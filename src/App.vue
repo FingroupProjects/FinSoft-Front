@@ -1,12 +1,14 @@
 <script setup>
-import HelloWorld from "./components/HelloWorld.vue";
+import Header from "./components/header/Header.vue";
 </script>
 
 <template>
-  <div>
-    <HelloWorld />
-  </div>
+  <v-app>
+    <Header/>
+    <router-view />
+  </v-app>
 </template>
 
 <style scoped>
-  </style>
+
+</style>
