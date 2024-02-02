@@ -13,11 +13,16 @@ function toggleSidebar() {
 <template>
   <v-app>
     <Header @rale="toggleSidebar" />
-    <div class="d-flex">
+    <div class="content">
       <Sidebar :rale="rale" />
       <router-view />
     </div>
   </v-app>
 </template>
 
-<style scoped></style>
+<style scoped>
+.content {
+  display: flex;
+  padding-top: 45px;
+}
+</style>
