@@ -1,0 +1,12 @@
+.custom_input {
+  font-size: 14px;
+  width: 100%;
+}
+
+.custom_input:focus {
+  outline: none;
+}
+
+.custom_input::placeholder {
+  color: #757575;
+}
