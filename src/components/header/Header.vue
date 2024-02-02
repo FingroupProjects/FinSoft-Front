@@ -1,8 +1,58 @@
 <script setup>
-
-import {ref} from "vue";
+import {onMounted, onUnmounted, ref} from "vue";
 
 const dialog = ref(false)
+const fav = ref(true)
+const menu = ref(false)
+const message = ref(false)
+const hints = ref(true)
+const items = ref(
+    [
+          {
+            title: 'Продажа',
+            value: 1,
+          },
+          {
+            title: "Возврат",
+            value: 2,
+          },
+          {
+            title: 'Клиент',
+            value: 3,
+          },
+          {
+            title: 'Заказ',
+            value: 4,
+          },
+          {
+            title: 'Запросы на закупку',
+            value: 5,
+          },
+          {
+            title: 'Заказ на закупку',
+            value: 6,
+          },
+          {
+            title: 'Закуп',
+            value: 7,
+          },
+        ])
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeyDown);
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown);
+})
+
+const handleKeyDown = (event) => {
+  if (event.ctrlKey && event.key === 'm' || event.key === 'M') {
+    dialog.value = true
+  }
+}
+
+
 </script>
 
 <template>
@@ -27,57 +77,58 @@ const dialog = ref(false)
         </template>
 
         <template v-slot:append>
-          <span class="bg-blue rounded-lg px-1">Ctrl+K</span>
+          <span class="bg-blue rounded-lg px-1">Ctrl+M</span>
         </template>
 
         <v-dialog
             v-model="dialog"
             activator="parent"
-            width="400"
+            width="600"
             class="rounded-lg"
         >
           <v-card>
-            <v-card-title>
-              <div class="d-flex align-center">
-                <v-icon>search</v-icon>
-                <v-text-field
-                    placeholder="Поиск...."
-                    variant="plain"
-                >
-                </v-text-field>
+            <div class="d-flex align-center">
+              <div class="d-flex align-center w-100">
+                <span class="pa-3">
+                  <v-icon color="info" size="15">search</v-icon>
+                </span>
+                <input type="text" class="custom_input" placeholder="Поиск...">
               </div>
-            </v-card-title>
+              <v-btn @click="dialog = false" :ripple="false" size="x-small" text="esc" color="info bg-info me-2"/>
+            </div>
             <v-divider/>
-            <v-card-text>
-              <v-container>
-
-              </v-container>
+            <v-card-text style="height: 300px">
+              <div class="text-center h-auto">
+                На этой платформе вы можете легко находить товары, функии и клиентов
+              </div>
             </v-card-text>
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn
-                  color="blue-darken-1"
-                  variant="text"
-                  @click="dialog = false"
-              >
-                Close
-              </v-btn>
-              <v-btn
-                  color="blue-darken-1"
-                  variant="text"
-                  @click="dialog = false"
-              >
-                Save
-              </v-btn>
-            </v-card-actions>
           </v-card>
         </v-dialog>
       </v-btn>
 
-      <v-btn variant="text" size="55" class="ms-2" >
-        <v-icon size="20">add_circle_outline</v-icon>
-        <v-icon size="20">expand_more</v-icon>
-      </v-btn>
+<!--      start menu -->
+      <v-menu
+          v-model="menu"
+          :close-on-content-click="false"
+      >
+        <template v-slot:activator="{ props }">
+          <v-btn variant="text" size="55" class="ms-2" v-bind="props">
+            <v-icon size="20">add_circle_outline</v-icon>
+            <v-icon size="20">expand_more</v-icon>
+          </v-btn>
+        </template>
+
+        <v-card rounded :min-width="300">
+          <div class="pa-3 text-sm-body-2">
+            Быстрое создание
+          </div>
+          <v-divider></v-divider>
+          <div>
+            <v-list :max-height="300" :items="items"></v-list>
+          </div>
+        </v-card>
+      </v-menu>
+<!--      end menu-->
 
       <v-btn variant="text" size="55" >
         <v-icon size="20">help_outline</v-icon>
@@ -85,7 +136,9 @@ const dialog = ref(false)
       </v-btn>
 
       <v-btn variant="text" size="55" >
-        <v-icon size="20">notifications</v-icon>
+        <v-badge color="red" dot content="3">
+          <v-icon  size="20">notifications</v-icon>
+        </v-badge>
         <v-icon size="20">expand_more</v-icon>
       </v-btn>
 
