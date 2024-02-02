@@ -12,7 +12,7 @@ const dialog = ref(false)
       height="45"
   >
     <template v-slot:prepend>
-      <v-app-bar-nav-icon></v-app-bar-nav-icon>
+      <v-app-bar-nav-icon @click="$emit('rale')"></v-app-bar-nav-icon>
       <v-icon size="18" class="text-grey-lighten-3">home</v-icon>
       <v-icon size="12" class="ms-1">chevron_right</v-icon>
     </template>
