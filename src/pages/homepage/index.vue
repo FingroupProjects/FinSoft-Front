@@ -4,7 +4,7 @@
 
 <template>
   <div>
-    The Main pagedasddddddddddddddddd
+    The Main page
   </div>
 </template>
 
