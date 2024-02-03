@@ -1,42 +1,16 @@
 <script setup>
 import {onMounted, onUnmounted, ref} from "vue";
 
-const dialog = ref(false)
-const fav = ref(true)
-const menu = ref(false)
-const message = ref(false)
-const hints = ref(true)
-const items = ref(
-    [
-          {
-            title: 'Продажа',
-            value: 1,
-          },
-          {
-            title: "Возврат",
-            value: 2,
-          },
-          {
-            title: 'Клиент',
-            value: 3,
-          },
-          {
-            title: 'Заказ',
-            value: 4,
-          },
-          {
-            title: 'Запросы на закупку',
-            value: 5,
-          },
-          {
-            title: 'Заказ на закупку',
-            value: 6,
-          },
-          {
-            title: 'Закуп',
-            value: 7,
-          },
-        ])
+const isDialog = ref(false)
+
+const isFastAdd = ref(false)
+const fastAddItems = ref([{title: 'Продажа',value: 1,},{title: "Возврат",value: 2,},{title: 'Клиент',value: 3,},{title: 'Заказ',  value: 4,},{title: 'Запросы на закупку',  value: 5,},{title: 'Заказ на закупку',  value: 6,},{title: 'Закуп',value: 7,},])
+
+const isQuestion = ref(false)
+const questionItems = ref([{title: 'Продажа'}])
+
+const isNotification = ref(false)
+const notificationsItems = ref([{title: 'Продажа'}])
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown);
@@ -48,7 +22,7 @@ onUnmounted(() => {
 
 const handleKeyDown = (event) => {
   if (event.ctrlKey && event.key === 'm' || event.key === 'M') {
-    dialog.value = true
+    isDialog.value = true
   }
 }
 
@@ -63,7 +37,7 @@ const handleKeyDown = (event) => {
   >
     <template v-slot:prepend>
       <v-app-bar-nav-icon @click="$emit('rale')"></v-app-bar-nav-icon>
-      <v-icon size="18" class="text-grey-lighten-3">home</v-icon>
+      <v-icon size="18" class="text-grey-lighten-3" @click="$router.push('/')">home</v-icon>
       <v-icon size="12" class="ms-1">chevron_right</v-icon>
     </template>
 
@@ -81,7 +55,7 @@ const handleKeyDown = (event) => {
         </template>
 
         <v-dialog
-            v-model="dialog"
+            v-model="isDialog"
             activator="parent"
             width="600"
             class="rounded-lg"
@@ -94,27 +68,26 @@ const handleKeyDown = (event) => {
                 </span>
                 <input type="text" class="custom_input" placeholder="Поиск...">
               </div>
-              <v-btn @click="dialog = false" :ripple="false" size="x-small" text="esc" color="info bg-info me-2"/>
+              <v-btn @click="isDialog = false" :ripple="false" size="x-small" text="esc" color="info bg-info me-2"/>
             </div>
             <v-divider/>
             <v-card-text style="height: 300px">
               <div class="text-center h-auto">
-                На этой платформе вы можете легко находить товары, функии и клиентов
+                На этой платформе вы можете легко находить товары, функции и клиентов
               </div>
             </v-card-text>
           </v-card>
         </v-dialog>
       </v-btn>
 
-<!--      start menu -->
       <v-menu
-          v-model="menu"
+          v-model="isFastAdd"
           :close-on-content-click="false"
       >
         <template v-slot:activator="{ props }">
           <v-btn variant="text" size="55" class="ms-2" v-bind="props">
             <v-icon size="20">add_circle_outline</v-icon>
-            <v-icon size="20">expand_more</v-icon>
+            <v-icon size="20">{{ isFastAdd ? 'expand_less' : 'expand_more' }}</v-icon>
           </v-btn>
         </template>
 
@@ -124,23 +97,94 @@ const handleKeyDown = (event) => {
           </div>
           <v-divider></v-divider>
           <div>
-            <v-list :max-height="300" :items="items"></v-list>
+            <v-list>
+              <v-list-item
+                v-for="(item, index) in fastAddItems"
+                :key="index"
+                :value="index"
+              >
+                <v-list-item-title class="font-weight-bold">{{ item.title }}</v-list-item-title>
+              </v-list-item>
+            </v-list>
           </div>
         </v-card>
       </v-menu>
-<!--      end menu-->
 
-      <v-btn variant="text" size="55" >
-        <v-icon size="20">help_outline</v-icon>
-        <v-icon size="20">expand_more</v-icon>
-      </v-btn>
+      <v-menu
+          v-model="isQuestion"
+          :close-on-content-click="false"
+      >
+        <template v-slot:activator="{ props }">
+          <v-btn variant="text" size="55" v-bind="props">
+            <v-icon size="20">help_outline</v-icon>
+            <v-icon size="20">{{ isQuestion ? 'expand_less' : 'expand_more' }}</v-icon>
+          </v-btn>
+        </template>
 
-      <v-btn variant="text" size="55" >
-        <v-badge color="red" dot content="3">
-          <v-icon  size="20">notifications</v-icon>
-        </v-badge>
-        <v-icon size="20">expand_more</v-icon>
-      </v-btn>
+        <v-card class="rounded-lg" :min-width="200">
+          <div class="pa-3 text-sm-body-2">
+            Инструкция
+          </div>
+          <v-divider></v-divider>
+          <div>
+            <v-list>
+              <v-list-item
+                v-for="(item, index) in questionItems"
+                :key="index"
+                :value="index"
+              >
+                <v-list-item-title class="font-weight-bold">{{ item.title }}</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </div>
+        </v-card>
+      </v-menu>
+
+      <v-menu
+          v-model="isNotification"
+          :close-on-content-click="false"
+      >
+        <template v-slot:activator="{ props }">
+          <v-btn variant="text" size="55" v-bind="props">
+            <v-badge color="red" dot content="3">
+              <v-icon  size="20">notifications</v-icon>
+            </v-badge>
+            <v-icon size="20">expand_more</v-icon>
+          </v-btn>
+        </template>
+
+        <v-card class="rounded-lg" :min-width="400">
+          <v-card variant="tonal" class="pa-3 text-sm-body-2 rounded-0">
+            <div class="d-flex justify-space-between">
+              <span class="text-subtitle-1 font-weight-bold">Уведомление</span>
+              <div>
+                <v-icon class="me-2">done_all</v-icon>
+                <div class="pa-2 bg-red rounded-circle d-inline-block">84</div>
+              </div>
+            </div>
+            <div class="d-flex align-center justify-space-between">
+              <span>Показать только не прочитанные</span>
+              <span>
+                <v-checkbox-btn color="info"></v-checkbox-btn>
+              </span>
+            </div>
+          </v-card>
+          <v-divider></v-divider>
+          <div>
+            <v-list>
+              <v-list-item
+                v-for="(item, index) in notificationsItems"
+                :key="index"
+                :value="index"
+              >
+                <v-list-item-title class="font-weight-bold">{{ item.title }}</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </div>
+        </v-card>
+      </v-menu>
+
+    
 
       <v-btn variant="text" class="d-flex justify-space-between">
         <v-icon size="20">language</v-icon>
