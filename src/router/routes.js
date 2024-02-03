@@ -30,9 +30,9 @@ const routes = [
     component: () => import('../pages/cash/index.vue')
   },
   {
-    path: '/',
+    path: '/salary',
     name: 'main',
-    component: () => import('../pages/homepage/index.vue')
+    component: () => import('../pages/salary/index.vue')
   },
   {
     path: '/',
