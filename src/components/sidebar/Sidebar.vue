@@ -1,19 +1,27 @@
 <script setup>
-import { ref, defineProps, } from 'vue'
+import { ref, defineProps, watchEffect, computed } from 'vue'
 import { useRouter } from 'vue-router';
 const props = defineProps(['rale'])
 const drawer = ref(true)
 const router = useRouter();
 
+watchEffect(() => {
+  console.log(props.rale)
+})
+
+const isClass = computed(() => {
+  return props.rale ? '' : 'pr-3';
+})
+
 const menu = ref([
-  { id: 1, title: 'Планирование', icon: 'home', link: '/planning' },
-  { id: 2, title: 'Закупки товаров', link: '/procurementOfGoods' },
-  { id: 3, title: 'Продажа товаров ', link: '/sellingGoods' },
-  { id: 4, title: 'Учет складов', link: '/sklad' },
-  { id: 5, title: 'Касса и банки', link: '/cash' },
-  { id: 6, title: 'Зарплата и кадры', link: '' },
-  { id: 7, title: 'Финансы и анализ', icon: 'attach_money', link: '' },
-])
+  { id: 1, title: 'Планирование', icon: 'widgets', link: '/planning' },
+  { id: 2, title: 'Закупки товаров', icon: 'assignment_return', link: '/procurementOfGoods' },
+  { id: 3, title: 'Продажа товаров ', icon: 'content_paste_go', link: '/sellingGoods' },
+  { id: 4, title: 'Учет складов', icon: 'save_as', link: '/sklad' },
+  { id: 5, title: 'Касса и банки', icon: 'account_balance', link: '/cash' },
+  { id: 6, title: 'Зарплата и кадры', icon: 'payments', link: '' },
+  { id: 7, title: 'Финансы и  анализ', icon: 'attach_money', link: '' }
+]);
 
 const admins = ref([
   { id: 1, title: 'Справочники', link: '' },
@@ -36,7 +44,7 @@ function push(route) {
           <v-list-item v-for="item in menu" color="info" :key="item.id" @click="push(item.link)" :title="item.title"
             :value="item.title">
             <template v-slot:prepend>
-              <v-icon color="info" :class="props.rale ? '' : 'pl-3'" :icon="item.icon"></v-icon>
+              <v-icon color="info" :class="isClass" :icon="item.icon"></v-icon>
             </template>
           </v-list-item>
 
@@ -44,7 +52,7 @@ function push(route) {
             <template v-slot:activator="{ props }">
               <v-list-item v-bind="props" title="Админ-панель">
                 <template v-slot:prepend>
-                  <v-icon :class="props.rale ? '' : 'pl-3'" color="info">analytics</v-icon>
+                  <v-icon :class="isClass" color="info">analytics</v-icon>
                 </template>
               </v-list-item>
             </template>

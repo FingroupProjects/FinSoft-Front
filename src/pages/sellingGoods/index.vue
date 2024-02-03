@@ -3,9 +3,9 @@
 </srcipt>
 
 <template>
- 
+  <div>
+    Продажа товаров
+  </div>
 </template>
 
-<style>
-
-</style>
+<style></style>
