@@ -24,5 +24,6 @@ function toggleSidebar() {
 .content {
   display: flex;
   padding-top: 45px;
+  background-color: #E8EDF0FF;
 }
 </style>
