@@ -1,24 +1,29 @@
 <script setup>
-import { ref, defineProps, onMounted } from 'vue'
-
+import { ref, defineProps, } from 'vue'
+import { useRouter } from 'vue-router';
 const props = defineProps(['rale'])
 const drawer = ref(true)
+const router = useRouter();
 
 const menu = ref([
-  { id: 1, title: 'Планирование', icon: 'home' },
-  { id: 2, title: 'Закупки товаров' },
-  { id: 3, title: 'Продаж товаров ' },
-  { id: 4, title: 'Учет складов' },
-  { id: 5, title: 'Касса и банка' },
-  { id: 6, title: 'Зарплата и кадры' },
-  { id: 7, title: 'Финансов и анализ' },
+  { id: 1, title: 'Планирование', icon: 'home', link: '/planning' },
+  { id: 2, title: 'Закупки товаров', link: '/procurementOfGoods' },
+  { id: 3, title: 'Продажа товаров ', link: '/sellingGoods' },
+  { id: 4, title: 'Учет складов', link: '/sklad' },
+  { id: 5, title: 'Касса и банки', link: '/cash' },
+  { id: 6, title: 'Зарплата и кадры', link: '' },
+  { id: 7, title: 'Финансы и анализ', icon: 'attach_money', link: '' },
 ])
 
 const admins = ref([
-  { id: 1, title: 'Справочники' },
-  { id: 2, title: 'Настройки программы' },
-  { id: 3, title: 'Настройка разделов' },
+  { id: 1, title: 'Справочники', link: '' },
+  { id: 2, title: 'Настройки программы', link: '' },
+  { id: 3, title: 'Настройка разделов', link: '' },
 ]);
+
+function push(route) {
+  router.push(route)
+}
 
 </script>
 
@@ -28,20 +33,25 @@ const admins = ref([
       <v-navigation-drawer v-model="drawer" :rail="props.rale">
         <v-list density="compact" nav>
 
-          <v-list-item v-for="item in menu" :key="item.id">
-            <v-icon class="mr-2" color="info" size="30">{{ item.icon }}</v-icon>{{ item.title }}
+          <v-list-item v-for="item in menu" color="info" :key="item.id" @click="push(item.link)" :title="item.title"
+            :value="item.title">
+            <template v-slot:prepend>
+              <v-icon color="info" :class="props.rale ? '' : 'pl-3'" :icon="item.icon"></v-icon>
+            </template>
           </v-list-item>
 
           <v-list-group value="Admin" class="admin">
             <template v-slot:activator="{ props }">
-              <v-list-item class="d-flex" v-bind="props">
-                <v-icon class="icon mr-2" color="info" size="30">analytics</v-icon>Админ-панель
+              <v-list-item v-bind="props" title="Админ-панель">
+                <template v-slot:prepend>
+                  <v-icon :class="props.rale ? '' : 'pl-3'" color="info">analytics</v-icon>
+                </template>
               </v-list-item>
             </template>
 
             <div class="list">
-              <v-list-item class="mb-0" v-for="title in admins" :title="title.title" :key="title.id" color="info"
-                variant="plain" :value="title"></v-list-item>
+              <v-list-item class="mb-0" v-for="admin in admins" :title="admin.title" :key="admin.id" color="info"
+                variant="plain" :value="admin.title"></v-list-item>
             </div>
           </v-list-group>
 
@@ -60,33 +70,31 @@ const admins = ref([
   box-shadow: none;
 }
 
-.list {
-  padding-left: 30px;
-}
-
 .admin:hover .icon {
-  -webkit-animation: 0.2s tremor ease;
-  animation: 0.2s tremor ease;
-  transition: transform 0.5s;
+  animation: 0.3s tremor ease;
 }
 
 @keyframes tremor {
 
   0%,
   25% {
-    transform: rotate(20deg) translateX(-4%);
+    transform: rotate(5deg);
   }
 
   50% {
-    transform: rotate(-20deg) translateX(-4%);
+    transform: rotate(-5deg);
   }
 
-  75% {
-    transform: rotate(-20deg) translateX(-4%);
+  60% {
+    transform: rotate(-5deg);
+  }
+
+  80% {
+    transform: rotate(5deg);
   }
 
   100% {
-    transform: rotate(0deg) translateX(4%);
+    transform: rotate(0deg);
   }
 }
 </style>
