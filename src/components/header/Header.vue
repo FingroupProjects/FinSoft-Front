@@ -1,5 +1,7 @@
 <script setup>
 import {onMounted, onUnmounted, ref} from "vue";
+import FlagRU from '../../assets/svg/flags/flag-ru.svg'
+import FlagUS from '../../assets/svg/flags/flag-us.svg'
 
 const isDialog = ref(false)
 
@@ -10,7 +12,11 @@ const isQuestion = ref(false)
 const questionItems = ref([{title: 'Продажа'}])
 
 const isNotification = ref(false)
-const notificationsItems = ref([{title: 'Продажа'}])
+const notificationsItems = ref([{person: 'Рустам', title: 'Закупил 500 ноутбуков'}, {person: 'Хусрав', title: 'Внёс все данные в систему'}])
+
+const isLanguage = ref(false)
+const isProfile = ref(false)
+const profileItems = ref(['Профиль', 'Изменение пароль', 'Изменить пин-код', 'Выйти'])
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown);
@@ -85,7 +91,7 @@ const handleKeyDown = (event) => {
           :close-on-content-click="false"
       >
         <template v-slot:activator="{ props }">
-          <v-btn variant="text" size="55" class="ms-2" v-bind="props">
+          <v-btn :variant="isFastAdd ? 'tonal' : 'text'" size="55" class="ms-2" v-bind="props">
             <v-icon size="20">add_circle_outline</v-icon>
             <v-icon size="20">{{ isFastAdd ? 'expand_less' : 'expand_more' }}</v-icon>
           </v-btn>
@@ -115,7 +121,7 @@ const handleKeyDown = (event) => {
           :close-on-content-click="false"
       >
         <template v-slot:activator="{ props }">
-          <v-btn variant="text" size="55" v-bind="props">
+          <v-btn :variant="isQuestion ? 'tonal' : 'text'" size="55" v-bind="props">
             <v-icon size="20">help_outline</v-icon>
             <v-icon size="20">{{ isQuestion ? 'expand_less' : 'expand_more' }}</v-icon>
           </v-btn>
@@ -145,11 +151,11 @@ const handleKeyDown = (event) => {
           :close-on-content-click="false"
       >
         <template v-slot:activator="{ props }">
-          <v-btn variant="text" size="55" v-bind="props">
+          <v-btn :variant="isNotification ? 'tonal' : 'text'" size="55" v-bind="props">
             <v-badge color="red" dot content="3">
               <v-icon  size="20">notifications</v-icon>
             </v-badge>
-            <v-icon size="20">expand_more</v-icon>
+            <v-icon size="20">{{ isNotification ? 'expand_less' : 'expand_more' }}</v-icon>
           </v-btn>
         </template>
 
@@ -169,34 +175,92 @@ const handleKeyDown = (event) => {
               </span>
             </div>
           </v-card>
-          <v-divider></v-divider>
-          <div>
-            <v-list>
-              <v-list-item
-                v-for="(item, index) in notificationsItems"
-                :key="index"
-                :value="index"
-              >
-                <v-list-item-title class="font-weight-bold">{{ item.title }}</v-list-item-title>
-              </v-list-item>
-            </v-list>
+          <div v-for="item in notificationsItems" :key="item.person">
+            <v-divider></v-divider>
+            <v-card-title class="d-flex flex-column">
+              <div class="d-flex w-100">
+                <div class="w-auto pr-4">
+              <span class="rounded-circle pa-1 px-2 py-2 border bg-grey-lighten-4">
+                <v-icon size="25" color="info">groups</v-icon>
+              </span>
+                </div>
+                <div class="w-100">
+                  <div class="d-flex flex-column w-100 text-caption ">
+                    <div class="d-flex justify-space-between ">
+                      <span class="text-blue text-subtitle-2 font-weight-bold">CRM</span>
+                      <span>30.01.2024 23:59</span>
+                    </div>
+                    <div class="d-flex justify-space-between ">
+                      <span class="text-end font-weight-bold">Время напоминания</span>
+                      <span class="text-end text-blue-grey-lighten-4 cursor-pointer">Отметить, как прочитанное</span>
+                    </div>
+                  </div>
+                  <div class="d-flex align-center mt-2">
+                    <span class="font-weight-bold text-subtitle-2 me-2">{{ item.person }}:</span>
+                    <span class="text-caption">{{ item.title }}</span>
+                  </div>
+                </div>
+              </div>
+            </v-card-title>
           </div>
         </v-card>
       </v-menu>
 
-    
 
-      <v-btn variant="text" class="d-flex justify-space-between">
-        <v-icon size="20">language</v-icon>
-        <span class="text-sm-body-2 mx-2">Русский</span>
-        <v-icon size="20">expand_more</v-icon>
-      </v-btn>
+      <v-menu
+          v-model="isLanguage"
+          :close-on-content-click="false"
+      >
+        <template v-slot:activator="{ props }">
+          <v-btn :variant="isLanguage ? 'tonal' : 'text'" class="d-flex justify-space-between" v-bind="props">
+            <v-icon size="20">language</v-icon>
+            <span class="text-sm-body-2 mx-2">Русский</span>
+            <v-icon size="20">{{ isLanguage ? 'expand_less' : 'expand_more' }}</v-icon>
+          </v-btn>
+        </template>
 
-      <v-btn variant="text" class="d-flex justify-space-between" rounded="2">
-        <v-icon size="20">account_circle</v-icon>
-        <span class="text-sm-body-2 mx-2">Hello</span>
-        <v-icon size="20">expand_more</v-icon>
-      </v-btn>
+        <v-card class="rounded-lg">
+          <div class="d-flex">
+            <div class="pa-3 d-flex ga-2 text-subtitle-2 align-center cursor-pointer">
+              <FlagRU />
+              <span>Русский</span>
+            </div>
+          </div>
+            <v-divider></v-divider>
+          <div class="d-flex">
+            <div class="pa-3 d-flex ga-2 text-sm-body-2 align-center cursor-pointer">
+              <FlagUS />
+              <span>English</span>
+            </div>
+          </div>
+        </v-card>
+      </v-menu>
+
+
+      <v-menu
+          v-model="isProfile"
+          :close-on-content-click="false"
+      >
+        <template v-slot:activator="{ props }">
+          <v-btn :variant="isProfile ? 'tonal' : 'text'" class="d-flex justify-space-between" v-bind="props" rounded="2">
+            <v-icon size="20">account_circle</v-icon>
+            <span class="text-sm-body-2 mx-2">Hello</span>
+            <v-icon size="20">{{ isLanguage ? 'expand_less' : 'expand_more' }}</v-icon>
+          </v-btn>
+        </template>
+
+        <v-card class="rounded-lg">
+          <v-list>
+            <v-list-item
+                v-for="(item, index) in profileItems"
+                :key="index"
+                :value="index"
+            >
+              <v-list-item-title class="font-weight-bold">{{ item }}</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-card>
+      </v-menu>
 
     </template>
   </v-app-bar>
