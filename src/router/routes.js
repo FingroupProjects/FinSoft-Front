@@ -30,11 +30,12 @@ const routes = [
     component: () => import('../pages/cash/index.vue')
   },
   {
-<<<<<<< HEAD
+
     path: '/salary',
     name: 'main',
     component: () => import('../pages/salary/index.vue')
-=======
+  },
+  {
     path: '/list/currency',
     name: 'currency',
     component: () => import('../pages/List/Currency/index.vue')
@@ -43,7 +44,6 @@ const routes = [
     path: '/list/currency/create',
     name: 'currency/create',
     component: () => import('../pages/List/Currency/create.vue')
->>>>>>> develop
   },
   {
     path: '/',
