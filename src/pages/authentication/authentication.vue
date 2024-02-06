@@ -4,8 +4,10 @@
 
 <template>
   <div>
-    Зарплата и кадры
+    123123
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+
+</style>

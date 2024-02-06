@@ -1,7 +1,8 @@
 <script setup>
-import { ref, defineEmits } from 'vue'
+import { ref, defineProps, defineEmits, computed } from 'vue'
 import { useRouter } from 'vue-router';
 
+const props = defineProps(['rale'])
 const router = useRouter();
 const emit = defineEmits();
 
@@ -36,11 +37,14 @@ function push(item) {
   router.push(item.link)
 }
 
+const admin_panel_width = computed(() => {
+  return props.rale === true ? 'calc(100vw - 65px)' : 'calc(100vw - 255px)';
+});
 
 </script>
 
 <template>
-  <div class="admin_panel">
+  <div class="admin_panel" :style="{ width: admin_panel_width }">
     <div class="d-flex justify-end">
       <v-icon color="info" icon="close" @click="emit('close')"></v-icon>
     </div>
@@ -70,12 +74,13 @@ function push(item) {
   position: absolute;
   top: 45px;
   right: 0;
-  width: calc(100vw - 255px);
+  transition: width 250ms;
   height: calc(100vh - 45px);
   background: white;
   border-left: 1px rgb(152, 146, 146) solid;
   z-index: 10;
   padding: 20px;
+  overflow: auto;
 }
 
 ul {
