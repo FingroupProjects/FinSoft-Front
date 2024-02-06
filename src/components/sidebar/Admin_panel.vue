@@ -1,5 +1,10 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, defineProps, defineEmits, computed } from 'vue'
+import { useRouter } from 'vue-router';
+
+const props = defineProps(['rale'])
+const router = useRouter();
+const emit = defineEmits();
 
 const admins = ref([
   { id: 1, title: 'Настройки программы', link: '' },
@@ -26,24 +31,39 @@ const lists = ref([
     ]
   }
 ]);
+
+function push(item) {
+  emit('close')
+  router.push(item.link)
+}
+
+const admin_panel_width = computed(() => {
+  return props.rale === true ? 'calc(100vw - 65px)' : 'calc(100vw - 255px)';
+});
+
 </script>
 
 <template>
-  <div class="admin_panel">
-    <div class="d-flex align-start">
+  <div class="admin_panel" :style="{ width: admin_panel_width }">
+    <div class="d-flex justify-end">
+      <v-icon color="info" icon="close" @click="emit('close')"></v-icon>
+    </div>
+    <div class="d-flex align-start ga-10">
       <div>
-        <v-list v-for="list in lists" :key="list.id">
-          <h2>{{ list.title }}</h2>
-          <v-list nav v-for="child in list.child" :key="child.id">
-            <v-list-item :title="child.title">
-
-            </v-list-item></v-list>
-        </v-list>
+        <ul v-for="list in lists" :key="list.id">
+          <h3>{{ list.title }}</h3>
+          <span nav v-for="child in list.child" :key="child.id">
+            <li class="text-body-2" @click="push(child)">
+              {{ child.title }}
+            </li>
+          </span>
+        </ul>
       </div>
       <div>
-        <v-list nav v-for="admin in admins" :key="admin.id">
-          <v-list-item :title="admin.title" @click="ff"></v-list-item>
-        </v-list>
+        <ul nav v-for="admin in admins" :key="admin.id">
+          <h3>{{ admin.title }}</h3>
+          <li class="mb-10 text-body-2" @click="push(admin)">{{ admin.title }}</li>
+        </ul>
       </div>
     </div>
   </div>
@@ -52,13 +72,31 @@ const lists = ref([
 <style scoped>
 .admin_panel {
   position: absolute;
-  top: 47px;
+  top: 45px;
   right: 0;
-  width: calc(100vw - 260px);
-  height: calc(100vh - 50px);
+  transition: width 250ms;
+  height: calc(100vh - 45px);
   background: white;
-  box-shadow: 5px 5px 5px 5px rgb(58, 56, 56);
+  border-left: 1px rgb(152, 146, 146) solid;
   z-index: 10;
   padding: 20px;
+  overflow: auto;
+}
+
+ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer;
+}
+
+li {
+  padding: 6px 10px;
+  border-radius: 5px;
+}
+
+li:hover {
+  color: #2196f3;
 }
 </style>

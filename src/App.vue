@@ -1,10 +1,10 @@
 <script setup>
-import {useRoute} from 'vue-router'
+import { useRoute } from 'vue-router'
 
 import Header from "./components/header/Header.vue";
 import Sidebar from "./components/sidebar/Sidebar.vue";
-// import Admin_panel from "./components/sidebar/Admin_panel.vue";
-import {computed, ref, watch} from "vue"
+import Admin_panel from "./components/sidebar/Admin_panel.vue";
+import { ref, watch } from "vue"
 
 const rale = ref(false)
 const isAdmin = ref(false)
@@ -13,7 +13,6 @@ const isLayout = ref(true)
 
 const toggleAdmin = () => {
   isAdmin.value = !isAdmin.value
-  console.log(isAdmin.value);
 }
 
 const toggleSidebar = () => {
@@ -23,28 +22,22 @@ const toggleSidebar = () => {
 
 watch(route, (newVal) => {
   isLayout.value = !!newVal.meta.hideSideBarAndHeader;
-
-  // if (newVal.meta.hideSideBarAndHeader) {
-  //   isLayout.value = true
-  // } else {
-  //   isLayout.value = false
-  // }
 })
 
 
 </script>
 
 <template>
-  <v-app v-cloak >
+  <v-app v-cloak>
     <div v-if="isLayout">
       <router-view />
     </div>
     <div v-else>
       <Header @rale="toggleSidebar" />
       <div class="content">
-        <Sidebar @toggleAdmin="toggleAdmin" :rale="rale" />
-        <!-- <Admin_panel v-if="isAdmin" /> -->
-        <router-view />
+        <Sidebar @toggleAdmin="toggleAdmin" @closeAdmin="isAdmin = false" :rale="rale" />
+        <Admin_panel v-if="isAdmin" @close="isAdmin = false" :rale="rale" />
+        <router-view class="w-100 px-4 py-4" />
       </div>
     </div>
   </v-app>
