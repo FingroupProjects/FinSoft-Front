@@ -3,9 +3,9 @@
 </srcipt>
 
 <template>
- 
+  <div>
+    Склад
+  </div>
 </template>
 
-<style>
-
-</style>
+<style></style>

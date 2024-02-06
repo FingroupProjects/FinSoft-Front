@@ -22,7 +22,7 @@ const routes = [
   {
     path: '/sklad',
     name: 'sklad',
-    component: () => import('../pages/sklad/index.vue')
+    component: () => import('../pages/storage/index.vue')
   },
   {
     path: '/cash',

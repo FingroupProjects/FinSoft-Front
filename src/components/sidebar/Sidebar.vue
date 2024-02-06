@@ -24,6 +24,7 @@ function push(item) {
   }
   else {
     router.push(item.link)
+    emit('closeAdmin')
   }
 }
 
@@ -33,7 +34,7 @@ function push(item) {
   <v-card class="sidebar ">
     <v-layout>
 
-      <v-navigation-drawer v-model="drawer" permanent :rail="props.rale" expand-on-hover>
+      <v-navigation-drawer :width="320" v-model="drawer" permanent :rail="props.rale" expand-on-hover>
         <v-list density="compact" nav>
 
           <v-list-item v-for="item in menu" color="info" :key="item.id" @click="push(item)" :title="item.title"
@@ -42,36 +43,6 @@ function push(item) {
               <v-icon color="info" :icon="item.icon"></v-icon>
             </template>
           </v-list-item>
-
-          <!-- <v-list-group value="Admin" class="admin">
-            <template v-slot:activator="{ props }">
-              <v-list-item v-bind="props" title="Админ-панель">
-                <template v-slot:prepend>
-                  <v-icon color="info">analytics</v-icon>
-                </template>
-              </v-list-item>
-            </template>
-
-            <v-list-group v-for="list in lists" :key="list.id" value="List">
-              <template v-slot:activator="{ props }">
-                <v-list-item v-bind="props" :title="list.title">
-                </v-list-item>
-              </template>
-
-              <div>
-                <v-list-item class="mb-0 " v-for="list_child in list.child" :key="list_child.id"
-                  @click="push(list_child.link)" color="info" variant="plain" :title="list_child.title"
-                  :value="list_child.title">
-                </v-list-item>
-              </div>
-            </v-list-group>
-
-
-            <v-list-item class="mb-0" v-for="admin in admins" :title="admin.title" @click="push(admin.link)"
-              :key="admin.id" color="info" variant="plain" :value="admin.title">
-            </v-list-item>
-
-          </v-list-group> -->
 
         </v-list>
       </v-navigation-drawer>

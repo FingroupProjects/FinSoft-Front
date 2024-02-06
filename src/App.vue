@@ -1,7 +1,7 @@
 <script setup>
 import Header from "./components/header/Header.vue";
 import Sidebar from "./components/sidebar/Sidebar.vue";
-// import Admin_panel from "./components/sidebar/Admin_panel.vue";
+import Admin_panel from "./components/sidebar/Admin_panel.vue";
 import { ref } from "vue"
 
 const rale = ref(false)
@@ -10,7 +10,6 @@ const isAdmin = ref(false)
 
 function toggleAdmin() {
   isAdmin.value = !isAdmin.value
-  console.log(isAdmin.value);
 }
 
 function toggleSidebar() {
@@ -22,9 +21,9 @@ function toggleSidebar() {
   <v-app>
     <Header @rale="toggleSidebar" />
     <div class="content">
-      <Sidebar @toggleAdmin="toggleAdmin" :rale="rale" />
-      <!-- <Admin_panel v-if="isAdmin" /> -->
-      <router-view />
+      <Sidebar @toggleAdmin="toggleAdmin" @closeAdmin="isAdmin = false" :rale="rale" />
+      <Admin_panel v-if="isAdmin" @close="isAdmin = false" />
+      <router-view class="w-100 px-4 py-4" />
     </div>
   </v-app>
 </template>
