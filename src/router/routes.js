@@ -2,63 +2,83 @@ const routes = [
   {
     path: '/',
     name: 'main',
-    component: () => import('../pages/homepage/index.vue')
+    component: () => import('../pages/homepage/index.vue'),
+    meta: {
+      hideSideBarAndHeader: false
+    }
   },
   {
     path: '/planning',
     name: 'planning',
-    component: () => import('../pages/planning/index.vue')
+    component: () => import('../pages/planning/index.vue'),
+    meta: {
+      hideSideBarAndHeader: false
+    }
   },
   {
     path: '/procurementOfGoods',
     name: 'procurementOfGoods',
-    component: () => import('../pages/procurementOfGoods/index.vue')
+    component: () => import('../pages/procurementOfGoods/index.vue'),
+    meta: {
+      hideSideBarAndHeader: false
+    }
   },
   {
     path: '/sellingGoods',
     name: 'sellingGoods',
-    component: () => import('../pages/sellingGoods/index.vue')
+    component: () => import('../pages/sellingGoods/index.vue'),
+    meta: {
+      hideSideBarAndHeader: false
+    }
   },
   {
     path: '/sklad',
     name: 'sklad',
-    component: () => import('../pages/sklad/index.vue')
+    component: () => import('../pages/sklad/index.vue'),
+    meta: {
+      hideSideBarAndHeader: false
+    }
   },
   {
     path: '/cash',
     name: 'cash',
-    component: () => import('../pages/cash/index.vue')
+    component: () => import('../pages/cash/index.vue'),
+    meta: {
+      hideSideBarAndHeader: false
+    }
   },
   {
 
     path: '/salary',
-    name: 'main',
-    component: () => import('../pages/salary/index.vue')
+    name: 'salary',
+    component: () => import('../pages/salary/index.vue'),
+    meta: {
+      hideSideBarAndHeader: false
+    }
   },
   {
     path: '/list/currency',
     name: 'currency',
-    component: () => import('../pages/List/Currency/index.vue')
+    component: () => import('../pages/List/Currency/index.vue'),
+    meta: {
+      hideSideBarAndHeader: false
+    }
   },
   {
     path: '/list/currency/create',
     name: 'currency/create',
-    component: () => import('../pages/List/Currency/create.vue')
+    component: () => import('../pages/List/Currency/create.vue'),
+    meta: {
+      hideSideBarAndHeader: false
+    }
   },
   {
-    path: '/',
-    name: 'main',
-    component: () => import('../pages/homepage/index.vue')
-  },
-  {
-    path: '/',
-    name: 'main',
-    component: () => import('../pages/homepage/index.vue')
-  },
-  {
-    path: '/',
-    name: 'main',
-    component: () => import('../pages/homepage/index.vue')
+    path: '/login',
+    name: 'login',
+    component: () => import('../pages/authentication/authentication.vue'),
+    meta: {
+      hideSideBarAndHeader: true
+    }
   },
 ]
 
