@@ -4,8 +4,8 @@
 
 <template>
   <div>
-    Зарплата и кадры
+    Финансы и аналитика
   </div>
 </template>
 
-<style scoped></style>
+<style></style>

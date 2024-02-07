@@ -32,9 +32,9 @@ const routes = [
     }
   },
   {
-    path: '/sklad',
-    name: 'sklad',
-    component: () => import('../pages/sklad/index.vue'),
+    path: '/storage',
+    name: 'storage',
+    component: () => import('../pages/storage/index.vue'),
     meta: {
       hideSideBarAndHeader: false
     }
@@ -48,10 +48,17 @@ const routes = [
     }
   },
   {
-
     path: '/salary',
     name: 'salary',
     component: () => import('../pages/salary/index.vue'),
+    meta: {
+      hideSideBarAndHeader: false
+    }
+  },
+  {
+    path: '/financeAnalysis',
+    name: 'financeAnalysis',
+    component: () => import('../pages/financeAnalysis/index.vue'),
     meta: {
       hideSideBarAndHeader: false
     }
