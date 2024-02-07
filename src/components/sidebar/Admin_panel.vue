@@ -44,32 +44,56 @@ const admin_panel_width = computed(() => {
 </script>
 
 <template>
-  <div class="admin_panel" :style="{ width: admin_panel_width }">
-    <div class="d-flex justify-end">
-      <v-icon color="info" icon="close" @click="emit('close')"></v-icon>
-    </div>
-    <div class="d-flex align-start ga-10">
-      <div>
-        <ul v-for="list in lists" :key="list.id">
-          <h3>{{ list.title }}</h3>
-          <span nav v-for="child in list.child" :key="child.id">
-            <li class="text-body-2" @click="push(child)">
-              {{ child.title }}
-            </li>
-          </span>
-        </ul>
+  <transition name="fade">
+    <div class="admin_panel" :style="{ width: admin_panel_width }">
+      <div class="d-flex justify-end">
+        <v-icon color="info" icon="close" @click="emit('close')"></v-icon>
       </div>
-      <div>
-        <ul nav v-for="admin in admins" :key="admin.id">
-          <h3>{{ admin.title }}</h3>
-          <li class="mb-10 text-body-2" @click="push(admin)">{{ admin.title }}</li>
-        </ul>
+      <div class="d-flex align-start ga-10">
+        <div>
+          <ul v-for="list in lists" :key="list.id">
+            <h3>{{ list.title }}</h3>
+            <span nav v-for="child in list.child" :key="child.id">
+              <li class="text-body-2" @click="push(child)">
+                {{ child.title }}
+              </li>
+            </span>
+          </ul>
+        </div>
+        <div>
+          <ul nav v-for="admin in admins" :key="admin.id">
+            <h3>{{ admin.title }}</h3>
+            <li class="mb-10 text-body-2" @click="push(admin)">{{ admin.title }}</li>
+          </ul>
+        </div>
       </div>
     </div>
-  </div>
+  </transition>
 </template>
 
 <style scoped>
+::-webkit-scrollbar {
+  border-radius: 50px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #dadfe3;
+  border-radius: 50px;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s;
+}
+
+.fade-enter,
+.fade-leave-to
+
+/* .fade-leave-active in <2.1.8 */
+  {
+  opacity: 0;
+}
+
 .admin_panel {
   position: absolute;
   top: 45px;
