@@ -2,6 +2,7 @@
 import {ref} from "vue";
 import auth from "../../api/auth.js";
 import {useRouter} from "vue-router";
+import setToken from "../../composables/tokenAuth/token.js";
 const visible = ref(false)
 const loginRef = ref('')
 const passwordRef = ref('')
@@ -15,8 +16,9 @@ const authentication = async () => {
 
   try {
     const res = await auth.login(body)
-
+    console.log(res)
     if (res.status === 200) {
+      setToken(res.data.token)
       await router.push('/')
     }
   } catch (e) {
