@@ -19,10 +19,10 @@ const lists = ref([
       { id: 3, title: 'Виды Цен', icon: 'request_quote' },
       { id: 4, title: 'Договоры Контрагентов', icon: 'contact_page' },
       { id: 5, title: 'Кассы', icon: 'savings' },
-      { id: 6, title: 'Контрагенты', icon: 'group' },
-      { id: 7, title: 'Наборы Упаковок', icon: 'price_change' },
+      { id: 6, title: 'Контрагенты', link: '/list/counterparty', icon: 'group' },
+      { id: 7, title: 'Наборы Упаковок', icon: 'apps' },
       { id: 8, title: 'Номенклатура', icon: 'assignment' },
-      { id: 9, title: 'Организации', icon: 'home' },
+      { id: 9, title: 'Организации', icon: 'corporate_fare' },
       { id: 10, title: 'Пользователи', icon: 'groups' },
       { id: 11, title: 'Прочие Расходы', icon: 'price_change' },
       { id: 12, title: 'Склады', icon: 'warehouse' },
@@ -122,7 +122,7 @@ span {
   width: 250px;
   background: #fefeff;
   border-radius: 10px;
-  box-shadow: 3px 3px 3px lightgray;
+  box-shadow: 3px 3px 3px rgb(226, 226, 226);
 }
 
 span:hover {

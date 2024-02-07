@@ -80,6 +80,14 @@ const routes = [
     }
   },
   {
+    path: '/list/counterparty',
+    name: 'counterparty',
+    component: () => import('../pages/List/counterparty/index.vue'),
+    meta: {
+      hideSideBarAndHeader: false
+    }
+  },
+  {
     path: '/login',
     name: 'login',
     component: () => import('../pages/authentication/authentication.vue'),
