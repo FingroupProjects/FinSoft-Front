@@ -2,9 +2,11 @@
 import {onMounted, onUnmounted, ref} from "vue";
 import FlagRU from '../../assets/svg/flags/flag-ru.svg'
 import FlagUS from '../../assets/svg/flags/flag-us.svg'
+import {useRouter} from "vue-router";
+import auth from "../../api/auth.js";
 
 const isDialog = ref(false)
-
+const router = useRouter()
 const isFastAdd = ref(false)
 const fastAddItems = ref([{title: 'Продажа',value: 1,},{title: "Возврат",value: 2,},{title: 'Клиент',value: 3,},{title: 'Заказ',  value: 4,},{title: 'Запросы на закупку',  value: 5,},{title: 'Заказ на закупку',  value: 6,},{title: 'Закуп',value: 7,},])
 
@@ -16,7 +18,23 @@ const notificationsItems = ref([{person: 'Рустам', title: 'Закупил 
 
 const isLanguage = ref(false)
 const isProfile = ref(false)
-const profileItems = ref(['Профиль', 'Изменение пароль', 'Изменить пин-код', 'Выйти'])
+const profileItems = ref([{val: 'Профиль', link: 'profile'}, {val: 'Изменение пароль', link: 'change_password'}, {val: 'Изменить пин-код', link: 'change_pin_code'}, {val: 'Выйти', link: 'logout'}])
+
+const listProfile = async (item) => {
+  if (item === 'profile') {
+     await router.push('/profile')
+  }
+
+  if (item === 'logout') {
+    // await auth.logout()
+
+     await router.push('/login')
+  }
+}
+
+const logout = () => {
+  console.log('dad')
+}
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown);
@@ -244,7 +262,7 @@ const handleKeyDown = (event) => {
         <template v-slot:activator="{ props }">
           <v-btn :variant="isProfile ? 'tonal' : 'text'" class="d-flex justify-space-between" v-bind="props" rounded="2">
             <v-icon size="20">account_circle</v-icon>
-            <span class="text-sm-body-2 mx-2">Hello</span>
+            <span class="text-sm-body-2 mx-2">Admin</span>
             <v-icon size="20">{{ isLanguage ? 'expand_less' : 'expand_more' }}</v-icon>
           </v-btn>
         </template>
@@ -256,7 +274,7 @@ const handleKeyDown = (event) => {
                 :key="index"
                 :value="index"
             >
-              <v-list-item-title class="font-weight-bold">{{ item }}</v-list-item-title>
+              <v-list-item-title class="font-weight-bold" @click="listProfile(item.link)">{{ item.val }}</v-list-item-title>
             </v-list-item>
           </v-list>
         </v-card>
