@@ -30,7 +30,9 @@ watch(route, (newVal) => {
 <template>
   <v-app v-cloak>
     <div v-if="isLayout">
-      <router-view />
+      <div class="bg_auth">
+        <router-view />
+      </div>
     </div>
     <div v-else>
       <Header @rale="toggleSidebar" />
@@ -49,5 +51,24 @@ watch(route, (newVal) => {
   padding-top: 45px;
   background-color: #E8EDF0FF;
   position: relative;
+}
+
+.bg_auth {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  -webkit-box-pack: center;
+  justify-content: center;
+  -webkit-box-align: center;
+  align-items: center;
+  position: relative;
+  background-image: url('src/assets/svg/auth/login-bg.svg');
+  background-repeat: initial;
+  background-attachment: initial;
+  background-origin: initial;
+  background-clip: initial;
+  background-color: initial;
+  background-size: cover !important;
+  background-position: right top !important;
 }
 </style>
