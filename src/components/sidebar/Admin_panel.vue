@@ -90,7 +90,6 @@ const admin_panel_width = computed(() => {
 }
 
 .admin_panel {
-  display: grid;
   position: absolute;
   top: 45px;
   right: 0;
