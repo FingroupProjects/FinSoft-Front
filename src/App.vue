@@ -62,7 +62,7 @@ watch(route, (newVal) => {
   -webkit-box-align: center;
   align-items: center;
   position: relative;
-  background-image: url('auth/login-bg.jpg');
+  background-image: url('assets/svg/auth/login-bg.jpg');
   background-repeat: initial;
   background-attachment: initial;
   background-origin: initial;
