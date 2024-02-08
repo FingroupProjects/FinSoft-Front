@@ -66,15 +66,7 @@ const routes = [
   {
     path: '/list/currency',
     name: 'currency',
-    component: () => import('../pages/List/Currency/index.vue'),
-    meta: {
-      hideSideBarAndHeader: false
-    }
-  },
-  {
-    path: '/list/currency/create',
-    name: 'currency/create',
-    component: () => import('../pages/List/Currency/create.vue'),
+    component: () => import('../pages/list/currency.vue'),
     meta: {
       hideSideBarAndHeader: false
     }
@@ -82,7 +74,7 @@ const routes = [
   {
     path: '/list/counterparty',
     name: 'counterparty',
-    component: () => import('../pages/List/counterparty/index.vue'),
+    component: () => import('../pages/list/counterparty.vue'),
     meta: {
       hideSideBarAndHeader: false
     }
