@@ -56,7 +56,7 @@ const authentication = async () => {
         <v-text-field v-model="loginRef" :error-messages="loginError" density="compact" placeholder="Логин" prepend-inner-icon="email" base-color="blue" variant="solo" />
 
         <div class="text-subtitle-1 text-medium-emphasis d-flex align-center justify-space-between">Пароль</div>
-        <v-text-field v-model="passwordRef" :error-messages="passwordError" :append-inner-icon="visible ? 'visibility_off' : 'visibility'"
+        <v-text-field v-model="passwordRef" :error-messages="passwordError" :append-inner-icon="visible ? 'visibility' : 'visibility_off'"
                       :type="visible ? 'text' : 'password'"
                       autocomplete="off"
                       density="compact" placeholder="Введите пароль" prepend-inner-icon="lock" variant="solo"
