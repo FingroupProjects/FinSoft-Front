@@ -1,9 +1,10 @@
 <script setup>
 import {onMounted, onUnmounted, ref} from "vue";
+import {useRouter} from "vue-router";
 import FlagRU from '../../assets/svg/flags/flag-ru.svg'
 import FlagUS from '../../assets/svg/flags/flag-us.svg'
-import {useRouter} from "vue-router";
 import auth from "../../api/auth.js";
+import { deleteToken } from "../../composables/auth";
 
 const isDialog = ref(false)
 const router = useRouter()
@@ -26,14 +27,10 @@ const listProfile = async (item) => {
   }
 
   if (item === 'logout') {
-    // await auth.logout()
-
-     await router.push('/login')
+    await auth.logout()
+    await router.push('/login')
+    deleteToken()
   }
-}
-
-const logout = () => {
-  console.log('dad')
 }
 
 onMounted(() => {

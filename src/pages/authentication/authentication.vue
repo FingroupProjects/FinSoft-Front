@@ -1,13 +1,16 @@
 <script setup>
 import {ref} from "vue";
-import auth from "../../api/auth.js";
 import {useRouter} from "vue-router";
-import setToken from "../../composables/tokenAuth/token.js";
+import auth from "../../api/auth.js";
+import {setToken, setUser} from "../../composables/auth";
 
 const visible = ref(false)
 const loginRef = ref('')
 const passwordRef = ref('')
 const router = useRouter()
+const loginError = ref(null)
+const passwordError = ref(null)
+
 
 const authentication = async () => {
   const body = {
@@ -18,17 +21,28 @@ const authentication = async () => {
   try {
     const res = await auth.login(body)
     console.log(res)
+
+
     if (res.status === 200) {
       setToken(res.data.token)
       await router.push('/')
     }
   } catch (e) {
-    console.log(e)
+    if (e.response.data.errors.login) {
+      loginError.value = 'Неверный логин!'
+    }
+
+    if (e.response.data.errors.message) {
+      passwordError.value = 'Неверный пароль!'
+    }
   } finally {
     body.login = ''
     body.password = ''
   }
 }
+
+
+
 </script>
 
 <template>
@@ -37,21 +51,21 @@ const authentication = async () => {
       <v-card-title class="text-center text-h5">
         Войти
       </v-card-title>
-      <div class="text-subtitle-1 text-medium-emphasis">Аккаунт</div>
+      <v-form fast-fail @submit.prevent="authentication">
+        <div class="text-subtitle-1 text-medium-emphasis">Аккаунт</div>
+        <v-text-field v-model="loginRef" :error-messages="loginError" density="compact" placeholder="Логин" prepend-inner-icon="email" base-color="blue" variant="solo" />
 
-      <v-text-field  v-model="loginRef" density="compact" placeholder="Логин" prepend-inner-icon="email" base-color="blue" variant="solo" />
-      <div class="text-subtitle-1 text-medium-emphasis d-flex align-center justify-space-between">
-        Пароль
-      </div>
+        <div class="text-subtitle-1 text-medium-emphasis d-flex align-center justify-space-between">Пароль</div>
+        <v-text-field v-model="passwordRef" :error-messages="passwordError" :append-inner-icon="visible ? 'visibility_off' : 'visibility'"
+                      :type="visible ? 'text' : 'password'"
+                      autocomplete="off"
+                      density="compact" placeholder="Введите пароль" prepend-inner-icon="lock" variant="solo"
+                      @click:append-inner="visible = !visible" base-color="blue"></v-text-field>
 
-      <v-text-field v-model="passwordRef" :append-inner-icon="visible ? 'visibility_off' : 'visibility'"
-                    :type="visible ? 'text' : 'password'"
-                    density="compact" placeholder="Введите пароль" prepend-inner-icon="lock" variant="solo"
-                    @click:append-inner="visible = !visible" base-color="blue"></v-text-field>
-
-      <v-btn block class="mb-8 text-subtitle-1" color="blue" size="large" variant="tonal" @click="$router.push('/')">
-        Войти
-      </v-btn>
+        <v-btn block class="mb-8 text-subtitle-1" color="blue" size="large" variant="tonal" type="submit">
+          Войти
+        </v-btn>
+      </v-form>
 
     </v-card>
   </div>
