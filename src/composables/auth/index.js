@@ -11,5 +11,13 @@ export function getToken() {
 }
 
 export function setUser(user) {
-  localStorage.setItem('user', user.toString())
+  localStorage.setItem('user', JSON.stringify(user))
+}
+
+export function deleteUser() {
+  localStorage.removeItem('user')
+}
+
+export function getUser() {
+  return JSON.parse(localStorage.getItem('user'))
 }
