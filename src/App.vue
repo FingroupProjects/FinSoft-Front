@@ -49,6 +49,7 @@ watch(route, (newVal) => {
 .content {
   display: flex;
   padding-top: 45px;
+  height: 100vh;
   background-color: #E8EDF0FF;
   position: relative;
 }
