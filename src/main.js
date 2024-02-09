@@ -6,13 +6,11 @@ import App from './App.vue'
 import 'vuetify/styles'
 import './assets/css/default.css'
 import 'material-design-icons-iconfont/dist/material-design-icons.css'
-
-
-const pinia = createPinia()
-
+import { mask } from 'vue-the-mask'
 
 createApp(App)
   .use(vuetify)
-  .use(pinia)
+  .use(createPinia())
   .use(router)
+  .directive('mask', mask)
   .mount('#app')
