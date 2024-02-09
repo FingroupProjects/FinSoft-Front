@@ -5,7 +5,7 @@ export default {
   createCounterparty(data) {
     return  api.post('/counterparty', data)
   },
-  createCounterparty(data) {
+  renameCounterparty(data) {
     return  api.patch(`/counterparty${id}`, data)
   },
   getCounterparty() {

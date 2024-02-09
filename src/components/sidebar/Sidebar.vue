@@ -34,8 +34,8 @@ function push(item) {
   <v-card class="sidebar ">
     <v-layout>
 
-      <v-navigation-drawer :width="320" v-model="drawer" permanent :rail="props.rale" expand-on-hover>
-        <v-list density="compact" nav>
+      <v-navigation-drawer :width="320" v-model="drawer" permanent :rail="props.rale">
+        <v-list density="compact">
 
           <v-list-item v-for="item in menu" color="info" :key="item.id" @click="push(item)" :title="item.title"
             :value="item.title">
@@ -53,8 +53,6 @@ function push(item) {
 
 <style scoped>
 .sidebar {
-  height: auto;
-  max-height: calc(100vh - 45px);
   border: none;
   border-radius: none;
   box-shadow: none;
