@@ -1,6 +1,9 @@
 import axios from 'axios'
+import {getToken} from "../composables/auth/index.js";
+
 const headers = {
-  'Accept': 'application/json'
+  'Accept': 'application/json',
+  Authorization: `Bearer ${getToken()}`
 }
 
 export const api = axios.create({

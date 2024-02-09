@@ -12,6 +12,7 @@
     "@mdi/font": "^7.4.47",
     "axios": "^1.6.7",
     "pinia": "^2.1.7",
+    "typescript": "^5.3.3",
     "vee-validate": "^4.12.5",
     "vue": "^3.3.11",
     "vue-router": "^4.2.5"

@@ -4,7 +4,7 @@ import {useRouter} from "vue-router";
 import FlagRU from '../../assets/svg/flags/flag-ru.svg'
 import FlagUS from '../../assets/svg/flags/flag-us.svg'
 import auth from "../../api/auth.js";
-import { deleteToken } from "../../composables/auth";
+import {deleteToken, deleteUser} from "../../composables/auth";
 
 const isDialog = ref(false)
 const router = useRouter()
@@ -27,8 +27,9 @@ const listProfile = async (item) => {
   }
 
   if (item === 'logout') {
-    await auth.logout()
     await router.push('/login')
+    await auth.logout()
+    deleteUser()
     deleteToken()
   }
 }

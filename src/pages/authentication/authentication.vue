@@ -20,11 +20,10 @@ const authentication = async () => {
 
   try {
     const res = await auth.login(body)
-    console.log(res)
-
 
     if (res.status === 200) {
       setToken(res.data.token)
+      setUser(res.data.user)
       await router.push('/')
     }
   } catch (e) {
@@ -40,9 +39,6 @@ const authentication = async () => {
     body.password = ''
   }
 }
-
-
-
 </script>
 
 <template>
