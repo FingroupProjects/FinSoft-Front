@@ -6,5 +6,8 @@ export default {
   },
   addCurrency(data) {
     return  api.post('/currency', data)
-  }
+  },
+  getCurrency() {
+    return  api.get('/currency')
+  },
 }

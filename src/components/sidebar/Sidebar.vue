@@ -38,15 +38,15 @@ function push(item) {
         <v-list density="compact">
 
           <v-list-item v-for="item in menu" color="info" :key="item.id" @click="push(item)" :title="item.title"
-            :value="item.title">
+            :value="item.title" class="admin" @mouseover="isHovering = true" @mouseleave="isHovering = false">
             <template v-slot:prepend>
-              <v-icon color="info" :icon="item.icon"></v-icon>
+              <v-icon class="icon" color="info" :icon="item.icon"></v-icon>
             </template>
           </v-list-item>
 
         </v-list>
       </v-navigation-drawer>
-      <v-main style="height: 45vw"> </v-main>
+      <v-main style="height: 100vh"> </v-main>
     </v-layout>
   </v-card>
 </template>
@@ -59,30 +59,22 @@ function push(item) {
 }
 
 .admin:hover .icon {
-  animation: 0.3s tremor ease;
+  animation: 0.2s tremor ease;
 }
 
 @keyframes tremor {
 
   0%,
-  25% {
-    transform: rotate(5deg);
-  }
-
-  50% {
-    transform: rotate(-5deg);
-  }
-
-  60% {
-    transform: rotate(-5deg);
-  }
-
-  80% {
-    transform: rotate(5deg);
-  }
-
   100% {
     transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(15deg);
+  }
+
+  75% {
+    transform: rotate(-15deg);
   }
 }
 </style>

@@ -2,6 +2,7 @@
 import { onMounted, ref } from "vue";
 import currency from '../../api/currency.js'
 
+const loadingData = ref(true)
 const expand = ref(false);
 const loading = ref(false);
 const isCurrentRate = ref(false)
@@ -13,11 +14,25 @@ const digitalRef = ref(null)
 const dateRef = ref(null)
 const valueRef = ref(null)
 
+const currencies = ref([])
+const headers = ref([
+  { title: 'Наименование', key: 'name', },
+  { title: 'Цифровой код', key: 'digital_code' },
+  { title: 'Символьный код', key: 'symbol_code' },
+]);
 
 onMounted(() => {
-
+  getCurrencyData()
 })
-
+const getCurrencyData = async () => {
+  try {
+    const { data } = await currency.getCurrency()
+    currencies.value = data.result
+    loadingData.value = false
+  } catch (e) {
+    console.log(e);
+  }
+}
 const addCurrency = async () => {
   const body = {
     name: nameRef.value,
@@ -30,7 +45,7 @@ const addCurrency = async () => {
     isCurrentRate.value = true
     idCurrency.value = res.data.result.id
   }
-  
+
 }
 
 const addCurrentRate = async () => {
@@ -46,54 +61,53 @@ const addCurrentRate = async () => {
 </script>
 
 <template>
-  <v-row
-    justify="center"
-    class="d-flex flex-column"
-    style="min-height: 160px;"
-  >
-    <v-col class="">
-      <v-icon size="40" color="info" class="ma-2" @click="expand = !expand">add_circle</v-icon>
+  <!-- <v-row justify="center" class="d-flex flex-column" style="min-height: 160px;"> -->
+  <v-col class="">
+    <v-icon size="40" color="info" class="ma-2" @click="expand = !expand">add_circle</v-icon>
 
-      <v-expand-transition>
-        <v-card
-          v-show="expand"
-          height="200"
-          width="100%"
-          class="mx-auto"
-        >
+    <v-expand-transition>
+      <v-card v-show="expand" height="200" width="100%" class="mx-auto">
 
-          <v-form class="w-100 pa-4" @submit.prevent="addCurrency">
-            <v-row class="w-100">
-              <v-col class="d-flex justfiy-between w-100 ga-5">
-                <v-text-field variant="outlined" :disabled="isCurrentRate"  label="Название" v-model="nameRef" />
-                <v-text-field variant="outlined" :disabled="isCurrentRate" v-mask="'SSS'" label="Символный код" v-model="symbolRef" />
-                <v-text-field variant="outlined" :disabled="isCurrentRate" v-mask="'###'" label="Цифровой код" v-model="digitalRef" />
-                <v-btn :loading="loading" color="green" class="mt-2" type="submit" :hidden="isCurrentRate">Добавить</v-btn>
-              </v-col>
-            </v-row>
-          </v-form>
+        <v-form class="w-100 pa-4" @submit.prevent="addCurrency">
+          <v-row class="w-100">
+            <v-col class="d-flex justfiy-between w-100 ga-5">
+              <v-text-field variant="outlined" :disabled="isCurrentRate" label="Название" v-model="nameRef" />
+              <v-text-field variant="outlined" :disabled="isCurrentRate" v-mask="'SSS'" label="Символный код"
+                v-model="symbolRef" />
+              <v-text-field variant="outlined" :disabled="isCurrentRate" v-mask="'###'" label="Цифровой код"
+                v-model="digitalRef" />
+              <v-btn :loading="loading" color="green" class="mt-2" type="submit" :hidden="isCurrentRate">Добавить</v-btn>
+            </v-col>
+          </v-row>
+        </v-form>
 
-          <v-form class="w-100 pa-4" v-show="isCurrentRate" @submit.prevent="addCurrentRate">
-            <v-row class="w-100">
-              <v-col class="d-flex justfiy-between w-100 ga-5">
-                <v-text-field variant="outlined"  label="Дата" v-model="dateRef" />
-                <v-text-field variant="outlined" :disabled="isCurrentRate" label="Символный код" v-model="symbolRef" />
-                <v-text-field variant="outlined" type="number" label="Значение" v-model="valueRef" />
-                <v-btn :loading="loading" color="green" class="mt-2" type="submit">Добавить</v-btn>
-              </v-col>
-            </v-row>
-          </v-form>
+        <v-form class="w-100 pa-4" v-show="isCurrentRate" @submit.prevent="addCurrentRate">
+          <v-row class="w-100">
+            <v-col class="d-flex justfiy-between w-100 ga-5">
+              <v-text-field variant="outlined" label="Дата" v-model="dateRef" />
+              <v-text-field variant="outlined" :disabled="isCurrentRate" label="Символный код" v-model="symbolRef" />
+              <v-text-field variant="outlined" type="number" label="Значение" v-model="valueRef" />
+              <v-btn :loading="loading" color="green" class="mt-2" type="submit">Добавить</v-btn>
+            </v-col>
+          </v-row>
+        </v-form>
 
       </v-card>
-      </v-expand-transition>
-      <v-card class="mt-4">
-        daopsd
-      </v-card>
-    </v-col>
-   
-  </v-row>
+    </v-expand-transition>
+    <v-card class="mt-4 table">
+      <v-data-table :items="currencies" :headers="headers" :loading="loadingData"></v-data-table>
+    </v-card>
+  </v-col>
+
+  <!-- </v-row> -->
 </template>
 
 <style scoped>
-
+.table {
+  background: white;
+  padding: 5px;
+  border-radius: 16px;
+  max-height: 90vh;
+  overflow: auto;
+}
 </style>
