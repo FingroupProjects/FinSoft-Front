@@ -3,7 +3,7 @@ import {getToken} from "../composables/auth/index.js";
 
 const headers = {
   'Accept': 'application/json',
-  Authorization: `Bearer 54|7sJMqQyz9A3coikNHGcKie6Kcf8RruVAIjodur5xdcce3be9`
+  Authorization: `Bearer ${getToken()}`
 }
 
 export const api = axios.create({
