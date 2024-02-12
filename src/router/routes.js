@@ -60,6 +60,16 @@ const routes = [
     component: () => import("../pages/list/counterparty/createCounterparty.vue"),
   },
   {
+    path: "/list/organizationBill",
+    name: "organizationBill",
+    component: () => import("../pages/list/organizationBill/index.vue"),
+  },
+  {
+    path: "/list/organizationBill/create",
+    name: "createOrganizationBill",
+    component: () => import("../pages/list/organizationBill/create.vue"),
+  },
+  {
     path: "/list/renameCounterparty/:id",
     name: "renameCounterparty",
     component: () => import("../pages/list/counterparty/renameCounterparty.vue"),
