@@ -1,8 +1,12 @@
 <script setup>
 import { ref, onMounted } from "vue"
+import { useRouter } from "vue-router"
 import counterpartyApi from "../../../api/counterparty"
 
 const loading = ref(true)
+
+const router = useRouter()
+
 const counterparty = ref([])
 const headers = ref([
   { title: 'Наименование', key: 'name', },
@@ -11,6 +15,7 @@ const headers = ref([
   { title: 'Телефон', key: 'phone' },
   { title: 'Эл. почта', key: 'email' },
   { title: 'Дата создания', key: 'created_at' },
+  { title: '#', key: 'icons' },
 ]);
 
 const formatDateTime = (dateTimeString) => {
@@ -28,9 +33,12 @@ const formatRole = (roles) => {
   return roles.map(role => roleMap[role] || "Неизвестная роль").join(", ");
 };
 
+const pushToRename = item => {
+  router.push({ name: 'renameCounterparty', params: { id: item.id } })
+}
 const fetchCounterparty = async () => {
   try {
-    const { data } = await counterpartyApi.getCounterparty()
+    const { data } = await counterpartyApi.get()
     counterparty.value = data.result.map(item => ({
       ...item,
       created_at: formatDateTime(item.created_at),
@@ -53,7 +61,11 @@ onMounted(() => {
       <v-btn rounded="lg" color="info" @click="$router.push('createCounterparty')">Создать</v-btn>
     </div>
     <v-card class="table">
-      <v-data-table :items="counterparty" :headers="headers" :loading="loading"></v-data-table>
+      <v-data-table :items="counterparty" :headers="headers" :loading="loading">
+        <template #item.icons="{ item }">
+          <v-icon class="icon" @click="pushToRename(item)">edit</v-icon>
+        </template>
+      </v-data-table>
     </v-card>
   </div>
 </template>
@@ -63,7 +75,13 @@ onMounted(() => {
   background: white;
   padding: 5px;
   border-radius: 16px;
-  max-height: 90vh;
-  overflow: auto;
+}
+
+.icon {
+  opacity: 75%;
+}
+
+.icon:hover {
+  opacity: 100%;
 }
 </style>

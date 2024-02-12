@@ -19,9 +19,7 @@ const CreateCounterparty = async () => {
       email: email.value,
       roles: roles.value,
     }
-    console.log(body);
-    const res = await counterpartyApi.createCounterparty(body)
-    // console.log(res, ' ответ')
+    const res = await counterpartyApi.create(body)
     router.push('counterparty')
   } catch (error) {
     console.error(error)
@@ -43,13 +41,13 @@ const handleCheckboxChange = (index) => {
     <div class="d-flex justify-end mb-4">
       <v-btn rounded="lg" color="info" @click="$router.push('counterparty')">Назад</v-btn>
     </div>
-    <div class="block">
+    <v-card class="block">
 
       <div class="d-flex ga-5">
         <v-text-field variant="outlined" label="Наименование контрагента" v-model="name" />
-        <v-text-field variant="outlined" label="Тел номер" v-model="phone" />
+        <v-text-field variant="outlined" label="Тел номер" v-model.trim="phone" v-mask="'+992 ### ## ##'" />
         <v-text-field variant="outlined" label="Адрес" v-model="address" />
-        <v-text-field variant="outlined" label="Почта" v-model="email" />
+        <v-text-field variant="outlined" type="email" label="Почта" v-model="email" />
       </div>
       <div class="d-flex w-75">
         <v-checkbox-btn label="Клиент" color="info" @change="handleCheckboxChange(0)"></v-checkbox-btn>
@@ -59,13 +57,12 @@ const handleCheckboxChange = (index) => {
       <div class="d-flex justify-end mt-4">
         <v-btn rounded="lg" color="info" @click="CreateCounterparty()">Создать</v-btn>
       </div>
-    </div>
+    </v-card>
   </div>
 </template>
 
 <style scoped>
 .block {
-  background: white;
   border-radius: 6px;
   padding: 20px;
 

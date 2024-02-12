@@ -32,7 +32,7 @@ function push(item) {
 
 <template>
   <v-card class="sidebar ">
-    <v-layout>
+    <v-layout class="side">
 
       <v-navigation-drawer :width="320" v-model="drawer" permanent :rail="props.rale">
         <v-list density="compact">
@@ -56,7 +56,14 @@ function push(item) {
   border: none;
   border-radius: none;
   box-shadow: none;
+  /* height: 100%; */
 }
+
+/* .side {
+  position: sticky;
+  top: 45px;
+  left: 0px;
+} */
 
 .admin:hover .icon {
   animation: 0.2s tremor ease;
