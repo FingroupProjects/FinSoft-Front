@@ -60,6 +60,11 @@ const routes = [
     component: () => import("../pages/list/counterparty/createCounterparty.vue"),
   },
   {
+    path: "/list/renameCounterparty/:id",
+    name: "renameCounterparty",
+    component: () => import("../pages/list/counterparty/renameCounterparty.vue"),
+  },
+  {
     path: "/login",
     name: "login",
     component: () => import("../pages/authentication/authentication.vue"),

@@ -39,7 +39,7 @@ watch(route, (newVal) => {
       <div class="content">
         <Sidebar @toggleAdmin="toggleAdmin" @closeAdmin="isAdmin = false" :rale="rale" />
         <Admin_panel v-if="isAdmin" @close="isAdmin = false" :rale="rale" />
-        <router-view class="w-100 px-4 py-4" />
+        <router-view class="w-100 px-4 py-4 block" />
       </div>
     </div>
   </v-app>
@@ -52,6 +52,11 @@ watch(route, (newVal) => {
   height: 100vh;
   background-color: #E8EDF0FF;
   position: relative;
+}
+
+.block {
+  max-height: 100vh;
+  overflow: auto;
 }
 
 .bg_auth {
