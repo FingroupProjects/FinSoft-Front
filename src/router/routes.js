@@ -42,7 +42,12 @@ const routes = [
   {
     path: "/list/currency",
     name: "currency",
-    component: () => import("../pages/list/currency.vue"),
+    component: () => import("../pages/list/currency/index.vue"),
+  },
+  {
+    path: "/list/currency/:id",
+    name: "currencyShow",
+    component: () => import("../pages/list/currency/show.vue"),
   },
   {
     path: "/list/counterparty",
