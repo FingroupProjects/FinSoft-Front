@@ -14,7 +14,7 @@ const admins = ref([
 const lists = ref([
   {
     id: 1, title: 'Справочник', child: [
-      { id: 1, title: 'Банковские Счета Организаций', icon: 'account_balance' },
+      { id: 1, title: 'Банковские Счета Организаций', icon: 'account_balance', link: '/list/organizationBill' },
       { id: 2, title: 'Валюты', link: '/list/currency', icon: 'currency_exchange' },
       { id: 3, title: 'Виды Цен', icon: 'request_quote' },
       { id: 4, title: 'Договоры Контрагентов', icon: 'contact_page' },
