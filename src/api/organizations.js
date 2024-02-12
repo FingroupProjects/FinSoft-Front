@@ -2,13 +2,13 @@ import { api } from './api.js'
 import {getToken} from '../composables/auth'
 
 export default {
-  createCounterparty(data) {
-    return  api.post('/counterparty', data)
+  index(data) {
+    return  api.get('/organization', data)
   },
-  renameCounterparty(data) {
+  create(data) {
     return  api.patch(`/counterparty${id}`, data)
   },
-  getCounterparty() {
+  update() {
     return api.get('/counterparty', { headers: { Authorization: `Bearer ${getToken()}` } })
   }
 }
