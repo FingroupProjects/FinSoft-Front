@@ -10,3 +10,9 @@
 .custom_input::placeholder {
   color: #757575;
 }
+
+.table {
+  background: white;
+  padding: 5px;
+  border-radius: 16px;
+}
