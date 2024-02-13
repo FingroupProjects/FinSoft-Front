@@ -66,7 +66,7 @@ const routes = [
   },
   {
     path: "/list/organizationBill/create",
-    name: "creteOrganizationBill",
+    name: "createOrganizationBill",
     component: () => import("../pages/list/organizationBill/create.vue"),
   },
   {
@@ -81,7 +81,8 @@ const routes = [
     meta: {
       hideSideBarAndHeader: true,
     },
-  }
+  },
+
 ];
 
 routes.forEach((route) => {
