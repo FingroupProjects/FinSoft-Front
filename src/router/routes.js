@@ -70,6 +70,11 @@ const routes = [
     component: () => import("../pages/list/organizationBill/create.vue"),
   },
   {
+    path: "/list/organizationBill/edit/:id",
+    name: "editOrganizationBill",
+    component: () => import("../pages/list/organizationBill/edit.vue"),
+  },
+  {
     path: "/list/renameCounterparty/:id",
     name: "renameCounterparty",
     component: () => import("../pages/list/counterparty/update.vue"),
@@ -81,7 +86,9 @@ const routes = [
     meta: {
       hideSideBarAndHeader: true,
     },
+
   },
+
 ];
 
 routes.forEach((route) => {
