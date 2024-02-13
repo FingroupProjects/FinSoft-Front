@@ -1,20 +1,32 @@
 <script setup>
 import {onMounted, ref,} from "vue"
-import { useRouter } from "vue-router";
 import organizationBill from "../../../api/organizationBill.js";
 import currency from "../../../api/currency.js";
-import organization from "../../../api/organizations.js";
+import organization from "../../../api/organizations.js";import { useRoute } from 'vue-router';
+
+const route = useRoute();
+
+
 
 const currencies = ref([])
 const organizations = ref([])
 const digitalCodes = ref([])
 
-const router = useRouter()
-const name = ref('')
-const bill_number = ref('')
-const currency_id = ref('')
-const currency_name = ref('')
-const organization_id = ref('')
+const id = ref(null)
+
+const body = ref({
+  name: "",
+  bill_number: "",
+  currency: {
+    digital_code: "",
+    id: ""
+  },
+
+  organization: {
+    name: "",
+    id: ""
+  }
+})
 
 const fetchCurrency = async () => {
   try {
@@ -25,20 +37,29 @@ const fetchCurrency = async () => {
     console.error(error);
   }
 }
+
 const ID = ref(null)
 const OrganizationID = ref(null)
 
 
 const itemProps = (item) => {
-
   return {
     title: item.digital_code,
   }
 }
 const organizationProps = (item) => {
-
   return {
     title: item.name,
+  }
+}
+
+const getId = async () => {
+  try {
+    const { data } = await organizationBill.getById(id.value)
+    body.value = data.result
+    console.log(body.value)
+  } catch (e) {
+    console.log(e);
   }
 }
 
@@ -48,29 +69,29 @@ const fetchOrganizations = async () => {
     organizations.value = data.result
 
   } catch (error) {
-    console.error(error)
+
   }
 }
 
 
-const create = async () => {
+const update = async () => {
   try {
-    const body = {
-      name: name.value,
-      bill_number: bill_number.value,
-      currency_id: ID._rawValue.id,
-      organization_id: OrganizationID._rawValue.id
+    const bodyData = {
+      bill_number: body.value.bill_number,
+      name: body.value.name,
+      currency_id: body.value.currency.id,
+      organization_id: body.value.organization.id
     }
-    console.log(body);
-    const res = await organizationBill.create(body)
+    const res = await organizationBill.update(id.value, bodyData)
     console.log(res)
-
-    router.push({name: 'organizationBill'})
   } catch (error) {
     console.error(error)
   }
 }
 onMounted(() => {
+    id.value = route.params.id;
+    getId()
+
   fetchOrganizations()
   fetchCurrency()
 })
@@ -79,29 +100,29 @@ onMounted(() => {
 
 <template>
   <div>
+    <v-card  class="block">
     <div class="d-flex justify-end mb-4">
       <v-btn rounded="lg" color="info" @click="$router.push({name: 'organizationBill'})">Назад</v-btn>
     </div>
-    <div class="block">
+    <div>
 
       <div class="d-flex ga-5">
-        <v-text-field variant="outlined" label="Наименование" v-model="name" />
-        <v-text-field variant="outlined" label="Номер счета" v-model="bill_number" />
-        <v-select :items="currencies" :item-props="itemProps" v-model="ID" label="Выберите валюту"></v-select>
-        <v-select :items="organizations" :item-props="organizationProps" v-model="OrganizationID" label="Выберите организацию"></v-select>
-
+        <v-text-field variant="outlined" label="Наименование" v-model="body.name" />
+        <v-text-field variant="outlined" label="Номер счета" v-model="body.bill_number" />
+        <v-select :items="currencies" :item-props="itemProps" v-model="body.currency" label="Выберите валюту"></v-select>
+        <v-select :items="organizations" :item-props="organizationProps" v-model="body.organization" label="Выберите организацию"></v-select>
       </div>
 
       <div class="d-flex justify-end mt-4">
-        <v-btn rounded="lg" color="info" @click="create()">Создать</v-btn>
+        <v-btn rounded="lg" color="info" @click="update()">Обновить</v-btn>
       </div>
     </div>
+    </v-card>
   </div>
 </template>
 
 <style scoped>
 .block {
-  background: white;
   border-radius: 6px;
   padding: 20px;
 

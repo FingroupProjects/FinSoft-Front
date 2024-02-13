@@ -2,17 +2,20 @@
 import { ref, onMounted } from "vue"
 import organizationBill from "../../../api/organizationBill.js"
 import currency from "../../../api/currency.js";
+import { useRouter } from "vue-router"
 
+const router = useRouter()
 
 const loading = ref(true)
 const organizationBills = ref([])
 const headers = ref([
   { title: 'Наименование', key: 'name', },
   { title: 'Счет', key: 'bill_number' },
-  { title: 'Валюта', key: 'currency' },
-  { title: 'Организация', key: 'organization' },
+  { title: 'Валюта', key: 'currency_id' },
+  { title: 'Организация', key: 'organization_id' },
   { title: '#', key: 'icons' },
 ]);
+
 
 const fetchCounterparty = async () => {
   try {
@@ -26,8 +29,9 @@ const fetchCounterparty = async () => {
   }
 }
 
-const pushToRename = item => {
-  router.push({ name: 'updateOrganizationBill', params: { id: item.id } })
+const pushToEdit = item => {
+  console.log(item)
+  router.push({ name: 'editOrganizationBill', params: { id: item.id } })
 }
 
 
@@ -45,7 +49,7 @@ onMounted(() => {
     <v-card class="table">
       <v-data-table :items="organizationBills" :headers="headers" :loading="loading">
         <template #item.icons="{ item }">
-          <v-icon class="icon" @click="pushToRename(item)">edit</v-icon>
+          <v-icon class="icon" @click="pushToEdit(item)">edit</v-icon>
         </template>
       </v-data-table>
     </v-card>
