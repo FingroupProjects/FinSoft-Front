@@ -86,7 +86,9 @@ const routes = [
     meta: {
       hideSideBarAndHeader: true,
     },
-  }
+
+  },
+
 ];
 
 routes.forEach((route) => {
