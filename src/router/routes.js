@@ -66,7 +66,7 @@ const routes = [
   },
   {
     path: "/list/organizationBill/create",
-    name: "crefateOrganizationBill",
+    name: "creteOrganizationBill",
     component: () => import("../pages/list/organizationBill/create.vue"),
   },
   {
