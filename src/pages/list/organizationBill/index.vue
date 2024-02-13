@@ -10,7 +10,8 @@ const headers = ref([
   { title: 'Наименование', key: 'name', },
   { title: 'Счет', key: 'bill_number' },
   { title: 'Валюта', key: 'currency' },
-  { title: 'Организация', key: 'organization' }
+  { title: 'Организация', key: 'organization' },
+  { title: '#', key: 'icons' },
 ]);
 
 const fetchCounterparty = async () => {
@@ -25,6 +26,11 @@ const fetchCounterparty = async () => {
   }
 }
 
+const pushToRename = item => {
+  router.push({ name: 'updateOrganizationBill', params: { id: item.id } })
+}
+
+
 
 onMounted(() => {
   fetchCounterparty()
@@ -37,7 +43,11 @@ onMounted(() => {
       <v-btn rounded="lg" color="info" @click="$router.push({name: 'createOrganizationBill'})">Добавить</v-btn>
     </div>
     <v-card class="table">
-      <v-data-table :items="organizationBills" :headers="headers" :loading="loading"></v-data-table>
+      <v-data-table :items="organizationBills" :headers="headers" :loading="loading">
+        <template #item.icons="{ item }">
+          <v-icon class="icon" @click="pushToRename(item)">edit</v-icon>
+        </template>
+      </v-data-table>
     </v-card>
   </div>
 </template>
