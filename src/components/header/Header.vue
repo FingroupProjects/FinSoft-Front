@@ -43,7 +43,7 @@ onUnmounted(() => {
 })
 
 const handleKeyDown = (event) => {
-  if (event.ctrlKey && event.key === 'm' || event.key === 'M') {
+  if (event.ctrlKey && event.key === 'm') {
     isDialog.value = true
   }
 }
