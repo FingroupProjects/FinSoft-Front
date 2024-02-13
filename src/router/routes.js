@@ -57,7 +57,7 @@ const routes = [
   {
     path: "/list/createCounterparty",
     name: "createCounterparty",
-    component: () => import("../pages/list/counterparty/createCounterparty.vue"),
+    component: () => import("../pages/list/counterparty/create.vue"),
   },
   {
     path: "/list/organizationBill",
@@ -72,7 +72,7 @@ const routes = [
   {
     path: "/list/renameCounterparty/:id",
     name: "renameCounterparty",
-    component: () => import("../pages/list/counterparty/renameCounterparty.vue"),
+    component: () => import("../pages/list/counterparty/update.vue"),
   },
   {
     path: "/login",

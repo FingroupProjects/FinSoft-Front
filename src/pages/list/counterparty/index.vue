@@ -45,7 +45,6 @@ const fetchCounterparty = async () => {
       roles: formatRole(item.roles)
     }))
     loading.value = false
-    console.log(counterparty.value)
   } catch (error) {
     console.error(error)
   }
@@ -56,17 +55,20 @@ onMounted(() => {
 })
 </script>
 <template>
-  <div class="d-flex flex-column ga-5">
-    <div class="d-flex justify-end">
-      <v-btn rounded="lg" color="info" @click="$router.push('createCounterparty')">Создать</v-btn>
-    </div>
-    <v-card class="table">
-      <v-data-table :items="counterparty" :headers="headers" :loading="loading">
-        <template #item.icons="{ item }">
-          <v-icon class="icon" @click="pushToRename(item)">edit</v-icon>
-        </template>
-      </v-data-table>
-    </v-card>
+  <div>
+    <v-col class="d-flex flex-column ga-5">
+      <div class="d-flex justify-end">
+        <v-btn rounded="lg" color="info" @click="$router.push('createCounterparty')">Создать</v-btn>
+      </div>
+      <v-card class="table">
+        <v-data-table :items="counterparty" :headers="headers" :loading="loading"
+          items-per-page-text="Элементов на странице:" loading-text="Загрузка" no-data-text="Нет данных">
+          <template #item.icons="{ item }">
+            <v-icon class="icon" @click="pushToRename(item)">edit</v-icon>
+          </template>
+        </v-data-table>
+      </v-card>
+    </v-col>
   </div>
 </template>
 

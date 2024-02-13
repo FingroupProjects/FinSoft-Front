@@ -45,7 +45,7 @@ const handleCheckboxChange = (index) => {
 
       <div class="d-flex ga-5">
         <v-text-field variant="outlined" label="Наименование контрагента" v-model="name" />
-        <v-text-field variant="outlined" label="Тел номер" v-model.trim="phone" v-mask="'+992 ### ## ##'" />
+        <v-text-field variant="outlined" label="Тел номер" v-model="phone" v-mask="'+992 ### ## ##'" />
         <v-text-field variant="outlined" label="Адрес" v-model="address" />
         <v-text-field variant="outlined" type="email" label="Почта" v-model="email" />
       </div>
