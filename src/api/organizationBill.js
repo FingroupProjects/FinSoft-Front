@@ -5,6 +5,9 @@ export default {
   index(){
     return api.get('/organizationBill') 
   },
+  getById(id) {
+    return api.get(`/organizationBill/${id}`);
+  },
   create(data) {
     return api.post('/organizationBill', data)
   },

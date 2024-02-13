@@ -10,5 +10,6 @@ export default {
   },
   update() {
     return api.get('/counterparty', { headers: { Authorization: `Bearer ${getToken()}` } })
-  }
+  },
+
 }
