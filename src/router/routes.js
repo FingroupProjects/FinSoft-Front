@@ -82,6 +82,14 @@ const routes = [
       hideSideBarAndHeader: true,
     },
   },
+  {
+    path: "/logffin",
+    name: "logfin",
+    component: () => import("../pages/authentication/authentication.vue"),
+    meta: {
+      hideSideBarAndHeader: true,
+    },
+  },
 ];
 
 routes.forEach((route) => {
