@@ -8,7 +8,7 @@ export default {
     return  api.get('/currency')
   },
   addCurrencyRate(data, id) {
-    return  api.post(`/currencyRate/add/${id}`, data)
+    return api.post(`/currencyRate/add/${id}`, data)
   },
   showCurrencyRate(id) {
     return api.get(`/currencyRate/${id}`)
