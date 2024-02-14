@@ -2,6 +2,8 @@
 import { ref, onMounted } from "vue";
 import counterpartyApi from "../../../api/counterparty";
 import { useRoute, useRouter } from 'vue-router';
+import showToast from '../../../composables/toast'
+
 const router = useRouter();
 const route = useRoute();
 
@@ -22,8 +24,9 @@ const id = ref(null);
 
 const renameCounterparty = async () => {
   try {
-    const res = await counterpartyApi.rename(id.value, form.value);
+    await counterpartyApi.rename(id.value, form.value);
     router.push({ name: 'counterparty' })
+    showToast('Успешно изменено')
   } catch (e) {
     console.error(e);
   }
@@ -52,10 +55,43 @@ const handleCheckboxChange = (roleIndex) => {
   }
 };
 
-onMounted(() => {
+onMounted(async () => {
   id.value = route.params.id;
-  getId();
+  await getId();
 });
+
+const nameRules = ref([
+  value => {
+    if (value) return true
+    return 'Поле не может быть пустым'
+  },
+])
+
+const phoneRules = ref([
+  value => {
+    if (value?.length === 13) return true
+    return 'Введите валидный номер телефона'
+  },
+])
+
+const emailRules = ref([
+  value => {
+    if (value) return true
+    return 'Поле email объязательна'
+  },
+  value => {
+    if (/.+@.+\..+/.test(value)) return true
+    return 'Введите валидную почту'
+  },
+])
+
+const addressRules = ref([
+  value => {
+    if (value) return true
+    return 'Поле не может быть пустым'
+  },
+])
+
 </script>
 
 <template>
@@ -63,14 +99,15 @@ onMounted(() => {
     <div class="d-flex justify-end mb-4">
       <v-btn rounded="lg" color="info" @click="$router.push({ name: 'counterparty' })">Назад</v-btn>
     </div>
-    <v-card class="px-4 py-4">
+    <v-card class="px-4 py-6">
       <div class="d-flex ga-5">
-        <v-text-field v-model="form.name" variant="outlined" label="Наименование контрагента" />
-        <v-text-field v-model="form.phone" variant="outlined" label="Тел номер" v-mask="'+992 ### ## ##'" />
-        <v-text-field v-model="form.address" variant="outlined" label="Адрес" />
-        <v-text-field v-model="form.email" variant="outlined" type="email" label="Почта" />
+        <v-text-field v-model="form.name" :rules="nameRules" variant="outlined" label="Наименование контрагента" />
+        <v-text-field v-model="form.phone" :rules="phoneRules" variant="outlined" label="Тел номер"
+          v-mask="'+992#########'" />
+        <v-text-field v-model="form.address" :rules="addressRules" variant="outlined" label="Адрес" />
+        <v-text-field v-model="form.email" :rules="emailRules" variant="outlined" type="email" label="Почта" />
       </div>
-      <div class="d-flex w-75">
+      <div>
         <v-checkbox-btn v-model="a" label="Клиент" color="info" @change="handleCheckboxChange(1)"></v-checkbox-btn>
         <v-checkbox-btn v-model="b" label="Поставщик" color="info" @change="handleCheckboxChange(2)"></v-checkbox-btn>
         <v-checkbox-btn v-model="c" label="Прочие отношения" color="info"
