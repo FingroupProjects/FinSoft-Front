@@ -5,6 +5,7 @@ import currency from '../../../api/currency.js'
 import showToast from "../../../composables/toast/index.js";
 import showDate from "../../../composables/date/showDate";
 import currentDate from "../../../composables/date/currentDate";
+import changeTheDateForSending from "../../../composables/date/changeTheDateForSending";
 
 const route = useRoute()
 
@@ -35,7 +36,7 @@ onMounted( async () => {
 const getCurrencyRateData = async (id) => {
   try {
     const { data } = await currency.showCurrencyRate(id)
-    currencies.value = currencies.value.map(item => ({
+    currencies.value = data.result.map(item => ({
       ...item,
       date: showDate(item.date)
     }))
