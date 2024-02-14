@@ -1,27 +1,32 @@
 <script setup>
 import { ref, onMounted } from "vue"
 import organizationBill from "../../../api/organizationBill.js"
-import currency from "../../../api/currency.js";
 import { useRouter } from "vue-router"
 
 const router = useRouter()
 
 const loading = ref(true)
 const organizationBills = ref([])
+
 const headers = ref([
   { title: 'Наименование', key: 'name', },
   { title: 'Счет', key: 'bill_number' },
-  { title: 'Валюта', key: 'currency_id' },
-  { title: 'Организация', key: 'organization_id' },
+  { title: 'Валюта', key: 'currencyName' },
+  { title: 'Организация', key: 'organizationName' },
   { title: '#', key: 'icons' },
 ]);
 
 
-const fetchCounterparty = async () => {
+const fetchCounterParty = async () => {
   try {
-    const { data } = await organizationBill.index()
+    const { data } = await organizationBill.getAll()
     loading.value = false
-    organizationBills.value = data.result
+
+    organizationBills.value = data.result.map(item => ({
+      ...item,
+      currencyName: item.currency.name,
+      organizationName: item.organization.name
+    }))
 
     console.log(data)
   } catch (error) {
@@ -30,14 +35,11 @@ const fetchCounterparty = async () => {
 }
 
 const pushToEdit = item => {
-  console.log(item)
   router.push({ name: 'editOrganizationBill', params: { id: item.id } })
 }
 
-
-
 onMounted(() => {
-  fetchCounterparty()
+  fetchCounterParty()
 })
 
 </script>

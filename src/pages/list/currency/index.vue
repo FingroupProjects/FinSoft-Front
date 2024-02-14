@@ -1,7 +1,12 @@
 <script setup>
 import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 import currency from '../../../api/currency.js'
 import showToast from '../../../composables/toast'
+import changeTheDateForSending from '../../../composables/date/changeTheDateForSending'
+import currentDate from '../../../composables/date/currentDate'
+
+const router = useRouter()
 
 const loadingData = ref(true)
 const expand = ref(false);
@@ -32,21 +37,15 @@ const headers = ref([
   { title: '#', key: 'icons'}
 ])
 
-onMounted(() => {
-  getCurrencyData()
+onMounted( async () => {
+  dateRef.value = currentDate()
+  await getCurrencyData()
 })
 
 const getCurrencyData = async () => {
-  loadingData.value = true
-  try {
     const { data } = await currency.getCurrency()
-    console.log(data)
     currencies.value = data.result
-  } catch (e) {
-    
-  } finally {
     loadingData.value = false
-  }
 }
 
 const validateCurrency = () => {
@@ -58,8 +57,8 @@ const validateCurrency = () => {
     return nameError.value = 'Заполните поле!'
   }
 
-  if (digitalRef.value.length === null) {
-    return digitalError.value = 'Заполните поле доконца!'
+  if (digitalRef.value === null) {
+    return digitalError.value = 'Заполните поле!'
   }
 
   if (symbolRef.value === null) {
@@ -80,7 +79,7 @@ const addCurrency = async () => {
 
   const res = await currency.addCurrency(body)
   if (res.status === 201) {
-    getCurrencyData()
+    await getCurrencyData()
     showToast('Успешно добавлена')
     isCurrentRate.value = true
     idCurrency.value = res.data.result.id
@@ -98,7 +97,7 @@ const validateCurrencyRate = () => {
   }
 
   if (dateRef.value.length <= 9) {
-    return dateError.value = 'Заполните поле доконца!'
+    return dateError.value = 'Введите правильную дату!'
   }
 
   if (valueRef.value === null) {
@@ -108,41 +107,49 @@ const validateCurrencyRate = () => {
   return true
 }
 
+const back = () => {
+  nameRef.value = null
+  symbolRef.value = null
+  digitalRef.value = null
+  isCurrentRate.value = false
+}
+
 const createCurrentRate = async () => {
   if (validateCurrencyRate() !== true) return
   
-  let parts = dateRef.value.split('/');
-  let day = parts[0];
-  let month = parts[1];
-  let year = parts[2];
-  let newDate = `${year}/${month}/${day}`;
 
   const body = {
-    date: newDate,
+    date: changeTheDateForSending(dateRef.value),
     value: valueRef.value
   }
 
   const res = await currency.addCurrencyRate(body, String(idCurrency.value))
   if (res.status === 201) {
     showToast('Успешно добавлена')
+    nameRef.value = null
+    symbolRef.value = null
+    digitalRef.value = null
+    isCurrentRate.value = false
   }
-  
 }
 
+const goToShow = (id, symbol) => {
+  router.push({ path: `/list/currency/${id}`, query: { symbol } });
+}
 
 </script>
 
 <template>
   <div>
     <v-col>
-    <v-icon size="40" color="info" class="ma-2" @click="expand = !expand">add_circle</v-icon>
+    <v-icon size="40" color="green" class="ma-2" @click="expand = !expand">add_circle</v-icon>
     <v-expand-transition>
-      <v-card v-show="expand" height="210" width="100%" class="mx-auto">
+      <v-card v-show="expand" :height="isCurrentRate ? 210 : 95" width="100%" class="mx-auto">
         <v-form class="w-100 pa-4" @submit.prevent="addCurrency">
           <v-row class="w-100">
             <v-col class="d-flex justify-between w-100 ga-5">
               <v-text-field variant="outlined" :disabled="isCurrentRate" :error-messages="nameError" placeholder="Доллар" label="Название" v-model="nameRef" />
-              <v-text-field variant="outlined" :disabled="isCurrentRate" :error-messages="symbolError" placeholder="USD" v-mask="'SSS'" label="Символный код"
+              <v-text-field variant="outlined" :disabled="isCurrentRate" :error-messages="symbolError" placeholder="USD" v-mask="'AAA'" label="Символный код"
                 v-model="symbolRef" />
               <v-text-field variant="outlined" :disabled="isCurrentRate" :error-messages="digitalError" placeholder="132" v-mask="'###'" label="Цифровой код"
                 v-model="digitalRef" />
@@ -155,9 +162,10 @@ const createCurrentRate = async () => {
           <v-row class="w-100">
             <v-col class="d-flex justify-between w-100 ga-5">
               <v-text-field variant="outlined" type="tel" :error-messages="dateError" placeholder="30/04/2004" v-mask="'##/##/####'" label="Дата" v-model="dateRef" />
-              <v-text-field variant="outlined" :disabled="isCurrentRate" label="Символный код" value="usd" v-model="symbolRef" />
-              <v-text-field variant="outlined" type="tel" :error-messages="valueError" placeholder="1.0000" label="Значение" v-model="valueRef" />
+              <v-text-field variant="outlined" :disabled="isCurrentRate" label="Символный код" :value="symbolRef" v-model="symbolRef" />
+              <v-text-field variant="outlined" type="number" :error-messages="valueError" placeholder="1.0000" label="Значение" v-model="valueRef" />
               <v-btn :loading="loading" color="green" class="mt-2" type="submit">Добавить</v-btn>
+              <v-btn :loading="loading" color="info" class="mt-2" type="button" @click="back">Назад</v-btn>
             </v-col>
           </v-row>
         </v-form>
@@ -166,17 +174,21 @@ const createCurrentRate = async () => {
     </v-expand-transition>
     <v-card class="mt-4 table">
       <v-data-table 
+        items-per-page-text="Элементов на странице:" 
+        loading-text="Загрузка" 
+        no-data-text="Нет данных"
         :headers="headers"
         :items="currencies" 
         :loading="loadingData"
       >
         <template #item.icons="{ item }">
-          <v-icon @click="$router.push(`/list/currency/${item.id}`)" color="info">visibility</v-icon>
+          <v-icon @click="goToShow(item.id, item.symbol_code)" color="info">visibility</v-icon>
         </template>
       </v-data-table>
     </v-card>
   </v-col>
   </div>
+  
 </template>
 
 <style scoped>

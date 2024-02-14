@@ -3,6 +3,8 @@ import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import currency from '../../../api/currency.js'
 import showToast from "../../../composables/toast/index.js";
+import showDate from "../../../composables/date/showDate";
+import currentDate from "../../../composables/date/currentDate";
 
 const route = useRoute()
 
@@ -24,14 +26,19 @@ const headers = ref([
   { title: 'Значение', key: 'value'},
 ])
 
-onMounted( () => {
-  getCurrencyRateData(route.params.id)
+onMounted( async () => {
+  dateRef.value = currentDate()  
+  symbolRef.value = useRoute().query.symbol
+  await getCurrencyRateData(route.params.id)
 })
 
 const getCurrencyRateData = async (id) => {
   try {
     const { data } = await currency.showCurrencyRate(id)
-    currencies.value = data.result
+    currencies.value = currencies.value.map(item => ({
+      ...item,
+      date: showDate(item.date)
+    }))
     loading.value = false
   } catch (e) {
     
@@ -59,21 +66,17 @@ const validateCurrentRate = () => {
 
 const addRate = async () => {
   if (validateCurrentRate() !== true) return
-  
-  let parts = dateRef.value.split('/');
-  let day = parts[0];
-  let month = parts[1];
-  let year = parts[2];
-  let newDate = `${year}/${month}/${day}`;
-
+ 
   const body = {
-    date: newDate,
+    date: changeTheDateForSending(dateRef.value),
     value: valueRef.value
   }
 
   const { data } = await currency.addCurrencyRate(body, route.params.id)
   currencies.value = data.result
+  await getCurrencyRateData(route.params.id)
   showToast('Успешно добавлена')
+  valueRef.value = null
 
 }
 
@@ -81,9 +84,9 @@ const addRate = async () => {
 
 <template>
   <v-col>
-    <div class="d-flex justify me-2">
-      <span>Назад</span>
-      <v-icon size="40" color="info" class="ma-2" @click="expand = !expand">add_circle</v-icon>
+    <div class="d-flex  align-center ms-2">
+      <v-btn color="info" @click="$router.push('/list/currency')">Назад</v-btn>
+      <v-icon size="40" color="green" class="ma-2" @click="expand = !expand">add_circle</v-icon>
     </div>
     <v-expand-transition>
       <v-card v-show="expand" height="95" width="100%" class="mx-auto">
@@ -91,8 +94,8 @@ const addRate = async () => {
           <v-row class="w-100">
             <v-col class="d-flex justify-between w-100 ga-5">
               <v-text-field variant="outlined" type="tel" :error-messages="dateError" placeholder="30/04/2004" v-mask="'##/##/####'" label="Дата" v-model="dateRef" />
-              <v-text-field variant="outlined" label="Символный код" v-model="symbolRef" />
-              <v-text-field variant="outlined" type="tel" :error-messages="valueError" placeholder="1.0000" label="Значение" v-model="valueRef" />
+              <v-text-field variant="solo" label="Символный код" disabled v-model="symbolRef" />
+              <v-text-field variant="outlined" type="number" :error-messages="valueError" placeholder="1.0000" label="Значение" v-model="valueRef" />
               <v-btn :loading="loading" color="green" class="mt-2" type="submit">Добавить</v-btn>
             </v-col>
           </v-row>
