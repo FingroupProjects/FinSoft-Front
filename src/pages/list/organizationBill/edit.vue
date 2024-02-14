@@ -1,71 +1,42 @@
 <script setup>
 import {onMounted, ref,} from "vue"
+import { useRoute } from 'vue-router';
 import organizationBill from "../../../api/organizationBill.js";
 import currency from "../../../api/currency.js";
-import organization from "../../../api/organizations.js";import { useRoute } from 'vue-router';
+import organization from "../../../api/organizations.js";
 
 const route = useRoute();
 
 
-
+const organizationsBill = ref([])
 const currencies = ref([])
 const organizations = ref([])
-const digitalCodes = ref([])
 
-const id = ref(null)
 
-const body = ref({
-  name: "",
-  bill_number: "",
-  currency: {
-    digital_code: "",
-    id: ""
-  },
 
-  organization: {
-    name: "",
-    id: ""
-  }
-})
 
-const fetchCurrency = async () => {
+const getDataById = async () => {
   try {
-    const { data } = await currency.getCurrency();
-    currencies.value = data.result;
-    console.log(currencies.value)
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-const ID = ref(null)
-const OrganizationID = ref(null)
-
-
-const itemProps = (item) => {
-  return {
-    title: item.digital_code,
-  }
-}
-const organizationProps = (item) => {
-  return {
-    title: item.name,
-  }
-}
-
-const getId = async () => {
-  try {
-    const { data } = await organizationBill.getById(id.value)
-    body.value = data.result
-    console.log(body.value)
+    const { data } = await organizationBill.getById(route.params.id)
+    organizationsBill.value = data.result
+    console.log(organizationsBill.value)
   } catch (e) {
     console.log(e);
   }
 }
 
+const fetchCurrency = async () => {
+  try {
+    const { data } = await currency.getCurrency();
+    currencies.value = data.result;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
 const fetchOrganizations = async () => {
   try {
-    const { data } = await organization.index()
+    const { data } = await organization.getAll()
     organizations.value = data.result
 
   } catch (error) {
@@ -73,6 +44,17 @@ const fetchOrganizations = async () => {
   }
 }
 
+const currencyName = item => {
+  return {
+    title: item.name
+  }
+}
+
+const organizationName = item => {
+  return {
+    title: item.name
+  }
+}
 
 const update = async () => {
   try {
@@ -83,17 +65,14 @@ const update = async () => {
       organization_id: body.value.organization.id
     }
     const res = await organizationBill.update(id.value, bodyData)
-    console.log(res)
   } catch (error) {
     console.error(error)
   }
 }
-onMounted(() => {
-    id.value = route.params.id;
-    getId()
-
-  fetchOrganizations()
-  fetchCurrency()
+onMounted(async () => {
+  await getDataById()
+  await fetchOrganizations()
+  await fetchCurrency()
 })
 
 </script>
@@ -107,10 +86,10 @@ onMounted(() => {
     <div>
 
       <div class="d-flex ga-5">
-        <v-text-field variant="outlined" label="Наименование" v-model="body.name" />
-        <v-text-field variant="outlined" label="Номер счета" v-model="body.bill_number" />
-        <v-select :items="currencies" :item-props="itemProps" v-model="body.currency" label="Выберите валюту"></v-select>
-        <v-select :items="organizations" :item-props="organizationProps" v-model="body.organization" label="Выберите организацию"></v-select>
+        <v-text-field variant="outlined" label="Наименование" v-model="organizationsBill.name" />
+        <v-text-field variant="outlined" label="Номер счета" v-model="organizationsBill.bill_number" />
+        <v-select :items="currencies" :item-props="currencyName" label="Выберите валюту"></v-select>
+        <v-select :items="organizations" :item-props="organizationName" label="Выберите организацию"></v-select>
       </div>
 
       <div class="d-flex justify-end mt-4">

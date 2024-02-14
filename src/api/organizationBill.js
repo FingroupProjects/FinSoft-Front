@@ -1,8 +1,7 @@
 import { api } from './api.js'
-import {getToken} from '../composables/auth'
 
 export default {
-  index(){
+  getAll(){
     return api.get('/organizationBill') 
   },
   getById(id) {
