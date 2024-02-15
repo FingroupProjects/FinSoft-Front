@@ -15,17 +15,11 @@ const menu = ref([
   { id: 5, title: 'Касса и банки', icon: 'account_balance', link: '/cash' },
   { id: 6, title: 'Зарплата и кадры', icon: 'payments', link: '/salary' },
   { id: 7, title: 'Финансы и  анализ', icon: 'attach_money', link: '/financeAnalysis' },
-  { id: 8, title: 'Админ - панель', icon: 'analytics', },
+  { id: 8, title: 'Админ - панель', icon: 'analytics', link: '/adminPanel' },
 ]);
 
 function push(item) {
-  if (item.id === 8) {
-    emit('toggleAdmin')
-  }
-  else {
-    router.push(item.link)
-    emit('closeAdmin')
-  }
+  router.push(item.link)
 }
 
 </script>

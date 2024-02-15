@@ -20,37 +20,31 @@ const lists = ref([
       { id: 4, title: 'Договоры Контрагентов', icon: 'contact_page' },
       { id: 5, title: 'Кассы', icon: 'savings' },
       { id: 6, title: 'Контрагенты', link: '/list/counterparty', icon: 'group' },
-      { id: 7, title: 'Наборы Упаковок', icon: 'apps' },
-      { id: 8, title: 'Номенклатура', icon: 'assignment' },
-      { id: 9, title: 'Организации', icon: 'corporate_fare' },
-      { id: 10, title: 'Пользователи', icon: 'groups' },
-      { id: 11, title: 'Прочие Расходы', icon: 'price_change' },
-      { id: 12, title: 'Склады', icon: 'warehouse' },
-      { id: 13, title: 'Сотрудники', icon: 'supervisor_account' },
-      { id: 14, title: 'Должность', icon: 'work' },
+      { id: 7, title: 'Номенклатура', icon: 'assignment' },
+      { id: 8, title: 'Организации', icon: 'corporate_fare' },
+      { id: 9, title: 'Пользователи', icon: 'groups' },
+      { id: 10, title: 'Прочие Расходы', icon: 'price_change' },
+      { id: 11, title: 'Склады', icon: 'warehouse' },
+      { id: 12, title: 'Сотрудники', icon: 'supervisor_account' },
+      { id: 13, title: 'Должность', icon: 'work' },
     ]
   }
 ]);
 
 function push(item) {
-  emit('close')
   router.push(item.link)
 }
-
-const admin_panel_width = computed(() => {
-  return props.rale === true ? 'calc(100vw - 65px)' : 'calc(100vw - 255px)';
-});
 
 </script>
 
 <template>
-  <div class="admin_panel" :style="{ width: admin_panel_width }">
-    <div class="d-flex justify-end">
+  <div>
+    <!-- <div class="d-flex justify-end">
       <v-icon color="info" icon="close" @click="emit('close')"></v-icon>
-    </div>
+    </div> -->
     <div class="d-flex flex-column align-start ga-10">
       <div v-for="list in lists" :key="list.id">
-        <h3 class="text-uppercase mb-2">{{ list.title }}</h3>
+        <h3 class="text-uppercase mb-4">{{ list.title }}</h3>
         <ul class="list">
           <span class="d-flex align-center pa-5 ga-4 cursor-pointer" nav v-for="child in list.child" :key="child.id"
             @click="push(child)">
@@ -87,19 +81,6 @@ const admin_panel_width = computed(() => {
 ::-webkit-scrollbar-thumb {
   background: #c7c5c5;
   border-radius: 50px;
-}
-
-.admin_panel {
-  position: absolute;
-  top: 45px;
-  right: 0;
-  transition: width 250ms;
-  height: calc(100vh - 45px);
-  background: white;
-  border-left: 1px rgb(152, 146, 146) solid;
-  z-index: 10;
-  padding: 20px;
-  overflow: auto;
 }
 
 ul {

@@ -3,27 +3,20 @@ import { useRoute } from 'vue-router'
 
 import Header from "./components/header/Header.vue";
 import Sidebar from "./components/sidebar/Sidebar.vue";
-import Admin_panel from "./components/sidebar/Admin_panel.vue";
+// import Admin_panel from "./pages/admin-panel/index.vue";
 import { ref, watch } from "vue"
 
 const rale = ref(false)
-const isAdmin = ref(false)
 const route = useRoute()
 const isLayout = ref(true)
-
-const toggleAdmin = () => {
-  isAdmin.value = !isAdmin.value
-}
 
 const toggleSidebar = () => {
   rale.value = !rale.value
 }
 
-
 watch(route, (newVal) => {
   isLayout.value = !!newVal.meta.hideSideBarAndHeader;
 })
-
 
 </script>
 
@@ -37,8 +30,7 @@ watch(route, (newVal) => {
     <div v-else>
       <Header @rale="toggleSidebar" />
       <div class="content">
-        <Sidebar @toggleAdmin="toggleAdmin" @closeAdmin="isAdmin = false" :rale="rale" />
-        <Admin_panel v-if="isAdmin" @close="isAdmin = false" :rale="rale" />
+        <Sidebar :rale="rale" />
         <router-view class="w-100 px-4 py-4 block" />
       </div>
     </div>
