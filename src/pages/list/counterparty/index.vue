@@ -15,7 +15,7 @@ const headers = ref([
   { title: 'Телефон', key: 'phone' },
   { title: 'Эл. почта', key: 'email' },
   { title: 'Дата создания', key: 'created_at' },
-  { title: '#', key: 'icons' },
+  { title: '#', key: 'icons', align: 'center' },
 ]);
 
 const formatDateTime = (dateTimeString) => {
@@ -36,6 +36,11 @@ const formatRole = (roles) => {
 const pushToRename = item => {
   router.push({ name: 'renameCounterparty', params: { id: item.id } })
 }
+
+const showDetail = item => {
+  router.push({ name: 'detailCounterparty', params: { id: item.id } })
+}
+
 const fetchCounterparty = async () => {
   try {
     const { data } = await counterpartyApi.get()
@@ -57,14 +62,18 @@ onMounted(() => {
 <template>
   <div>
     <v-col class="d-flex flex-column ga-5">
-      <div class="d-flex justify-end">
+      <div class="d-flex w-100 justify-space-between">
+        <div>
+          <h2>Список контрагентов</h2>
+        </div>
         <v-btn rounded="lg" color="info" @click="$router.push('createCounterparty')">Создать</v-btn>
       </div>
       <v-card class="table">
         <v-data-table :items="counterparty" :headers="headers" :loading="loading"
           items-per-page-text="Элементов на странице:" loading-text="Загрузка" no-data-text="Нет данных">
           <template #item.icons="{ item }">
-            <v-icon class="icon" @click="pushToRename(item)">edit</v-icon>
+            <v-icon class="icon mr-2" @click="pushToRename(item)">edit</v-icon>
+            <v-icon class="icon" @click="showDetail(item)">visibility</v-icon>
           </template>
         </v-data-table>
       </v-card>

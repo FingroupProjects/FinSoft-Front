@@ -65,6 +65,16 @@ const routes = [
     component: () => import("../pages/list/counterparty/create.vue"),
   },
   {
+    path: "/list/renameCounterparty/:id",
+    name: "renameCounterparty",
+    component: () => import("../pages/list/counterparty/update.vue"),
+  },
+  {
+    path: "/list/detailCounterparty/:id",
+    name: "detailCounterparty",
+    component: () => import("../pages/list/counterparty/detail.vue"),
+  },
+  {
     path: "/list/organizationBill",
     name: "organizationBill",
     component: () => import("../pages/list/organizationBill/index.vue"),
@@ -80,20 +90,13 @@ const routes = [
     component: () => import("../pages/list/organizationBill/edit.vue"),
   },
   {
-    path: "/list/renameCounterparty/:id",
-    name: "renameCounterparty",
-    component: () => import("../pages/list/counterparty/update.vue"),
-  },
-  {
     path: "/login",
     name: "login",
     component: () => import("../pages/authentication/authentication.vue"),
     meta: {
       hideSideBarAndHeader: true,
     },
-
   },
-
 ];
 
 routes.forEach((route) => {
