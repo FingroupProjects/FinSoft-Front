@@ -1,7 +1,7 @@
 import 'toastify-js/src/toastify.css';
 import Toastify from 'toastify-js';
 
-export default function showToast(message, colour) {
+export default function showToast(message, colour = 'green') {
   let color 
   if(colour === 'green'){
     color = '#08D411'

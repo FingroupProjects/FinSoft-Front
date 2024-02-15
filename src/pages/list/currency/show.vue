@@ -9,7 +9,7 @@ import changeTheDateForSending from "../../../composables/date/changeTheDateForS
 
 const route = useRoute()
 
-const expand = ref(false);
+const isDialog = ref(false);
 const loading = ref(false);
 
 const symbolRef = ref(null)
@@ -22,8 +22,10 @@ const valueError = ref(null)
 const currencies = ref([])
 
 const headers = ref([
+  { title: 'Наименование', key: 'name'},
   { title: 'Дата', key: 'date'},
   { title: 'Символьный код', key: 'currency'},
+  { title: 'Цифровой код', key: 'digital_code'},
   { title: 'Значение', key: 'value'},
 ])
 
@@ -35,10 +37,11 @@ onMounted( async () => {
 
 const getCurrencyRateData = async (id) => {
   try {
-    const { data } = await currency.showCurrencyRate(id)
-    currencies.value = data.result.map(item => ({
+    const { data } = await currency.showRate(id)
+    currencies.value = data.result.exchangeRates.map(item => ({
       ...item,
-      date: showDate(item.date)
+      name: data.result.name,
+      digital_code: data.result.digital_code
     }))
     loading.value = false
   } catch (e) {
@@ -62,6 +65,10 @@ const validateCurrentRate = () => {
     return valueError.value = 'Заполните поле!'
   }
 
+  if (Number(valueRef.value) > 9999999) {
+    return valueError.value = 'Слишком больше значение!'
+  }
+
   return true
 }
 
@@ -73,49 +80,63 @@ const addRate = async () => {
     value: valueRef.value
   }
 
-  const { data } = await currency.addCurrencyRate(body, route.params.id)
-  currencies.value = data.result
-  await getCurrencyRateData(route.params.id)
-  showToast('Успешно добавлена')
-  valueRef.value = null
+  try {
+    const { data } = await currency.addRate(body, route.params.id)
+    currencies.value = data.result
+    await getCurrencyRateData(route.params.id)
+    showToast('Успешно добавлена')
+    valueRef.value = null
+    isDialog.value = false
+  } catch(e) {
+
+  }
+
 
 }
-
 </script>
 
 <template>
-  <v-col>
-    <div class="d-flex  align-center ms-2">
-      <v-btn color="info" @click="$router.push('/list/currency')">Назад</v-btn>
-      <v-icon size="40" color="green" class="ma-2" @click="expand = !expand">add_circle</v-icon>
-    </div>
-    <v-expand-transition>
-      <v-card v-show="expand" height="95" width="100%" class="mx-auto">
-        <v-form class="w-100 pa-4" @submit.prevent="addRate">
-          <v-row class="w-100">
-            <v-col class="d-flex justify-between w-100 ga-5">
-              <v-text-field variant="outlined" type="tel" :error-messages="dateError" placeholder="30/04/2004" v-mask="'##/##/####'" label="Дата" v-model="dateRef" />
-              <v-text-field variant="solo" label="Символный код" disabled v-model="symbolRef" />
-              <v-text-field variant="outlined" type="number" :error-messages="valueError" placeholder="1.0000" label="Значение" v-model="valueRef" />
-              <v-btn :loading="loading" color="green" class="mt-2" type="submit">Добавить</v-btn>
-            </v-col>
-          </v-row>
-        </v-form>
-      </v-card>
-    </v-expand-transition>
-    <v-card class="mt-4 table">
-      <v-data-table 
-        items-per-page-text="Элементов на странице:" 
-        loading-text="Загрузка" 
-        no-data-text="Нет данных"
-        :headers="headers"
-        :items="currencies" 
-        :loading="loading"
-      >
+  <div>
+    <v-col>
+      <div class="d-flex  align-center ms-2">
+        <v-btn color="info" @click="$router.push('/list/currency')">Назад</v-btn>
+        
+        <v-btn icon="add_circle" variant="text">
+          <v-icon size="40" color="green" class=""></v-icon>
+          <v-dialog width="500" v-model="isDialog" activator="parent">   
+            <v-card class="rounded-xl pl-4" :title="'Курс валюты: ' + symbolRef">
+              <v-form class="w-100 pa-4" @submit.prevent="addRate">
+                <v-row class="w-100">
+                  <v-col class="d-flex flex-column justify-between w-100 ga-5">
+                    <v-text-field variant="outlined" type="tel" :error-messages="dateError" placeholder="30/04/2004"
+                                  v-mask="'##/##/####'" label="Дата" v-model="dateRef"/>
+                    <v-text-field variant="outlined" type="number" :error-messages="valueError" placeholder="1.0000"
+                                  label="Значение" v-model="valueRef"/>
+                    <div class="d-flex ga-2 justify-end align-center">
+                      <v-btn :loading="loading" color="green" type="submit">Добавить</v-btn>
+                    </div>
+                  </v-col>
+                </v-row>
+              </v-form>
+            </v-card>
+          </v-dialog>
+        </v-btn>
+        
+      </div>
+      <v-card class="mt-4 table">
+        <v-data-table
+            items-per-page-text="Элементов на странице:"
+            loading-text="Загрузка"
+            no-data-text="Нет данных"
+            :headers="headers"
+            :items="currencies"
+            :loading="loading"
+        >
 
-      </v-data-table>
-    </v-card>
-  </v-col>
+        </v-data-table>
+      </v-card>
+    </v-col>
+  </div>
 </template>
 
 <style scoped>
