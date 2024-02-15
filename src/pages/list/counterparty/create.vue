@@ -98,7 +98,7 @@ const handleCheckboxChange = (index) => {
             v-model="address" />
           <v-text-field variant="outlined" :rules="email_validate ? emailRules : []" label="Почта" v-model="email" />
         </div>
-        <div>
+        <div class="d-flex w-75">
           <v-checkbox-btn label="Клиент" color="info" @change="handleCheckboxChange(0)"></v-checkbox-btn>
           <v-checkbox-btn label="Поставщик" color="info" @change="handleCheckboxChange(1)"></v-checkbox-btn>
           <v-checkbox-btn label="Прочие отношения" color="info" @change="handleCheckboxChange(2)"></v-checkbox-btn>

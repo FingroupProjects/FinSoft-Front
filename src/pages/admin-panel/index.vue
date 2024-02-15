@@ -38,11 +38,8 @@ function push(item) {
 </script>
 
 <template>
-  <div>
-    <!-- <div class="d-flex justify-end">
-      <v-icon color="info" icon="close" @click="emit('close')"></v-icon>
-    </div> -->
-    <div class="d-flex flex-column align-start ga-10">
+  <div class="">
+    <div class="d-flex flex-column align-start ga-10 main">
       <div v-for="list in lists" :key="list.id">
         <h3 class="text-uppercase mb-4">{{ list.title }}</h3>
         <ul class="list">
@@ -81,6 +78,10 @@ function push(item) {
 ::-webkit-scrollbar-thumb {
   background: #c7c5c5;
   border-radius: 50px;
+}
+
+.main {
+  padding: 16px;
 }
 
 ul {
