@@ -26,7 +26,7 @@ const renameCounterparty = async () => {
   try {
     await counterpartyApi.rename(id.value, form.value);
     router.push({ name: 'counterparty' })
-    showToast('Успешно изменено')
+    showToast('Успешно изменено', '#')
   } catch (e) {
     console.error(e);
   }

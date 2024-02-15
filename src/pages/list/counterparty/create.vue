@@ -35,7 +35,7 @@ const CreateCounterparty = async () => {
     console.log(body);
     await counterpartyApi.create(body)
     router.push('counterparty')
-    showToast('Успешно добавлена')
+    showToast('Успешно добавлена', 'green')
   } catch (error) {
     console.error(error)
   }
@@ -92,8 +92,10 @@ const handleCheckboxChange = (index) => {
       <v-form @submit.prevent="CreateCounterparty">
         <div class="d-flex ga-5">
           <v-text-field variant="outlined" :rules="name_validate ? nameRules : []" label="Наименование" v-model="name" />
-          <v-text-field variant="outlined" :rules="phone_validate ? phoneRules : []" label="Тел номер" v-model.trim="phone" v-mask="'+992#########'"/>
-          <v-text-field variant="outlined" :rules="address_validate ? addressRules : []" label="Адрес" v-model="address" />
+          <v-text-field variant="outlined" :rules="phone_validate ? phoneRules : []" label="Тел номер"
+            v-model.trim="phone" v-mask="'+992#########'" />
+          <v-text-field variant="outlined" :rules="address_validate ? addressRules : []" label="Адрес"
+            v-model="address" />
           <v-text-field variant="outlined" :rules="email_validate ? emailRules : []" label="Почта" v-model="email" />
         </div>
         <div>
