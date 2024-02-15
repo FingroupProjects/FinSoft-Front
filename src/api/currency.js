@@ -1,16 +1,22 @@
 import { api } from './api.js'
 
 export default {
-  addCurrency(data) {
+  add(data) {
     return  api.post('/currency', data)
   },
-  getCurrency() {
+  get() {
     return  api.get('/currency')
   },
-  addCurrencyRate(data, id) {
+  addRate(data, id) {
     return api.post(`/currencyRate/add/${id}`, data)
   },
-  showCurrencyRate(id) {
+  showRate(id) {
     return api.get(`/currencyRate/${id}`)
+  },
+  update() {
+
+  },
+  delete() {
+
   }
 }

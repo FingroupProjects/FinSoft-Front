@@ -43,7 +43,7 @@ onMounted( async () => {
 })
 
 const getCurrencyData = async () => {
-    const { data } = await currency.getCurrency()
+    const { data } = await currency.get()
     currencies.value = data.result
     loadingData.value = false
 }
@@ -57,9 +57,14 @@ const validateCurrency = () => {
     return nameError.value = 'Заполните поле!'
   }
 
+  if (nameRef.value.length < 3) {
+    return nameError.value = 'Не менее трёх символов!'
+  }
+
   if (digitalRef.value === null) {
     return digitalError.value = 'Заполните поле!'
   }
+
 
   if (symbolRef.value === null) {
     return symbolError.value = 'Заполните поле!'
@@ -77,11 +82,12 @@ const addCurrency = async () => {
     symbol_code: symbolRef.value
   }
 
-  const res = await currency.addCurrency(body)
+  const res = await currency.add(body)
   if (res.status === 201) {
     await getCurrencyData()
     showToast('Успешно добавлена')
     isCurrentRate.value = true
+    valueRef.value = null
     idCurrency.value = res.data.result.id
   }
 
@@ -104,6 +110,10 @@ const validateCurrencyRate = () => {
     return valueError.value = 'Заполните поле!'
   }
 
+  if (Number(valueRef.value) > 9999999.9999) {
+    return valueError.value = 'Значение не должно превышать 9999999!'
+  }
+
   return true
 }
 
@@ -112,6 +122,7 @@ const back = () => {
   symbolRef.value = null
   digitalRef.value = null
   isCurrentRate.value = false
+  expand.value = false
 }
 
 const createCurrentRate = async () => {
@@ -123,13 +134,14 @@ const createCurrentRate = async () => {
     value: valueRef.value
   }
 
-  const res = await currency.addCurrencyRate(body, String(idCurrency.value))
+  const res = await currency.addRate(body, String(idCurrency.value))
   if (res.status === 201) {
     showToast('Успешно добавлена')
     nameRef.value = null
     symbolRef.value = null
     digitalRef.value = null
     isCurrentRate.value = false
+    expand.value = false
   }
 }
 
