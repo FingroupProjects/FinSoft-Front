@@ -22,16 +22,6 @@ const b = ref(false)
 const c = ref(false)
 const id = ref(null);
 
-const renameCounterparty = async () => {
-  try {
-    await counterpartyApi.rename(id.value, form.value);
-    router.push({ name: 'counterparty' })
-    showToast('Успешно изменено', '#')
-  } catch (e) {
-    console.error(e);
-  }
-};
-
 const getId = async () => {
   try {
     const { data } = await counterpartyApi.getById(id.value);
@@ -101,20 +91,20 @@ const addressRules = ref([
     </div>
     <v-card class="px-4 py-6">
       <div class="d-flex ga-5">
-        <v-text-field v-model="form.name" :rules="nameRules" variant="outlined" label="Наименование контрагента" />
-        <v-text-field v-model="form.phone" :rules="phoneRules" variant="outlined" label="Тел номер"
+        <v-text-field v-model="form.name" disabled :rules="nameRules" variant="outlined"
+          label="Наименование контрагента" />
+        <v-text-field v-model="form.phone" disabled :rules="phoneRules" variant="outlined" label="Тел номер"
           v-mask="'+992#########'" />
-        <v-text-field v-model="form.address" :rules="addressRules" variant="outlined" label="Адрес" />
-        <v-text-field v-model="form.email" :rules="emailRules" variant="outlined" type="email" label="Почта" />
+        <v-text-field v-model="form.address" disabled :rules="addressRules" variant="outlined" label="Адрес" />
+        <v-text-field v-model="form.email" disabled :rules="emailRules" variant="outlined" type="email" label="Почта" />
       </div>
       <div class="d-flex w-75">
-        <v-checkbox-btn v-model="a" label="Клиент" color="info" @change="handleCheckboxChange(1)"></v-checkbox-btn>
-        <v-checkbox-btn v-model="b" label="Поставщик" color="info" @change="handleCheckboxChange(2)"></v-checkbox-btn>
-        <v-checkbox-btn v-model="c" label="Прочие отношения" color="info"
+        <v-checkbox-btn v-model="a" disabled label="Клиент" color="info"
+          @change="handleCheckboxChange(1)"></v-checkbox-btn>
+        <v-checkbox-btn v-model="b" disabled label="Поставщик" color="info"
+          @change="handleCheckboxChange(2)"></v-checkbox-btn>
+        <v-checkbox-btn v-model="c" disabled label="Прочие отношения" color="info"
           @change="handleCheckboxChange(3)"></v-checkbox-btn>
-      </div>
-      <div class="d-flex justify-end mt-4">
-        <v-btn rounded="lg" color="info" @click="renameCounterparty()">Изменить</v-btn>
       </div>
     </v-card>
   </div>
