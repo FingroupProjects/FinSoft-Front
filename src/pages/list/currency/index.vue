@@ -33,20 +33,19 @@ const headers = ref([
   { title: 'Наименование', key: 'name', align: 'start',},
   { title: 'Символьный код', key: 'symbol_code', align: 'start',},
   { title: 'Цифровой код', key: 'digital_code', align: 'start',},
+  { title: '#', key: 'icons', align: 'start', sortable: false,},
 ])
 
 onMounted( async () => {
   dateRef.value = currentDate()
 })
 
-const getCurrencyData = async ({ page, itemsPerPage }) => {
+const getCurrencyData = async ({ page, itemsPerPage, sortBy }) => {
   loading.value = true
   try {
-    const { data } = await currency.get(page, itemsPerPage)
+    const { data } = await currency.get(page, itemsPerPage, sortBy )
     currencies.value = data.result.data
     paginations.value = data.result.pagination
-    console.log(currencies.value)
-    console.log(paginations.value)
     loading.value = false
   } catch (e) {
 
@@ -79,7 +78,7 @@ const validateCurrency = () => {
 }
 
 
-const addCurrency = async () => {
+const addCurrency = async ({ page, itemsPerPage, sortBy }) => {
   if (validateCurrency() !== true) return
 
   const body = {
@@ -90,7 +89,7 @@ const addCurrency = async () => {
 
   const res = await currency.add(body)
   if (res.status === 201) {
-    await getCurrencyData()
+    await getCurrencyData({ page, itemsPerPage, sortBy })
     showToast('Успешно добавлена')
     isCurrentRate.value = true
     valueRef.value = null
@@ -192,15 +191,18 @@ const goToShow = (id, symbol) => {
     </v-expand-transition>
     <v-card class="mt-4 table">
       <v-data-table-server
+          :loading="loading"
           v-model:items-per-page="paginations.per_page"
           :headers="headers"
           :items-length="Number(paginations.total)"
           :items="currencies"
-          :loading="loading"
           :item-value="headers.title"
           @update:options="getCurrencyData"
       >
-        <template #item.icons="{ item }">
+        <template v-slot:item.id="{ item }">
+          <span>{{ item.id }}</span>
+        </template>
+        <template v-slot:item.icons="{ item }">
           <v-icon @click="goToShow(item.id, item.symbol_code)" color="info">visibility</v-icon>
         </template>
       </v-data-table-server>
