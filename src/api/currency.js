@@ -4,8 +4,13 @@ export default {
   add(data) {
     return  api.post('/currency', data)
   },
-  get() {
-    return  api.get('/currency')
+  get(page = 1, itemPerPage = 10) {
+    return  api.get('/currency', {
+      params: {
+        page: page,
+        itemPerPage: itemPerPage
+      },
+    })
   },
   addRate(data, id) {
     return api.post(`/currencyRate/add/${id}`, data)
