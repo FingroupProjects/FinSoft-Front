@@ -90,6 +90,11 @@ const routes = [
     component: () => import("../pages/list/organizationBill/edit.vue"),
   },
   {
+    path: "/list/counterpartyeAgreement",
+    name: "counterpartyeAgreement",
+    component: () => import("../pages/list/counterpartyAgreement/index.vue"),
+  },
+  {
     path: "/login",
     name: "login",
     component: () => import("../pages/authentication/authentication.vue"),
