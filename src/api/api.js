@@ -13,7 +13,7 @@ export const api = axios.create({
 export function buildParams(page = 1, itemsPerPage = 10, sortBy) {
   const params = {
     page: page,
-    itemPerPage: itemsPerPage
+    itemsPerPage: itemsPerPage
   };
 
   if (sortBy && sortBy.length > 0) {
