@@ -45,6 +45,7 @@ const getCurrencyData = async ({ page, itemsPerPage, sortBy }) => {
   try {
     const { data } = await currency.get(page, itemsPerPage, sortBy )
     currencies.value = data.result.data
+    console.log(data)
     paginations.value = data.result.pagination
     loading.value = false
   } catch (e) {
