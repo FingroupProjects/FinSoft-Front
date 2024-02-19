@@ -8,9 +8,8 @@ import currentDate from '../../../composables/date/currentDate'
 
 const router = useRouter()
 
-const loadingData = ref(true)
 const expand = ref(false);
-const loading = ref(false);
+const loading = ref(true);
 const isCurrentRate = ref(false)
 
 const idCurrency = ref(null)
@@ -27,25 +26,31 @@ const digitalError = ref(null)
 const symbolError = ref(null)
 
 const currencies = ref([])
-
-
+const paginations = ref([])
 
 const headers = ref([
-  { title: 'Наименование', key: 'name'},
-  { title: 'Символьный код', key: 'symbol_code'},
-  { title: 'Цифровой код', key: 'digital_code'},
-  { title: '#', key: 'icons'}
+  { title: '№', key: 'id', align: 'start',},
+  { title: 'Наименование', key: 'name', align: 'start',},
+  { title: 'Символьный код', key: 'symbol_code', align: 'start',},
+  { title: 'Цифровой код', key: 'digital_code', align: 'start',},
+  { title: '#', key: 'icons', align: 'start', sortable: false,},
 ])
 
 onMounted( async () => {
   dateRef.value = currentDate()
-  await getCurrencyData()
 })
 
-const getCurrencyData = async () => {
-    const { data } = await currency.get()
-    currencies.value = data.result
-    loadingData.value = false
+const getCurrencyData = async ({ page, itemsPerPage, sortBy }) => {
+  loading.value = true
+  try {
+    const { data } = await currency.get(page, itemsPerPage, sortBy )
+    currencies.value = data.result.data
+    console.log(data)
+    paginations.value = data.result.pagination
+    loading.value = false
+  } catch (e) {
+
+  }
 }
 
 const validateCurrency = () => {
@@ -73,7 +78,8 @@ const validateCurrency = () => {
   return true
 }
 
-const addCurrency = async () => {
+
+const addCurrency = async ({ page, itemsPerPage, sortBy }) => {
   if (validateCurrency() !== true) return
 
   const body = {
@@ -84,7 +90,7 @@ const addCurrency = async () => {
 
   const res = await currency.add(body)
   if (res.status === 201) {
-    await getCurrencyData()
+    await getCurrencyData({ page, itemsPerPage, sortBy })
     showToast('Успешно добавлена')
     isCurrentRate.value = true
     valueRef.value = null
@@ -185,18 +191,22 @@ const goToShow = (id, symbol) => {
       </v-card>
     </v-expand-transition>
     <v-card class="mt-4 table">
-      <v-data-table 
-        items-per-page-text="Элементов на странице:" 
-        loading-text="Загрузка" 
-        no-data-text="Нет данных"
-        :headers="headers"
-        :items="currencies" 
-        :loading="loadingData"
+      <v-data-table-server
+          :loading="loading"
+          v-model:items-per-page="paginations.per_page"
+          :headers="headers"
+          :items-length="Number(paginations.total)"
+          :items="currencies"
+          :item-value="headers.title"
+          @update:options="getCurrencyData"
       >
-        <template #item.icons="{ item }">
+        <template v-slot:item.id="{ item }">
+          <span>{{ item.id }}</span>
+        </template>
+        <template v-slot:item.icons="{ item }">
           <v-icon @click="goToShow(item.id, item.symbol_code)" color="info">visibility</v-icon>
         </template>
-      </v-data-table>
+      </v-data-table-server>
     </v-card>
   </v-col>
   </div>

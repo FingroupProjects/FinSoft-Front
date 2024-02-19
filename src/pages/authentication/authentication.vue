@@ -17,7 +17,7 @@ const authentication = async () => {
     login: loginRef.value,
     password: passwordRef.value,
   }
-
+  console.log(body)
   try {
     const res = await auth.login(body)
 
