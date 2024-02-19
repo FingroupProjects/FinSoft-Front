@@ -20,6 +20,7 @@ const dateError = ref(null)
 const valueError = ref(null)
 
 const currencies = ref([])
+const paginations = ref([])
 
 const headers = ref([
   { title: 'Наименование', key: 'name'},
@@ -32,17 +33,20 @@ const headers = ref([
 onMounted( async () => {
   dateRef.value = currentDate()  
   symbolRef.value = useRoute().query.symbol
-  await getCurrencyRateData(route.params.id)
 })
 
-const getCurrencyRateData = async (id) => {
+const getCurrencyRateData = async ({ page, itemsPerPage, sortBy }) => {
   try {
-    const { data } = await currency.showRate(id)
-    currencies.value = data.result.exchangeRates.map(item => ({
+    const response = await currency.show(route.params.id)
+    const { data } = await currency.showRate(route.params.id, { page, itemsPerPage, sortBy })
+
+    currencies.value = data.result.data.map(item => ({
       ...item,
-      name: data.result.name,
-      digital_code: data.result.digital_code
+      date: showDate(item.date),
+      name: response.data.result.name,
+      digital_code: response.data.result.digital_code
     }))
+    paginations.value = data.result.pagination
     loading.value = false
   } catch (e) {
     
@@ -72,7 +76,7 @@ const validateCurrentRate = () => {
   return true
 }
 
-const addRate = async () => {
+const addRate = async ({ page, itemsPerPage, sortBy }) => {
   if (validateCurrentRate() !== true) return
  
   const body = {
@@ -83,7 +87,7 @@ const addRate = async () => {
   try {
     const { data } = await currency.addRate(body, route.params.id)
     currencies.value = data.result
-    await getCurrencyRateData(route.params.id)
+    await getCurrencyRateData({ page, itemsPerPage, sortBy })
     showToast('Успешно добавлена')
     valueRef.value = null
     isDialog.value = false
@@ -124,16 +128,20 @@ const addRate = async () => {
         
       </div>
       <v-card class="mt-4 table">
-        <v-data-table
-            items-per-page-text="Элементов на странице:"
-            loading-text="Загрузка"
-            no-data-text="Нет данных"
-            :headers="headers"
-            :items="currencies"
+        <v-data-table-server
             :loading="loading"
+            v-model:items-per-page="paginations.per_page"
+            :headers="headers"
+            :items-length="paginations.total || 0"
+            :items="currencies"
+            :item-value="headers.title"
+            @update:options="getCurrencyRateData"
         >
+          <template v-slot:item.id="{ item }">
+            <span>{{ item.id }}</span>
+          </template>
+        </v-data-table-server>
 
-        </v-data-table>
       </v-card>
     </v-col>
   </div>
