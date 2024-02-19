@@ -6,6 +6,6 @@ export default {
     return  api.post('/login', data)
   },
   logout() {
-    return api.get('/logout', { headers: { Authorization: `Bearer ${getToken()}` } })
+    return api.get('/logout', )
   }
 }
