@@ -4,7 +4,8 @@ import { useRouter } from "vue-router"
 import counterpartyAgreementApi from "../../../api/counterpartyAgreement"
 import counterpartyApi from "../../../api/counterparty"
 import currencyApi from '../../../api/currency.js'
-import organizationApi from "../../../api/organizationBill.js"
+import organizationApi from "../../../api/organizations.js"
+import priceTypeApi from "../../../api/priceType.js"
 import showToast from '../../../composables/toast'
 
 
@@ -29,8 +30,7 @@ const price_type = ref('')
 const getOrganization = async () => {
   try {
     const { data } = await organizationApi.getAll();
-    organizations.value = data.result;
-    console.log(organizations.value, 'organization');
+    organizations.value = data.result.data;
   }
   catch (e) {
     console.log(e);
@@ -41,7 +41,6 @@ const getCounterprty = async () => {
   try {
     const { data } = await counterpartyApi.get()
     counterparties.value = data.result.data
-    console.log(counterparties.value, 'counterpartyApi');
   }
   catch (e) {
     console.log(e);
@@ -52,7 +51,6 @@ const getCurrency = async () => {
   try {
     const { data } = await currencyApi.get()
     currencies.value = data.result.data
-    console.log(data, 'currency');
   }
   catch (e) {
     console.log(e);
@@ -63,7 +61,6 @@ const getPayment = async () => {
   try {
     const { data } = await currencyApi.get()
     payments.value = data.result.data
-    console.log(data, 'payment');
   }
   catch (e) {
     console.log(e);
@@ -72,9 +69,8 @@ const getPayment = async () => {
 
 const getPriceType = async () => {
   try {
-    const { data } = await currencyApi.get()
+    const { data } = await priceTypeApi.get()
     price_types.value = data.result.data
-    console.log(data, 'price');
   }
   catch (e) {
     console.log(e);
@@ -83,20 +79,20 @@ const getPriceType = async () => {
 
 const createCounterpartyAgreement = async () => {
   try {
-    body = {
+    const body = {
       name: name.value,
-      contract_number: contract_number.value,
       date: date.value,
-      organization_id: organization.value,
-      counterparty_id: counterparty.value,
+      organization_id: organization.value.id,
+      counterparty_id: counterparty.value.id,
       contact_person: contact_person.value,
-      currency_id: currency.value,
-      payment_id: payment.value,
+      contract_number: '00002',
+      currency_id: currency.value.id,
+      payment_id: payment.value.id,
       comment: comment.value,
-      price_type_id: price_type.value,
+      price_type_id: price_type.value.id,
     }
     const res = await counterpartyAgreementApi.create(body)
-    console.log(res);
+    router.push({ name: 'counterpartyeAgreement' })
   } catch (e) {
     console.log(e);
   }
@@ -149,7 +145,7 @@ const price_typeProps = (item) => {
       <v-form @submit.prevent="createCounterpartyAgreement">
         <div class="d-flex ga-5">
           <v-text-field v-model="name" variant="outlined" label="Наименование"></v-text-field>
-          <v-text-field v-model="date" variant="outlined" label="Дата"></v-text-field>
+          <v-text-field v-model="date" v-mask="'####-##-##'" variant="outlined" label="Дата"></v-text-field>
           <v-text-field v-model="contact_person" variant="outlined" label="Контактное лицо"></v-text-field>
           <v-text-field v-model="comment" variant="outlined" label="Комментарий"></v-text-field>
         </div>

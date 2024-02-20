@@ -22,7 +22,7 @@ const headers = ref([
   { title: 'Организация', key: 'organization_id.name' },
   { title: 'Валюта оплаты', key: 'payment_id.symbol_code' },
   { title: 'Тип валюты', key: 'price_type_id.name' },
-  { title: '#', key: 'icons', align: 'center' },
+  // { title: '#', key: 'icons', align: 'center' },
 ]);
 
 const getDocuments = async ({ page, itemsPerPage, sortBy }) => {
@@ -31,7 +31,6 @@ const getDocuments = async ({ page, itemsPerPage, sortBy }) => {
     const { data } = await counterpartyAgreement.get(page, itemsPerPage, sortBy)
     result.value = data.result.data
     pagination.value = data.result.pagination
-    console.log(data);
     loading.value = false
   }
   catch (e) {
@@ -58,14 +57,14 @@ const getDocuments = async ({ page, itemsPerPage, sortBy }) => {
           <template v-slot:item.id="{ item, index }">
             <span>{{ index + 1 }}</span>
           </template>
-          <template #item.icons="{ item }">
+          <!-- <template #item.icons="{ item }">
             <div class="d-flex">
 
               <v-icon color="info" class="icon mr-2" @click="pushToRename(item)">edit</v-icon>
               <v-icon color="info" class="icon" @click="showDetail(item)">visibility</v-icon>
             </div>
 
-          </template>
+          </template> -->
         </v-data-table-server>
       </v-card>
     </v-col>
