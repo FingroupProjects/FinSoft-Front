@@ -105,6 +105,16 @@ const routes = [
     component: () => import("../pages/list/counterpartyAgreement/create.vue"),
   },
   {
+    path: "/list/cashRegister",
+    name: "cashRegister",
+    component: () => import("../pages/list/cashRegister/index.vue"),
+  },
+  {
+    path: "/list/employee",
+    name: "employee",
+    component: () => import("../pages/list/employee/index.vue"),
+  },
+  {
     path: "/login",
     name: "login",
     component: () => import("../pages/authentication/authentication.vue"),
