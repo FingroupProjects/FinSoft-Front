@@ -16,6 +16,7 @@ const lists = ref([
     id: 1, title: 'Справочник', child: [
       { id: 1, title: 'Банковские Счета Организаций', icon: 'account_balance', link: '/list/organizationBill' },
       { id: 2, title: 'Валюты', link: '/list/currency', icon: 'currency_exchange' },
+
       { id: 3, title: 'Виды Цен',link: '/list/priceType',  icon: 'request_quote' },
       { id: 4, title: 'Договоры Контрагентов', icon: 'contact_page' },
       { id: 5, title: 'Кассы', icon: 'savings' },
@@ -39,7 +40,7 @@ function push(item) {
 
 <template>
   <div class="">
-    <div class="d-flex flex-column align-start ga-10 main">
+    <div class="d-flex flex-column align-start ga-10 pa-4">
       <div v-for="list in lists" :key="list.id">
         <h3 class="text-uppercase mb-4">{{ list.title }}</h3>
         <ul class="list">
@@ -54,7 +55,7 @@ function push(item) {
       </div>
       <div>
         <div class="mb-10" nav v-for="admin in admins" :key="admin.id">
-          <h3 class="text-uppercase mb-2">{{ admin.title }}</h3>
+          <h3 class="text-uppercase mb-4">{{ admin.title }}</h3>
           <ul class="list">
             <span class="d-flex align-center pa-5 ga-4 cursor-pointer" @click="push(admin)">
               <div class="icon"><v-icon color="info">{{ admin.icon }}</v-icon></div>
@@ -78,10 +79,6 @@ function push(item) {
 ::-webkit-scrollbar-thumb {
   background: #c7c5c5;
   border-radius: 50px;
-}
-
-.main {
-  padding: 16px;
 }
 
 ul {

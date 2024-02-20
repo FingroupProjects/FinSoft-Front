@@ -8,9 +8,10 @@ import currentDate from '../../../composables/date/currentDate'
 
 const router = useRouter()
 
-const expand = ref(false);
-const loading = ref(true);
+const expand = ref(false)
+const loading = ref(true)
 const isCurrentRate = ref(false)
+const isDialogEdit = ref(false)
 
 const idCurrency = ref(null)
 const nameRef = ref(null)
@@ -29,11 +30,11 @@ const currencies = ref([])
 const paginations = ref([])
 
 const headers = ref([
-  { title: '№', key: 'id', align: 'start',},
-  { title: 'Наименование', key: 'name', align: 'start',},
-  { title: 'Символьный код', key: 'symbol_code', align: 'start',},
-  { title: 'Цифровой код', key: 'digital_code', align: 'start',},
-  { title: '#', key: 'icons', align: 'start', sortable: false,},
+  { title: '№', key: 'id'},
+  { title: 'Наименование', key: 'name'},
+  { title: 'Символьный код', key: 'symbol_code'},
+  { title: 'Цифровой код', key: 'digital_code'},
+  { title: '#', key: 'icons', align:'center', sortable: false},
 ])
 
 onMounted( async () => {
@@ -42,11 +43,12 @@ onMounted( async () => {
 
 const getCurrencyData = async ({ page, itemsPerPage, sortBy }) => {
   loading.value = true
+  console.log(itemsPerPage)
   try {
     const { data } = await currency.get(page, itemsPerPage, sortBy )
+    paginations.value = data.result.pagination
     currencies.value = data.result.data
     console.log(data)
-    paginations.value = data.result.pagination
     loading.value = false
   } catch (e) {
 
@@ -69,7 +71,6 @@ const validateCurrency = () => {
   if (digitalRef.value === null) {
     return digitalError.value = 'Заполните поле!'
   }
-
 
   if (symbolRef.value === null) {
     return symbolError.value = 'Заполните поле!'
@@ -133,7 +134,6 @@ const back = () => {
 
 const createCurrentRate = async () => {
   if (validateCurrencyRate() !== true) return
-  
 
   const body = {
     date: changeTheDateForSending(dateRef.value),
@@ -141,6 +141,7 @@ const createCurrentRate = async () => {
   }
 
   const res = await currency.addRate(body, String(idCurrency.value))
+
   if (res.status === 201) {
     showToast('Успешно добавлена')
     nameRef.value = null
@@ -155,6 +156,19 @@ const goToShow = (id, symbol) => {
   router.push({ path: `/list/currency/${id}`, query: { symbol } });
 }
 
+const goToEdit = (id) => {
+  isDialogEdit.value = true
+  console.log(id)
+}
+const editRate = async (id) => {
+  const body = {
+    name: nameRef.value,
+    symbol_code: symbolRef.value,
+    digital_code: digitalRef.value
+  }
+
+  console.log(body)
+}
 </script>
 
 <template>
@@ -195,21 +209,42 @@ const goToShow = (id, symbol) => {
           :loading="loading"
           v-model:items-per-page="paginations.per_page"
           :headers="headers"
-          :items-length="Number(paginations.total)"
+          :items-length="paginations.total || 0"
           :items="currencies"
           :item-value="headers.title"
           @update:options="getCurrencyData"
       >
-        <template v-slot:item.id="{ item }">
-          <span>{{ item.id }}</span>
+        <template v-slot:item.id="{ index }">
+          <span>{{ index + 1 }}</span>
         </template>
         <template v-slot:item.icons="{ item }">
-          <v-icon @click="goToShow(item.id, item.symbol_code)" color="info">visibility</v-icon>
+          <v-icon @click="goToShow(item.id, item.symbol_code)" class="me-2">visibility</v-icon>
+          <v-icon @click="goToEdit(item.id)">edit</v-icon>
         </template>
       </v-data-table-server>
     </v-card>
+    <v-card>
+      <v-dialog width="500" v-model="isDialogEdit" activator="parent">   
+     <v-card class="rounded-xl pl-4">
+       <v-form class="w-100 pa-4" @submit.prevent="editRate">
+         <v-row class="w-100">
+           <v-col class="d-flex flex-column justify-between w-100 ga-5">
+             <v-text-field variant="outlined" type="tel" :error-messages="dateError" placeholder="30/04/2004"
+                           v-mask="'##/##/####'" label="Дата" v-model="dateRef"/>
+             <v-text-field variant="outlined" type="number" :error-messages="valueError" placeholder="1.0000"
+                           label="Значение" v-model="valueRef"/>
+             <div class="d-flex ga-2 justify-end align-center">
+               <v-btn :loading="loading" color="green" type="submit">Изменить</v-btn>
+             </div>
+           </v-col>
+         </v-row>
+       </v-form>
+     </v-card>
+   </v-dialog>
+    </v-card>
   </v-col>
   </div>
+  
   
 </template>
 
