@@ -3,7 +3,6 @@ import {api, buildParams} from './api.js'
 export default {
   add(data) {
     return  api.post('/priceType', data)
-
   },
   get(page = 1, itemsPerPage = 10, sortBy) {
     const params = buildParams(page, itemsPerPage, sortBy);
@@ -15,7 +14,7 @@ export default {
   update(id, body) {
     return api.patch(`/priceType/${id}`, body)
   },
-  delete() {
-
+  delete(id) {
+    return api.delete(`/priceType/${id}`)
   }
 }
