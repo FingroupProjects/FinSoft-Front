@@ -16,3 +16,11 @@
   padding: 5px;
   border-radius: 16px;
 }
+
+.icon {
+  opacity: 75%;
+}
+
+.icon:hover {
+  opacity: 100%;
+}

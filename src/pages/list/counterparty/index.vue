@@ -68,7 +68,7 @@ const fetchCounterparty = async ({ page, itemsPerPage, sortBy }) => {
         <div>
           <h2>Список контрагентов</h2>
         </div>
-        <v-btn rounded="lg" color="info" @click="$router.push('createCounterparty')">Создать</v-btn>
+        <v-btn rounded="lg" color="info" @click="$router.push('createCounterparty')">Добавить</v-btn>
       </div>
       <v-card class="table">
         <v-data-table-server :items="counterparty" :headers="headers" :loading="loading"
@@ -79,8 +79,8 @@ const fetchCounterparty = async ({ page, itemsPerPage, sortBy }) => {
             <span>{{ index + 1 }}</span>
           </template>
           <template #item.icons="{ item }">
-            <v-icon class="icon mr-2" @click="pushToRename(item)">edit</v-icon>
-            <v-icon class="icon" @click="showDetail(item)">visibility</v-icon>
+            <v-icon color="info" class="icon mr-2" @click="pushToRename(item)">edit</v-icon>
+            <v-icon color="info" class="icon" @click="showDetail(item)">visibility</v-icon>
           </template>
         </v-data-table-server>
       </v-card>
@@ -88,12 +88,8 @@ const fetchCounterparty = async ({ page, itemsPerPage, sortBy }) => {
   </div>
 </template>
 
-<style scoped>
-.icon {
-  opacity: 75%;
-}
-
-.icon:hover {
-  opacity: 100%;
+<style lang="css">
+.theme--light.v-data-table-server>.v-data-table-server__wrapper>table>tr:hover:not(.v-data-table-server__expanded__content):not(.v-data-table-server__empty-wrapper) {
+  background-color: green !important;
 }
 </style>

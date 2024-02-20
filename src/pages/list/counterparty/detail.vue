@@ -17,7 +17,11 @@ const headers = ref([
   { title: 'Номер контракта', key: 'contract_number' },
   { title: 'Дата', key: 'date' },
   { title: 'Комментарий', key: 'comment' },
-  // { title: '#', key: 'icons', align: 'center' },
+  { title: 'Контрагент', key: 'counterparty_id.name' },
+  { title: 'Валюта договора', key: 'currency_id.symbol_code' },
+  { title: 'Организация', key: 'organization_id.name' },
+  { title: 'Валюта оплаты', key: 'payment_id.symbol_code' },
+  { title: 'Тип валюты', key: 'price_type_id.name' },
 ]);
 
 const form = ref({
@@ -92,11 +96,8 @@ onMounted(async () => {
           <template v-slot:item.id="{ item, index }">
             <span>{{ index + 1 }}</span>
           </template>
-          <!-- <template #item.icons="{ item }">
-            <v-icon class="icon mr-2" @click="pushToRename(item)">edit</v-icon>
-            <v-icon class="icon" @click="showDetail(item)">visibility</v-icon>
-          </template> -->
         </v-data-table-server>
+
       </v-card>
     </div>
   </div>
