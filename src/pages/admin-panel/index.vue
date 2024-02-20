@@ -16,7 +16,7 @@ const lists = ref([
     id: 1, title: 'Справочник', child: [
       { id: 1, title: 'Банковские Счета Организаций', icon: 'account_balance', link: '/list/organizationBill' },
       { id: 2, title: 'Валюты', link: '/list/currency', icon: 'currency_exchange' },
-      { id: 3, title: 'Виды Цен', icon: 'request_quote' },
+      { id: 3, title: 'Виды Цен',link: '/list/priceType',  icon: 'request_quote' },
       { id: 4, title: 'Договоры Контрагентов', link: '/list/counterpartyeAgreement', icon: 'contact_page' },
       { id: 5, title: 'Кассы', icon: 'savings' },
       { id: 6, title: 'Контрагенты', link: '/list/counterparty', icon: 'group' },
