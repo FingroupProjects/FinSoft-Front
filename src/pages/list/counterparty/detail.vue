@@ -3,9 +3,26 @@ import { ref, onMounted } from "vue";
 import counterpartyApi from "../../../api/counterparty";
 import { useRoute, useRouter } from 'vue-router';
 import showToast from '../../../composables/toast'
+import counterpartyAgreement from "../../../api/counterpartyAgreement"
 
 const router = useRouter();
 const route = useRoute();
+
+const dataCounterpartyAgreement = ref([])
+const paginations = ref([])
+const headers = ref([
+  { title: '№', key: 'id', align: 'start', },
+  { title: 'Наименование', key: 'name', },
+  { title: 'Контактное лицо', key: 'contact_person' },
+  { title: 'Номер контракта', key: 'contract_number' },
+  { title: 'Дата', key: 'date' },
+  { title: 'Комментарий', key: 'comment' },
+  { title: 'Контрагент', key: 'counterparty_id.name' },
+  { title: 'Валюта договора', key: 'currency_id.symbol_code' },
+  { title: 'Организация', key: 'organization_id.name' },
+  { title: 'Валюта оплаты', key: 'payment_id.symbol_code' },
+  { title: 'Тип валюты', key: 'price_type_id.name' },
+]);
 
 const form = ref({
   address: "",
@@ -20,11 +37,10 @@ const form = ref({
 const a = ref(false)
 const b = ref(false)
 const c = ref(false)
-const id = ref(null);
 
 const getId = async () => {
   try {
-    const { data } = await counterpartyApi.getById(id.value);
+    const { data } = await counterpartyApi.getById(route.params.id);
     form.value = data.result;
     form.value.roles.forEach(roleIndex => {
       if (roleIndex === 1) a.value = true;
@@ -36,52 +52,21 @@ const getId = async () => {
   }
 };
 
-const handleCheckboxChange = (roleIndex) => {
-  const index = form.value.roles.indexOf(roleIndex);
-  if (index > -1) {
-    form.value.roles.splice(index, 1);
-  } else {
-    form.value.roles.push(roleIndex);
+const getDocumentsById = async ({ page, itemsPerPage, sortBy }) => {
+  try {
+    const { data } = await counterpartyAgreement.getById(route.params.id, page, itemsPerPage, sortBy)
+    dataCounterpartyAgreement.value = data.result.data
+    paginations.value = data.result.pagination
+    console.log(data);
   }
-};
+  catch (e) {
+    console.log(e);
+  }
+}
 
 onMounted(async () => {
-  id.value = route.params.id;
   await getId();
 });
-
-const nameRules = ref([
-  value => {
-    if (value) return true
-    return 'Поле не может быть пустым'
-  },
-])
-
-const phoneRules = ref([
-  value => {
-    if (value?.length === 13) return true
-    return 'Введите валидный номер телефона'
-  },
-])
-
-const emailRules = ref([
-  value => {
-    if (value) return true
-    return 'Поле email объязательна'
-  },
-  value => {
-    if (/.+@.+\..+/.test(value)) return true
-    return 'Введите валидную почту'
-  },
-])
-
-const addressRules = ref([
-  value => {
-    if (value) return true
-    return 'Поле не может быть пустым'
-  },
-])
-
 </script>
 
 <template>
@@ -91,22 +76,30 @@ const addressRules = ref([
     </div>
     <v-card class="px-4 py-6">
       <div class="d-flex ga-5">
-        <v-text-field v-model="form.name" disabled :rules="nameRules" variant="outlined"
-          label="Наименование контрагента" />
-        <v-text-field v-model="form.phone" disabled :rules="phoneRules" variant="outlined" label="Тел номер"
-          v-mask="'+992#########'" />
-        <v-text-field v-model="form.address" disabled :rules="addressRules" variant="outlined" label="Адрес" />
-        <v-text-field v-model="form.email" disabled :rules="emailRules" variant="outlined" type="email" label="Почта" />
+        <v-text-field v-model="form.name" disabled variant="outlined" label="Наименование контрагента" />
+        <v-text-field v-model="form.phone" disabled variant="outlined" label="Тел номер" v-mask="'+992#########'" />
+        <v-text-field v-model="form.address" disabled variant="outlined" label="Адрес" />
+        <v-text-field v-model="form.email" disabled variant="outlined" type="email" label="Почта" />
       </div>
       <div class="d-flex w-75">
-        <v-checkbox-btn v-model="a" disabled label="Клиент" color="info"
-          @change="handleCheckboxChange(1)"></v-checkbox-btn>
-        <v-checkbox-btn v-model="b" disabled label="Поставщик" color="info"
-          @change="handleCheckboxChange(2)"></v-checkbox-btn>
-        <v-checkbox-btn v-model="c" disabled label="Прочие отношения" color="info"
-          @change="handleCheckboxChange(3)"></v-checkbox-btn>
+        <v-checkbox-btn v-model="a" disabled label="Клиент" @change="handleCheckboxChange(1)"></v-checkbox-btn>
+        <v-checkbox-btn v-model="b" disabled label="Поставщик" @change="handleCheckboxChange(2)"></v-checkbox-btn>
+        <v-checkbox-btn v-model="c" disabled label="Прочие отношения" @change="handleCheckboxChange(3)"></v-checkbox-btn>
       </div>
     </v-card>
+    <div class="mt-4">
+      <v-card class="table">
+        <v-data-table-server :items="dataCounterpartyAgreement" items-per-page-text="Элементов на странице:"
+          loading-text="Загрузка" no-data-text="Нет данных" @update:options="getDocumentsById" :headers="headers"
+          v-model:items-per-page="paginations.per_page" :items-length="paginations.total || 0"
+          :item-value="headers.title">
+          <template v-slot:item.id="{ item, index }">
+            <span>{{ index + 1 }}</span>
+          </template>
+        </v-data-table-server>
+
+      </v-card>
+    </div>
   </div>
 </template>
 

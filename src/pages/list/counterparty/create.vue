@@ -115,6 +115,5 @@ const handleCheckboxChange = (index) => {
 .block {
   border-radius: 6px;
   padding: 20px;
-
 }
 </style>

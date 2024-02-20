@@ -90,6 +90,21 @@ const routes = [
     component: () => import("../pages/list/organizationBill/edit.vue"),
   },
   {
+    path: "/list/priceType",
+    name: "priceType",
+    component: () => import("../pages/list/priceType/index.vue"),
+  },
+  {
+    path: "/list/counterpartyeAgreement",
+    name: "counterpartyeAgreement",
+    component: () => import("../pages/list/counterpartyAgreement/index.vue"),
+  },
+  {
+    path: "/list/createCounterpartyAgreement",
+    name: "createCounterpartyAgreement",
+    component: () => import("../pages/list/counterpartyAgreement/create.vue"),
+  },
+  {
     path: "/login",
     name: "login",
     component: () => import("../pages/authentication/authentication.vue"),

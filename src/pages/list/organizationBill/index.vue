@@ -58,12 +58,4 @@ onMounted(() => {
   </div>
 </template>
 
-<style scoped>
-.table {
-  background: white;
-  padding: 5px;
-  border-radius: 16px;
-  max-height: 90vh;
-  overflow: auto;
-}
-</style>
+<style scoped></style>
