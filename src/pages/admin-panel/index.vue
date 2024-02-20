@@ -22,7 +22,8 @@ const lists = ref([
       { id: 6, title: 'Контрагенты', link: '/list/counterparty', icon: 'group' },
       { id: 7, title: 'Номенклатура', icon: 'assignment' },
       { id: 8, title: 'Организации', icon: 'corporate_fare' },
-      { id: 9, title: 'Пользователи', icon: 'groups', link: '/list/employee' },
+      { id: 9, title: 'Пользователи', icon: 'groups', link: '/list/employee' },=
+      { id: 8, title: 'Организации', link: '/list/organization', icon: 'corporate_fare' },
       { id: 10, title: 'Прочие Расходы', icon: 'price_change' },
       { id: 11, title: 'Склады', icon: 'warehouse' },
       { id: 12, title: 'Сотрудники', icon: 'supervisor_account' },
