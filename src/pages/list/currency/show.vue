@@ -6,15 +6,15 @@ import showToast from "../../../composables/toast/index.js";
 import showDate from "../../../composables/date/showDate";
 import currentDate from "../../../composables/date/currentDate";
 import changeTheDateForSending from "../../../composables/date/changeTheDateForSending";
+import {add, prevIcon} from "../../../composables/constant/buttons.js";
 
 const route = useRoute()
 
-
-const isDialog = ref(false);
+const isDialog = ref(false)
 const updateDialog = ref(false)
 const deleteDialog = ref(false)
-const loading = ref(false);
-const search = ref('');
+const loading = ref(false)
+const search = ref('')
 
 const currentCurrencyRateID = ref(null)
 const symbolRef = ref(null)
@@ -29,8 +29,6 @@ const paginations = ref([])
 
 const headers = ref([
   { title: '№', key: 'id'},
-  { title: 'Наименование', key: 'name', sortable: false},
-  { title: 'Цифровой код', key: 'digital_code', sortable: false},
   { title: 'Дата', key: 'date'},
   { title: 'Значение', key: 'value'},
   { title: '#', key: 'icons', align: 'center', sortable: false},
@@ -85,7 +83,7 @@ const addRate = async ({ page, itemsPerPage, sortBy }) => {
   if (validateCurrentRate() !== true) return
 
   const body = {
-    date: changeTheDateForSendingUpdate(dateRef.value),
+    date: changeTheDateForSending(dateRef.value),
     value: valueRef.value
   }
 
@@ -136,10 +134,12 @@ const goToDelete = item => {
   <div>
     <v-col>
       <div class="d-flex justify-space-between  align-center ms-2">
-        <v-btn variant="outlined" color="info" @click="$router.push('/list/currency')">Назад</v-btn>
+        <div class="rounded-circle bg-blue pa-2 cursor-pointer" @click="$router.push('/list/currency')">
+          <v-icon color="white" size="25">{{ prevIcon }}</v-icon>
+        </div>
         
         <v-btn color="info">
-          <span>Создать</span>
+          <span>{{ add }}</span>
           <v-dialog width="500" v-model="isDialog" activator="parent">   
             <v-card class="rounded-xl pl-4" :title="'Курс валюты: ' + symbolRef">
               <v-form class="w-100 pa-4" @submit.prevent="addRate">
@@ -150,7 +150,7 @@ const goToDelete = item => {
                     <v-text-field variant="outlined" type="number" :error-messages="valueError" placeholder="1.0000"
                                   label="Значение" v-model="valueRef"/>
                     <div class="d-flex ga-2 justify-end align-center">
-                      <v-btn :loading="loading" color="info" type="submit">Добавить</v-btn>
+                      <v-btn :loading="loading" color="info" type="submit">{{ add }}</v-btn>
                     </div>
                   </v-col>
                 </v-row>
@@ -162,7 +162,11 @@ const goToDelete = item => {
       </div>
       <v-card class="mt-4 table">
         <v-card-title class="d-flex align-center pe-2">
-          Курс валюты: {{ useRoute().query.symbol }}
+          <div class="d-flex flex-column text-sm-body-1">
+            <p><strong>Наименование:</strong> {{ useRoute().query.name }}</p>
+            <p><strong>Символьный код:</strong> {{ useRoute().query.symbol }}</p>
+            <p><strong>Цифровой код:</strong> {{ useRoute().query.digital }}</p>
+          </div>
 
           <v-spacer />
           <v-spacer />
@@ -179,6 +183,7 @@ const goToDelete = item => {
               variant="outlined"
           ></v-text-field>
         </v-card-title>
+
         <v-data-table-server
             items-per-page-text="Элементов на странице:"
             loading-text="Загрузка"
@@ -190,6 +195,7 @@ const goToDelete = item => {
             :items="currencies"
             :search="search"
             :item-value="headers.title"
+            hover
             @update:options="getCurrencyRateData"
         >
           <template v-slot:item.id="{ index }">

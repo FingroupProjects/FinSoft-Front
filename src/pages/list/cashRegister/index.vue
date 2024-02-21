@@ -6,7 +6,6 @@ import organization from '../../../api/organizations.js'
 import showToast from '../../../composables/toast'
 import currency from "../../../api/currency.js";
 
-const router = useRouter()
 const isDialog = ref(false);
 const updateDialog = ref(false);
 const deleteDialog = ref(false);
@@ -14,9 +13,8 @@ const deleteDialog = ref(false);
 const loading = ref(true);
 
 const ID = ref(null)
-
+const search = ref('')
 const name = ref(null)
-const symbol_code = ref(null)
 const itemID = ref(null)
 const nameError = ref(null)
 const currencyError = ref(null)
@@ -41,10 +39,10 @@ const headers = ref([
   { title: '#', key: 'icons', sortable: false},
 ])
 
-const getCashRegisterData = async ({ page, itemsPerPage, sortBy }) => {
+const getCashRegisterData = async ({ page, itemsPerPage, sortBy, search }) => {
   loading.value = true
   try {
-    const { data } = await cashRegister.get(page, itemsPerPage, sortBy )
+    const { data } = await cashRegister.get({page, itemsPerPage, sortBy}, search )
     paginations.value = data.result.pagination
     cashRegisters.value = data.result.data
     loading.value = false
@@ -186,7 +184,8 @@ watch(isDialog, async() => {
   if (isDialog.value === false) {
     name.value = null;
   }
-} )
+})
+
 watch(updateDialog, async() => {
   if (updateDialog.value === false) {
     name.value = null;
@@ -204,28 +203,48 @@ onMounted(async () => {
 
   <div>
     <v-col>
-      <div class="d-flex w-100 justify-space-between">
-        <div>
-          <h2>Виды цен</h2>
-        </div>
+      <div class="d-flex w-100 justify-end">
         <v-btn rounded="lg" @click="isDialog = true" color="info" >Создать</v-btn>
       </div>
       <v-card class="mt-4 table">
+        <v-card-title class="d-flex align-center pe-2">
+          Касса
+
+          <v-spacer />
+          <v-spacer />
+          <v-spacer />
+
+          <v-text-field
+              v-model="search"
+              prepend-inner-icon="search"
+              density="compact"
+              label="Поиск..."
+              single-line
+              flat
+              hide-details
+              variant="outlined"
+          ></v-text-field>
+        </v-card-title>
+
         <v-data-table-server
+            items-per-page-text="Элементов на странице:"
+            loading-text="Загрузка"
+            no-data-text="Нет данных"
             :loading="loading"
             v-model:items-per-page="paginations.per_page"
             :headers="headers"
             :items-length="paginations.total || 0"
             :items="cashRegisters"
             :item-value="headers.title"
+            :search="search"
             @update:options="getCashRegisterData"
         >
           <template v-slot:item.id="{ index }">
             <span>{{ index + 1 }}</span>
           </template>
           <template #item.icons="{ item }">
-            <v-icon class="icon mr-2" @click="editItem(item)" >edit</v-icon>
-            <v-icon class="trash mr-2" @click="deleteItem(item)" color="red" >delete</v-icon>
+            <v-icon class="icon mr-2" @click="editItem(item)" color="info">edit</v-icon>
+            <v-icon class="icon mr-2" @click="deleteItem(item)" color="red" >delete</v-icon>
           </template>
         </v-data-table-server>
       </v-card>
