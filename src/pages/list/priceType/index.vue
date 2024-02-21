@@ -1,5 +1,5 @@
 <script setup>
-import {computed, onMounted, ref} from "vue";
+import {computed, onMounted, ref, watch} from "vue";
 import { useRouter } from "vue-router";
 import priceType from '../../../api/priceType.js'
 import showToast from '../../../composables/toast'
@@ -142,6 +142,17 @@ const deleteModal = async ({page, itemsPerPage, sortBy}) => {
   }
 }
 
+watch(isDialog, async() => {
+  if (isDialog.value === false) {
+    name.value = null;
+  }
+} )
+watch(updateDialog, async() => {
+  if (updateDialog.value === false) {
+    name.value = null;
+  }
+})
+
 
 onMounted(async () => {
   await getCurrency()
@@ -169,8 +180,8 @@ onMounted(async () => {
             :item-value="headers.title"
             @update:options="getCurrencyData"
         >
-          <template v-slot:item.id="{ item }">
-            <span>{{ item.id }}</span>
+          <template v-slot:item.id="{ index }">
+            <span>{{ index + 1 }}</span>
           </template>
           <template #item.icons="{ item }">
             <v-icon class="icon mr-2" @click="editItem(item)" >edit</v-icon>
