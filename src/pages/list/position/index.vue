@@ -1,52 +1,37 @@
 <script setup>
 import {computed, onMounted, ref, watch} from "vue";
 import { useRouter } from "vue-router";
-import cashRegister from '../../../api/cashRegister.js'
-import organization from '../../../api/organizations.js'
+import position from '../../../api/position.js'
 import showToast from '../../../composables/toast'
-import currency from "../../../api/currency.js";
 
 const router = useRouter()
 const isDialog = ref(false);
 const updateDialog = ref(false);
 const deleteDialog = ref(false);
-
 const loading = ref(true);
+const paginations = ref([])
 
+const itemID = ref(null)
 const ID = ref(null)
 
 const name = ref(null)
-const symbol_code = ref(null)
-const itemID = ref(null)
 const nameError = ref(null)
-const currencyError = ref(null)
-const organizationError = ref(null)
 
-const currencies = ref([])
-const organizations = ref([])
-
-const cashRegisters = ref([])
-const paginations = ref([])
-
-const currencyAdd = ref([])
-const currencyUpdate = ref([])
-const organizationAdd = ref([])
-const organizationUpdate = ref([])
+const positions = ref([])
 
 const headers = ref([
   { title: '№', key: 'id'},
   { title: 'Название', key: 'name'},
-  { title: 'Валюта', key: 'currency.symbol_code', sortable: false},
-  { title: 'Организация', key: 'organization.name', sortable: false},
-  { title: '#', key: 'icons', sortable: false},
+  { title: '#', key: 'icons', align:'center', sortable: false},
 ])
 
-const getCashRegisterData = async ({ page, itemsPerPage, sortBy }) => {
+const getPositionData = async ({ page, itemsPerPage, sortBy }) => {
   loading.value = true
   try {
-    const { data } = await cashRegister.get(page, itemsPerPage, sortBy )
+    const { data } = await position.get(page, itemsPerPage, sortBy )
+    console.log(data)
     paginations.value = data.result.pagination
-    cashRegisters.value = data.result.data
+    positions.value = data.result.data
     loading.value = false
   } catch (e) {
 
@@ -55,39 +40,17 @@ const getCashRegisterData = async ({ page, itemsPerPage, sortBy }) => {
 
 const validate = () => {
   nameError.value = null
-  currencyError.value = null
-  organizationError.value = null
-
-  if (name.value === null) {
+  if (name.value.length < 1) {
     return nameError.value = 'Заполните поле!'
   }
 
-  if (currencyAdd.value.length === 0) {
-   return  currencyError.value = 'Выберите валюту'
-  }
-  if (organizationAdd.value.length === 0) {
-    return currencyError.value = 'Выберите организацию'
-  }
   return true
 }
 
 const getCurrency = async () => {
   try {
-    const { data } = await currency.get(1, 10000 )
-    currencies.value = data.result.data.map(item => {
-      return {
-        id: item.id,
-        symbol_code: item.symbol_code
-      }
-    })
-  } catch (e) {
-
-  }
-}
-const getOrganizations = async () => {
-  try {
-    const { data } = await organization.getAll(1, 10000 )
-    organizations.value = data.result.data.map(item => {
+    const { data } = await position.get(1, 10000 )
+    positions.value = data.result.data.map(item => {
       return {
         id: item.id,
         name: item.name
@@ -98,23 +61,21 @@ const getOrganizations = async () => {
   }
 }
 
-
 const create = async ({page, itemsPerPage, sortBy}) => {
   if (validate() !== true) return
 
+
   const body = {
-    name: name.value,
-    currency_id: currencyAdd.value,
-    organization_id: organizationAdd.value
+    name: name.value
   }
 
-  const res = await cashRegister.add(body)
+  const res = await position.add(body)
 
   if (res.status === 201) {
     showToast('Успешно добавлена')
     isDialog.value = false;
     name.value = null;
-   await getCashRegisterData({page, itemsPerPage, sortBy})
+   await getPositionData({page, itemsPerPage, sortBy})
   }
 
 }
@@ -123,46 +84,23 @@ const editItem = item => {
   updateDialog.value = true
   name.value = item.name
   itemID.value = item.id
-
-  let organizationID;
-
-  organizations.value.map(el => {
-    if (el.id === item.organization.id) {
-      organizationUpdate.value = {
-        id: item.organization.id,
-        name: item.organization.name
-      }
-      organizationID = item.organization.id
-    }
-  })
-
-  currencies.value.map(el => {
-    if (el.id === item.currency.id) {
-      currencyUpdate.value = {
-        id: item.currency.id,
-        symbol_code: item.currency.symbol_code,
-        organization_id: organizationID
-      }
-    }
-  })
 }
 
 const update = async ({page, itemsPerPage, sortBy}) => {
 
   if (validate() !== true) return
+
   const body = {
-    name: name.value,
-    currency_id: currencyUpdate.value.id,
-    organization_id: currencyUpdate.value.organization_id || organizationUpdate.value.id,
+    name: name.value
   }
 
-  const { status } = await cashRegister.update(itemID.value, body)
+  const res = await position.update(itemID.value, body)
 
-  if (status === 200) {
+  if (res.status === 200) {
     showToast('Успешно обновлено')
     updateDialog.value = false
     name.value = null;
-    await getCashRegisterData({page, itemsPerPage, sortBy})
+    await getPositionData({page, itemsPerPage, sortBy})
   }
 }
 
@@ -172,15 +110,16 @@ const deleteItem = item => {
 }
 
 const deleteModal = async ({page, itemsPerPage, sortBy}) => {
-  const {status} = await cashRegister.delete(ID.value)
+  const {status} = await position.delete(ID.value)
 
   if (status === 200) {
     showToast('Успешно удалено', 'red')
     deleteDialog.value = false
     ID.value = null;
-    await getCashRegisterData({page, itemsPerPage, sortBy})
+    await getPositionData({page, itemsPerPage, sortBy})
   }
 }
+
 
 watch(isDialog, async() => {
   if (isDialog.value === false) {
@@ -193,11 +132,6 @@ watch(updateDialog, async() => {
   }
 })
 
-onMounted(async () => {
-  await getCurrency()
-  await getOrganizations()
-})
-
 </script>
 
 <template>
@@ -206,7 +140,7 @@ onMounted(async () => {
     <v-col>
       <div class="d-flex w-100 justify-space-between">
         <div>
-          <h2>Виды цен</h2>
+          <h2>Должность</h2>
         </div>
         <v-btn rounded="lg" @click="isDialog = true" color="info" >Создать</v-btn>
       </div>
@@ -216,12 +150,12 @@ onMounted(async () => {
             v-model:items-per-page="paginations.per_page"
             :headers="headers"
             :items-length="paginations.total || 0"
-            :items="cashRegisters"
+            :items="positions"
             :item-value="headers.title"
-            @update:options="getCashRegisterData"
+            @update:options="getPositionData"
         >
           <template v-slot:item.id="{ index }">
-            <span>{{ index + 1 }}</span>
+            <span>{{ index +1 }}</span>
           </template>
           <template #item.icons="{ item }">
             <v-icon class="icon mr-2" @click="editItem(item)" >edit</v-icon>
@@ -244,22 +178,6 @@ onMounted(async () => {
                     type="text"
                     v-model="name"
                     :error-messages="nameError"
-                />
-                <v-select
-                    variant="outlined"
-                    label="Выберите валюту"
-                    v-model="currencyAdd"
-                    :items="currencies"
-                    item-title="symbol_code"
-                    item-value="id"
-                />
-                <v-select
-                    variant="outlined"
-                    label="Выберите организацию"
-                    v-model="organizationAdd"
-                    :items="organizations"
-                    item-title="name"
-                    item-value="id"
                 />
                 <div class="d-flex ga-2 justify-end align-center">
                   <v-btn :loading="loading" color="green" type="submit">Добавить</v-btn>
@@ -284,29 +202,6 @@ onMounted(async () => {
                     type="text"
                     :error-messages="nameError"
                     label="Наименование"
-                />
-                <v-select
-                    :items="currencies"
-                    v-model="currencyUpdate"
-                    item-title="symbol_code"
-                    item-value="id"
-                    variant="outlined"
-                    label="Выберите валюту"
-                    persistent-hint
-                    return-object
-                    single-line
-                />
-                <v-select
-                    :items="organizations"
-                    v-model="organizationUpdate"
-                    item-title="name"
-                    item-value="id"
-                    :error-messages="organizationError"
-                    variant="outlined"
-                    label="Выберите организацию"
-                    persistent-hint
-                    return-object
-                    single-line
                 />
                 <div class="d-flex ga-2 justify-end align-center">
                   <v-btn :loading="loading" color="green" type="submit">Добавить</v-btn>

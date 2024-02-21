@@ -2,9 +2,9 @@
 import {computed, onMounted, ref} from "vue";
 import { useRouter } from "vue-router";
 import cashRegister from '../../../api/cashRegister.js'
-import organization from '../../../api/organizations.js'
+import position from '../../../api/position.js'
 import showToast from '../../../composables/toast'
-import currency from "../../../api/currency.js";
+import employee from "../../../api/employee.js";
 
 const router = useRouter()
 const isDialog = ref(false);
@@ -12,82 +12,75 @@ const updateDialog = ref(false);
 const deleteDialog = ref(false);
 
 const loading = ref(true);
+const itemID = ref(null);
 
 const ID = ref(null)
 
 const name = ref(null)
-const symbol_code = ref(null)
-const itemID = ref(null)
+const surname = ref(null)
+const lastname = ref(null)
+
+const avatar = ref(null)
+
 const nameError = ref(null)
-const currencyError = ref(null)
-const organizationError = ref(null)
+const surnameError = ref(null)
+const positionError = ref(null)
 
-const currencies = ref([])
-const organizations = ref([])
+const positions = ref([])
+const employees = ref([])
 
-const cashRegisters = ref([])
 const paginations = ref([])
 
-const currencyAdd = ref([])
-const currencyUpdate = ref([])
-const organizationAdd = ref([])
-const organizationUpdate = ref([])
+const positionAdd = ref([])
+const positionUpdate = ref([])
+
 
 const headers = ref([
   { title: '№', key: 'id'},
-  { title: 'Название', key: 'name'},
-  { title: 'Валюта', key: 'currency.symbol_code', sortable: false},
-  { title: 'Организация', key: 'organization.name', sortable: false},
+  { title: 'Имя', key: 'name'},
+  { title: 'Фамилия', key: 'lastname'},
+  { title: 'Отчество', key: 'surname'},
+  { title: 'Аватар', key: 'image'},
   { title: '#', key: 'icons', sortable: false},
 ])
 
-const getCashRegisterData = async ({ page, itemsPerPage, sortBy }) => {
+const getEmployeesData = async ({ page, itemsPerPage, sortBy }) => {
   loading.value = true
   try {
-    const { data } = await cashRegister.get(page, itemsPerPage, sortBy )
+    const { data } = await employee.get(page, itemsPerPage, sortBy )
     paginations.value = data.result.pagination
-    cashRegisters.value = data.result.data
+    employees.value = data.result.data
     loading.value = false
   } catch (e) {
-
   }
 }
 
 const validate = () => {
   nameError.value = null
-  currencyError.value = null
-  organizationError.value = null
+  surnameError.value = null;
+
 
   if (name.value === null) {
     return nameError.value = 'Заполните поле!'
   }
-
-  if (currencyAdd.value.length === 0) {
-   return  currencyError.value = 'Выберите валюту'
+  if (lastname.value === null) {
+    return nameError.value = 'Заполните поле!'
   }
-  if (organizationAdd.value.length === 0) {
-    return currencyError.value = 'Выберите организацию'
+
+
+  if (positionAdd.value.length === 0) {
+   return  positionError.value = 'Выберите позицию'
+  }
+  if (positionUpdate.value.length === 0) {
+    return positionError.value = 'Выберите позицию'
   }
   return true
 }
 
-const getCurrency = async () => {
+const getPositions = async () => {
   try {
-    const { data } = await currency.get(1, 10000 )
-    currencies.value = data.result.data.map(item => {
-      return {
-        id: item.id,
-        symbol_code: item.symbol_code
-      }
-    })
-  } catch (e) {
-
-  }
-}
-const getOrganizations = async () => {
-  try {
-    const { data } = await organization.get(1, 10000 )
-    organizations.value = data.result.data.map(item => {
+    const { data } = await position.get(1, 10000 )
+    positions.value = data.result.data.map(item => {
       return {
         id: item.id,
         name: item.name
@@ -104,17 +97,21 @@ const create = async ({page, itemsPerPage, sortBy}) => {
 
   const body = {
     name: name.value,
-    currency_id: currencyAdd.value,
-    organization_id: organizationAdd.value
+    lastname: lastname.value,
+    surname: surname.value,
+    position_id: positionAdd.value
   }
 
-  const res = await cashRegister.add(body)
+  const res = await employee.add(body)
 
   if (res.status === 201) {
     showToast('Успешно добавлена')
     isDialog.value = false;
     name.value = null;
-   await getCashRegisterData({page, itemsPerPage, sortBy})
+    lastname.value = null;
+    surname.value = null;
+    positionAdd.value = null;
+   await getEmployeesData({page, itemsPerPage, sortBy})
   }
 
 }
@@ -126,25 +123,15 @@ const editItem = item => {
 
   let organizationID;
 
-  organizations.value.map(el => {
-    if (el.id === item.organization.id) {
-      organizationUpdate.value = {
-        id: item.organization.id,
-        name: item.organization.name
+  positions.value.map(el => {
+    if (el.id === item.position.id) {
+      positionUpdate.value = {
+        id: item.position.id,
+        name: item.position.name
       }
-      organizationID = item.organization.id
     }
   })
 
-  currencies.value.map(el => {
-    if (el.id === item.currency.id) {
-      currencyUpdate.value = {
-        id: item.currency.id,
-        symbol_code: item.currency.symbol_code,
-        organization_id: organizationID
-      }
-    }
-  })
 }
 
 const update = async ({page, itemsPerPage, sortBy}) => {
@@ -152,8 +139,9 @@ const update = async ({page, itemsPerPage, sortBy}) => {
   if (validate() !== true) return
   const body = {
     name: name.value,
-    currency_id: currencyUpdate.value.id,
-    organization_id: currencyUpdate.value.organization_id || organizationUpdate.value.id,
+    lastname: lastname.value,
+    surname: surname.value,
+    position_id: positionUpdate.value
   }
 
   const { status } = await cashRegister.update(itemID.value, body)
@@ -162,7 +150,11 @@ const update = async ({page, itemsPerPage, sortBy}) => {
     showToast('Успешно обновлено')
     updateDialog.value = false
     name.value = null;
-    await getCashRegisterData({page, itemsPerPage, sortBy})
+    lastname.value = null;
+    surname.value = null;
+    positionUpdate.value = null;
+
+    await getEmployeesData({page, itemsPerPage, sortBy})
   }
 }
 
@@ -172,20 +164,19 @@ const deleteItem = item => {
 }
 
 const deleteModal = async ({page, itemsPerPage, sortBy}) => {
-  const {status} = await cashRegister.delete(ID.value)
+  const {status} = await employee.delete(ID.value)
 
   if (status === 200) {
     showToast('Успешно удалено', 'red')
     deleteDialog.value = false
     ID.value = null;
-    await getCashRegisterData({page, itemsPerPage, sortBy})
+    await getEmployeesData({page, itemsPerPage, sortBy})
   }
 }
 
 
 onMounted(async () => {
-  await getCurrency()
-  await getOrganizations()
+  await getPositions()
 })
 
 </script>
@@ -196,7 +187,7 @@ onMounted(async () => {
     <v-col>
       <div class="d-flex w-100 justify-space-between">
         <div>
-          <h2>Виды цен</h2>
+          <h2>Сотрудники</h2>
         </div>
         <v-btn rounded="lg" @click="isDialog = true" color="info" >Создать</v-btn>
       </div>
@@ -206,12 +197,17 @@ onMounted(async () => {
             v-model:items-per-page="paginations.per_page"
             :headers="headers"
             :items-length="paginations.total || 0"
-            :items="cashRegisters"
+            :items="employees"
             :item-value="headers.title"
-            @update:options="getCashRegisterData"
+            @update:options="getEmployeesData"
         >
           <template v-slot:item.id="{ index }">
             <span>{{ index + 1 }}</span>
+          </template>
+          <template v-slot:item.image="{ item }">
+            <div class="p-2">
+              <v-img :src="item.image" :alt="item.name" height="100px"></v-img>
+            </div>
           </template>
           <template #item.icons="{ item }">
             <v-icon class="icon mr-2" @click="editItem(item)" >edit</v-icon>
