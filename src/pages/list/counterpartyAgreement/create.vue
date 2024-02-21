@@ -7,7 +7,7 @@ import currencyApi from '../../../api/currency.js'
 import organizationApi from "../../../api/organizations.js"
 import priceTypeApi from "../../../api/priceType.js"
 import showToast from '../../../composables/toast'
-
+import changeTheDateForSending from '../../../composables/date/changeTheDateForSending'
 
 const router = useRouter()
 
@@ -29,7 +29,7 @@ const price_type = ref('')
 
 const getOrganization = async () => {
   try {
-    const { data } = await organizationApi.getAll();
+    const { data } = await organizationApi.getAll({ itemsPerPage: 10000 });
     organizations.value = data.result.data;
   }
   catch (e) {
@@ -37,9 +37,9 @@ const getOrganization = async () => {
   }
 }
 
-const getCounterprty = async () => {
+const getCounterparty = async () => {
   try {
-    const { data } = await counterpartyApi.get()
+    const { data } = await counterpartyApi.get({ itemsPerPage: 10000 })
     counterparties.value = data.result.data
   }
   catch (e) {
@@ -49,7 +49,7 @@ const getCounterprty = async () => {
 
 const getCurrency = async () => {
   try {
-    const { data } = await currencyApi.get()
+    const { data } = await currencyApi.get({ itemsPerPage: 10000 })
     currencies.value = data.result.data
   }
   catch (e) {
@@ -59,7 +59,7 @@ const getCurrency = async () => {
 
 const getPayment = async () => {
   try {
-    const { data } = await currencyApi.get()
+    const { data } = await currencyApi.get({ itemsPerPage: 10000 })
     payments.value = data.result.data
   }
   catch (e) {
@@ -69,7 +69,7 @@ const getPayment = async () => {
 
 const getPriceType = async () => {
   try {
-    const { data } = await priceTypeApi.get()
+    const { data } = await priceTypeApi.get({ itemsPerPage: 10000 })
     price_types.value = data.result.data
   }
   catch (e) {
@@ -81,7 +81,7 @@ const createCounterpartyAgreement = async () => {
   try {
     const body = {
       name: name.value,
-      date: date.value,
+      date: changeTheDateForSending(date.value),
       organization_id: organization.value.id,
       counterparty_id: counterparty.value.id,
       contact_person: contact_person.value,
@@ -91,18 +91,20 @@ const createCounterpartyAgreement = async () => {
       comment: comment.value,
       price_type_id: price_type.value.id,
     }
+    console.log(body);
     const res = await counterpartyAgreementApi.create(body)
+    showToast('Успешно добавлено')
     router.push({ name: 'counterpartyeAgreement' })
   } catch (e) {
     console.log(e);
   }
 }
 onMounted(async () => {
-  getOrganization()
-  getCounterprty()
-  getCurrency()
-  getPayment()
-  getPriceType()
+  await getOrganization()
+  await getCounterparty()
+  await getCurrency()
+  await getPayment()
+  await getPriceType()
 })
 
 const organizationProps = (item) => {
@@ -134,35 +136,46 @@ const price_typeProps = (item) => {
     title: item.name,
   }
 }
+const rules = {
+  required: v => !!v || 'Поле обязательно для заполнения',
+  date: v => (v && /^\d{2}-\d{2}-\d{4}$/.test(v)) || 'Формат даты должен быть DD-MM-YYYY',
+}
 
 </script>
 <template>
   <div>
-    <div class="d-flex justify-end mb-4">
-      <v-btn rounded="lg" color="info" @click.prevent="$router.push('counterpartyeAgreement')">Назад</v-btn>
-    </div>
-    <v-card class="block">
-      <v-form @submit.prevent="createCounterpartyAgreement">
-        <div class="d-flex ga-5">
-          <v-text-field v-model="name" variant="outlined" label="Наименование"></v-text-field>
-          <v-text-field v-model="date" v-mask="'####-##-##'" variant="outlined" label="Дата"></v-text-field>
-          <v-text-field v-model="contact_person" variant="outlined" label="Контактное лицо"></v-text-field>
-          <v-text-field v-model="comment" variant="outlined" label="Комментарий"></v-text-field>
-        </div>
-        <div class="d-flex ga-5">
-          <v-select v-model="organization" :items="organizations" :item-props="organizationProps"
-            label="Организация"></v-select>
-          <v-select v-model="counterparty" :items="counterparties" :item-props="counterpartyProps"
-            label="Контрагент"></v-select>
-          <v-select v-model="currency" :items="currencies" :item-props="currencyProps" label="Валюта договора"></v-select>
-          <v-select v-model="payment" :items="payments" :item-props="paymentProps" label="Валюта оплаты"></v-select>
-          <v-select v-model="price_type" :items="price_types" :item-props="price_typeProps" label="Тип валюты"></v-select>
-        </div>
-        <div class="d-flex justify-end mt-4">
-          <v-btn rounded="lg" color="info" type="submit">Создать</v-btn>
-        </div>
-      </v-form>
-    </v-card>
+    <v-col class="d-flex flex-column ga-5">
+      <div class="d-flex justify-start">
+        <v-btn variant="outlined" color="info" @click.prevent="$router.push('counterpartyeAgreement')">Назад</v-btn>
+      </div>
+      <v-card class="block">
+        <v-form @submit.prevent="createCounterpartyAgreement" ref="form">
+          <div class="d-flex ga-5">
+            <v-text-field v-model="name" :rules="[rules.required]" variant="outlined" label="Наименование"></v-text-field>
+            <v-text-field v-model="date" :rules="[rules.required, rules.date]" v-mask="'##-##-####'" variant="outlined"
+              label="Дата"></v-text-field>
+            <v-text-field v-model="contact_person" :rules="[rules.required]" variant="outlined"
+              label="Контактное лицо"></v-text-field>
+            <v-text-field v-model="comment" variant="outlined" label="Комментарий"></v-text-field>
+          </div>
+          <div class="d-flex ga-5">
+            <v-select v-model="organization" :items="organizations" :item-props="organizationProps"
+              :rules="[rules.required]" label="Организация"></v-select>
+            <v-select v-model="counterparty" :items="counterparties" :item-props="counterpartyProps"
+              :rules="[rules.required]" label="Контрагент"></v-select>
+            <v-select v-model="currency" :items="currencies" :item-props="currencyProps" :rules="[rules.required]"
+              label="Валюта договора"></v-select>
+            <v-select v-model="payment" :items="payments" :item-props="paymentProps" :rules="[rules.required]"
+              label="Валюта оплаты"></v-select>
+            <v-select v-model="price_type" :items="price_types" :item-props="price_typeProps" :rules="[rules.required]"
+              label="Тип валюты"></v-select>
+          </div>
+          <div class="d-flex justify-end mt-4">
+            <v-btn rounded="lg" color="info" type="submit">Создать</v-btn>
+          </div>
+        </v-form>
+      </v-card>
+    </v-col>
   </div>
 </template>
 <style scoped>

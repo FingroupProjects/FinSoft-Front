@@ -12,7 +12,6 @@ export const api = axios.create({
 });
 
 export function buildParams(page = 1, itemsPerPage = 10, sortBy, search = '') {
-  console.log(search)
   const params = {
     page: page,
     itemsPerPage: itemsPerPage,
