@@ -4,7 +4,7 @@ export default {
   create(data) {
     return api.post("/counterparty", data);
   },
-  rename(id, data) {
+  update(id, data) {
     return api.patch(`/counterparty/${id}`, data);
   },
   get({ page = 1, itemsPerPage = 10, sortBy }, search = "") {

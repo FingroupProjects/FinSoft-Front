@@ -24,7 +24,7 @@ const headers = ref([
   { title: 'Организация', key: 'organization_id.name' },
   { title: 'Валюта оплаты', key: 'payment_id.symbol_code' },
   { title: 'Тип валюты', key: 'price_type_id.name' },
-  // { title: '#', key: 'icons', align: 'center', sortable: false },
+  { title: '#', key: 'icons', sortable: false },
 ]);
 
 const getDocuments = async ({ page, itemsPerPage, sortBy, search }) => {
@@ -40,13 +40,17 @@ const getDocuments = async ({ page, itemsPerPage, sortBy, search }) => {
   }
 }
 
+const pushToRename = (item) => {
+  router.push({ name: "updateCounterpartyAgreement", params: { id: item.id } });
+};
+
 </script>
 
 <template>
   <div>
     <v-col class="d-flex flex-column ga-5">
       <div class="d-flex w-100 justify-space-between">
-        <v-btn variant="outlined" color="info" @click.prevent="$router.push('/adminPanel')">Назад</v-btn>
+        <v-btn rounded="lg" variant="outlined" color="info" @click.prevent="$router.push('/adminPanel')">Назад</v-btn>
         <v-btn rounded="lg" color="info" @click="$router.push('createCounterpartyAgreement')">Добавить</v-btn>
       </div>
       <v-card class="table">
@@ -67,14 +71,11 @@ const getDocuments = async ({ page, itemsPerPage, sortBy, search }) => {
           <template v-slot:item.id="{ item, index }">
             <span>{{ index + 1 }}</span>
           </template>
-          <!-- <template #item.icons="{ item }">
+          <template #item.icons="{ item }">
             <div class="d-flex">
-
               <v-icon color="info" class="icon mr-2" @click="pushToRename(item)">edit</v-icon>
-              <v-icon color="info" class="icon" @click="showDetail(item)">visibility</v-icon>
             </div>
-
-          </template> -->
+          </template>
         </v-data-table-server>
       </v-card>
     </v-col>

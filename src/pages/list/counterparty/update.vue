@@ -22,9 +22,9 @@ const b = ref(false);
 const c = ref(false);
 const id = ref(null);
 
-const renameCounterparty = async () => {
+const updateCounterparty = async () => {
   try {
-    await counterpartyApi.rename(id.value, form.value);
+    await counterpartyApi.update(id.value, form.value);
     router.push({ name: "counterparty" });
     showToast("Успешно изменено", "#");
   } catch (e) {
@@ -96,7 +96,7 @@ const addressRules = ref([
 <template>
   <div>
     <div class="d-flex justify-start mb-4">
-      <v-btn variant="outlined" color="info" @click="$router.push({ name: 'counterparty' })">Назад</v-btn>
+      <v-btn rounded="lg" variant="outlined" color="info" @click="$router.push({ name: 'counterparty' })">Назад</v-btn>
     </div>
     <v-card class="px-4 py-6">
       <div class="d-flex ga-5">
@@ -113,7 +113,7 @@ const addressRules = ref([
           @change="handleCheckboxChange(3)"></v-checkbox-btn>
       </div>
       <div class="d-flex justify-end mt-4">
-        <v-btn rounded="lg" color="info" @click="renameCounterparty()">Изменить</v-btn>
+        <v-btn rounded="lg" color="info" @click="updateCounterparty()">Изменить</v-btn>
       </div>
     </v-card>
   </div>

@@ -65,7 +65,7 @@ const fetchCounterparty = async ({ page, itemsPerPage, sortBy, search }) => {
   <div>
     <v-col class="d-flex flex-column ga-5">
       <div class="d-flex w-100 justify-space-between">
-        <v-btn variant="outlined" color="info" @click.prevent="$router.push('/adminPanel')">Назад</v-btn>
+        <v-btn rounded="lg" variant="outlined" color="info" @click.prevent="$router.push('/adminPanel')">Назад</v-btn>
         <v-btn rounded="lg" color="info" @click="$router.push('createCounterparty')">Добавить</v-btn>
       </div>
       <v-card class="table">

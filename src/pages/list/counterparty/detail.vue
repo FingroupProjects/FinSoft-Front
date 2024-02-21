@@ -76,7 +76,7 @@ onMounted(async () => {
 <template>
   <div>
     <div class="d-flex justify-start mb-4">
-      <v-btn variant="outlined" color="info" @click="$router.push({ name: 'counterparty' })">Назад</v-btn>
+      <v-btn rounded="lg" variant="outlined" color="info" @click="$router.push({ name: 'counterparty' })">Назад</v-btn>
     </div>
     <v-card class="px-4 py-6">
       <div class="d-flex ga-5">
