@@ -1,21 +1,18 @@
 <script setup>
-import { computed, onMounted, ref, watch } from "vue";
-import { useRouter } from "vue-router";
-import priceType from '../../../api/priceType.js'
+import {onMounted, ref, watch} from "vue";
 import showToast from '../../../composables/toast'
+import priceType from '../../../api/priceType.js'
 import currency from "../../../api/currency.js";
 
-const router = useRouter()
+const search = ref('')
 const isDialog = ref(false);
 const updateDialog = ref(false);
 const deleteDialog = ref(false);
-const expand = ref(false);
 const loading = ref(true);
 
 const ID = ref(null)
 
 const name = ref(null)
-const symbol_code = ref(null)
 const itemID = ref(null)
 const nameError = ref(null)
 
@@ -28,16 +25,16 @@ const currencyAdd = ref([])
 const currencyUpdate = ref([])
 
 const headers = ref([
-  { title: '№', key: 'id' },
-  { title: 'Название', key: 'name' },
-  { title: 'Валюта', key: 'currency.symbol_code', sortable: false },
-  { title: '#', key: 'icons', sortable: false },
+  { title: '№', key: 'id'},
+  { title: 'Название', key: 'name'},
+  { title: 'Валюта', key: 'currency.symbol_code', sortable: false},
+  { title: '#', key: 'icons', align: 'center', sortable: false},
 ])
 
-const getCurrencyData = async ({ page, itemsPerPage, sortBy }) => {
+const getCurrencyData = async ({ page, itemsPerPage, sortBy, search }) => {
   loading.value = true
   try {
-    const { data } = await priceType.get(page, itemsPerPage, sortBy)
+    const { data } = await priceType.get({page, itemsPerPage, sortBy}, search)
     paginations.value = data.result.pagination
     priceTypes.value = data.result.data
     loading.value = false
@@ -51,10 +48,6 @@ const validate = () => {
   if (name.value.length < 1) {
     return nameError.value = 'Заполните поле!'
   }
-
-  // if (currencyUpdate.id === null) {
-  //   return nameError.value = 'Заполните поле!'
-  // }
 
   return true
 }
@@ -163,22 +156,47 @@ onMounted(async () => {
 <template>
   <div>
     <v-col>
-      <div class="d-flex w-100 justify-space-between">
-        <div>
-          <h2>Виды цен</h2>
-        </div>
+      <div class="d-flex w-100 justify-end">
         <v-btn rounded="lg" @click="isDialog = true" color="info">Создать</v-btn>
       </div>
       <v-card class="mt-4 table">
-        <v-data-table-server :loading="loading" v-model:items-per-page="paginations.per_page" :headers="headers"
-          :items-length="paginations.total || 0" :items="priceTypes" :item-value="headers.title"
-          @update:options="getCurrencyData">
+        <v-card-title class="d-flex align-center pe-2">
+          Виды цен
+
+          <v-spacer />
+          <v-spacer />
+          <v-spacer />
+
+          <v-text-field
+              v-model="search"
+              prepend-inner-icon="search"
+              density="compact"
+              label="Поиск..."
+              single-line
+              flat
+              hide-details
+              variant="outlined"
+          ></v-text-field>
+        </v-card-title>
+        <v-data-table-server
+            items-per-page-text="Элементов на странице:"
+            loading-text="Загрузка"
+            no-data-text="Нет данных"
+            :loading="loading"
+            v-model:items-per-page="paginations.per_page"
+            :headers="headers"
+            :items-length="paginations.total || 0"
+            :items="priceTypes"
+            :search="search"
+            :item-value="headers.title"
+            @update:options="getCurrencyData"
+        >
           <template v-slot:item.id="{ index }">
             <span>{{ index + 1 }}</span>
           </template>
           <template #item.icons="{ item }">
-            <v-icon class="icon mr-2" @click="editItem(item)">edit</v-icon>
-            <v-icon class="trash mr-2" @click="deleteItem(item)" color="red">delete</v-icon>
+            <v-icon class="icon mr-2" @click="editItem(item)" color="info">edit</v-icon>
+            <v-icon class="icon mr-2" @click="deleteItem(item)" color="red" >delete</v-icon>
           </template>
         </v-data-table-server>
       </v-card>
