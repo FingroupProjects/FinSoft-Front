@@ -9,10 +9,14 @@ import changeTheDateForSending from "../../../composables/date/changeTheDateForS
 
 const route = useRoute()
 
+
 const isDialog = ref(false);
+const updateDialog = ref(false)
+const deleteDialog = ref(false)
 const loading = ref(false);
 const search = ref('');
 
+const currentCurrencyRateID = ref(null)
 const symbolRef = ref(null)
 const dateRef = ref(null)
 const valueRef = ref(null)
@@ -25,11 +29,11 @@ const paginations = ref([])
 
 const headers = ref([
   { title: '№', key: 'id'},
-  { title: 'Наименование', key: 'name'},
+  { title: 'Наименование', key: 'name', sortable: false},
+  { title: 'Цифровой код', key: 'digital_code', sortable: false},
   { title: 'Дата', key: 'date'},
-  { title: 'Символьный код', key: 'currency'},
-  { title: 'Цифровой код', key: 'digital_code'},
   { title: 'Значение', key: 'value'},
+  { title: '#', key: 'icons', align: 'center', sortable: false},
 ])
 
 onMounted( async () => {
@@ -39,7 +43,6 @@ onMounted( async () => {
 
 const getCurrencyRateData = async ({ page, itemsPerPage, sortBy, search}) => {
   try {
-    console.log(sortBy)
     const response = await currency.show(route.params.id)
     const { data } = await currency.showRate(route.params.id, { page, itemsPerPage, sortBy }, search)
     currencies.value = data.result.data.map(item => ({
@@ -82,7 +85,7 @@ const addRate = async ({ page, itemsPerPage, sortBy }) => {
   if (validateCurrentRate() !== true) return
 
   const body = {
-    date: changeTheDateForSending(dateRef.value),
+    date: changeTheDateForSendingUpdate(dateRef.value),
     value: valueRef.value
   }
 
@@ -99,7 +102,34 @@ const addRate = async ({ page, itemsPerPage, sortBy }) => {
 
 }
 
+const goToEdit = item => {
+  currentCurrencyRateID.value = item.id
+  dateRef.value = item.date
+  valueRef.value = item.value
+  updateDialog.value = true
+}
 
+const update = async ({page, itemsPerPage, sortBy}) => {
+  if (validateCurrentRate() !== true) return
+
+  const body = {
+    date: changeTheDateForSending(dateRef.value, '.'),
+    value: Number(valueRef.value)
+  }
+
+  const {status} = await currency.updateRate(currentCurrencyRateID.value, body)
+
+  if (status === 200) {
+    await getCurrencyRateData({page, itemsPerPage, sortBy})
+    showToast('Успешно обновлено!')
+    updateDialog.value = false
+  }
+}
+
+const goToDelete = item => {
+  currentCurrencyRateID.value = item.id
+  deleteDialog.value = true
+}
 </script>
 
 <template>
@@ -165,9 +195,44 @@ const addRate = async ({ page, itemsPerPage, sortBy }) => {
           <template v-slot:item.id="{ index }">
             <span>{{ index + 1 }}</span>
           </template>
-        </v-data-table-server>
 
+          <template v-slot:item.icons="{ item }">
+            <v-icon color="info" @click="goToEdit(item)" class="icon">edit</v-icon>
+            <v-icon color="info" @click="goToDelete(item)" class="icon me-2">delete</v-icon>
+          </template>
+        </v-data-table-server>
       </v-card>
+
+      <v-card>
+        <v-dialog width="500" v-model="updateDialog" activator="parent">
+          <v-card class="rounded-xl pl-4" :title="'Изменение '">
+            <v-form class="w-100 pa-4" @submit.prevent="update">
+              <v-row class="w-100">
+                <v-col class="d-flex flex-column justify-between w-100 ga-5">
+                  <v-text-field
+                      v-model="dateRef"
+                      variant="outlined"
+                      type="text"
+                      :error-messages="dateError"
+                      label="Дата"
+                  />
+                  <v-text-field
+                      v-model="valueRef"
+                      variant="outlined"
+                      type="text"
+                      :error-messages="valueError"
+                      label="Значение"
+                  />
+                  <div class="d-flex ga-2 justify-end align-center">
+                    <v-btn :loading="loading" color="green" type="submit">Добавить</v-btn>
+                  </div>
+                </v-col>
+              </v-row>
+            </v-form>
+          </v-card>
+        </v-dialog>
+      </v-card>
+
     </v-col>
   </div>
 </template>
