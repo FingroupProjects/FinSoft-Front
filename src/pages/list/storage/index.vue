@@ -1,19 +1,18 @@
 <script setup>
-import {computed, onMounted, ref, watch} from "vue";
-import { useRouter } from "vue-router";
-import employee from '../../../api/employee.js'
+import {onMounted, ref, watch} from "vue";
 import showToast from '../../../composables/toast'
+import employee from '../../../api/employee.js'
 import storage from "../../../api/storage.js";
+import {add, edit, remove} from "../../../composables/constant/buttons.js";
 
-const router = useRouter()
 const isDialog = ref(false);
 const updateDialog = ref(false);
 const deleteDialog = ref(false);
-const expand = ref(false);
 const loading = ref(true);
 
 const ID = ref(null)
 
+const search = ref(null)
 const name = ref(null)
 const itemID = ref(null)
 const nameError = ref(null)
@@ -33,10 +32,10 @@ const headers = ref([
   { title: '#', key: 'icons', sortable: false},
 ])
 
-const getStorageData = async ({ page, itemsPerPage, sortBy }) => {
+const getStorageData = async ({ page, itemsPerPage, sortBy, search }) => {
   loading.value = true
   try {
-    const { data } = await storage.get(page, itemsPerPage, sortBy )
+    const { data } = await storage.get({page, itemsPerPage, sortBy}, search )
     paginations.value = data.result.pagination
     storages.value = data.result.data
     loading.value = false
@@ -50,10 +49,6 @@ const validate = () => {
   if (name.value.length < 1) {
     return nameError.value = 'Заполните поле!'
   }
-
-  // if (currencyUpdate.id === null) {
-  //   return nameError.value = 'Заполните поле!'
-  // }
 
   return true
 }
@@ -169,19 +164,37 @@ onMounted(async () => {
 
   <div>
     <v-col>
-      <div class="d-flex w-100 justify-space-between">
-        <div>
-          <h2>Склады</h2>
-        </div>
-        <v-btn rounded="lg" @click="isDialog = true" color="info" >Создать</v-btn>
+      <div class="d-flex w-100 justify-end">
+        <v-btn rounded="lg" @click="isDialog = true" color="info">{{ add }}</v-btn>
       </div>
       <v-card class="mt-4 table">
+
+        <v-card-title class="d-flex align-center pe-2">
+          Список складов
+
+          <v-spacer />
+          <v-spacer />
+          <v-spacer />
+
+          <v-text-field
+              v-model="search"
+              prepend-inner-icon="search"
+              density="compact"
+              label="Поиск..."
+              single-line
+              flat
+              hide-details
+              variant="outlined"
+          ></v-text-field>
+        </v-card-title>
+
         <v-data-table-server
             :loading="loading"
             v-model:items-per-page="paginations.per_page"
             :headers="headers"
             :items-length="paginations.total || 0"
             :items="storages"
+            :search="search"
             :item-value="headers.title"
             @update:options="getStorageData"
         >
@@ -219,7 +232,7 @@ onMounted(async () => {
                     item-value="id"
                 />
                 <div class="d-flex ga-2 justify-end align-center">
-                  <v-btn :loading="loading" color="green" type="submit">Добавить</v-btn>
+                  <v-btn :loading="loading" color="info" type="submit">{{ add }}</v-btn>
                 </div>
               </v-col>
             </v-row>
@@ -254,7 +267,7 @@ onMounted(async () => {
                     single-line
                 />
                 <div class="d-flex ga-2 justify-end align-center">
-                  <v-btn :loading="loading" color="green" type="submit">Добавить</v-btn>
+                  <v-btn :loading="loading" color="info" type="submit">{{ edit }}</v-btn>
                 </div>
               </v-col>
             </v-row>
@@ -274,7 +287,7 @@ onMounted(async () => {
                   Вы точно хотите удалить?
                 </div>
                  <div class="d-flex ga-2  justify-end align-center">
-                  <v-btn :loading="loading" class="text-sm-body-2" color="red" type="submit">Удалить</v-btn>
+                  <v-btn :loading="loading" class="text-sm-body-2" color="red" type="submit">{{ remove }}</v-btn>
                 </div>
               </v-col>
             </v-row>

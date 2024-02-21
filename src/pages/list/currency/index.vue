@@ -5,6 +5,7 @@ import currency from '../../../api/currency.js'
 import showToast from '../../../composables/toast'
 import changeTheDateForSending from '../../../composables/date/changeTheDateForSending'
 import currentDate from '../../../composables/date/currentDate'
+import {prevIcon} from "../../../composables/constant/buttons.js";
 
 const router = useRouter()
 
@@ -152,8 +153,11 @@ const createCurrentRate = async () => {
   }
 }
 
-const goToShow = (id, symbol) => {
-  router.push({ path: `/list/currency/${id}`, query: { symbol } });
+const goToShow = item => {
+  const name = item.name
+  const symbol = item.symbol_code
+  const digital = item.digital_code
+  router.push({ path: `/list/currency/${item.id}`, query: { name, symbol, digital } });
 }
 
 const goToEdit = item => {
@@ -191,7 +195,9 @@ const update = async ({page, itemsPerPage, sortBy}) => {
   <div>
     <v-col>
     <div class="d-flex justify-space-between">
-      <v-btn variant="outlined" color="info">Назад</v-btn>
+      <div class="rounded-circle bg-blue pa-2 cursor-pointer" @click="$router.push('/adminPanel')">
+        <v-icon color="white" size="25">{{ prevIcon }}</v-icon>
+      </div>
       <v-btn color="info" class="mb-1" @click="expand = !expand">Создать</v-btn>
     </div>
     <v-expand-transition>
@@ -249,6 +255,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
           loading-text="Загрузка"
           no-data-text="Нет данных"
           :loading="loading"
+          hover
           v-model:items-per-page="paginations.per_page"
           :headers="headers"
           :items-length="paginations.total || 0"
@@ -261,7 +268,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
           <span>{{ index + 1 }}</span>
         </template>
         <template v-slot:item.icons="{ item }">
-          <v-icon color="info" @click="goToShow(item.id, item.symbol_code)" class="icon me-2">visibility</v-icon>
+          <v-icon color="info" @click="goToShow(item)" class="icon me-2">visibility</v-icon>
           <v-icon color="info" @click="goToEdit(item)" class="icon">edit</v-icon>
         </template>
       </v-data-table-server>
