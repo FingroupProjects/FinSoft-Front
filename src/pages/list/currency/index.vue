@@ -11,7 +11,7 @@ const router = useRouter()
 const expand = ref(false)
 const loading = ref(true)
 const isCurrentRate = ref(false)
-const isDialogEdit = ref(false)
+const updateModal = ref(false)
 const search = ref('')
 
 const idCurrency = ref(null)
@@ -157,7 +157,7 @@ const goToShow = (id, symbol) => {
 }
 
 const goToEdit = item => {
-  isDialogEdit.value = true
+  updateModal.value = true
   idCurrency.value = item.id
   nameRef.value = item.name
   symbolRef.value = item.symbol_code
@@ -165,8 +165,7 @@ const goToEdit = item => {
 
 }
 
-const editRate = async ({page, itemsPerPage, sortBy}) => {
-
+const update = async ({page, itemsPerPage, sortBy}) => {
   if (validateCurrency() !== true) return
   
   const body = {
@@ -176,10 +175,10 @@ const editRate = async ({page, itemsPerPage, sortBy}) => {
   }
 
   try {
-    const { status } = await currency.edit(idCurrency.value, body)
+    const { status } = await currency.update(idCurrency.value, body)
     if (status === 200) {
       await getCurrencyData({page, itemsPerPage, sortBy})
-      isDialogEdit.value = false
+      updateModal.value = false
       showToast('Успешно обновлено!')
     }
   } catch (e) {
@@ -268,11 +267,11 @@ const editRate = async ({page, itemsPerPage, sortBy}) => {
       </v-data-table-server>
     </v-card>
 
-<!-- editModal -->
+<!-- updateModal -->
     <v-card>
-      <v-dialog width="500" v-model="isDialogEdit" activator="parent">   
+      <v-dialog width="500" v-model="updateModal" activator="parent">
         <v-card class="rounded-xl pl-4">
-          <v-form class="w-100 pa-4" @submit.prevent="editRate">
+          <v-form class="w-100 pa-4" @submit.prevent="update">
             <v-row class="w-100">
               <v-col class="d-flex flex-column justify-between w-100">
                 <v-text-field variant="outlined" type="text" :error-messages="nameError" 

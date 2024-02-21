@@ -7,7 +7,7 @@ export default {
   show(id) {
     return api.get(`/currency/${id}`)
   },
-  edit(id, body) {
+  update(id, body) {
     return api.patch(`/currency/${id}`, body)
   },
   get({page = 1, itemsPerPage = 10, sortBy}, search = '') {
@@ -20,5 +20,8 @@ export default {
   showRate(id, {page = 1, itemsPerPage = 10, sortBy}, search = '') {
     const params = buildParams(page, itemsPerPage, sortBy, search);
     return api.get(`/currencyRate/${id}`, { params })
+  },
+  updateRate(id, body) {
+    return api.patch(`/currencyRate/${id}`, body)
   },
 }
