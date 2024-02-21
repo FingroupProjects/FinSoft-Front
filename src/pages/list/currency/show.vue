@@ -11,6 +11,7 @@ const route = useRoute()
 
 const isDialog = ref(false);
 const loading = ref(false);
+const search = ref('');
 
 const symbolRef = ref(null)
 const dateRef = ref(null)
@@ -23,6 +24,7 @@ const currencies = ref([])
 const paginations = ref([])
 
 const headers = ref([
+  { title: '№', key: 'id'},
   { title: 'Наименование', key: 'name'},
   { title: 'Дата', key: 'date'},
   { title: 'Символьный код', key: 'currency'},
@@ -35,11 +37,11 @@ onMounted( async () => {
   symbolRef.value = useRoute().query.symbol
 })
 
-const getCurrencyRateData = async ({ page, itemsPerPage, sortBy }) => {
+const getCurrencyRateData = async ({ page, itemsPerPage, sortBy, search}) => {
   try {
+    console.log(sortBy)
     const response = await currency.show(route.params.id)
-    const { data } = await currency.showRate(route.params.id, { page, itemsPerPage, sortBy })
-
+    const { data } = await currency.showRate(route.params.id, { page, itemsPerPage, sortBy }, search)
     currencies.value = data.result.data.map(item => ({
       ...item,
       date: showDate(item.date),
@@ -78,7 +80,7 @@ const validateCurrentRate = () => {
 
 const addRate = async ({ page, itemsPerPage, sortBy }) => {
   if (validateCurrentRate() !== true) return
- 
+
   const body = {
     date: changeTheDateForSending(dateRef.value),
     value: valueRef.value
@@ -95,18 +97,19 @@ const addRate = async ({ page, itemsPerPage, sortBy }) => {
 
   }
 
-
 }
+
+
 </script>
 
 <template>
   <div>
     <v-col>
-      <div class="d-flex  align-center ms-2">
-        <v-btn color="info" @click="$router.push('/list/currency')">Назад</v-btn>
+      <div class="d-flex justify-space-between  align-center ms-2">
+        <v-btn variant="outlined" color="info" @click="$router.push('/list/currency')">Назад</v-btn>
         
-        <v-btn icon="add_circle" variant="text">
-          <v-icon size="40" color="green" class=""></v-icon>
+        <v-btn color="info">
+          <span>Создать</span>
           <v-dialog width="500" v-model="isDialog" activator="parent">   
             <v-card class="rounded-xl pl-4" :title="'Курс валюты: ' + symbolRef">
               <v-form class="w-100 pa-4" @submit.prevent="addRate">
@@ -117,7 +120,7 @@ const addRate = async ({ page, itemsPerPage, sortBy }) => {
                     <v-text-field variant="outlined" type="number" :error-messages="valueError" placeholder="1.0000"
                                   label="Значение" v-model="valueRef"/>
                     <div class="d-flex ga-2 justify-end align-center">
-                      <v-btn :loading="loading" color="green" type="submit">Добавить</v-btn>
+                      <v-btn :loading="loading" color="info" type="submit">Добавить</v-btn>
                     </div>
                   </v-col>
                 </v-row>
@@ -128,17 +131,39 @@ const addRate = async ({ page, itemsPerPage, sortBy }) => {
         
       </div>
       <v-card class="mt-4 table">
+        <v-card-title class="d-flex align-center pe-2">
+          Курс валюты: {{ useRoute().query.symbol }}
+
+          <v-spacer />
+          <v-spacer />
+          <v-spacer />
+
+          <v-text-field
+              v-model="search"
+              prepend-inner-icon="search"
+              density="compact"
+              label="Поиск..."
+              single-line
+              flat
+              hide-details
+              variant="outlined"
+          ></v-text-field>
+        </v-card-title>
         <v-data-table-server
+            items-per-page-text="Элементов на странице:"
+            loading-text="Загрузка"
+            no-data-text="Нет данных"
             :loading="loading"
             v-model:items-per-page="paginations.per_page"
             :headers="headers"
             :items-length="paginations.total || 0"
             :items="currencies"
+            :search="search"
             :item-value="headers.title"
             @update:options="getCurrencyRateData"
         >
-          <template v-slot:item.id="{ item }">
-            <span>{{ item.id }}</span>
+          <template v-slot:item.id="{ index }">
+            <span>{{ index + 1 }}</span>
           </template>
         </v-data-table-server>
 

@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 import currency from '../../../api/currency.js'
 import showToast from '../../../composables/toast'
 import changeTheDateForSending from '../../../composables/date/changeTheDateForSending'
@@ -12,6 +12,7 @@ const expand = ref(false)
 const loading = ref(true)
 const isCurrentRate = ref(false)
 const isDialogEdit = ref(false)
+const search = ref('')
 
 const idCurrency = ref(null)
 const nameRef = ref(null)
@@ -41,14 +42,12 @@ onMounted( async () => {
   dateRef.value = currentDate()
 })
 
-const getCurrencyData = async ({ page, itemsPerPage, sortBy }) => {
+const getCurrencyData = async ({ page, itemsPerPage, sortBy, search }) => {
   loading.value = true
-  console.log(itemsPerPage)
   try {
-    const { data } = await currency.get(page, itemsPerPage, sortBy )
+    const { data } = await currency.get({page, itemsPerPage, sortBy}, search)
     paginations.value = data.result.pagination
     currencies.value = data.result.data
-    console.log(data)
     loading.value = false
   } catch (e) {
 
@@ -124,6 +123,7 @@ const validateCurrencyRate = () => {
   return true
 }
 
+
 const back = () => {
   nameRef.value = null
   symbolRef.value = null
@@ -156,27 +156,47 @@ const goToShow = (id, symbol) => {
   router.push({ path: `/list/currency/${id}`, query: { symbol } });
 }
 
-const goToEdit = (id) => {
+const goToEdit = item => {
   isDialogEdit.value = true
-  console.log(id)
+  idCurrency.value = item.id
+  nameRef.value = item.name
+  symbolRef.value = item.symbol_code
+  digitalRef.value = item.digital_code
+
 }
-const editRate = async (id) => {
+
+const editRate = async ({page, itemsPerPage, sortBy}) => {
+
+  if (validateCurrency() !== true) return
+  
   const body = {
     name: nameRef.value,
     symbol_code: symbolRef.value,
     digital_code: digitalRef.value
   }
 
-  console.log(body)
+  try {
+    const { status } = await currency.edit(idCurrency.value, body)
+    if (status === 200) {
+      await getCurrencyData({page, itemsPerPage, sortBy})
+      isDialogEdit.value = false
+      showToast('Успешно обновлено!')
+    }
+  } catch (e) {
+    console.log(e)
+  }
 }
 </script>
 
 <template>
   <div>
     <v-col>
-    <v-icon size="40" color="green" class="ma-2" @click="expand = !expand">add_circle</v-icon>
+    <div class="d-flex justify-space-between">
+      <v-btn variant="outlined" color="info">Назад</v-btn>
+      <v-btn color="info" class="mb-1" @click="expand = !expand">Создать</v-btn>
+    </div>
     <v-expand-transition>
-      <v-card v-show="expand" :height="isCurrentRate ? 210 : 95" width="100%" class="mx-auto">
+      <v-card v-show="expand" :height="isCurrentRate ? 210 : 95" width="100%" class="mx-auto my-0">
         <v-form class="w-100 pa-4" @submit.prevent="addCurrency">
           <v-row class="w-100">
             <v-col class="d-flex justify-between w-100 ga-5">
@@ -185,7 +205,7 @@ const editRate = async (id) => {
                 v-model="symbolRef" />
               <v-text-field variant="outlined" :disabled="isCurrentRate" :error-messages="digitalError" placeholder="132" v-mask="'###'" label="Цифровой код"
                 v-model="digitalRef" />
-              <v-btn :loading="loading" color="green" class="mt-2" type="submit" :hidden="isCurrentRate">Добавить</v-btn>
+              <v-btn :loading="loading" color="info" class="mt-2" type="submit" :hidden="isCurrentRate">Добавить</v-btn>
             </v-col>
           </v-row>
         </v-form>
@@ -204,43 +224,71 @@ const editRate = async (id) => {
 
       </v-card>
     </v-expand-transition>
-    <v-card class="mt-4 table">
+    <v-card class="mt-2 table">
+
+      <v-card-title class="d-flex align-center pe-2">
+        Курсы
+
+        <v-spacer />
+        <v-spacer />
+        <v-spacer />
+
+        <v-text-field
+            v-model="search"
+            prepend-inner-icon="search"
+            density="compact"
+            label="Поиск..."
+            single-line
+            flat
+            hide-details
+            variant="outlined"
+        ></v-text-field>
+      </v-card-title>
+
       <v-data-table-server
+          items-per-page-text="Элементов на странице:"
+          loading-text="Загрузка"
+          no-data-text="Нет данных"
           :loading="loading"
           v-model:items-per-page="paginations.per_page"
           :headers="headers"
           :items-length="paginations.total || 0"
           :items="currencies"
           :item-value="headers.title"
+          :search="search"
           @update:options="getCurrencyData"
       >
         <template v-slot:item.id="{ index }">
           <span>{{ index + 1 }}</span>
         </template>
         <template v-slot:item.icons="{ item }">
-          <v-icon @click="goToShow(item.id, item.symbol_code)" class="me-2">visibility</v-icon>
-          <v-icon @click="goToEdit(item.id)">edit</v-icon>
+          <v-icon color="info" @click="goToShow(item.id, item.symbol_code)" class="icon me-2">visibility</v-icon>
+          <v-icon color="info" @click="goToEdit(item)" class="icon">edit</v-icon>
         </template>
       </v-data-table-server>
     </v-card>
+
+<!-- editModal -->
     <v-card>
       <v-dialog width="500" v-model="isDialogEdit" activator="parent">   
-     <v-card class="rounded-xl pl-4">
-       <v-form class="w-100 pa-4" @submit.prevent="editRate">
-         <v-row class="w-100">
-           <v-col class="d-flex flex-column justify-between w-100 ga-5">
-             <v-text-field variant="outlined" type="tel" :error-messages="dateError" placeholder="30/04/2004"
-                           v-mask="'##/##/####'" label="Дата" v-model="dateRef"/>
-             <v-text-field variant="outlined" type="number" :error-messages="valueError" placeholder="1.0000"
-                           label="Значение" v-model="valueRef"/>
-             <div class="d-flex ga-2 justify-end align-center">
-               <v-btn :loading="loading" color="green" type="submit">Изменить</v-btn>
-             </div>
-           </v-col>
-         </v-row>
-       </v-form>
-     </v-card>
-   </v-dialog>
+        <v-card class="rounded-xl pl-4">
+          <v-form class="w-100 pa-4" @submit.prevent="editRate">
+            <v-row class="w-100">
+              <v-col class="d-flex flex-column justify-between w-100">
+                <v-text-field variant="outlined" type="text" :error-messages="nameError" 
+                               label="Наименнование" v-model="nameRef"/>
+                <v-text-field variant="outlined" type="tel" :error-messages="symbolError"
+                              label="Символьный код" v-model="symbolRef"/>
+                <v-text-field variant="outlined" type="tel" :error-messages="digitalError"
+                              label="Цифровой код" v-model="digitalRef"/>
+                <div class="d-flex justify-end align-center">
+                  <v-btn :loading="loading" color="green" type="submit">Изменить</v-btn>
+                </div>
+              </v-col>
+            </v-row>
+          </v-form>
+        </v-card>
+       </v-dialog>
     </v-card>
   </v-col>
   </div>
