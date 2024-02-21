@@ -1,78 +1,86 @@
 <script setup>
-import { ref, onMounted } from "vue"
-import { useRouter } from "vue-router"
-import counterpartyApi from "../../../api/counterparty"
+import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import counterpartyApi from "../../../api/counterparty";
 
-const loading = ref(true)
+const loading = ref(true);
 
-const router = useRouter()
+const router = useRouter();
 
-const counterparty = ref([])
-const paginations = ref([])
+const counterparty = ref([]);
+const paginations = ref([]);
+
+const search = ref('')
 
 const headers = ref([
-  { title: '№', key: 'id', align: 'start', },
-  { title: 'Наименование', key: 'name', },
-  { title: 'Адрес', key: 'address' },
-  { title: 'Тип контрагента', key: 'roles' },
-  { title: 'Телефон', key: 'phone' },
-  { title: 'Эл. почта', key: 'email' },
-  { title: 'Дата создания', key: 'created_at' },
-  { title: '#', key: 'icons', align: 'center' },
+  { title: "№", key: "id", align: "start" },
+  { title: "Наименование", key: "name" },
+  { title: "Адрес", key: "address" },
+  { title: "Тип контрагента", key: "roles" },
+  { title: "Телефон", key: "phone" },
+  { title: "Эл. почта", key: "email" },
+  { title: "Дата создания", key: "created_at" },
+  { title: "#", key: "icons", align: "center", sortable: false },
 ]);
 
 const formatDateTime = (dateTimeString) => {
-  const dateTime = new Date(dateTimeString)
-  return dateTime.toLocaleDateString('ru-RU')
-}
+  const dateTime = new Date(dateTimeString);
+  return dateTime.toLocaleDateString("ru-RU");
+};
 
 const formatRole = (roles) => {
   const roleMap = {
     1: "Клиент",
     2: "Поставщик",
-    3: "Прочие отношения"
+    3: "Прочие отношения",
   };
 
-  return roles.map(role => roleMap[role] || "Неизвестная роль").join(", ");
+  return roles.map((role) => roleMap[role] || "Неизвестная роль").join(", ");
 };
 
-const pushToRename = item => {
-  router.push({ name: 'renameCounterparty', params: { id: item.id } })
-}
+const pushToRename = (item) => {
+  router.push({ name: "renameCounterparty", params: { id: item.id } });
+};
 
-const showDetail = item => {
-  router.push({ name: 'detailCounterparty', params: { id: item.id } })
-}
+const showDetail = (item) => {
+  router.push({ name: "detailCounterparty", params: { id: item.id } });
+};
 
-const fetchCounterparty = async ({ page, itemsPerPage, sortBy }) => {
+const fetchCounterparty = async ({ page, itemsPerPage, sortBy, search }) => {
   try {
-    const { data } = await counterpartyApi.get(page, itemsPerPage, sortBy)
-    console.log(data);
-    counterparty.value = data.result.data.map(item => ({
+    const { data } = await counterpartyApi.get({ page, itemsPerPage, sortBy }, search);
+    counterparty.value = data.result.data.map((item) => ({
       ...item,
       created_at: formatDateTime(item.created_at),
-      roles: formatRole(item.roles)
-    }))
-    paginations.value = data.result.pagination
-    loading.value = false
+      roles: formatRole(item.roles),
+    }));
+    paginations.value = data.result.pagination;
+    loading.value = false;
   } catch (error) {
-    console.error(error)
+    console.error(error);
   }
-}
-
+};
 </script>
 <template>
   <div>
     <v-col class="d-flex flex-column ga-5">
       <div class="d-flex w-100 justify-space-between">
-        <div>
-          <h2>Список контрагентов</h2>
-        </div>
+        <v-btn variant="outlined" color="info" @click.prevent="$router.push('/adminPanel')">Назад</v-btn>
         <v-btn rounded="lg" color="info" @click="$router.push('createCounterparty')">Добавить</v-btn>
       </div>
       <v-card class="table">
+        <v-card-title class="d-flex align-center pe-2">
+          Список контрагентов
+
+          <v-spacer />
+          <v-spacer />
+          <v-spacer />
+
+          <v-text-field v-model="search" prepend-inner-icon="search" density="compact" label="Поиск..." single-line flat
+            hide-details variant="outlined"></v-text-field>
+        </v-card-title>
         <v-data-table-server :items="counterparty" :headers="headers" :loading="loading"
-          items-per-page-text="Элементов на странице:" loading-text="Загрузка" no-data-text="Нет данных"
+          items-per-page-text="Элементов на странице:" loading-text="Загрузка" no-data-text="Нет данных" :search="search"
           @update:options="fetchCounterparty" v-model:items-per-page="paginations.per_page"
           :items-length="paginations.total || 0" :item-value="headers.title">
           <template v-slot:item.id="{ item, index }">
@@ -88,8 +96,4 @@ const fetchCounterparty = async ({ page, itemsPerPage, sortBy }) => {
   </div>
 </template>
 
-<style lang="css">
-.theme--light.v-data-table-server>.v-data-table-server__wrapper>table>tr:hover:not(.v-data-table-server__expanded__content):not(.v-data-table-server__empty-wrapper) {
-  background-color: green !important;
-}
-</style>
+<style scoped></style>

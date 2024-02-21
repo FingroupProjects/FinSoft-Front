@@ -7,9 +7,9 @@ export default {
   rename(id, data) {
     return api.patch(`/counterparty/${id}`, data);
   },
-  get(page = 1, itemsPerPage = 10, sortBy) {
-    const params = buildParams(page, itemsPerPage, sortBy);
-    return api.get('/counterparty', { params });
+  get({ page = 1, itemsPerPage = 10, sortBy }, search = "") {
+    const params = buildParams( page, itemsPerPage, sortBy, search);
+    return api.get("/counterparty", { params });
   },
   getById(id) {
     return api.get(`/counterparty/${id}`);

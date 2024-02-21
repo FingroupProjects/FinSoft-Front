@@ -1,29 +1,28 @@
 <script setup>
-import { ref, } from "vue"
+import { ref } from "vue";
 import { useRouter } from "vue-router";
-import counterpartyApi from "../../../api/counterparty"
-import showToast from '../../../composables/toast'
+import counterpartyApi from "../../../api/counterparty";
+import showToast from "../../../composables/toast";
 
-const router = useRouter()
+const router = useRouter();
 
-const name = ref('')
-const phone = ref('')
-const address = ref('')
-const email = ref('')
-const roles = ref([])
+const name = ref("");
+const phone = ref("");
+const address = ref("");
+const email = ref("");
+const roles = ref([]);
 
-const name_validate = ref(true)
-const phone_validate = ref(false)
-const address_validate = ref(false)
-const email_validate = ref(false)
+const name_validate = ref(true);
+const phone_validate = ref(false);
+const address_validate = ref(false);
+const email_validate = ref(false);
 
 const CreateCounterparty = async () => {
   try {
-
-    name_validate.value = true
-    phone_validate.value = true
-    address_validate.value = true
-    email_validate.value = true
+    name_validate.value = true;
+    phone_validate.value = true;
+    address_validate.value = true;
+    email_validate.value = true;
 
     const body = {
       name: name.value,
@@ -31,62 +30,61 @@ const CreateCounterparty = async () => {
       address: address.value,
       email: email.value,
       roles: roles.value,
-    }
+    };
     console.log(body);
-    await counterpartyApi.create(body)
-    router.push('counterparty')
-    showToast('Успешно добавлена', 'green')
+    await counterpartyApi.create(body);
+    router.push("counterparty");
+    showToast("Успешно добавлена", "green");
   } catch (error) {
-    console.error(error)
+    console.error(error);
   }
-}
+};
 
 const nameRules = ref([
-  value => {
-    if (value) return true
-    return 'Поле не может быть пустым'
+  (value) => {
+    if (value) return true;
+    return "Поле не может быть пустым";
   },
-])
+]);
 
 const phoneRules = ref([
-  value => {
-    if (value?.length === 13) return true
-    return 'Введите валидный номер телефона'
+  (value) => {
+    if (value?.length === 13) return true;
+    return "Введите валидный номер телефона";
   },
-])
+]);
 
 const emailRules = ref([
-  value => {
-    if (value) return true
-    return 'Поле email объязательна'
+  (value) => {
+    if (value) return true;
+    return "Поле email объязательна";
   },
-  value => {
-    if (/.+@.+\..+/.test(value)) return true
-    return 'Введите валидную почту'
+  (value) => {
+    if (/.+@.+\..+/.test(value)) return true;
+    return "Введите валидную почту";
   },
-])
+]);
 
 const addressRules = ref([
-  value => {
-    if (value) return true
-    return 'Поле не может быть пустым'
+  (value) => {
+    if (value) return true;
+    return "Поле не может быть пустым";
   },
-])
+]);
 
 const handleCheckboxChange = (index) => {
   if (roles.value.includes(index + 1)) {
-    roles.value = roles.value.filter(role => role !== index + 1);
+    roles.value = roles.value.filter((role) => role !== index + 1);
   } else {
     roles.value.push(index + 1);
   }
-}
-
+};
 </script>
 
 <template>
   <div>
-    <div class="d-flex justify-end mb-4">
-      <v-btn rounded="lg" color="info" @click.prevent="$router.push('counterparty')">Назад</v-btn>
+    <div class="d-flex justify-start mb-4">
+      <v-btn variant="outlined" color="info" @click.prevent="$router.push('counterparty')">Назад</v-btn>
     </div>
     <v-card class="block">
       <v-form @submit.prevent="CreateCounterparty">
