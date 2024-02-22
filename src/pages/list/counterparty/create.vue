@@ -89,12 +89,19 @@ const handleCheckboxChange = (index) => {
     <v-card class="block">
       <v-form @submit.prevent="CreateCounterparty">
         <div class="d-flex ga-5">
-          <v-text-field variant="outlined" :rules="name_validate ? nameRules : []" label="Наименование" v-model="name" />
+          <v-text-field variant="outlined" :rules="name_validate ? nameRules : []" v-model="name" density="compact">
+            <template v-slot:label>
+              <span class="labelClass">
+                Наименование
+              </span>
+            </template>
+          </v-text-field>
           <v-text-field variant="outlined" :rules="phone_validate ? phoneRules : []" label="Тел номер"
             v-model.trim="phone" v-mask="'+992#########'" />
           <v-text-field variant="outlined" :rules="address_validate ? addressRules : []" label="Адрес"
             v-model="address" />
-          <v-text-field variant="outlined" :rules="email_validate ? emailRules : []" label="Почта" v-model="email" />
+          <v-text-field variant="outlined" prepend-inner-icon="email" :rules="email_validate ? emailRules : []"
+            label="Почта" v-model="email" />
         </div>
         <div class="d-flex w-75">
           <v-checkbox-btn label="Клиент" color="info" @change="handleCheckboxChange(0)"></v-checkbox-btn>
@@ -113,5 +120,10 @@ const handleCheckboxChange = (index) => {
 .block {
   border-radius: 6px;
   padding: 20px;
+}
+
+.labelClass {
+  font-size: 12px;
+  line-height: 30px;
 }
 </style>

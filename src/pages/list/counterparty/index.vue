@@ -2,6 +2,7 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import counterpartyApi from "../../../api/counterparty";
+import showDate from "../../../composables/date/showDate"
 
 const loading = ref(true);
 
@@ -22,11 +23,6 @@ const headers = ref([
   { title: "Дата создания", key: "created_at" },
   { title: "#", key: "icons", align: "center", sortable: false },
 ]);
-
-const formatDateTime = (dateTimeString) => {
-  const dateTime = new Date(dateTimeString);
-  return dateTime.toLocaleDateString("ru-RU");
-};
 
 const formatRole = (roles) => {
   const roleMap = {
@@ -51,7 +47,7 @@ const fetchCounterparty = async ({ page, itemsPerPage, sortBy, search }) => {
     const { data } = await counterpartyApi.get({ page, itemsPerPage, sortBy }, search);
     counterparty.value = data.result.data.map((item) => ({
       ...item,
-      created_at: formatDateTime(item.created_at),
+      created_at: showDate(item.created_at),
       roles: formatRole(item.roles),
     }));
     paginations.value = data.result.pagination;
