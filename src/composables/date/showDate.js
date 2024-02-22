@@ -1,8 +1,7 @@
-export default function showDate(date) {
-    const parts = date.split("-")
-    const year = parts[0]
-    const month = parts[1]
-    const day = parts[2]
-
-    return `${day}.${month}.${year}`
+export default function showDate(dateTimeString) {
+  const dateTime = new Date(dateTimeString);
+  const year = dateTime.getFullYear();
+  const month = (dateTime.getMonth() + 1).toString().padStart(2, "0");
+  const day = dateTime.getDate().toString().padStart(2, "0");
+  return `${year}.${month}.${day}`;
 }

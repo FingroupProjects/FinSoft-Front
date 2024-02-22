@@ -2,6 +2,7 @@
 import { ref, onMounted } from "vue"
 import { useRouter } from "vue-router"
 import counterpartyAgreement from "../../../api/counterpartyAgreement"
+import showDate from "../../../composables/date/showDate"
 
 const router = useRouter()
 
@@ -31,7 +32,10 @@ const getDocuments = async ({ page, itemsPerPage, sortBy, search }) => {
   try {
     loading.value = true
     const { data } = await counterpartyAgreement.get({ page, itemsPerPage, sortBy }, search)
-    result.value = data.result.data
+    result.value = data.result.data.map(item => ({
+      ...item,
+      date: showDate(item.date)
+    }))
     pagination.value = data.result.pagination
     loading.value = false
   }

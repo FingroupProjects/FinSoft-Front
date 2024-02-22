@@ -154,12 +154,13 @@ const rules = {
       <v-card class="block">
         <v-form @submit.prevent="createCounterpartyAgreement" ref="form">
           <div class="d-flex ga-5">
-            <v-text-field v-model="name" :rules="[rules.required]" variant="outlined" label="Наименование"></v-text-field>
-            <v-text-field v-model="date" :rules="[rules.required, rules.date]" v-mask="'##-##-####'" variant="outlined"
-              label="Дата"></v-text-field>
-            <v-text-field v-model="contact_person" :rules="[rules.required]" variant="outlined"
+            <v-text-field v-model="name" density="compact" :rules="[rules.required]" variant="outlined"
+              label="Наименование"></v-text-field>
+            <v-text-field v-model="date" density="compact" :rules="[rules.required, rules.date]" v-mask="'##-##-####'"
+              variant="outlined" label="Дата"></v-text-field>
+            <v-text-field v-model="contact_person" density="compact" :rules="[rules.required]" variant="outlined"
               label="Контактное лицо"></v-text-field>
-            <v-text-field v-model="comment" variant="outlined" label="Комментарий"></v-text-field>
+            <v-text-field v-model="comment" density="compact" variant="outlined" label="Комментарий"></v-text-field>
           </div>
           <div class="d-flex ga-5">
             <v-select v-model="organization" :items="organizations" :item-props="organizationProps"
@@ -169,7 +170,7 @@ const rules = {
             <v-select v-model="currency" :items="currencies" :item-props="currencyProps" :rules="[rules.required]"
               label="Валюта договора"></v-select>
             <v-select v-model="payment" :items="payments" :item-props="paymentProps" :rules="[rules.required]"
-              label="Валюта оплаты"></v-select>
+              density="compact" variant="outlined" rounded="lg" label="Валюта оплаты"></v-select>
             <v-select v-model="price_type" :items="price_types" :item-props="price_typeProps" :rules="[rules.required]"
               label="Тип валюты"></v-select>
           </div>

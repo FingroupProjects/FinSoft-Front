@@ -8,7 +8,7 @@ import organizationApi from "../../../api/organizations.js"
 import priceTypeApi from "../../../api/priceType.js"
 import showToast from '../../../composables/toast'
 import changeTheDateForSending from '../../../composables/date/changeTheDateForSending'
-import currentDate from '../../../composables/date/currentDate'
+import showDate from '../../../composables/date/showDate'
 
 const router = useRouter()
 const route = useRoute();
@@ -26,17 +26,18 @@ const form = ref({
   comment: '',
   organization_id: '',
   counterparty_id: '',
-  currency: '',
-  payment: '',
-  price_type: '',
+  currency_id: '',
+  payment_id: '',
+  price_type_id: '',
 })
 
 
 const getById = async () => {
   try {
     const { data } = await counterpartyAgreementApi.getById(route.params.id)
-    console.log(data);
-    form.value = data.result.data[0]
+    const formattedDate = new Date(data.result.date).toISOString().split('T')[0];
+    form.value = { ...data.result, date: formattedDate };
+    console.log(form.value.date);
   } catch (e) {
     console.log(e);
   }
@@ -95,16 +96,16 @@ const getPriceType = async () => {
 const updateCounterpartyAgreement = async () => {
   try {
     const body = {
-      name: name.value,
-      date: changeTheDateForSending(date.value, '-'),
-      organization_id: organization.value.id,
-      counterparty_id: counterparty.value.id,
-      contact_person: contact_person.value,
+      name: form.value.name,
+      date: changeTheDateForSending(form.value.date, '-'),
+      organization_id: form.value.organization_id,
+      counterparty_id: form.value.counterparty_id,
+      contact_person: form.value.contact_person,
       contract_number: '00002',
-      currency_id: currency.value.id,
-      payment_id: payment.value.id,
-      comment: comment.value,
-      price_type_id: price_type.value.id,
+      currency_id: form.value.currency_id,
+      payment_id: form.value.payment_id,
+      comment: form.value.comment,
+      price_type_id: form.value.price_type_id,
     }
     console.log(body);
     const res = await counterpartyAgreementApi.update(body)
@@ -156,7 +157,7 @@ const price_typeProps = (item) => {
 
 const rules = {
   required: v => !!v || 'Поле обязательно для заполнения',
-  date: v => (v && /^\d{2}-\d{2}-\d{4}$/.test(v)) || 'Формат даты должен быть DD-MM-YYYY',
+  date: v => (v && /^\d{4}.\d{2}.\d{2}$/.test(v)) || 'Формат даты должен быть YYYY.MM.DD',
 }
 
 </script>
@@ -172,22 +173,22 @@ const rules = {
           <div class="d-flex ga-5">
             <v-text-field v-model="form.name" :rules="[rules.required]" variant="outlined"
               label="Наименование"></v-text-field>
-            <v-text-field v-model="form.date" :rules="[rules.required, rules.date]" v-mask="'##-##-####'"
-              variant="outlined" label="Дата"></v-text-field>
+            <v-text-field v-model="form.date" type="date" :rules="[rules.required, rules.date]" variant="outlined"
+              label="Дата"></v-text-field>
             <v-text-field v-model="form.contact_person" :rules="[rules.required]" variant="outlined"
               label="Контактное лицо"></v-text-field>
             <v-text-field v-model="form.comment" variant="outlined" label="Комментарий"></v-text-field>
           </div>
           <div class="d-flex ga-5">
-            <v-select v-model="form.organization" :items="organizations" :item-props="organizationProps"
+            <v-select v-model="form.organization_id" :items="organizations" :item-props="organizationProps"
               :rules="[rules.required]" label="Организация"></v-select>
-            <v-select v-model="form.counterparty" :items="counterparties" :item-props="counterpartyProps"
+            <v-select v-model="form.counterparty_id" :items="counterparties" :item-props="counterpartyProps"
               :rules="[rules.required]" label="Контрагент"></v-select>
-            <v-select v-model="form.currency" :items="currencies" :item-props="currencyProps" :rules="[rules.required]"
+            <v-select v-model="form.currency_id" :items="currencies" :item-props="currencyProps" :rules="[rules.required]"
               label="Валюта договора"></v-select>
-            <v-select v-model="form.payment" :items="payments" :item-props="paymentProps" :rules="[rules.required]"
+            <v-select v-model="form.payment_id" :items="payments" :item-props="paymentProps" :rules="[rules.required]"
               label="Валюта оплаты"></v-select>
-            <v-select v-model="form.price_type" :items="price_types" :item-props="price_typeProps"
+            <v-select v-model="form.price_type_id" :items="price_types" :item-props="price_typeProps"
               :rules="[rules.required]" label="Тип валюты"></v-select>
           </div>
           <div class="d-flex justify-end mt-4">

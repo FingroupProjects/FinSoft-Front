@@ -13,6 +13,12 @@ export default {
   },
   getById(id, page = 1, itemsPerPage = 1, sortBy) {
     const params = buildParams(page, itemsPerPage, sortBy);
+    return api.get(`/cpAgreement/${id}`, {
+      params,
+    });
+  },
+  getCounterpartyById(id, page = 1, itemsPerPage = 1, sortBy) {
+    const params = buildParams(page, itemsPerPage, sortBy);
     return api.get(`/cpAgreement/getAgreementByCounterpartyId/${id}`, {
       params,
     });
