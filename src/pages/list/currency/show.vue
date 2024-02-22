@@ -145,10 +145,24 @@ const goToDelete = item => {
               <v-form class="w-100 pa-4" @submit.prevent="addRate">
                 <v-row class="w-100">
                   <v-col class="d-flex flex-column justify-between w-100 ga-5">
-                    <v-text-field variant="outlined" type="tel" :error-messages="dateError" placeholder="30/04/2004"
-                                  v-mask="'##/##/####'" label="Дата" v-model="dateRef"/>
-                    <v-text-field variant="outlined" type="number" :error-messages="valueError" placeholder="1.0000"
-                                  label="Значение" v-model="valueRef"/>
+                    <v-text-field
+                        v-model="dateRef"
+                        :error-messages="dateError"
+                        variant="outlined"
+                        type="tel"
+                        placeholder="30/04/2004"
+                        v-mask="'##/##/####'"
+                        label="Дата"
+                    />
+                    <v-text-field
+                        v-model="valueRef"
+                        :error-messages="valueError"
+                        variant="outlined"
+                        type="number"
+                        hide-spin-buttons
+                        placeholder="1.0000"
+                        label="Значение"
+                    />
                     <div class="d-flex ga-2 justify-end align-center">
                       <v-btn :loading="loading" color="info" type="submit">{{ add }}</v-btn>
                     </div>

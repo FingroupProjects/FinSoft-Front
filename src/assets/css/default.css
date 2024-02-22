@@ -24,3 +24,11 @@
 .icon:hover {
   opacity: 100%;
 }
+
+.text_label {
+  font-size: 14px;
+}
+
+.text_label:active {
+  font-size: 10px !important;
+}

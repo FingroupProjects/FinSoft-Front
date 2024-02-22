@@ -3,6 +3,7 @@ import {onMounted, ref, watch} from "vue";
 import showToast from '../../../composables/toast'
 import priceType from '../../../api/priceType.js'
 import currency from "../../../api/currency.js";
+import {add, editIcon, remove, removeIcon} from "../../../composables/constant/buttons.js";
 
 const search = ref('')
 const isDialog = ref(false);
@@ -54,13 +55,14 @@ const validate = () => {
 
 const getCurrency = async () => {
   try {
-    const { data } = await currency.get(1, 10000)
+    const { data } = await currency.get({itemsPerPage: 1000})
     currencies.value = data.result.data.map(item => {
       return {
         id: item.id,
         symbol_code: item.symbol_code
       }
     })
+    console.log(currencies.value)
   } catch (e) {
 
   }
@@ -178,6 +180,7 @@ onMounted(async () => {
               variant="outlined"
           ></v-text-field>
         </v-card-title>
+
         <v-data-table-server
             items-per-page-text="Элементов на странице:"
             loading-text="Загрузка"
@@ -195,26 +198,37 @@ onMounted(async () => {
             <span>{{ index + 1 }}</span>
           </template>
           <template #item.icons="{ item }">
-            <v-icon class="icon mr-2" @click="editItem(item)" color="info">edit</v-icon>
-            <v-icon class="icon mr-2" @click="deleteItem(item)" color="red" >delete</v-icon>
+            <v-icon class="icon mr-2" @click="editItem(item)" color="info">{{ editIcon }}</v-icon>
+            <v-icon class="icon mr-2" @click="deleteItem(item)" color="red" >{{ removeIcon }}</v-icon>
           </template>
         </v-data-table-server>
       </v-card>
     </v-col>
 
-    <!-- addDialog   -->
+  <!-- addDialog   -->
     <v-card>
       <v-dialog width="500" v-model="isDialog" activator="parent">
         <v-card class="rounded-xl pl-4" :title="'Добавление'">
           <v-form class="w-100 pa-4" @submit.prevent="create">
             <v-row class="w-100">
               <v-col class="d-flex flex-column justify-between w-100 ga-5">
-                <v-text-field variant="outlined" label="Наименование" type="text" v-model="name"
-                  :error-messages="nameError" />
-                <v-select variant="outlined" label="Выберите валюту" v-model="currencyAdd" :items="currencies"
-                  item-title="symbol_code" item-value="id" />
+                <v-text-field
+                    variant="outlined"
+                    label="Наименование"
+                    type="text"
+                    v-model="name"
+                    :error-messages="nameError"
+                />
+                <v-select
+                    v-model="currencyAdd"
+                    :items="currencies"
+                    variant="outlined"
+                    label="Выберите валюту"
+                    item-title="symbol_code"
+                    item-value="id"
+                />
                 <div class="d-flex ga-2 justify-end align-center">
-                  <v-btn :loading="loading" color="green" type="submit">Добавить</v-btn>
+                  <v-btn :loading="loading" color="green" type="submit">{{ add }}</v-btn>
                 </div>
               </v-col>
             </v-row>
@@ -236,7 +250,7 @@ onMounted(async () => {
                   :hint="`${currencyUpdate.symbol_code} ${currencyUpdate.id}`" variant="outlined" label="Выберите валюту"
                   persistent-hint return-object single-line />
                 <div class="d-flex ga-2 justify-end align-center">
-                  <v-btn :loading="loading" color="green" type="submit">Добавить</v-btn>
+                  <v-btn :loading="loading" color="green" type="submit">{{ add }}</v-btn>
                 </div>
               </v-col>
             </v-row>
@@ -256,7 +270,7 @@ onMounted(async () => {
                   Вы точно хотите удалить?
                 </div>
                 <div class="d-flex ga-2  justify-end align-center">
-                  <v-btn :loading="loading" class="text-sm-body-2" color="red" type="submit">Удалить</v-btn>
+                  <v-btn :loading="loading" class="text-sm-body-2" color="red" type="submit">{{ remove }}</v-btn>
                 </div>
               </v-col>
             </v-row>
