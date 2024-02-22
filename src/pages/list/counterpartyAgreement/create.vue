@@ -163,7 +163,7 @@ const rules = {
             <v-text-field v-model="comment" density="compact" variant="outlined" label="Комментарий"></v-text-field>
           </div>
           <div class="d-flex ga-5">
-            <v-select v-model="organization"я :items="organizations" :item-props="organizationProps"
+            <v-select v-model="organization" :items="organizations" :item-props="organizationProps"
               :rules="[rules.required]" label="Организация"></v-select>
             <v-select v-model="counterparty" :items="counterparties" :item-props="counterpartyProps"
               :rules="[rules.required]" label="Контрагент"></v-select>
