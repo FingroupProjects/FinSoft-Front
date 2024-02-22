@@ -28,7 +28,7 @@ const currencyUpdate = ref([])
 const headers = ref([
   { title: '№', key: 'id'},
   { title: 'Название', key: 'name'},
-  { title: 'Валюта', key: 'currency.symbol_code', sortable: false},
+  { title: 'Валюта', key: 'currency.symbol_code'},
   { title: '#', key: 'icons', align: 'center', sortable: false},
 ])
 

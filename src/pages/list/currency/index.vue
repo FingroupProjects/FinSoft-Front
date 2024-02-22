@@ -4,7 +4,7 @@ import {useRouter} from "vue-router";
 import currency from '../../../api/currency.js'
 import showToast from '../../../composables/toast'
 import changeTheDateForSending from '../../../composables/date/changeTheDateForSending'
-import {add, addIcon, cancel, prevIcon} from "../../../composables/constant/buttons.js";
+import {add, addIcon, cancel, editIcon, prevIcon, showIcon} from "../../../composables/constant/buttons.js";
 
 const router = useRouter()
 
@@ -243,8 +243,8 @@ const update = async ({page, itemsPerPage, sortBy}) => {
           <span>{{ index + 1 }}</span>
         </template>
         <template v-slot:item.icons="{ item }">
-          <v-icon color="info" @click="goToShow(item)" class="icon me-2">visibility</v-icon>
-          <v-icon color="info" @click="goToEdit(item)" class="icon">edit</v-icon>
+          <v-icon color="info" @click="goToShow(item)" class="icon me-2">{{ showIcon }}</v-icon>
+          <v-icon color="info" @click="goToEdit(item)" class="icon">{{ editIcon }}</v-icon>
         </template>
       </v-data-table-server>
     </v-card>
