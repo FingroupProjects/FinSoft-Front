@@ -2,6 +2,7 @@ export const add = 'Добавить';
 export const edit = 'Изменить';
 export const remove = 'Удалить';
 export const prev = 'Назад'
+export const cancel = 'Отменить'
 export const prevIcon = 'keyboard_backspace'
 export const removeIcon = 'delete';
 export const editIcon = 'edit';
