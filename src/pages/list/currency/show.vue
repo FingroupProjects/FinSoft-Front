@@ -1,12 +1,20 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
-import currency from '../../../api/currency.js'
 import showToast from "../../../composables/toast/index.js";
 import showDate from "../../../composables/date/showDate";
 import currentDate from "../../../composables/date/currentDate";
 import changeTheDateForSending from "../../../composables/date/changeTheDateForSending";
-import {add, addIcon, prevIcon} from "../../../composables/constant/buttons.js";
+import currency from '../../../api/currency.js'
+import {
+  add,
+  addIcon,
+  addMessage, cancel, edit,
+  editMessage,
+  editIcon,
+  prevIcon,
+  removeIcon
+} from "../../../composables/constant/buttons.js";
 
 const route = useRoute()
 
@@ -21,9 +29,6 @@ const symbolRef = ref(null)
 const dateRef = ref(null)
 const valueRef = ref(null)
 
-const dateError = ref(null)
-const valueError = ref(null)
-
 const currencies = ref([])
 const paginations = ref([])
 
@@ -34,16 +39,12 @@ const headers = ref([
   { title: '#', key: 'icons', align: 'center', sortable: false},
 ])
 
-onMounted( async () => {
-  dateRef.value = currentDate()  
-  symbolRef.value = useRoute().query.symbol
-})
 
 const getCurrencyRateData = async ({ page, itemsPerPage, sortBy, search}) => {
   try {
     const response = await currency.show(route.params.id)
     const { data } = await currency.showRate(route.params.id, { page, itemsPerPage, sortBy }, search)
-    currencies.value = data.result.data.map(item => ({
+    currencies.value = data.result.data.map(item =>  ({
       ...item,
       date: showDate(item.date),
       name: response.data.result.name,
@@ -56,42 +57,22 @@ const getCurrencyRateData = async ({ page, itemsPerPage, sortBy, search}) => {
   }
 }
 
-const validateCurrentRate = () => {
-  dateError.value = null
-  valueError.value = null
-
-  if (dateRef.value === null) {
-    return dateError.value = 'Заполните поле!'
-  }
-
-  if (dateRef.value.length <= 9) {
-    return dateError.value = 'Заполните поле доконца!'
-  }
-
-  if (valueRef.value === null) {
-    return valueError.value = 'Заполните поле!'
-  }
-
-  if (Number(valueRef.value) > 9999999) {
-    return valueError.value = 'Слишком больше значение!'
-  }
-
-  return true
-}
 
 const addRate = async ({ page, itemsPerPage, sortBy }) => {
-  if (validateCurrentRate() !== true) return
 
+  console.log(dateRef.value)
   const body = {
-    date: changeTheDateForSending(dateRef.value),
+    date: showDate(dateRef.value, '-'),
     value: valueRef.value
   }
+
+  console.log(body)
 
   try {
     const { data } = await currency.addRate(body, route.params.id)
     currencies.value = data.result
     await getCurrencyRateData({ page, itemsPerPage, sortBy })
-    showToast('Успешно добавлена')
+    showToast(addMessage)
     valueRef.value = null
     isDialog.value = false
   } catch(e) {
@@ -102,13 +83,15 @@ const addRate = async ({ page, itemsPerPage, sortBy }) => {
 
 const goToEdit = item => {
   currentCurrencyRateID.value = item.id
-  dateRef.value = item.date
+  console.log(item.date)
+  const asd = new Date(item.date).toISOString().split('T')[0]
+  dateRef.value = asd
+  console.log(dateRef.value)
   valueRef.value = item.value
   updateDialog.value = true
 }
 
 const update = async ({page, itemsPerPage, sortBy}) => {
-  if (validateCurrentRate() !== true) return
 
   const body = {
     date: changeTheDateForSending(dateRef.value, '.'),
@@ -119,7 +102,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
 
   if (status === 200) {
     await getCurrencyRateData({page, itemsPerPage, sortBy})
-    showToast('Успешно обновлено!')
+    showToast(editMessage)
     updateDialog.value = false
   }
 }
@@ -128,6 +111,18 @@ const goToDelete = item => {
   currentCurrencyRateID.value = item.id
   deleteDialog.value = true
 }
+
+const rules = {
+  required: v => !!v || 'Поле обязательно для заполнения',
+  date: v => (v && /^\d{2}-\d{2}-\d{4}$/.test(v)) || 'Формат даты должен быть DD-MM-YYYY',
+}
+
+onMounted( async () => {
+  dateRef.value = currentDate()
+  symbolRef.value = useRoute().query.symbol
+})
+
+
 </script>
 
 <template>
@@ -137,31 +132,42 @@ const goToDelete = item => {
         <div class="rounded-circle bg-blue pa-2 cursor-pointer" @click="$router.push('/list/currency')">
           <v-icon color="white" size="25">{{ prevIcon }}</v-icon>
         </div>
-
         <v-btn class="rounded-circle pa-2 mb-1" stacked color="green" size="40">
           <v-icon size="25">{{ addIcon }}</v-icon>
-          <v-dialog width="500" v-model="isDialog" activator="parent">   
-            <v-card class="rounded-xl pl-4" :title="'Курс валюты: ' + symbolRef">
-              <v-form class="w-100 pa-4" @submit.prevent="addRate">
+          <v-dialog v-model="isDialog" activator="parent">
+            <v-card width="30%" class="d-flex  justify-center flex-column mx-auto my-0" rounded="xl">
+              <div class="d-flex justify-space-between align-center pr-5 pt-3">
+                <span class="pl-5">Добавление</span>
+                <v-btn @click="isDialog = false" color="info" variant="tonal" :size="38">
+                  <v-icon size="22">close</v-icon>
+                </v-btn>
+              </div>
+              <v-form class="d-flex w-100 pa-5" @submit.prevent="addRate">
                 <v-row class="w-100">
-                  <v-col class="d-flex flex-column justify-between w-100 ga-5">
+                  <v-col class="d-flex flex-column w-100">
                     <v-text-field
                         v-model="dateRef"
-                        :error-messages="dateError"
-                        variant="outlined"
-                        type="tel"
-                        placeholder="30/04/2004"
-                        v-mask="'##/##/####'"
+                        :rules="[rules.required]"
+                        type="date"
                         label="Дата"
+                        rounded="lg"
+                        color="info"
+                        variant="outlined"
+                        density="compact"
+                        clearable
                     />
                     <v-text-field
                         v-model="valueRef"
-                        :error-messages="valueError"
-                        variant="outlined"
+                        :rules="[rules.required]"
                         type="number"
                         hide-spin-buttons
                         placeholder="1.0000"
                         label="Значение"
+                        rounded="lg"
+                        color="info"
+                        variant="outlined"
+                        density="compact"
+                        clearable
                     />
                     <div class="d-flex ga-2 justify-end align-center">
                       <v-btn :loading="loading" color="info" type="submit">{{ add }}</v-btn>
@@ -204,8 +210,8 @@ const goToDelete = item => {
             items-per-page-text="Элементов на странице:"
             loading-text="Загрузка..."
             no-data-text="Нет данных"
-            :loading="loading"
             v-model:items-per-page="paginations.per_page"
+            :loading="loading"
             :headers="headers"
             :items-length="paginations.total || 0"
             :items="currencies"
@@ -219,34 +225,51 @@ const goToDelete = item => {
           </template>
 
           <template v-slot:item.icons="{ item }">
-            <v-icon color="info" @click="goToEdit(item)" class="icon">edit</v-icon>
-            <v-icon color="info" @click="goToDelete(item)" class="icon me-2">delete</v-icon>
+            <v-icon color="warning" @click="goToEdit(item)" class="icon">{{ editIcon }}</v-icon>
+            <v-icon color="red" @click="goToDelete(item)" class="icon me-2">{{ removeIcon }}</v-icon>
           </template>
         </v-data-table-server>
       </v-card>
 
       <v-card>
         <v-dialog v-model="updateDialog" activator="parent">
-          <v-card class="rounded-xl pl-4" :title="'Изменение '">
-            <v-form class="w-100 pa-4" @submit.prevent="update">
+          <v-card width="30%" class="d-flex  justify-center flex-column mx-auto my-0" rounded="xl">
+            <div class="d-flex justify-space-between align-center pr-5 pt-3">
+              <span class="pl-5">Изменение</span>
+              <v-btn @click="updateDialog = false" color="info" variant="tonal" :size="38">
+                <v-icon size="22">close</v-icon>
+              </v-btn>
+            </div>
+            <v-form class="d-flex w-100 pa-5" @submit.prevent="update">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column justify-between w-100 ga-5">
                   <v-text-field
                       v-model="dateRef"
-                      variant="outlined"
-                      type="text"
-                      :error-messages="dateError"
+                      :rules="[rules.required, rules.date]"
+                      type="date"
                       label="Дата"
+                      rounded="lg"
+                      color="info"
+                      variant="outlined"
+                      density="compact"
+                      clearable
                   />
                   <v-text-field
                       v-model="valueRef"
-                      variant="outlined"
-                      type="text"
-                      :error-messages="valueError"
+                      :rules="[rules.required]"
+                      type="number"
+                      hide-spin-buttons
+                      placeholder="1.0000"
                       label="Значение"
+                      rounded="lg"
+                      color="info"
+                      variant="outlined"
+                      density="compact"
+                      clearable
                   />
-                  <div class="d-flex ga-2 justify-end align-center">
-                    <v-btn :loading="loading" color="green" type="submit">Добавить</v-btn>
+                  <div class="d-flex justify-end ga-2">
+                    <v-btn :loading="loading" size="small" color="info" rounded="lg" class="mt-2" @click="updateDialog = false">{{ cancel }}</v-btn>
+                    <v-btn :loading="loading" size="small" color="green" rounded="lg" class="mt-2" type="submit" >{{ edit }}</v-btn>
                   </div>
                 </v-col>
               </v-row>

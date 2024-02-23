@@ -4,5 +4,5 @@ export default function changeTheDateForSending(date, sign = '/') {
     let month = parts[1];
     let year = parts[2];
     
-    return `${year}/${month}/${day}`;
+    return `${year}${sign}${month}${sign}${day}`;
 }
