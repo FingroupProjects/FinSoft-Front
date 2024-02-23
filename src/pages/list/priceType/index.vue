@@ -34,6 +34,12 @@ const headers = ref([
 
 const getCurrencyData = async ({ page, itemsPerPage, sortBy, search }) => {
   loading.value = true
+  if (sortBy.length) {
+    console.log(sortBy[0].key || [])
+    console.log(sortBy[0].order || [])
+  }
+
+
   try {
     const { data } = await priceType.get({page, itemsPerPage, sortBy}, search)
     paginations.value = data.result.pagination
@@ -62,7 +68,6 @@ const getCurrency = async () => {
         symbol_code: item.symbol_code
       }
     })
-    console.log(currencies.value)
   } catch (e) {
 
   }
@@ -137,12 +142,12 @@ const deleteModal = async ({ page, itemsPerPage, sortBy }) => {
   }
 }
 
-watch(isDialog, async () => {
+watch(isDialog, () => {
   if (isDialog.value === false) {
     name.value = null;
   }
 })
-watch(updateDialog, async () => {
+watch(updateDialog,() => {
   if (updateDialog.value === false) {
     name.value = null;
   }
