@@ -3,7 +3,8 @@ import {onMounted, ref, watch} from "vue";
 import showToast from '../../../composables/toast'
 import priceType from '../../../api/priceType.js'
 import currency from "../../../api/currency.js";
-import {add, editIcon, remove, removeIcon} from "../../../composables/constant/buttons.js";
+import {add, editIcon, remove, removeIcon, cancel} from "../../../composables/constant/buttons.js";
+
 
 const search = ref('')
 const isDialog = ref(false);
@@ -29,16 +30,11 @@ const headers = ref([
   { title: '№', key: 'id'},
   { title: 'Название', key: 'name'},
   { title: 'Валюта', key: 'currency.symbol_code'},
-  { title: '#', key: 'icons', align: 'center', sortable: false},
+  { title: '#', key: 'deleted_at', align: 'center', sortable: false},
 ])
 
-const getCurrencyData = async ({ page, itemsPerPage, sortBy, search }) => {
+const getPriceTypeData = async ({ page, itemsPerPage, sortBy, search }) => {
   loading.value = true
-  if (sortBy.length) {
-    console.log(sortBy[0].key || [])
-    console.log(sortBy[0].order || [])
-  }
-
 
   try {
     const { data } = await priceType.get({page, itemsPerPage, sortBy}, search)
@@ -88,7 +84,7 @@ const create = async ({ page, itemsPerPage, sortBy }) => {
     showToast('Успешно добавлена')
     isDialog.value = false;
     name.value = null;
-    await getCurrencyData({ page, itemsPerPage, sortBy })
+    await getPriceTypeData({ page, itemsPerPage, sortBy })
   }
 
 }
@@ -122,7 +118,7 @@ const update = async ({ page, itemsPerPage, sortBy }) => {
     showToast('Успешно обновлено')
     updateDialog.value = false
     name.value = null;
-    await getCurrencyData({ page, itemsPerPage, sortBy })
+    await getPriceTypeData({ page, itemsPerPage, sortBy })
   }
 }
 
@@ -138,7 +134,7 @@ const deleteModal = async ({ page, itemsPerPage, sortBy }) => {
     showToast('Успешно удалено', 'red')
     deleteDialog.value = false
     ID.value = null;
-    await getCurrencyData({ page, itemsPerPage, sortBy })
+    await getPriceTypeData({ page, itemsPerPage, sortBy })
   }
 }
 
@@ -197,15 +193,20 @@ onMounted(async () => {
             :items="priceTypes"
             :search="search"
             :item-value="headers.title"
-            @update:options="getCurrencyData"
+            @update:options="getPriceTypeData"
         >
           <template v-slot:item.id="{ index }">
             <span>{{ index + 1 }}</span>
           </template>
-          <template #item.icons="{ item }">
-            <v-icon class="icon mr-2" @click="editItem(item)" color="info">{{ editIcon }}</v-icon>
-            <v-icon class="icon mr-2" @click="deleteItem(item)" color="red" >{{ removeIcon }}</v-icon>
-          </template>
+          <template v-slot:item.deleted_at="{ item }">
+            <div class="d-flex justify-center">
+              <div class="d-flex align-center justify-center ga-1" v-if="!item.deleted_at">
+                <v-icon color="warning" @click="editItem(item)" class="icon">{{ editIcon }}</v-icon>
+                <v-icon color="red" @click="deleteItem(item)" class="icon">{{ removeIcon }}</v-icon>
+              </div>
+              <v-icon v-else color="red" class=" cursor-pointer">close</v-icon>
+            </div>
+           </template>
         </v-data-table-server>
       </v-card>
     </v-col>
@@ -266,20 +267,28 @@ onMounted(async () => {
 
     <!-- deleteDialog   -->
     <v-card>
-      <v-dialog width="400" v-model="deleteDialog" activator="parent">
-        <v-card class="rounded-xl py-2">
-          <v-form class="w-100 pa-2" @submit.prevent="deleteModal">
-            <v-row class="w-100">
-              <v-col class="d-flex flex-column justify-between w-100 ga-5">
-                <div class="text-center">
-                  Вы точно хотите удалить?
-                </div>
-                <div class="d-flex ga-2  justify-end align-center">
-                  <v-btn :loading="loading" class="text-sm-body-2" color="red" type="submit">{{ remove }}</v-btn>
-                </div>
-              </v-col>
-            </v-row>
-          </v-form>
+      <v-dialog v-model="deleteDialog" activator="parent">
+        <v-card width="30%" class="d-flex  justify-center flex-column mx-auto my-0" rounded="xl">
+          <div class="d-flex justify-end align-center pr-5 pt-3">
+
+            <v-btn @click="deleteDialog = false" color="info" variant="tonal" :size="38">
+              <v-icon size="22">close</v-icon>
+            </v-btn>
+          </div>
+          <v-card class="d-flex flex-column w-100 pr-5 pl-5 pb-5 mt-2 justify-space-between h-100 " min-height="240">
+            <div class="d-flex justify-center align-center flex-column text-center">
+              <v-icon size="60" color="warning">error</v-icon>
+              <span class="mt-4 text-h6">Вы точно хотите удалить?</span>
+            </div>
+            <div class="d-flex flex-column justify-end ga-2 flex-grow-1 w-100 align-center">
+              <v-btn :loading="loading" size="small" color="red" rounded="xl" height="35" class="mt-2 w-100" @click="deleteModal">
+                {{ remove }}
+              </v-btn>
+              <v-btn :loading="loading" size="small" color="info" rounded="xl" height="35" class="mt-1 w-100" @click="deleteDialog = false">
+                {{ cancel }}
+              </v-btn>
+            </div>
+          </v-card>
         </v-card>
       </v-dialog>
     </v-card>
