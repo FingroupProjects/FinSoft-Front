@@ -46,7 +46,7 @@ const getCurrencyRateData = async ({ page, itemsPerPage, sortBy, search}) => {
     const { data } = await currency.showRate(route.params.id, { page, itemsPerPage, sortBy }, search)
     currencies.value = data.result.data.map(item =>  ({
       ...item,
-      date: showDate(item.date),
+      date: showDate(item.date,'-', true),
       name: response.data.result.name,
       digital_code: response.data.result.digital_code
     }))
@@ -85,8 +85,8 @@ const goToEdit = item => {
   currentCurrencyRateID.value = item.id
   console.log(item.date)
   const asd = new Date(item.date).toISOString().split('T')[0]
-  dateRef.value = asd
-  console.log(dateRef.value)
+  dateRef.value = item.date
+  // console.log(dateRef.value)
   valueRef.value = item.value
   updateDialog.value = true
 }
@@ -114,7 +114,7 @@ const goToDelete = item => {
 
 const rules = {
   required: v => !!v || 'Поле обязательно для заполнения',
-  date: v => (v && /^\d{2}-\d{2}-\d{4}$/.test(v)) || 'Формат даты должен быть DD-MM-YYYY',
+  date: v => (v && /^\d{2}.\d{2}.\d{4}$/.test(v)) || 'Формат даты должен быть DD.MM.YYYY',
 }
 
 onMounted( async () => {
@@ -128,7 +128,7 @@ onMounted( async () => {
 <template>
   <div>
     <v-col>
-      <div class="d-flex justify-space-between  align-center ms-2">
+      <div class="d-flex justify-space-between  align-center">
         <div class="rounded-circle bg-blue pa-2 cursor-pointer" @click="$router.push('/list/currency')">
           <v-icon color="white" size="25">{{ prevIcon }}</v-icon>
         </div>

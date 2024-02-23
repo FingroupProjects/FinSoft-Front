@@ -70,6 +70,7 @@ const rules = {
               label="Наименование"
               rounded="lg"
               color="info"
+              clearable
             />
             <v-text-field
               variant="outlined"
@@ -80,6 +81,7 @@ const rules = {
               v-mask="'+992#########'"
               rounded="lg"
               color="info"
+              clearable
             />
             <v-text-field
               variant="outlined"
@@ -89,6 +91,7 @@ const rules = {
               density="compact"
               rounded="lg"
               color="info"
+              clearable
             />
             <v-text-field
               variant="outlined"
@@ -99,6 +102,7 @@ const rules = {
               density="compact"
               rounded="lg"
               color="info"
+              clearable
             />
           </div>
           <div class="d-flex ga-16 flex-wrap">
