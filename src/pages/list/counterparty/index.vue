@@ -3,7 +3,7 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import counterpartyApi from "../../../api/counterparty";
 import showDate from "../../../composables/date/showDate"
-import {add, addIcon, cancel, editIcon, prevIcon, showIcon} from "../../../composables/constant/buttons.js";
+import { addIcon, prevIcon, showIcon, editIcon } from "../../../composables/constant/buttons.js";
 
 const loading = ref(true);
 
@@ -95,6 +95,8 @@ const fetchCounterparty = async ({ page, itemsPerPage, sortBy, search }) => {
 
         </v-card-title>
         <v-data-table-server
+          style="height: 58vh"
+          fixed-header
           :items="counterparty"
           :headers="headers"
           :loading="loading"
@@ -106,14 +108,17 @@ const fetchCounterparty = async ({ page, itemsPerPage, sortBy, search }) => {
           v-model:items-per-page="paginations.per_page"
           :items-length="paginations.total || 0"
           :item-value="headers.title"
+          hover
+          theme="red"
+          fixed-footer
         >
           <template v-slot:item.id="{ item, index }">
             <span>{{ index + 1 }}</span>
           </template>
           <template #item.icons="{ item }">
             <div class="d-flex ga-1">
-              <v-icon color="info" class="icon" @click="showDetail(item)">visibility</v-icon>
-              <v-icon color="orange" class="icon" @click="pushToRename(item)">edit</v-icon>
+              <v-icon color="info" class="icon" @click="showDetail(item)">{{ showIcon }}</v-icon>
+              <v-icon color="orange" class="icon" @click="pushToRename(item)">{{ editIcon }}</v-icon>
             </div>
           </template>
         </v-data-table-server>

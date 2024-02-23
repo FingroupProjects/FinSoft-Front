@@ -9,6 +9,7 @@ import priceTypeApi from "../../../api/priceType.js"
 import showToast from '../../../composables/toast'
 import changeTheDateForSending from '../../../composables/date/changeTheDateForSending'
 import currentDate from '../../../composables/date/currentDate'
+import showDate from "../../../composables/date/showDate.js";
 
 const router = useRouter()
 
@@ -101,7 +102,7 @@ const createCounterpartyAgreement = async () => {
   }
 }
 onMounted(async () => {
-  date.value = currentDate()
+  date.value = showDate(currentDate())
   await getOrganization()
   await getCounterparty()
   await getCurrency()

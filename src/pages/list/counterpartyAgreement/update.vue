@@ -37,7 +37,6 @@ const getById = async () => {
     const { data } = await counterpartyAgreementApi.getById(route.params.id)
     const formattedDate = new Date(data.result.date).toISOString().split('T')[0];
     form.value = { ...data.result, date: formattedDate };
-    console.log(form.value.date);
   } catch (e) {
     console.log(e);
   }
