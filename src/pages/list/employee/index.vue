@@ -25,6 +25,7 @@ const avatar = ref(null)
 const nameError = ref(null)
 const surnameError = ref(null)
 const positionError = ref(null)
+const lastnameError = ref(null)
 
 const positions = ref([])
 const employees = ref([])
@@ -40,7 +41,7 @@ const headers = ref([
   { title: 'Имя', key: 'name'},
   { title: 'Фамилия', key: 'lastname'},
   { title: 'Отчество', key: 'surname'},
-  { title: 'Аватар', key: 'image'},
+  { title: 'Должность', key: 'position.name', align: 'center'},
   { title: '#', key: 'icons', sortable: false},
 ])
 
@@ -59,12 +60,14 @@ const validate = () => {
   nameError.value = null
   surnameError.value = null;
 
-
   if (name.value === null) {
     return nameError.value = 'Заполните поле!'
   }
+  if (surname.value === null) {
+    return surnameError.value = 'Заполните поле!'
+  }
   if (lastname.value === null) {
-    return nameError.value = 'Заполните поле!'
+    return lastnameError.value = 'Заполните поле!'
   }
 
 
@@ -99,10 +102,15 @@ const create = async ({page, itemsPerPage, sortBy}) => {
     name: name.value,
     lastname: lastname.value,
     surname: surname.value,
+    image: null,
     position_id: positionAdd.value
   }
 
+  console.log(body)
+
   const res = await employee.add(body)
+
+  console.log(res)
 
   if (res.status === 201) {
     showToast('Успешно добавлена')
@@ -111,6 +119,7 @@ const create = async ({page, itemsPerPage, sortBy}) => {
     lastname.value = null;
     surname.value = null;
     positionAdd.value = null;
+
    await getEmployeesData({page, itemsPerPage, sortBy})
   }
 
@@ -141,6 +150,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
     name: name.value,
     lastname: lastname.value,
     surname: surname.value,
+    file: null,
     position_id: positionUpdate.value
   }
 
@@ -206,7 +216,7 @@ onMounted(async () => {
           </template>
           <template v-slot:item.image="{ item }">
             <div class="p-2">
-              <v-img :src="item.image" :alt="item.name" height="100px"></v-img>
+              <v-img :src="'http://192.168.1.84:8410/' + item.image" :alt="item.name" height="100px"></v-img>
             </div>
           </template>
           <template #item.icons="{ item }">
@@ -217,6 +227,7 @@ onMounted(async () => {
       </v-card>
     </v-col>
 
+
 <!-- addDialog   -->
     <v-card>
       <v-dialog width="500" v-model="isDialog" activator="parent">
@@ -226,27 +237,34 @@ onMounted(async () => {
               <v-col class="d-flex flex-column justify-between w-100 ga-5">
                 <v-text-field
                     variant="outlined"
-                    label="Наименование"
+                    label="Имя"
                     type="text"
                     v-model="name"
                     :error-messages="nameError"
                 />
-                <v-select
+                <v-text-field
                     variant="outlined"
-                    label="Выберите валюту"
-                    v-model="currencyAdd"
-                    :items="currencies"
-                    item-title="symbol_code"
-                    item-value="id"
+                    label="Фамимлия"
+                    type="text"
+                    v-model="lastname"
+                    :error-messages="nameError"
+                />
+                <v-text-field
+                    variant="outlined"
+                    label="Отчество"
+                    type="text"
+                    v-model="surname"
+                    :error-messages="nameError"
                 />
                 <v-select
                     variant="outlined"
-                    label="Выберите организацию"
-                    v-model="organizationAdd"
-                    :items="organizations"
+                    label="Выберите должность"
+                    v-model="positionAdd"
+                    :items="positions"
                     item-title="name"
                     item-value="id"
                 />
+
                 <div class="d-flex ga-2 justify-end align-center">
                   <v-btn :loading="loading" color="green" type="submit">Добавить</v-btn>
                 </div>
@@ -269,27 +287,29 @@ onMounted(async () => {
                     variant="outlined"
                     type="text"
                     :error-messages="nameError"
-                    label="Наименование"
+                    label="Имя"
                 />
-                <v-select
-                    :items="currencies"
-                    v-model="currencyUpdate"
-                    item-title="symbol_code"
-                    item-value="id"
+                <v-text-field
+                    v-model="surname"
                     variant="outlined"
-                    label="Выберите валюту"
-                    persistent-hint
-                    return-object
-                    single-line
+                    type="text"
+                    :error-messages="surnameError"
+                    label="Фамилия"
+                />
+                <v-text-field
+                    v-model="lastname"
+                    variant="outlined"
+                    type="text"
+                    :error-messages="lastnameError"
+                    label="Отчество"
                 />
                 <v-select
-                    :items="organizations"
-                    v-model="organizationUpdate"
+                    :items="positions"
+                    v-model="positionUpdate"
                     item-title="name"
                     item-value="id"
-                    :error-messages="organizationError"
                     variant="outlined"
-                    label="Выберите организацию"
+                    label="Выберите должность"
                     persistent-hint
                     return-object
                     single-line
