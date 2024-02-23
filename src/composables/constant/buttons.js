@@ -9,4 +9,7 @@ export const editIcon = 'edit';
 export const addIcon = 'add';
 
 export const showIcon = 'visibility'
+export const addMessage = 'Успешно добавлено!'
+export const editMessage = 'Успешно обновлено!'
+export const removeMessage = 'Успешно удалено!'
 
