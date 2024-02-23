@@ -1,30 +1,36 @@
 <script setup>
-import { onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
-import currency from '../../../api/currency.js'
+import {onMounted, ref, watch} from "vue";
+import {useRouter} from "vue-router";
 import showToast from '../../../composables/toast'
 import changeTheDateForSending from '../../../composables/date/changeTheDateForSending'
-import currentDate from '../../../composables/date/currentDate'
+import currentDate from "../../../composables/date/currentDate.js";
+import currency from '../../../api/currency.js'
+import {
+  add,
+  addIcon,
+  cancel,
+  edit,
+  editIcon,
+  prevIcon, remove,
+  removeIcon,
+  showIcon
+} from "../../../composables/constant/buttons.js";
 
 const router = useRouter()
 
-const expand = ref(false)
 const loading = ref(true)
 const isCurrentRate = ref(false)
-const isDialogEdit = ref(false)
+const addDialog = ref(false)
+const updateModal = ref(false)
+const deleteModal = ref(false)
 
 const idCurrency = ref(null)
+const search = ref('')
 const nameRef = ref(null)
 const symbolRef = ref(null)
 const digitalRef = ref(null)
 const dateRef = ref(null)
 const valueRef = ref(null)
-
-const dateError = ref(null)
-const valueError = ref(null)
-const nameError = ref(null)
-const digitalError = ref(null)
-const symbolError = ref(null)
 
 const currencies = ref([])
 const paginations = ref([])
@@ -34,54 +40,28 @@ const headers = ref([
   { title: 'Наименование', key: 'name'},
   { title: 'Символьный код', key: 'symbol_code'},
   { title: 'Цифровой код', key: 'digital_code'},
-  { title: '#', key: 'icons', align:'center', sortable: false},
+  { title: '#', key: 'deleted_at', align:'center'},
 ])
 
-onMounted( async () => {
-  dateRef.value = currentDate()
-})
+const rules = {
+  required: v => !!v || 'Поле обязательно для заполнения',
+  date: v => (v && /^\d{2}-\d{2}-\d{4}$/.test(v)) || 'Формат даты должен быть DD-MM-YYYY',
+}
 
-const getCurrencyData = async ({ page, itemsPerPage, sortBy }) => {
+const getCurrencyData = async ({ page, itemsPerPage, sortBy, search }) => {
   loading.value = true
-  console.log(itemsPerPage)
   try {
-    const { data } = await currency.get(page, itemsPerPage, sortBy )
+    const { data } = await currency.get({page, itemsPerPage, sortBy}, search)
     paginations.value = data.result.pagination
     currencies.value = data.result.data
-    console.log(data)
     loading.value = false
   } catch (e) {
 
   }
 }
 
-const validateCurrency = () => {
-  nameError.value = null
-  digitalError.value = null
-  symbolError.value = null
-
-  if (nameRef.value === null) {
-    return nameError.value = 'Заполните поле!'
-  }
-
-  if (nameRef.value.length < 3) {
-    return nameError.value = 'Не менее трёх символов!'
-  }
-
-  if (digitalRef.value === null) {
-    return digitalError.value = 'Заполните поле!'
-  }
-
-  if (symbolRef.value === null) {
-    return symbolError.value = 'Заполните поле!'
-  }
-
-  return true
-}
-
 
 const addCurrency = async ({ page, itemsPerPage, sortBy }) => {
-  if (validateCurrency() !== true) return
 
   const body = {
     name: nameRef.value,
@@ -101,147 +81,360 @@ const addCurrency = async ({ page, itemsPerPage, sortBy }) => {
 }
 
 
-const validateCurrencyRate = () => {
-  dateError.value = null
-  valueError.value = null
-
-  if (dateRef.value === null) {
-    return dateError.value = 'Заполните поле!'
-  }
-
-  if (dateRef.value.length <= 9) {
-    return dateError.value = 'Введите правильную дату!'
-  }
-
-  if (valueRef.value === null) {
-    return valueError.value = 'Заполните поле!'
-  }
-
-  if (Number(valueRef.value) > 9999999.9999) {
-    return valueError.value = 'Значение не должно превышать 9999999!'
-  }
-
-  return true
-}
-
 const back = () => {
   nameRef.value = null
   symbolRef.value = null
   digitalRef.value = null
   isCurrentRate.value = false
-  expand.value = false
+  addDialog.value = false
 }
 
 const createCurrentRate = async () => {
-  if (validateCurrencyRate() !== true) return
-
   const body = {
     date: changeTheDateForSending(dateRef.value),
     value: valueRef.value
   }
 
-  const res = await currency.addRate(body, String(idCurrency.value))
+  const {status} = await currency.addRate(body, String(idCurrency.value))
 
-  if (res.status === 201) {
+  if (status === 201) {
     showToast('Успешно добавлена')
     nameRef.value = null
     symbolRef.value = null
     digitalRef.value = null
     isCurrentRate.value = false
-    expand.value = false
+    addDialog.value = false
   }
 }
 
-const goToShow = (id, symbol) => {
-  router.push({ path: `/list/currency/${id}`, query: { symbol } });
-}
+const update = async ({page, itemsPerPage, sortBy}) => {
 
-const goToEdit = (id) => {
-  isDialogEdit.value = true
-  console.log(id)
-}
-const editRate = async (id) => {
   const body = {
     name: nameRef.value,
     symbol_code: symbolRef.value,
     digital_code: digitalRef.value
   }
 
-  console.log(body)
+  try {
+    const { status } = await currency.update(idCurrency.value, body)
+    if (status === 200) {
+      await getCurrencyData({page, itemsPerPage, sortBy})
+      updateModal.value = false
+      showToast('Успешно обновлено!')
+    }
+  } catch (e) {
+    console.log(e)
+  }
 }
+
+const removeCurrency = async ({page, itemsPerPage, sortBy}) => {
+  try {
+    const {status} = await currency.remove(idCurrency.value)
+    if (status === 200) {
+      showToast("Запись успешно удалён!", 'red')
+      await getCurrencyData({page, itemsPerPage, sortBy})
+    }
+  } catch (e) {
+
+  } finally {
+    deleteModal.value = false
+  }
+}
+
+const goToShow = item => {
+  const name = item.name
+  const symbol = item.symbol_code
+  const digital = item.digital_code
+  router.push({ path: `/list/currency/${item.id}`, query: { name, symbol, digital } });
+}
+
+const goToEdit = item => {
+  updateModal.value = true
+  idCurrency.value = item.id
+  nameRef.value = item.name
+  symbolRef.value = item.symbol_code
+  digitalRef.value = item.digital_code
+
+}
+const goToDelete = item => {
+  idCurrency.value = item.id
+  deleteModal.value = true
+}
+
+
+onMounted(() => {
+  dateRef.value = currentDate()
+})
+
+watch(updateModal, newVal => {
+  if (!newVal) {
+    nameRef.value = null
+    symbolRef.value = null
+    digitalRef.value = null
+  }
+})
 </script>
 
 <template>
   <div>
     <v-col>
-    <v-icon size="40" color="green" class="ma-2" @click="expand = !expand">add_circle</v-icon>
-    <v-expand-transition>
-      <v-card v-show="expand" :height="isCurrentRate ? 210 : 95" width="100%" class="mx-auto">
-        <v-form class="w-100 pa-4" @submit.prevent="addCurrency">
-          <v-row class="w-100">
-            <v-col class="d-flex justify-between w-100 ga-5">
-              <v-text-field variant="outlined" :disabled="isCurrentRate" :error-messages="nameError" placeholder="Доллар" label="Название" v-model="nameRef" />
-              <v-text-field variant="outlined" :disabled="isCurrentRate" :error-messages="symbolError" placeholder="USD" v-mask="'AAA'" label="Символный код"
-                v-model="symbolRef" />
-              <v-text-field variant="outlined" :disabled="isCurrentRate" :error-messages="digitalError" placeholder="132" v-mask="'###'" label="Цифровой код"
-                v-model="digitalRef" />
-              <v-btn :loading="loading" color="green" class="mt-2" type="submit" :hidden="isCurrentRate">Добавить</v-btn>
-            </v-col>
-          </v-row>
-        </v-form>
+    <div class="d-flex justify-space-between">
+      <v-btn color="info" class="rounded-circle mb-1" size="40" @click="$router.push('/adminPanel')">
+        <v-icon color="white" size="25" >{{ prevIcon }}</v-icon>
+      </v-btn>
+      <v-btn class="rounded-circle pa-2 mb-1" stacked color="green" size="40" @click="addDialog = !addDialog">
+        <v-icon size="25">{{ addIcon }}</v-icon>
+      </v-btn>
+    </div>
 
-        <v-form class="w-100 pa-4" v-show="isCurrentRate" @submit.prevent="createCurrentRate">
-          <v-row class="w-100">
-            <v-col class="d-flex justify-between w-100 ga-5">
-              <v-text-field variant="outlined" type="tel" :error-messages="dateError" placeholder="30/04/2004" v-mask="'##/##/####'" label="Дата" v-model="dateRef" />
-              <v-text-field variant="outlined" :disabled="isCurrentRate" label="Символный код" :value="symbolRef" v-model="symbolRef" />
-              <v-text-field variant="outlined" type="number" :error-messages="valueError" placeholder="1.0000" label="Значение" v-model="valueRef" />
-              <v-btn :loading="loading" color="green" class="mt-2" type="submit">Добавить</v-btn>
-              <v-btn :loading="loading" color="info" class="mt-2" type="button" @click="back">Назад</v-btn>
-            </v-col>
-          </v-row>
-        </v-form>
+    <v-card class="mt-2 table">
+      <v-card-title class="d-flex align-center pe-2">
+        Список валют
 
-      </v-card>
-    </v-expand-transition>
-    <v-card class="mt-4 table">
+        <v-spacer />
+        <v-spacer />
+        <v-spacer />
+
+        <v-text-field
+            v-model="search"
+            prepend-inner-icon="search"
+            clearable
+            variant="outlined"
+            density="compact"
+            label="Поиск..."
+            color="info"
+            rounded="lg"
+            single-line
+            flat
+            hide-details
+        ></v-text-field>
+      </v-card-title>
+
       <v-data-table-server
-          :loading="loading"
+          items-per-page-text="Элементов на странице:"
+          loading-text="Загрузка"
+          no-data-text="Нет данных"
           v-model:items-per-page="paginations.per_page"
+          :loading="loading"
           :headers="headers"
           :items-length="paginations.total || 0"
           :items="currencies"
           :item-value="headers.title"
+          :search="search"
           @update:options="getCurrencyData"
+          hover
       >
         <template v-slot:item.id="{ index }">
           <span>{{ index + 1 }}</span>
         </template>
-        <template v-slot:item.icons="{ item }">
-          <v-icon @click="goToShow(item.id, item.symbol_code)" class="me-2">visibility</v-icon>
-          <v-icon @click="goToEdit(item.id)">edit</v-icon>
+        <template v-slot:item.deleted_at="{ item }">
+          <div class="d-flex justify-center">
+            <div class="d-flex align-center justify-center ga-1" v-if="!item.deleted_at">
+              <v-icon color="info" @click="goToShow(item)" class="icon">{{ showIcon }}</v-icon>
+              <v-icon color="warning" @click="goToEdit(item)" class="icon">{{ editIcon }}</v-icon>
+              <v-icon color="red" @click="goToDelete(item)" class="icon">{{ removeIcon }}</v-icon>
+            </div>
+            <v-icon v-else color="red" class=" cursor-pointer">close</v-icon>
+          </div>
         </template>
       </v-data-table-server>
     </v-card>
+
+<!-- Modal -->
     <v-card>
-      <v-dialog width="500" v-model="isDialogEdit" activator="parent">   
-     <v-card class="rounded-xl pl-4">
-       <v-form class="w-100 pa-4" @submit.prevent="editRate">
-         <v-row class="w-100">
-           <v-col class="d-flex flex-column justify-between w-100 ga-5">
-             <v-text-field variant="outlined" type="tel" :error-messages="dateError" placeholder="30/04/2004"
-                           v-mask="'##/##/####'" label="Дата" v-model="dateRef"/>
-             <v-text-field variant="outlined" type="number" :error-messages="valueError" placeholder="1.0000"
-                           label="Значение" v-model="valueRef"/>
-             <div class="d-flex ga-2 justify-end align-center">
-               <v-btn :loading="loading" color="green" type="submit">Изменить</v-btn>
-             </div>
-           </v-col>
-         </v-row>
-       </v-form>
-     </v-card>
-   </v-dialog>
+<!--  addModal    -->
+      <v-dialog class="mt-2" v-model="addDialog">
+        <v-card width="30%" class="d-flex  justify-center flex-column mx-auto my-0" rounded="xl">
+          <div class="d-flex justify-space-between align-center pr-5 pt-3">
+            <span class="pl-5">Добавление</span>
+            <v-btn @click="addDialog = false" color="info" variant="tonal" :size="38">
+              <v-icon size="22">close</v-icon>
+            </v-btn>
+          </div>
+          <v-form v-if="!isCurrentRate" class="d-flex w-100 pa-5" @submit.prevent="addCurrency">
+            <v-row class="w-100">
+              <v-col class="d-flex flex-column w-100">
+                <v-text-field
+                    v-model="nameRef"
+                    :disabled="isCurrentRate"
+                    :rules="[rules.required]"
+                    color="info"
+                    rounded="lg"
+                    variant="outlined"
+                    class="w-auto text-sm-body-1"
+                    density="compact"
+                    placeholder="Доллар"
+                    label="Название"
+                    clearable
+                />
+                <v-text-field
+                    :disabled="isCurrentRate"
+                    v-model="symbolRef"
+                    :rules="[rules.required]"
+                    color="info"
+                    rounded="lg"
+                    variant="outlined"
+                    density="compact"
+                    placeholder="USD"
+                    v-mask="'AAA'"
+                    label="Символный код"
+                    clearable
+                />
+                <v-text-field
+                    :disabled="isCurrentRate"
+                    v-model="digitalRef"
+                    :rules="[rules.required]"
+                    color="info"
+                    rounded="lg"
+                    density="compact"
+                    variant="outlined"
+                    placeholder="132"
+                    v-mask="'###'"
+                    label="Цифровой код"
+                    clearable
+                />
+                <div class="d-flex justify-end ga-2">
+                  <v-btn :loading="loading" size="small" color="info" rounded="lg" class="mt-2" @click="addDialog = false">{{ cancel }}</v-btn>
+                  <v-btn :loading="loading" size="small" color="green" rounded="lg" class="mt-2" type="submit" :hidden="isCurrentRate">{{ add }}</v-btn>
+                </div>
+              </v-col>
+            </v-row>
+          </v-form>
+
+          <v-form v-else class="d-flex justify-center w-100 pa-5" @submit.prevent="createCurrentRate">
+            <v-row class="d-flex w-100">
+              <v-col class="d-flex flex-column w-100">
+                <v-text-field
+                    v-model="dateRef"
+                    :rules="[rules.required, rules.date]"
+                    variant="outlined"
+                    color="info"
+                    rounded="lg"
+                    density="compact"
+                    type="date"
+                    label="Дата"
+                    clearable
+                />
+                <v-text-field
+                    :value="symbolRef"
+                    :disabled="isCurrentRate"
+                    v-model="symbolRef"
+                    :rules="[rules.required]"
+                    color="info"
+                    rounded="lg"
+                    density="compact"
+                    variant="outlined"
+                    label="Символный код"
+                    clearable
+                />
+                <v-text-field
+                    v-model="valueRef"
+                    :rules="[rules.required]"
+                    color="info"
+                    rounded="lg"
+                    density="compact"
+                    variant="outlined"
+                    type="number"
+                    placeholder="1.0000"
+                    label="Значение"
+                    clearable
+                    hide-spin-buttons
+                />
+                <div class="d-flex justify-end ga-2">
+                  <v-btn :loading="loading" size="small" color="info" rounded="lg"  @click="back">{{ cancel }}</v-btn>
+                  <v-btn :loading="loading" size="small" color="green" rounded="lg" type="submit">{{ add }}</v-btn>
+                </div>
+              </v-col>
+            </v-row>
+          </v-form>
+        </v-card>
+      </v-dialog>
+      
+<!--  updateModal    -->
+      <v-dialog v-model="updateModal" activator="parent">
+        <v-card width="30%" class="d-flex  justify-center flex-column mx-auto my-0" rounded="xl">
+          <div class="d-flex justify-space-between align-center pr-5 pt-3">
+            <span class="pl-5">Изменение</span>
+            <v-btn @click="updateModal = false" color="info" variant="tonal" :size="38">
+              <v-icon size="22">close</v-icon>
+            </v-btn>
+          </div>
+          <v-form  class="d-flex w-100 pa-5" @submit.prevent="update">
+            <v-row class="w-100">
+              <v-col class="d-flex flex-column w-100">
+                <v-text-field
+                    v-model="nameRef"
+                    :rules="[rules.required]"
+                    color="info"
+                    rounded="lg"
+                    variant="outlined"
+                    class="w-auto text-sm-body-1"
+                    density="compact"
+                    placeholder="Доллар"
+                    label="Название"
+                    clearable
+                />
+                <v-text-field
+                    v-model="symbolRef"
+                    :rules="[rules.required]"
+                    color="info"
+                    rounded="lg"
+                    variant="outlined"
+                    density="compact"
+                    placeholder="USD"
+                    v-mask="'AAA'"
+                    label="Символный код"
+                    clearable
+                />
+                <v-text-field
+                    v-model="digitalRef"
+                    :rules="[rules.required]"
+                    color="info"
+                    rounded="lg"
+                    density="compact"
+                    variant="outlined"
+                    placeholder="132"
+                    v-mask="'###'"
+                    label="Цифровой код"
+                    clearable
+                />
+                <div class="d-flex justify-end ga-2">
+                  <v-btn :loading="loading" size="small" color="info" rounded="lg" class="mt-2" @click="updateModal = false">{{ cancel }}</v-btn>
+                  <v-btn :loading="loading" size="small" color="green" rounded="lg" class="mt-2" type="submit" >{{ edit }}</v-btn>
+                </div>
+              </v-col>
+            </v-row>
+          </v-form>
+        </v-card>
+       </v-dialog>
+
+<!--  deleteModal   -->
+      <v-dialog v-model="deleteModal" activator="parent">
+        <v-card width="30%" class="d-flex  justify-center flex-column mx-auto my-0" rounded="xl">
+          <div class="d-flex justify-end align-center pr-5 pt-3">
+
+            <v-btn @click="deleteModal = false" color="info" variant="tonal" :size="38">
+              <v-icon size="22">close</v-icon>
+            </v-btn>
+          </div>
+          <v-card class="d-flex flex-column w-100 pr-5 pl-5 pb-5 mt-2 justify-space-between h-100 " min-height="240">
+            <div class="d-flex justify-center align-center flex-column text-center">
+              <v-icon size="60" color="warning">error</v-icon>
+              <span class="mt-4 text-h6">Вы точно хотите удалить?</span>
+            </div>
+            <div class="d-flex flex-column justify-end ga-2 flex-grow-1 w-100 align-center">
+              <v-btn :loading="loading" size="small" color="red" rounded="xl" height="35" class="mt-2 w-100" @click="removeCurrency">
+                {{ remove }}
+              </v-btn>
+              <v-btn :loading="loading" size="small" color="info" rounded="xl" height="35" class="mt-1 w-100" @click="deleteModal = false">
+                {{ cancel }}
+              </v-btn>
+            </div>
+          </v-card>
+        </v-card>
+      </v-dialog>
     </v-card>
+
   </v-col>
   </div>
   

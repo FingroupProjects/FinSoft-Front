@@ -1,16 +1,15 @@
 <script setup>
-import {computed, onMounted, ref, watch} from "vue";
-import { useRouter } from "vue-router";
+import {ref, watch} from "vue";
 import position from '../../../api/position.js'
 import showToast from '../../../composables/toast'
 
-const router = useRouter()
 const isDialog = ref(false);
 const updateDialog = ref(false);
 const deleteDialog = ref(false);
 const loading = ref(true);
 const paginations = ref([])
 
+const search = ref('')
 const itemID = ref(null)
 const ID = ref(null)
 
@@ -25,11 +24,10 @@ const headers = ref([
   { title: '#', key: 'icons', align:'center', sortable: false},
 ])
 
-const getPositionData = async ({ page, itemsPerPage, sortBy }) => {
+const getPositionData = async ({ page, itemsPerPage, sortBy, search }) => {
   loading.value = true
   try {
-    const { data } = await position.get(page, itemsPerPage, sortBy )
-    console.log(data)
+    const { data } = await position.get({page, itemsPerPage, sortBy}, search)
     paginations.value = data.result.pagination
     positions.value = data.result.data
     loading.value = false
@@ -45,20 +43,6 @@ const validate = () => {
   }
 
   return true
-}
-
-const getCurrency = async () => {
-  try {
-    const { data } = await position.get(1, 10000 )
-    positions.value = data.result.data.map(item => {
-      return {
-        id: item.id,
-        name: item.name
-      }
-    })
-  } catch (e) {
-
-  }
 }
 
 const create = async ({page, itemsPerPage, sortBy}) => {
@@ -120,12 +104,12 @@ const deleteModal = async ({page, itemsPerPage, sortBy}) => {
   }
 }
 
-
 watch(isDialog, async() => {
   if (isDialog.value === false) {
     name.value = null;
   }
-} )
+})
+
 watch(updateDialog, async() => {
   if (updateDialog.value === false) {
     name.value = null;
@@ -138,28 +122,47 @@ watch(updateDialog, async() => {
 
   <div>
     <v-col>
-      <div class="d-flex w-100 justify-space-between">
-        <div>
-          <h2>Должность</h2>
-        </div>
+      <div class="d-flex w-100 justify-end">
         <v-btn rounded="lg" @click="isDialog = true" color="info" >Создать</v-btn>
       </div>
       <v-card class="mt-4 table">
+        <v-card-title class="d-flex align-center pe-2">
+          Должность
+
+          <v-spacer />
+          <v-spacer />
+          <v-spacer />
+
+          <v-text-field
+              v-model="search"
+              prepend-inner-icon="search"
+              density="compact"
+              label="Поиск..."
+              single-line
+              flat
+              hide-details
+              variant="outlined"
+          ></v-text-field>
+        </v-card-title>
         <v-data-table-server
+            items-per-page-text="Элементов на странице:"
+            loading-text="Загрузка"
+            no-data-text="Нет данных"
             :loading="loading"
             v-model:items-per-page="paginations.per_page"
             :headers="headers"
             :items-length="paginations.total || 0"
             :items="positions"
+            :search="search"
             :item-value="headers.title"
             @update:options="getPositionData"
         >
           <template v-slot:item.id="{ index }">
-            <span>{{ index +1 }}</span>
+            <span>{{ index + 1 }}</span>
           </template>
           <template #item.icons="{ item }">
-            <v-icon class="icon mr-2" @click="editItem(item)" >edit</v-icon>
-            <v-icon class="trash mr-2" @click="deleteItem(item)" color="red" >delete</v-icon>
+            <v-icon class="icon mr-2" @click="editItem(item)" color="info">edit</v-icon>
+            <v-icon class="icon mr-2" @click="deleteItem(item)" color="red" >delete</v-icon>
           </template>
         </v-data-table-server>
       </v-card>

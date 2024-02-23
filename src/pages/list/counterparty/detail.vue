@@ -1,27 +1,27 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import counterpartyApi from "../../../api/counterparty";
-import { useRoute, useRouter } from 'vue-router';
-import showToast from '../../../composables/toast'
-import counterpartyAgreement from "../../../api/counterpartyAgreement"
+import { useRoute, useRouter } from "vue-router";
+import showToast from "../../../composables/toast";
+import counterpartyAgreement from "../../../api/counterpartyAgreement";
 
 const router = useRouter();
 const route = useRoute();
 
-const dataCounterpartyAgreement = ref([])
-const paginations = ref([])
+const dataCounterpartyAgreement = ref([]);
+const paginations = ref([]);
 const headers = ref([
-  { title: '№', key: 'id', align: 'start', },
-  { title: 'Наименование', key: 'name', },
-  { title: 'Контактное лицо', key: 'contact_person' },
-  { title: 'Номер контракта', key: 'contract_number' },
-  { title: 'Дата', key: 'date' },
-  { title: 'Комментарий', key: 'comment' },
-  { title: 'Контрагент', key: 'counterparty_id.name' },
-  { title: 'Валюта договора', key: 'currency_id.symbol_code' },
-  { title: 'Организация', key: 'organization_id.name' },
-  { title: 'Валюта оплаты', key: 'payment_id.symbol_code' },
-  { title: 'Тип валюты', key: 'price_type_id.name' },
+  { title: "№", key: "id", align: "start" },
+  { title: "Наименование", key: "name" },
+  { title: "Контактное лицо", key: "contact_person" },
+  { title: "Номер контракта", key: "contract_number" },
+  { title: "Дата", key: "date" },
+  { title: "Комментарий", key: "comment" },
+  { title: "Контрагент", key: "counterparty_id.name" },
+  { title: "Валюта договора", key: "currency_id.symbol_code" },
+  { title: "Организация", key: "organization_id.name" },
+  { title: "Валюта оплаты", key: "payment_id.symbol_code" },
+  { title: "Тип валюты", key: "price_type_id.name" },
 ]);
 
 const form = ref({
@@ -34,15 +34,15 @@ const form = ref({
   roles: [],
 });
 
-const a = ref(false)
-const b = ref(false)
-const c = ref(false)
+const a = ref(false);
+const b = ref(false);
+const c = ref(false);
 
 const getId = async () => {
   try {
     const { data } = await counterpartyApi.getById(route.params.id);
     form.value = data.result;
-    form.value.roles.forEach(roleIndex => {
+    form.value.roles.forEach((roleIndex) => {
       if (roleIndex === 1) a.value = true;
       else if (roleIndex === 2) b.value = true;
       else if (roleIndex === 3) c.value = true;
@@ -54,15 +54,19 @@ const getId = async () => {
 
 const getDocumentsById = async ({ page, itemsPerPage, sortBy }) => {
   try {
-    const { data } = await counterpartyAgreement.getById(route.params.id, page, itemsPerPage, sortBy)
-    dataCounterpartyAgreement.value = data.result.data
-    paginations.value = data.result.pagination
+    const { data } = await counterpartyAgreement.getById(
+      route.params.id,
+      page,
+      itemsPerPage,
+      sortBy
+    );
+    dataCounterpartyAgreement.value = data.result.data;
+    paginations.value = data.result.pagination;
     console.log(data);
-  }
-  catch (e) {
+  } catch (e) {
     console.log(e);
   }
-}
+};
 
 onMounted(async () => {
   await getId();
@@ -71,8 +75,8 @@ onMounted(async () => {
 
 <template>
   <div>
-    <div class="d-flex justify-end mb-4">
-      <v-btn rounded="lg" color="info" @click="$router.push({ name: 'counterparty' })">Назад</v-btn>
+    <div class="d-flex justify-start mb-4">
+      <v-btn rounded="lg" variant="outlined" color="info" @click="$router.push({ name: 'counterparty' })">Назад</v-btn>
     </div>
     <v-card class="px-4 py-6">
       <div class="d-flex ga-5">
@@ -97,7 +101,6 @@ onMounted(async () => {
             <span>{{ index + 1 }}</span>
           </template>
         </v-data-table-server>
-
       </v-card>
     </div>
   </div>
