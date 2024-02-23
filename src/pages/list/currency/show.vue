@@ -6,7 +6,7 @@ import showToast from "../../../composables/toast/index.js";
 import showDate from "../../../composables/date/showDate";
 import currentDate from "../../../composables/date/currentDate";
 import changeTheDateForSending from "../../../composables/date/changeTheDateForSending";
-import {add, prevIcon} from "../../../composables/constant/buttons.js";
+import {add, addIcon, prevIcon} from "../../../composables/constant/buttons.js";
 
 const route = useRoute()
 
@@ -137,9 +137,9 @@ const goToDelete = item => {
         <div class="rounded-circle bg-blue pa-2 cursor-pointer" @click="$router.push('/list/currency')">
           <v-icon color="white" size="25">{{ prevIcon }}</v-icon>
         </div>
-        
-        <v-btn color="info">
-          <span>{{ add }}</span>
+
+        <v-btn class="rounded-circle pa-2 mb-1" stacked color="green" size="40">
+          <v-icon size="25">{{ addIcon }}</v-icon>
           <v-dialog width="500" v-model="isDialog" activator="parent">   
             <v-card class="rounded-xl pl-4" :title="'Курс валюты: ' + symbolRef">
               <v-form class="w-100 pa-4" @submit.prevent="addRate">
@@ -191,16 +191,18 @@ const goToDelete = item => {
               prepend-inner-icon="search"
               density="compact"
               label="Поиск..."
+              variant="outlined"
+              color="info"
               single-line
               flat
               hide-details
-              variant="outlined"
+              clearable
           ></v-text-field>
         </v-card-title>
 
         <v-data-table-server
             items-per-page-text="Элементов на странице:"
-            loading-text="Загрузка"
+            loading-text="Загрузка..."
             no-data-text="Нет данных"
             :loading="loading"
             v-model:items-per-page="paginations.per_page"
@@ -209,8 +211,8 @@ const goToDelete = item => {
             :items="currencies"
             :search="search"
             :item-value="headers.title"
-            hover
             @update:options="getCurrencyRateData"
+            hover
         >
           <template v-slot:item.id="{ index }">
             <span>{{ index + 1 }}</span>
@@ -224,7 +226,7 @@ const goToDelete = item => {
       </v-card>
 
       <v-card>
-        <v-dialog width="500" v-model="updateDialog" activator="parent">
+        <v-dialog v-model="updateDialog" activator="parent">
           <v-card class="rounded-xl pl-4" :title="'Изменение '">
             <v-form class="w-100 pa-4" @submit.prevent="update">
               <v-row class="w-100">

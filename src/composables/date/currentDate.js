@@ -4,5 +4,5 @@ export default function currentDate() {
     const month = ('0' + (currentDate.getMonth() + 1)).slice(-2)
     const day = ('0' + currentDate.getDate()).slice(-2)
 
-    return `${day}/${month}/${year}`
+    return `${year}-${month}-${day}`
 }
