@@ -1,16 +1,16 @@
 import { api } from './api.js'
 
 export default {
-  getAll(page = 1, itemPerPage = 10) {
-    return  api.get('/organization', {
+  getAll(page = 1, itemsPerPage = 10) {
+    return api.get('/organization', {
       params: {
         page: page,
-        itemPerPage: itemPerPage
+        itemsPerPage: itemsPerPage
       }
     })
-  },
-  add() {
-    return api.post('/organization')
+  },  
+  add(data) {
+    return api.post('/organization', data)
   },
   create(data) {
     return  api.patch(`/counterparty/${id}`, data)

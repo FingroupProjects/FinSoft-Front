@@ -79,6 +79,11 @@ const routes = [
     name: "organizationBill",
     component: () => import("../pages/list/organizationBill/index.vue"),
   },
+  { 
+    path: "/list/organization", 
+    name: "indexOrganization", 
+    component: () => import("../pages/list/organization/index.vue"), 
+  },
   {
     path: "/list/organizationBill/create",
     name: "createOrganizationBill",
