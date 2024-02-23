@@ -7,12 +7,12 @@ import currentDate from "../../../composables/date/currentDate.js";
 import currency from '../../../api/currency.js'
 import {
   add,
-  addIcon,
+  addIcon, addMessage,
   cancel,
   edit,
-  editIcon,
+  editIcon, editMessage,
   prevIcon, remove,
-  removeIcon,
+  removeIcon, removeMessage,
   showIcon
 } from "../../../composables/constant/buttons.js";
 
@@ -21,8 +21,8 @@ const router = useRouter()
 const loading = ref(true)
 const isCurrentRate = ref(false)
 const addDialog = ref(false)
-const updateModal = ref(false)
-const deleteModal = ref(false)
+const updateDialog = ref(false)
+const deleteDialog = ref(false)
 
 const idCurrency = ref(null)
 const search = ref('')
@@ -72,7 +72,7 @@ const addCurrency = async ({ page, itemsPerPage, sortBy }) => {
   const res = await currency.add(body)
   if (res.status === 201) {
     await getCurrencyData({ page, itemsPerPage, sortBy })
-    showToast('Успешно добавлена')
+    showToast(addMessage)
     isCurrentRate.value = true
     valueRef.value = null
     idCurrency.value = res.data.result.id
@@ -98,7 +98,7 @@ const createCurrentRate = async () => {
   const {status} = await currency.addRate(body, String(idCurrency.value))
 
   if (status === 201) {
-    showToast('Успешно добавлена')
+    showToast(addMessage)
     nameRef.value = null
     symbolRef.value = null
     digitalRef.value = null
@@ -119,8 +119,8 @@ const update = async ({page, itemsPerPage, sortBy}) => {
     const { status } = await currency.update(idCurrency.value, body)
     if (status === 200) {
       await getCurrencyData({page, itemsPerPage, sortBy})
-      updateModal.value = false
-      showToast('Успешно обновлено!')
+      updateDialog.value = false
+      showToast(editMessage)
     }
   } catch (e) {
     console.log(e)
@@ -131,13 +131,13 @@ const removeCurrency = async ({page, itemsPerPage, sortBy}) => {
   try {
     const {status} = await currency.remove(idCurrency.value)
     if (status === 200) {
-      showToast("Запись успешно удалён!", 'red')
+      showToast(removeMessage, 'red')
       await getCurrencyData({page, itemsPerPage, sortBy})
     }
   } catch (e) {
 
   } finally {
-    deleteModal.value = false
+    deleteDialog.value = false
   }
 }
 
@@ -149,7 +149,7 @@ const goToShow = item => {
 }
 
 const goToEdit = item => {
-  updateModal.value = true
+  updateDialog.value = true
   idCurrency.value = item.id
   nameRef.value = item.name
   symbolRef.value = item.symbol_code
@@ -158,7 +158,7 @@ const goToEdit = item => {
 }
 const goToDelete = item => {
   idCurrency.value = item.id
-  deleteModal.value = true
+  deleteDialog.value = true
 }
 
 
@@ -166,7 +166,7 @@ onMounted(() => {
   dateRef.value = currentDate()
 })
 
-watch(updateModal, newVal => {
+watch(updateDialog, newVal => {
   if (!newVal) {
     nameRef.value = null
     symbolRef.value = null
@@ -198,12 +198,12 @@ watch(updateModal, newVal => {
         <v-text-field
             v-model="search"
             prepend-inner-icon="search"
-            clearable
             variant="outlined"
             density="compact"
             label="Поиск..."
             color="info"
             rounded="lg"
+            clearable
             single-line
             flat
             hide-details
@@ -350,12 +350,12 @@ watch(updateModal, newVal => {
         </v-card>
       </v-dialog>
       
-<!--  updateModal    -->
-      <v-dialog v-model="updateModal" activator="parent">
+<!--  updateDialog    -->
+      <v-dialog v-model="updateDialog" activator="parent">
         <v-card width="30%" class="d-flex  justify-center flex-column mx-auto my-0" rounded="xl">
           <div class="d-flex justify-space-between align-center pr-5 pt-3">
             <span class="pl-5">Изменение</span>
-            <v-btn @click="updateModal = false" color="info" variant="tonal" :size="38">
+            <v-btn @click="updateDialog = false" color="info" variant="tonal" :size="38">
               <v-icon size="22">close</v-icon>
             </v-btn>
           </div>
@@ -365,10 +365,8 @@ watch(updateModal, newVal => {
                 <v-text-field
                     v-model="nameRef"
                     :rules="[rules.required]"
-                    color="info"
                     rounded="lg"
                     variant="outlined"
-                    class="w-auto text-sm-body-1"
                     density="compact"
                     placeholder="Доллар"
                     label="Название"
@@ -399,7 +397,7 @@ watch(updateModal, newVal => {
                     clearable
                 />
                 <div class="d-flex justify-end ga-2">
-                  <v-btn :loading="loading" size="small" color="info" rounded="lg" class="mt-2" @click="updateModal = false">{{ cancel }}</v-btn>
+                  <v-btn :loading="loading" size="small" color="info" rounded="lg" class="mt-2" @click="updateDialog = false">{{ cancel }}</v-btn>
                   <v-btn :loading="loading" size="small" color="green" rounded="lg" class="mt-2" type="submit" >{{ edit }}</v-btn>
                 </div>
               </v-col>
@@ -408,12 +406,12 @@ watch(updateModal, newVal => {
         </v-card>
        </v-dialog>
 
-<!--  deleteModal   -->
-      <v-dialog v-model="deleteModal" activator="parent">
+<!--  deleteDialog   -->
+      <v-dialog v-model="deleteDialog" activator="parent">
         <v-card width="30%" class="d-flex  justify-center flex-column mx-auto my-0" rounded="xl">
           <div class="d-flex justify-end align-center pr-5 pt-3">
 
-            <v-btn @click="deleteModal = false" color="info" variant="tonal" :size="38">
+            <v-btn @click="deleteDialog = false" color="info" variant="tonal" :size="38">
               <v-icon size="22">close</v-icon>
             </v-btn>
           </div>
@@ -426,7 +424,7 @@ watch(updateModal, newVal => {
               <v-btn :loading="loading" size="small" color="red" rounded="xl" height="35" class="mt-2 w-100" @click="removeCurrency">
                 {{ remove }}
               </v-btn>
-              <v-btn :loading="loading" size="small" color="info" rounded="xl" height="35" class="mt-1 w-100" @click="deleteModal = false">
+              <v-btn :loading="loading" size="small" color="info" rounded="xl" height="35" class="mt-1 w-100" @click="deleteDialog = false">
                 {{ cancel }}
               </v-btn>
             </div>
