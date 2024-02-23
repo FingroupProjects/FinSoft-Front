@@ -3,6 +3,7 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import counterpartyApi from "../../../api/counterparty";
 import showToast from "../../../composables/toast";
+import { add, prevIcon } from "../../../composables/constant/buttons.js";
 
 const router = useRouter();
 
@@ -11,19 +12,10 @@ const phone = ref("");
 const address = ref("");
 const email = ref("");
 const roles = ref([]);
-
-const name_validate = ref(true);
-const phone_validate = ref(false);
-const address_validate = ref(false);
-const email_validate = ref(false);
-
+const error_message = ref('')
 const CreateCounterparty = async () => {
   try {
-    name_validate.value = true;
-    phone_validate.value = true;
-    address_validate.value = true;
-    email_validate.value = true;
-
+    error_message.value = ''
     const body = {
       name: name.value,
       phone: phone.value,
@@ -31,6 +23,9 @@ const CreateCounterparty = async () => {
       email: email.value,
       roles: roles.value,
     };
+    if(roles.value.length === 0) {
+      error_message.value = 'Выберите хотя бы одну роль!'
+    }
     console.log(body);
     await counterpartyApi.create(body);
     router.push("counterparty");
@@ -40,38 +35,6 @@ const CreateCounterparty = async () => {
   }
 };
 
-const nameRules = ref([
-  (value) => {
-    if (value) return true;
-    return "Поле не может быть пустым";
-  },
-]);
-
-const phoneRules = ref([
-  (value) => {
-    if (value?.length === 13) return true;
-    return "Введите валидный номер телефона";
-  },
-]);
-
-const emailRules = ref([
-  (value) => {
-    if (value) return true;
-    return "Поле email объязательна";
-  },
-  (value) => {
-    if (/.+@.+\..+/.test(value)) return true;
-    return "Введите валидную почту";
-  },
-]);
-
-const addressRules = ref([
-  (value) => {
-    if (value) return true;
-    return "Поле не может быть пустым";
-  },
-]);
-
 const handleCheckboxChange = (index) => {
   if (roles.value.includes(index + 1)) {
     roles.value = roles.value.filter((role) => role !== index + 1);
@@ -79,51 +42,94 @@ const handleCheckboxChange = (index) => {
     roles.value.push(index + 1);
   }
 };
+
+const rules = {
+  required: v => !!v || 'Поле обязательно для заполнения',
+  email: v => (/.+@.+\..+/.test(v)) || 'Введите валидную почту',
+  phone: v => v.length === 13 || "Введите валидный номер телефона",
+}
+
 </script>
 
 <template>
   <div>
-    <div class="d-flex justify-start mb-4">
-      <v-btn rounded="lg" variant="outlined" color="info" @click.prevent="$router.push('counterparty')">Назад</v-btn>
-    </div>
-    <v-card class="block">
-      <v-form @submit.prevent="CreateCounterparty">
-        <div class="d-flex ga-5">
-          <v-text-field variant="outlined" :rules="name_validate ? nameRules : []" v-model="name" density="compact">
-            <template v-slot:label>
-              <span class="labelClass">
-                Наименование
-              </span>
-            </template>
-          </v-text-field>
-          <v-text-field variant="outlined" :rules="phone_validate ? phoneRules : []" label="Тел номер"
-            v-model.trim="phone" v-mask="'+992#########'" />
-          <v-text-field variant="outlined" :rules="address_validate ? addressRules : []" label="Адрес"
-            v-model="address" />
-          <v-text-field variant="outlined" prepend-inner-icon="email" :rules="email_validate ? emailRules : []"
-            label="Почта" v-model="email" />
-        </div>
-        <div class="d-flex w-75">
-          <v-checkbox-btn label="Клиент" color="info" @change="handleCheckboxChange(0)"></v-checkbox-btn>
-          <v-checkbox-btn label="Поставщик" color="info" @change="handleCheckboxChange(1)"></v-checkbox-btn>
-          <v-checkbox-btn label="Прочие отношения" color="info" @change="handleCheckboxChange(2)"></v-checkbox-btn>
-        </div>
-        <div class="d-flex justify-end mt-4">
-          <v-btn rounded="lg" color="info" type="submit">Создать</v-btn>
-        </div>
-      </v-form>
-    </v-card>
+    <v-col>
+      <div class="d-flex justify-start mb-2 ">
+        <v-btn color="info" class="rounded-circle mb-1" size="40" @click="$router.push('counterparty')">
+          <v-icon color="white" size="25" >{{ prevIcon }}</v-icon>
+        </v-btn>
+      </div>
+      <v-card class="block">
+        <v-form @submit.prevent="CreateCounterparty">
+          <div class="d-flex ga-5">
+            <v-text-field
+              variant="outlined"
+              :rules="[rules.required]"
+              v-model="name"
+              density="compact"
+              label="Наименование"
+              rounded="lg"
+              color="info"
+              clearable
+            />
+            <v-text-field
+              variant="outlined"
+              :rules="[rules.required, rules.phone]"
+              label="Тел номер"
+              v-model.trim="phone"
+              density="compact"
+              v-mask="'+992#########'"
+              rounded="lg"
+              color="info"
+              clearable
+            />
+            <v-text-field
+              variant="outlined"
+              :rules="[rules.required]"
+              label="Адрес"
+              v-model="address"
+              density="compact"
+              rounded="lg"
+              color="info"
+              clearable
+            />
+            <v-text-field
+              variant="outlined"
+              prepend-inner-icon="email"
+              :rules="[rules.required, rules.email]"
+              label="Почта"
+              v-model="email"
+              density="compact"
+              rounded="lg"
+              color="info"
+              clearable
+            />
+          </div>
+          <div class="d-flex ga-16 flex-wrap">
+            <v-switch label="Клиент" base-color="info" color="info" @change="handleCheckboxChange(0)" />
+            <v-switch label="Поставщик" base-color="info" color="info" @change="handleCheckboxChange(1)" />
+            <v-switch label="Прочие отношения" base-color="info" color="info" @change="handleCheckboxChange(2)" />
+          </div>
+          <div class="error_message">
+            {{ error_message }}
+          </div>
+          <div class="d-flex justify-end">
+            <v-btn rounded="lg" color="info" type="submit">{{ add }}</v-btn>
+          </div>
+        </v-form>
+      </v-card>
+    </v-col>
   </div>
 </template>
 
 <style scoped>
 .block {
-  border-radius: 6px;
+  border-radius: 16px;
   padding: 20px;
 }
-
-.labelClass {
-  font-size: 12px;
-  line-height: 30px;
+.error_message{
+  color:  darkred;
+  font-size: 14px;
+  opacity: 0.9;
 }
 </style>

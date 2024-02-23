@@ -25,14 +25,22 @@ function push(item) {
 </script>
 
 <template>
-  <v-card class="sidebar ">
+  <v-card class="sidebar">
     <v-layout class="side">
 
       <v-navigation-drawer :width="320" v-model="drawer" permanent :rail="props.rale">
-        <v-list density="compact">
+          <v-list density="comfortable">
 
-          <v-list-item v-for="item in menu" color="info" :key="item.id" @click="push(item)" :title="item.title"
-            :value="item.title" class="admin" @mouseover="isHovering = true" @mouseleave="isHovering = false">
+          <v-list-item
+              v-for="item in menu"
+              color="info"
+              :key="item.id"
+              @click="push(item)"
+              :title="item.title"
+              :value="item.title"
+              class="admin"
+              @mouseover="isHovering = true"
+              @mouseleave="isHovering = false">
             <template v-slot:prepend>
               <v-icon class="icon" color="info" :icon="item.icon"></v-icon>
             </template>
@@ -52,12 +60,6 @@ function push(item) {
   box-shadow: none;
   /* height: 100%; */
 }
-
-/* .side {
-  position: sticky;
-  top: 45px;
-  left: 0px;
-} */
 
 .admin:hover .icon {
   animation: 0.2s tremor ease;
