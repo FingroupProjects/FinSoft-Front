@@ -1,8 +1,8 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import counterpartyApi from "../../../api/counterparty";
-import { useRoute, useRouter } from 'vue-router';
-import showToast from '../../../composables/toast'
+import { useRoute, useRouter } from "vue-router";
+import showToast from "../../../composables/toast";
 
 const router = useRouter();
 const route = useRoute();
@@ -17,16 +17,16 @@ const form = ref({
   roles: [],
 });
 
-const a = ref(false)
-const b = ref(false)
-const c = ref(false)
+const a = ref(false);
+const b = ref(false);
+const c = ref(false);
 const id = ref(null);
 
-const renameCounterparty = async () => {
+const updateCounterparty = async () => {
   try {
-    await counterpartyApi.rename(id.value, form.value);
-    router.push({ name: 'counterparty' })
-    showToast('Успешно изменено', '#')
+    await counterpartyApi.update(id.value, form.value);
+    router.push({ name: "counterparty" });
+    showToast("Успешно изменено", "#");
   } catch (e) {
     console.error(e);
   }
@@ -36,7 +36,7 @@ const getId = async () => {
   try {
     const { data } = await counterpartyApi.getById(id.value);
     form.value = data.result;
-    form.value.roles.forEach(roleIndex => {
+    form.value.roles.forEach((roleIndex) => {
       if (roleIndex === 1) a.value = true;
       else if (roleIndex === 2) b.value = true;
       else if (roleIndex === 3) c.value = true;
@@ -61,43 +61,42 @@ onMounted(async () => {
 });
 
 const nameRules = ref([
-  value => {
-    if (value) return true
-    return 'Поле не может быть пустым'
+  (value) => {
+    if (value) return true;
+    return "Поле не может быть пустым";
   },
-])
+]);
 
 const phoneRules = ref([
-  value => {
-    if (value?.length === 13) return true
-    return 'Введите валидный номер телефона'
+  (value) => {
+    if (value?.length === 13) return true;
+    return "Введите валидный номер телефона";
   },
-])
+]);
 
 const emailRules = ref([
-  value => {
-    if (value) return true
-    return 'Поле email объязательна'
+  (value) => {
+    if (value) return true;
+    return "Поле email объязательна";
   },
-  value => {
-    if (/.+@.+\..+/.test(value)) return true
-    return 'Введите валидную почту'
+  (value) => {
+    if (/.+@.+\..+/.test(value)) return true;
+    return "Введите валидную почту";
   },
-])
+]);
 
 const addressRules = ref([
-  value => {
-    if (value) return true
-    return 'Поле не может быть пустым'
+  (value) => {
+    if (value) return true;
+    return "Поле не может быть пустым";
   },
-])
-
+]);
 </script>
 
 <template>
   <div>
-    <div class="d-flex justify-end mb-4">
-      <v-btn rounded="lg" color="info" @click="$router.push({ name: 'counterparty' })">Назад</v-btn>
+    <div class="d-flex justify-start mb-4">
+      <v-btn rounded="lg" variant="outlined" color="info" @click="$router.push({ name: 'counterparty' })">Назад</v-btn>
     </div>
     <v-card class="px-4 py-6">
       <div class="d-flex ga-5">
@@ -114,7 +113,7 @@ const addressRules = ref([
           @change="handleCheckboxChange(3)"></v-checkbox-btn>
       </div>
       <div class="d-flex justify-end mt-4">
-        <v-btn rounded="lg" color="info" @click="renameCounterparty()">Изменить</v-btn>
+        <v-btn rounded="lg" color="info" @click="updateCounterparty()">Изменить</v-btn>
       </div>
     </v-card>
   </div>

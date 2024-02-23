@@ -26,17 +26,6 @@ const addOrganization = () => {
   });
 };
 
-// const fetchOrganizations = () => {
-//   api.getAll().then((response) => {
-//     console.log("Fetched organizations:", response.data);
-//     organizations.value = response.data.result.data;
-//     paginations.value = response.data.result.pagination
-//     console.log(response);
-//   }).catch((err) => {
-//     error.value = err.response.data.message || "Произошла ошибка при загрузке списка организаций.";
-//   });
-
-// };
 const fetchOrganizations = async ( page, itemsPerPage, sortBy ) => {
   loading.value = true
   try {

@@ -110,6 +110,32 @@ const routes = [
     component: () => import("../pages/list/counterpartyAgreement/create.vue"),
   },
   {
+    path: "/list/updateCounterpartyAgreement/:id",
+    name: "updateCounterpartyAgreement",
+    component: () => import("../pages/list/counterpartyAgreement/update.vue"),
+  },
+  {
+    path: "/list/cashRegister",
+    name: "cashRegister",
+    component: () => import("../pages/list/cashRegister/index.vue"),
+  },
+  {
+    path: "/list/employee",
+    name: "employee",
+    component: () => import("../pages/list/employee/index.vue"),
+  },
+  {
+    path: "/list/position",
+    name: "position",
+    component: () => import("../pages/list/position/index.vue"),
+  },
+  {
+    path: "/list/storage",
+    name: "storage",
+    component: () => import("../pages/list/storage/index.vue"),
+  },
+
+  {
     path: "/login",
     name: "login",
     component: () => import("../pages/authentication/authentication.vue"),
