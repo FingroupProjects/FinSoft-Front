@@ -68,7 +68,7 @@ const addCurrency = async ({ page, itemsPerPage, sortBy }) => {
     digital_code: digitalRef.value,
     symbol_code: symbolRef.value
   }
-
+  
   const res = await currency.add(body)
   if (res.status === 201) {
     await getCurrencyData({ page, itemsPerPage, sortBy })
@@ -234,7 +234,7 @@ watch(updateDialog, newVal => {
               <v-icon color="warning" @click="goToEdit(item)" class="icon">{{ editIcon }}</v-icon>
               <v-icon color="red" @click="goToDelete(item)" class="icon">{{ removeIcon }}</v-icon>
             </div>
-            <v-icon v-else color="red" class=" cursor-pointer">close</v-icon>
+            <v-icon v-else color="red" class="cursor-pointer">close</v-icon>
           </div>
         </template>
       </v-data-table-server>
