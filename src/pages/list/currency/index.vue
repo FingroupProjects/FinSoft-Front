@@ -107,6 +107,40 @@ const createCurrentRate = async () => {
   }
 }
 
+const update = async ({page, itemsPerPage, sortBy}) => {
+
+  const body = {
+    name: nameRef.value,
+    symbol_code: symbolRef.value,
+    digital_code: digitalRef.value
+  }
+
+  try {
+    const { status } = await currency.update(idCurrency.value, body)
+    if (status === 200) {
+      await getCurrencyData({page, itemsPerPage, sortBy})
+      updateModal.value = false
+      showToast('Успешно обновлено!')
+    }
+  } catch (e) {
+    console.log(e)
+  }
+}
+
+const removeCurrency = async ({page, itemsPerPage, sortBy}) => {
+  try {
+    const {status} = await currency.remove(idCurrency.value)
+    if (status === 200) {
+      showToast("Запись успешно удалён!", 'red')
+      await getCurrencyData({page, itemsPerPage, sortBy})
+    }
+  } catch (e) {
+
+  } finally {
+    deleteModal.value = false
+  }
+}
+
 const goToShow = item => {
   const name = item.name
   const symbol = item.symbol_code
@@ -127,39 +161,6 @@ const goToDelete = item => {
   deleteModal.value = true
 }
 
-const removeCurrency = async ({page, itemsPerPage, sortBy}) => {
-  try {
-    const {status} = await currency.remove(idCurrency.value)
-    if (status === 200) {
-      const res = await getCurrencyData({page, itemsPerPage, sortBy})
-      console.log(res)
-    }
-  } catch (e) {
-
-  } finally {
-    deleteModal.value = false
-  }
-}
-
-const update = async ({page, itemsPerPage, sortBy}) => {
-
-  const body = {
-    name: nameRef.value,
-    symbol_code: symbolRef.value,
-    digital_code: digitalRef.value
-  }
-
-  try {
-    const { status } = await currency.update(idCurrency.value, body)
-    if (status === 200) {
-      await getCurrencyData({page, itemsPerPage, sortBy})
-      updateModal.value = false
-      showToast('Успешно обновлено!')
-    }
-  } catch (e) {
-    console.log(e)
-  }
-}
 
 onMounted(() => {
   dateRef.value = currentDate()
@@ -198,6 +199,7 @@ watch(updateModal, newVal => {
             v-model="search"
             prepend-inner-icon="search"
             clearable
+            variant="outlined"
             density="compact"
             label="Поиск..."
             color="info"
@@ -205,7 +207,6 @@ watch(updateModal, newVal => {
             single-line
             flat
             hide-details
-            variant="outlined"
         ></v-text-field>
       </v-card-title>
 
@@ -227,8 +228,8 @@ watch(updateModal, newVal => {
           <span>{{ index + 1 }}</span>
         </template>
         <template v-slot:item.deleted_at="{ item }">
-          <div class="d-flex justify-center ga-1">
-            <div v-if="!item.deleted_at">
+          <div class="d-flex justify-center">
+            <div class="d-flex align-center justify-center ga-1" v-if="!item.deleted_at">
               <v-icon color="info" @click="goToShow(item)" class="icon">{{ showIcon }}</v-icon>
               <v-icon color="warning" @click="goToEdit(item)" class="icon">{{ editIcon }}</v-icon>
               <v-icon color="red" @click="goToDelete(item)" class="icon">{{ removeIcon }}</v-icon>
@@ -416,16 +417,16 @@ watch(updateModal, newVal => {
               <v-icon size="22">close</v-icon>
             </v-btn>
           </div>
-          <v-card class="d-flex flex-column w-100 pr-5 pl-5 pb-5 mt-2 justify-space-between h-100 " min-height="230">
+          <v-card class="d-flex flex-column w-100 pr-5 pl-5 pb-5 mt-2 justify-space-between h-100 " min-height="240">
             <div class="d-flex justify-center align-center flex-column text-center">
               <v-icon size="60" color="warning">error</v-icon>
               <span class="mt-4 text-h6">Вы точно хотите удалить?</span>
             </div>
-            <div class="d-flex flex-column justify-end ga-2 flex-grow-1 w-100 align-end">
-              <v-btn :loading="loading" size="small" color="red" rounded="lg" class="mt-2 w-100" @click="removeCurrency">
+            <div class="d-flex flex-column justify-end ga-2 flex-grow-1 w-100 align-center">
+              <v-btn :loading="loading" size="small" color="red" rounded="xl" height="35" class="mt-2 w-100" @click="removeCurrency">
                 {{ remove }}
               </v-btn>
-              <v-btn :loading="loading" size="small" color="info" rounded="lg" class="mt-2 w-100" @click="deleteModal = false">
+              <v-btn :loading="loading" size="small" color="info" rounded="xl" height="35" class="mt-1 w-100" @click="deleteModal = false">
                 {{ cancel }}
               </v-btn>
             </div>
