@@ -46,7 +46,7 @@ const getCurrencyRateData = async ({ page, itemsPerPage, sortBy, search}) => {
     const { data } = await currency.showRate(route.params.id, { page, itemsPerPage, sortBy }, search)
     currencies.value = data.result.data.map(item =>  ({
       ...item,
-      date: showDate(item.date,'-', true),
+      date: showDate(item.date),
       name: response.data.result.name,
       digital_code: response.data.result.digital_code
     }))
@@ -69,8 +69,7 @@ const addRate = async ({ page, itemsPerPage, sortBy }) => {
   console.log(body)
 
   try {
-    const { data } = await currency.addRate(body, route.params.id)
-    currencies.value = data.result
+    await currency.addRate(body, route.params.id)
     await getCurrencyRateData({ page, itemsPerPage, sortBy })
     showToast(addMessage)
     valueRef.value = null
@@ -83,10 +82,7 @@ const addRate = async ({ page, itemsPerPage, sortBy }) => {
 
 const goToEdit = item => {
   currentCurrencyRateID.value = item.id
-  console.log(item.date)
-  const asd = new Date(item.date).toISOString().split('T')[0]
-  dateRef.value = item.date
-  // console.log(dateRef.value)
+  dateRef.value = item.date.split('.').reverse().join('-')
   valueRef.value = item.value
   updateDialog.value = true
 }
