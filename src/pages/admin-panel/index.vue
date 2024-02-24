@@ -96,7 +96,7 @@ li {
 }
 
 span {
-  width: 250px;
+  width: 243px;
   background: #fefeff;
   border-radius: 10px;
   box-shadow: 3px 3px 3px rgb(226, 226, 226);

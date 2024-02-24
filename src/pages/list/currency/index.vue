@@ -211,6 +211,7 @@ watch(updateDialog, newVal => {
       </v-card-title>
 
       <v-data-table-server
+          style="height: 58vh"
           items-per-page-text="Элементов на странице:"
           loading-text="Загрузка"
           no-data-text="Нет данных"
@@ -222,6 +223,7 @@ watch(updateDialog, newVal => {
           :item-value="headers.title"
           :search="search"
           @update:options="getCurrencyData"
+          fixed-footer
           hover
       >
         <template v-slot:item.id="{ index }">
