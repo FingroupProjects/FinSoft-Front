@@ -6,12 +6,13 @@ export default {
     return api.get('/organization', { params })
   },
   add(data) {
+    console.log(data)
     return api.post('/organization', data)
-  },
-  create(data) {
-    return  api.patch(`/counterparty/${id}`, data)
   },
   update() {
     return api.get('/counterparty')
+  },
+  remove(id) {
+    return api.delete(`/currency/${id}`)
   },
 }
