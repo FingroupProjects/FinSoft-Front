@@ -55,7 +55,7 @@ const rules = {
   <div>
     <v-col>
       <div class="d-flex justify-start mb-2 ">
-        <v-btn color="info" class="rounded-circle mb-1" size="40" @click="$router.push('counterparty')">
+        <v-btn color="info" class="rounded-circle mb-1" size="40" @click="$router.push({name: 'counterparty'})">
           <v-icon color="white" size="25" >{{ prevIcon }}</v-icon>
         </v-btn>
       </div>
@@ -70,7 +70,8 @@ const rules = {
               label="Наименование"
               rounded="lg"
               color="info"
-              clearable
+              :append-inner-icon="name.length > 1 ? 'cancel' : ''"
+              @click:append-inner="name = ''"
             />
             <v-text-field
               variant="outlined"
@@ -81,7 +82,8 @@ const rules = {
               v-mask="'+992#########'"
               rounded="lg"
               color="info"
-              clearable
+              :append-inner-icon="phone.length > 1 ? 'cancel' : ''"
+              @click:append-inner="phone = ''"
             />
             <v-text-field
               variant="outlined"
@@ -91,7 +93,8 @@ const rules = {
               density="compact"
               rounded="lg"
               color="info"
-              clearable
+              :append-inner-icon="address.length > 1 ? 'cancel' : ''"
+              @click:append-inner="address = ''"
             />
             <v-text-field
               variant="outlined"
@@ -102,7 +105,8 @@ const rules = {
               density="compact"
               rounded="lg"
               color="info"
-              clearable
+              :append-inner-icon="email.length > 1 ? 'cancel' : ''"
+              @click:append-inner="email = ''"
             />
           </div>
           <div class="d-flex ga-16 flex-wrap">
