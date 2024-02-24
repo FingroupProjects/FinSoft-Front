@@ -13,7 +13,7 @@ import {
   editMessage,
   editIcon,
   prevIcon,
-  removeIcon
+  removeIcon, remove, removeMessage
 } from "../../../composables/constant/buttons.js";
 
 const route = useRoute()
@@ -60,13 +60,10 @@ const getCurrencyRateData = async ({ page, itemsPerPage, sortBy, search}) => {
 
 const addRate = async ({ page, itemsPerPage, sortBy }) => {
 
-  console.log(dateRef.value)
   const body = {
     date: showDate(dateRef.value, '-'),
     value: valueRef.value
   }
-
-  console.log(body)
 
   try {
     await currency.addRate(body, route.params.id)
@@ -74,8 +71,8 @@ const addRate = async ({ page, itemsPerPage, sortBy }) => {
     showToast(addMessage)
     valueRef.value = null
     isDialog.value = false
-  } catch(e) {
-
+  } catch({response}) {
+    showToast(response.data.message, 'red')
   }
 
 }
@@ -94,18 +91,35 @@ const update = async ({page, itemsPerPage, sortBy}) => {
     value: Number(valueRef.value)
   }
 
-  const {status} = await currency.updateRate(currentCurrencyRateID.value, body)
+  try {
+    const {status} = await currency.updateRate(currentCurrencyRateID.value, body)
 
-  if (status === 200) {
-    await getCurrencyRateData({page, itemsPerPage, sortBy})
-    showToast(editMessage)
-    updateDialog.value = false
+    if (status === 200) {
+      await getCurrencyRateData({page, itemsPerPage, sortBy})
+      showToast(editMessage)
+      updateDialog.value = false
+    }
+  } catch (e) {
+
   }
 }
-
 const goToDelete = item => {
   currentCurrencyRateID.value = item.id
   deleteDialog.value = true
+}
+
+const removeCurrencyRate = async ({page, itemsPerPage, sortBy}) => {
+  try {
+    const { data } = await currency.removeRate(currentCurrencyRateID.value)
+    if (data.result) {
+      showToast(removeMessage, 'red')
+      await getCurrencyRateData({page, itemsPerPage, sortBy})
+    }
+  } catch (e) {
+
+  } finally {
+    deleteDialog.value = false
+  }
 }
 
 const rules = {
@@ -117,7 +131,6 @@ onMounted( async () => {
   dateRef.value = currentDate()
   symbolRef.value = useRoute().query.symbol
 })
-
 
 </script>
 
@@ -178,7 +191,7 @@ onMounted( async () => {
       </div>
       <v-card class="mt-4 table">
         <v-card-title class="d-flex align-center pe-2">
-          <div class="d-flex flex-column text-sm-body-1">
+          <div class="d-flex flex-column text-sm-body-2 ">
             <p><strong>Наименование:</strong> {{ useRoute().query.name }}</p>
             <p><strong>Символьный код:</strong> {{ useRoute().query.symbol }}</p>
             <p><strong>Цифровой код:</strong> {{ useRoute().query.digital }}</p>
@@ -195,6 +208,7 @@ onMounted( async () => {
               label="Поиск..."
               variant="outlined"
               color="info"
+              rounded="lg"
               single-line
               flat
               hide-details
@@ -270,6 +284,32 @@ onMounted( async () => {
                 </v-col>
               </v-row>
             </v-form>
+          </v-card>
+        </v-dialog>
+
+<!--   deleteDialog     -->
+        <v-dialog v-model="deleteDialog" activator="parent">
+          <v-card width="30%" class="d-flex  justify-center flex-column mx-auto my-0" rounded="xl">
+            <div class="d-flex justify-end align-center pr-5 pt-3">
+
+              <v-btn @click="deleteDialog = false" color="info" variant="tonal" :size="38">
+                <v-icon size="22">close</v-icon>
+              </v-btn>
+            </div>
+            <v-card class="d-flex flex-column w-100 pr-5 pl-5 pb-5 mt-2 justify-space-between h-100 " min-height="240">
+              <div class="d-flex justify-center align-center flex-column text-center">
+                <v-icon size="60" color="warning">error</v-icon>
+                <span class="mt-4 text-h6">Вы точно хотите удалить?</span>
+              </div>
+              <div class="d-flex flex-column justify-end ga-2 flex-grow-1 w-100 align-center">
+                <v-btn :loading="loading" size="small" color="red" rounded="xl" height="35" class="mt-2 w-100" @click="removeCurrencyRate">
+                  {{ remove }}
+                </v-btn>
+                <v-btn :loading="loading" size="small" color="info" rounded="xl" height="35" class="mt-1 w-100" @click="deleteDialog = false">
+                  {{ cancel }}
+                </v-btn>
+              </div>
+            </v-card>
           </v-card>
         </v-dialog>
       </v-card>

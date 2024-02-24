@@ -27,4 +27,7 @@ export default {
   updateRate(id, body) {
     return api.patch(`/currencyRate/${id}`, body)
   },
+  removeRate(id) {
+    return api.delete(`/currencyRate/${id}`)
+  },
 }
