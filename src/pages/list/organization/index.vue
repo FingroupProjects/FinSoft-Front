@@ -93,8 +93,7 @@ const goToDelete = item => {
 
 <template>
   <div class="element">
-  <div>
-    <div class="d-flex justify-space-between">
+    <div class="d-flex justify-space-between element">
       <v-btn color="info" class="rounded-circle mb-1" size="40" @click="$router.push('/adminPanel')">
           <v-icon color="white" size="25" >{{ prevIcon }}</v-icon>
       </v-btn> 
@@ -116,26 +115,26 @@ const goToDelete = item => {
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </div>
-  <v-card class="mt-4 table element">
-      <v-data-table-server
-          :loading="loading"
-          v-model:items-per-page="paginations.per_page"
-          :headers="headers"
-          :items-length="paginations.total || 0"
-          :items="organizations"
-          :item-value="headers.title"
-          @update:options="fetchOrganizations"
-      >
-        <template v-slot:item.id="{ index }">
-          <span>{{ index + 1 }}</span>
-        </template>
-        <template v-slot:item.icons="{ item }">
-          <v-icon color="warning" @click="goToEdit(item)" class="icon">{{ editIcon }}</v-icon>
-          <v-icon color="red" @click="goToDelete(item)" class="icon">{{ removeIcon }}</v-icon>
-        </template>
-      </v-data-table-server>
-    </v-card>
+    <v-card class="mt-4 table ">
+        <v-data-table-server
+            :loading="loading"
+            v-model:items-per-page="paginations.per_page"
+            :headers="headers"
+            :items-length="paginations.total || 0"
+            :items="organizations"
+            :item-value="headers.title"
+            @update:options="fetchOrganizations"
+        >
+          <template v-slot:item.id="{ index }">
+            <span>{{ index + 1 }}</span>
+          </template>
+          <template v-slot:item.icons="{ item }">
+            <v-icon color="warning" @click="goToEdit(item)" class="icon">{{ editIcon }}</v-icon>
+            <v-icon color="red" @click="goToDelete(item)" class="icon">{{ removeIcon }}</v-icon>
+          </template>
+        </v-data-table-server>
+      </v-card>
+  
     
     <v-card>
       <v-dialog v-model="updateModal" activator="parent">
@@ -163,7 +162,7 @@ const goToDelete = item => {
                   />
                   <div class="d-flex justify-end ga-2">
                     <v-btn :loading="loading" size="small" color="info" rounded="lg" class="mt-2" @click="updateModal = false">{{ cancel }}</v-btn>
-                    <v-btn :loading="loading" size="small" color="green" rounded="lg" class="mt-2" type="submit" >{{ edit }}</v-btn>
+                    <v-btn :loading="loading" size="small" color="green" rounded="lg" class="mt-2" type="submit" @click="updateModal = false" >{{ edit }}</v-btn>
                   </div>
                 </v-col>
               </v-row>
