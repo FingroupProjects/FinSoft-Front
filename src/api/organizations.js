@@ -1,14 +1,10 @@
-import { api } from './api.js'
+import { api, buildParams } from './api.js'
 
 export default {
-  getAll(page = 1, itemsPerPage = 10) {
-    return api.get('/organization', {
-      params: {
-        page: page,
-        itemsPerPage: itemsPerPage
-      }
-    })
-  },  
+  getAll({page = 1, itemsPerPage = 10, sortBy}, search = '') {
+    const params = buildParams(page, itemsPerPage, sortBy, search);
+    return api.get('/organization', { params })
+  },
   add(data) {
     return api.post('/organization', data)
   },

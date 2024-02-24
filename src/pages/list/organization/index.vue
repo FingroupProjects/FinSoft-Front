@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from "vue";
-import api from "../../../api/organizations";
+import organization from '../../../api/organizations';
 import {prevIcon,addIcon,editIcon,edit,removeIcon,remove,cancel} from '../../../composables/constant/buttons.js'
 
 const dialog = ref(false);
@@ -12,6 +12,7 @@ const paginations = ref([])
 const updateModal = ref(false)
 const idOrganizations = ref(null)
 const nameRef = ref(null)
+const search = ref('')
 const deleteModal = ref(false)
 
 const rules = {
@@ -30,39 +31,27 @@ const goToEdit = item => {
   updateModal.value = true;
 };
 
-const addOrganization = () => {
-  api.add({ name: name.value }).then(() => {
-    dialog.value = false;
-    name.value = "";
-    console.log("Organization added successfully!");
-    fetchOrganizations();
-  }).catch((err) => {
-    error.value = err.response.data.message || "Произошла ошибка при добавлении организации.";
-  });
-};
-
-
-
-const fetchOrganizations = async ( page, itemsPerPage, sortBy ) => {
+const getOrganizationData = async ({ page, itemsPerPage, sortBy, search }) => {
   loading.value = true
   try {
-    const { data } = await api.getAll(page, itemsPerPage, sortBy )
+    const { data } = await organization.getAll({page, itemsPerPage, sortBy}, search)
     paginations.value = data.result.pagination
     organizations.value = data.result.data
-    console.log(data)
     loading.value = false
   } catch (e) {
+
   }
 }
+
 const update = async ({page, itemsPerPage, sortBy}) => {
 
 const data = {
   name: nameRef.value,
 }
 try {
-  const { status } = await organizations.update(idOrganizations.value, data)
+  const { status } = await organization.update(idOrganizations.value, data)
   if (status === 200) {
-    await fetchOrganizations({page, itemsPerPage, sortBy})
+    await getOrganizationData({page, itemsPerPage, sortBy})
     updateModal.value = false
     showToast('Успешно обновлено!')
   }
@@ -73,9 +62,9 @@ try {
 
 const removeCurrency = async ({page, itemsPerPage, sortBy}) => {
   try {
-    const {status} = await organizations.remove(idOrganizations.value)
+    const {status} = await organization.remove(idOrganizations.value)
     if (status === 200) {
-      const res = await fetchOrganizations({page, itemsPerPage, sortBy})
+      const res = await getOrganizationData({page, itemsPerPage, sortBy})
       console.log(res)
     }
   } catch (e) {
@@ -104,6 +93,7 @@ const goToDelete = item => {
 
     <v-dialog v-model="dialog" width="500">
       <v-card>
+
         <v-card-text>
           <v-text-field v-model="name" label="Name"></v-text-field>
         </v-card-text>
@@ -111,19 +101,44 @@ const goToDelete = item => {
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn text @click="dialog = false">Закрыть</v-btn>
-          <v-btn @click="addOrganization">Добавить</v-btn>
+          <v-btn>Добавить</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
     <v-card class="mt-4 table ">
+      <v-card-title class="d-flex align-center pe-2">
+        Организации
+
+        <v-spacer />
+        <v-spacer />
+        <v-spacer />
+
+        <v-text-field
+            v-model="search"
+            prepend-inner-icon="search"
+            variant="outlined"
+            density="compact"
+            label="Поиск..."
+            color="info"
+            rounded="lg"
+            clearable
+            single-line
+            flat
+            hide-details
+        ></v-text-field>
+      </v-card-title>
         <v-data-table-server
+            style="height: 70vh"
+            fixed-header
             :loading="loading"
             v-model:items-per-page="paginations.per_page"
             :headers="headers"
             :items-length="paginations.total || 0"
             :items="organizations"
             :item-value="headers.title"
-            @update:options="fetchOrganizations"
+            @update:options="getOrganizationData"
+            fixed-footer
+            :search="search"
         >
           <template v-slot:item.id="{ index }">
             <span>{{ index + 1 }}</span>
