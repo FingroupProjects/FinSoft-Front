@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from "vue";
+import {onMounted, ref, watch} from "vue";
 import { useRoute } from "vue-router";
 import showToast from "../../../composables/toast/index.js";
 import showDate from "../../../composables/date/showDate";
@@ -13,7 +13,7 @@ import {
   editMessage,
   editIcon,
   prevIcon,
-  removeIcon, remove, removeMessage
+  removeIcon, remove, removeMessage, showIcon
 } from "../../../composables/constant/buttons.js";
 
 const route = useRoute()
@@ -36,7 +36,7 @@ const headers = ref([
   { title: '№', key: 'id'},
   { title: 'Дата', key: 'date'},
   { title: 'Значение', key: 'value'},
-  { title: '#', key: 'icons', align: 'center', sortable: false},
+  { title: '#', key: 'deleted_at', align: 'center', sortable: false},
 ])
 
 
@@ -87,7 +87,7 @@ const goToEdit = item => {
 const update = async ({page, itemsPerPage, sortBy}) => {
 
   const body = {
-    date: changeTheDateForSending(dateRef.value, '.'),
+    date: dateRef.value.split('.').reverse().join('-'),
     value: Number(valueRef.value)
   }
 
@@ -100,7 +100,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
       updateDialog.value = false
     }
   } catch (e) {
-
+    console.log(e)
   }
 }
 const goToDelete = item => {
@@ -124,8 +124,14 @@ const removeCurrencyRate = async ({page, itemsPerPage, sortBy}) => {
 
 const rules = {
   required: v => !!v || 'Поле обязательно для заполнения',
-  date: v => (v && /^\d{2}.\d{2}.\d{4}$/.test(v)) || 'Формат даты должен быть DD.MM.YYYY',
 }
+
+watch(updateDialog, (newValue) => {
+  if (!newValue) {
+    dateRef.value = null
+    valueRef.value = null
+  }
+})
 
 onMounted( async () => {
   dateRef.value = currentDate()
@@ -217,6 +223,7 @@ onMounted( async () => {
         </v-card-title>
 
         <v-data-table-server
+            style="height: 58vh"
             items-per-page-text="Элементов на странице:"
             loading-text="Загрузка..."
             no-data-text="Нет данных"
@@ -228,15 +235,21 @@ onMounted( async () => {
             :search="search"
             :item-value="headers.title"
             @update:options="getCurrencyRateData"
+            fixed-footer
             hover
         >
           <template v-slot:item.id="{ index }">
             <span>{{ index + 1 }}</span>
           </template>
 
-          <template v-slot:item.icons="{ item }">
-            <v-icon color="warning" @click="goToEdit(item)" class="icon">{{ editIcon }}</v-icon>
-            <v-icon color="red" @click="goToDelete(item)" class="icon me-2">{{ removeIcon }}</v-icon>
+          <template v-slot:item.deleted_at="{ item }">
+            <div class="d-flex justify-center">
+            <div class="d-flex align-center justify-center ga-1" v-if="!item.deleted_at">
+              <v-icon color="warning" @click="goToEdit(item)" class="icon">{{ editIcon }}</v-icon>
+              <v-icon color="red" @click="goToDelete(item)" class="icon me-2">{{ removeIcon }}</v-icon>
+            </div>
+            <v-icon v-else color="red" class="cursor-pointer">close</v-icon>
+            </div>
           </template>
         </v-data-table-server>
       </v-card>
@@ -255,7 +268,7 @@ onMounted( async () => {
                 <v-col class="d-flex flex-column justify-between w-100 ga-5">
                   <v-text-field
                       v-model="dateRef"
-                      :rules="[rules.required, rules.date]"
+                      :rules="[rules.required]"
                       type="date"
                       label="Дата"
                       rounded="lg"
