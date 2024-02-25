@@ -28,7 +28,6 @@ const error_message = ref('')
 const updateCounterparty = async () => {
   try {
     error_message.value = ''
-    console.log(form.value)
     if(form.value.roles.length === 0) {
       error_message.value = 'Выберите хотя бы одну роль!'
       return
@@ -57,36 +56,11 @@ const getId = async () => {
 
 const handleCheckboxChange = (roleIndex) => {
   const index = form.value.roles.indexOf(roleIndex);
-  if (roleIndex === 0) {
-    if (a.value === true) {
-      if (index === -1) {
-        form.value.roles.push(roleIndex);
-      }
-    } else {
-      if (index !== -1) {
-        form.value.roles.splice(index, 1);
-      }
-    }
-  } else if (roleIndex === 1) {
-    if (b.value === true) {
-      if (index === -2) {
-        form.value.roles.push(roleIndex);
-      }
-    } else {
-      if (index !== -2) {
-        form.value.roles.splice(index, 1);
-      }
-    }
-  } else if (roleIndex === 2) {
-    if (c.value === true) {
-      if (index === -3) {
-        form.value.roles.push(roleIndex);
-      }
-    } else {
-      if (index !== -3) {
-        form.value.roles.splice(index, 1);
-      }
-    }
+
+  if (index === -1) {
+    form.value.roles.push(roleIndex);
+  } else {
+    form.value.roles.splice(index, 1);
   }
 };
 
@@ -162,9 +136,9 @@ const rules = {
           />
         </div>
         <div class="d-flex ga-16 flex-wrap">
-          <v-switch v-model="a" label="Клиент" base-color="info" color="info" @change="handleCheckboxChange(0)" />
-          <v-switch v-model="b" label="Поставщик" base-color="info" color="info" @change="handleCheckboxChange(1)" />
-          <v-switch v-model="c" label="Прочие отношения" base-color="info" color="info" @change="handleCheckboxChange(2)" />
+          <v-switch v-model="a" label="Клиент" base-color="info" color="info" @change="handleCheckboxChange(1)" />
+          <v-switch v-model="b" label="Поставщик" base-color="info" color="info" @change="handleCheckboxChange(2)" />
+          <v-switch v-model="c" label="Прочие отношения" base-color="info" color="info" @change="handleCheckboxChange(3)" />
         </div>
         <div class="error_message">
           {{ error_message }}
@@ -187,5 +161,4 @@ const rules = {
    font-size: 14px;
    opacity: 0.9;
  }
-
 </style>
