@@ -17,8 +17,8 @@ export default {
       params,
     });
   },
-  getCounterpartyById(id, page = 1, itemsPerPage = 1, sortBy) {
-    const params = buildParams(page, itemsPerPage, sortBy);
+  getCounterpartyById(id, {page = 1, itemsPerPage = 10, sortBy}, search = "") {
+    const params = buildParams(page, itemsPerPage, sortBy, search);
     return api.get(`/cpAgreement/getAgreementByCounterpartyId/${id}`, {
       params,
     });

@@ -1,8 +1,9 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import counterpartyApi from "../../../api/counterparty";
 import { useRoute, useRouter } from "vue-router";
 import showToast from "../../../composables/toast";
+import { edit, prevIcon } from "../../../composables/constant/buttons.js";
 
 const router = useRouter();
 const route = useRoute();
@@ -22,8 +23,15 @@ const b = ref(false);
 const c = ref(false);
 const id = ref(null);
 
+const error_message = ref('')
+
 const updateCounterparty = async () => {
   try {
+    error_message.value = ''
+    if(form.value.roles.length === 0) {
+      error_message.value = 'Выберите хотя бы одну роль!'
+      return
+    }
     await counterpartyApi.update(id.value, form.value);
     router.push({ name: "counterparty" });
     showToast("Успешно изменено", "#");
@@ -48,75 +56,109 @@ const getId = async () => {
 
 const handleCheckboxChange = (roleIndex) => {
   const index = form.value.roles.indexOf(roleIndex);
-  if (index > -1) {
-    form.value.roles.splice(index, 1);
-  } else {
+
+  if (index === -1) {
     form.value.roles.push(roleIndex);
+  } else {
+    form.value.roles.splice(index, 1);
   }
 };
+
 
 onMounted(async () => {
   id.value = route.params.id;
   await getId();
 });
 
-const nameRules = ref([
-  (value) => {
-    if (value) return true;
-    return "Поле не может быть пустым";
-  },
-]);
+const rules = {
+  required: v => !!v || 'Поле обязательно для заполнения',
+  email: v => (/.+@.+\..+/.test(v)) || 'Введите валидную почту',
+  phone: v => v.length === 13 || "Введите валидный номер телефона",
+}
 
-const phoneRules = ref([
-  (value) => {
-    if (value?.length === 13) return true;
-    return "Введите валидный номер телефона";
-  },
-]);
-
-const emailRules = ref([
-  (value) => {
-    if (value) return true;
-    return "Поле email объязательна";
-  },
-  (value) => {
-    if (/.+@.+\..+/.test(value)) return true;
-    return "Введите валидную почту";
-  },
-]);
-
-const addressRules = ref([
-  (value) => {
-    if (value) return true;
-    return "Поле не может быть пустым";
-  },
-]);
 </script>
 
 <template>
   <div>
     <div class="d-flex justify-start mb-4">
-      <v-btn rounded="lg" variant="outlined" color="info" @click="$router.push({ name: 'counterparty' })">Назад</v-btn>
+      <v-btn color="info" class="rounded-circle mb-1" size="40" @click="$router.push({name:'counterparty'})">
+        <v-icon color="white" size="25" >{{ prevIcon }}</v-icon>
+      </v-btn>
     </div>
-    <v-card class="px-4 py-6">
-      <div class="d-flex ga-5">
-        <v-text-field v-model="form.name" :rules="nameRules" variant="outlined" label="Наименование контрагента" />
-        <v-text-field v-model="form.phone" :rules="phoneRules" variant="outlined" label="Тел номер"
-          v-mask="'+992#########'" />
-        <v-text-field v-model="form.address" :rules="addressRules" variant="outlined" label="Адрес" />
-        <v-text-field v-model="form.email" :rules="emailRules" variant="outlined" type="email" label="Почта" />
-      </div>
-      <div class="d-flex w-75">
-        <v-checkbox-btn v-model="a" label="Клиент" color="info" @change="handleCheckboxChange(1)"></v-checkbox-btn>
-        <v-checkbox-btn v-model="b" label="Поставщик" color="info" @change="handleCheckboxChange(2)"></v-checkbox-btn>
-        <v-checkbox-btn v-model="c" label="Прочие отношения" color="info"
-          @change="handleCheckboxChange(3)"></v-checkbox-btn>
-      </div>
-      <div class="d-flex justify-end mt-4">
-        <v-btn rounded="lg" color="info" @click="updateCounterparty()">Изменить</v-btn>
-      </div>
+    <v-card class="block">
+      <v-form @submit.prevent="updateCounterparty">
+        <div class="d-flex ga-5">
+          <v-text-field
+              variant="outlined"
+              :rules="[rules.required]"
+              v-model="form.name"
+              density="compact"
+              label="Наименование"
+              rounded="lg"
+              color="info"
+              :append-inner-icon="form.name.length > 1 ? 'cancel' : ''"
+              @click:append-inner="form.name = ''"
+          />
+          <v-text-field
+              variant="outlined"
+              :rules="[rules.required, rules.phone]"
+              label="Тел номер"
+              v-model.trim="form.phone"
+              density="compact"
+              v-mask="'+992#########'"
+              rounded="lg"
+              color="info"
+              :append-inner-icon="form.phone.length > 1 ? 'cancel' : ''"
+              @click:append-inner="form.phone = ''"
+          />
+          <v-text-field
+              variant="outlined"
+              :rules="[rules.required]"
+              label="Адрес"
+              v-model="form.address"
+              density="compact"
+              rounded="lg"
+              color="info"
+              :append-inner-icon="form.address.length > 1 ? 'cancel' : ''"
+              @click:append-inner="form.address = ''"
+          />
+          <v-text-field
+              variant="outlined"
+              prepend-inner-icon="email"
+              :rules="[rules.required, rules.email]"
+              label="Почта"
+              v-model="form.email"
+              density="compact"
+              rounded="lg"
+              color="info"
+              :append-inner-icon="form.email.length > 1 ? 'cancel' : ''"
+              @click:append-inner="form.email = ''"
+          />
+        </div>
+        <div class="d-flex ga-16 flex-wrap">
+          <v-switch v-model="a" label="Клиент" base-color="info" color="info" @change="handleCheckboxChange(1)" />
+          <v-switch v-model="b" label="Поставщик" base-color="info" color="info" @change="handleCheckboxChange(2)" />
+          <v-switch v-model="c" label="Прочие отношения" base-color="info" color="info" @change="handleCheckboxChange(3)" />
+        </div>
+        <div class="error_message">
+          {{ error_message }}
+        </div>
+        <div class="d-flex justify-end">
+          <v-btn rounded="lg" color="info" type="submit">{{ edit }}</v-btn>
+        </div>
+      </v-form>
     </v-card>
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.block {
+  border-radius: 16px;
+  padding: 20px;
+}
+.error_message{
+   color:  darkred;
+   font-size: 14px;
+   opacity: 0.9;
+ }
+</style>

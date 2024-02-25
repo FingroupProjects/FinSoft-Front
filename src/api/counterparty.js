@@ -14,4 +14,7 @@ export default {
   getById(id) {
     return api.get(`/counterparty/${id}`);
   },
+  delete(id) {
+    return api.delete(`/counterparty/${id}`);
+  },
 };
