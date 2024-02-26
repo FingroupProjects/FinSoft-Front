@@ -19,8 +19,7 @@ const ID = ref(null)
 const name = ref(null)
 const surname = ref(null)
 const lastname = ref(null)
-
-const avatar = ref(null)
+const image = ref(null)
 
 const nameError = ref(null)
 const surnameError = ref(null)
@@ -42,6 +41,7 @@ const headers = ref([
   { title: 'Фамилия', key: 'lastname'},
   { title: 'Отчество', key: 'surname'},
   { title: 'Должность', key: 'position.name', align: 'center'},
+  { title: 'Фото', key: 'image', align: 'center'},
   { title: '#', key: 'icons', sortable: false},
 ])
 
@@ -94,21 +94,22 @@ const getPositions = async () => {
   }
 }
 
+const chooseFile = event => {
+  image.value = event.target.files[0]
+}
+
 
 const create = async ({page, itemsPerPage, sortBy}) => {
-  if (validate() !== true) return
+  const form = new FormData()
+  form.append('name', name.value)
+  form.append('lastname', lastname.value)
+  form.append('surname', surname.value)
+  form.append('image', image.value)
+  form.append('position_id', 1)
 
-  const body = {
-    name: name.value,
-    lastname: lastname.value,
-    surname: surname.value,
-    image: null,
-    position_id: positionAdd.value
-  }
+  console.log(form)
 
-  console.log(body)
-
-  const res = await employee.add(body)
+  const res = await employee.add(form)
 
   console.log(res)
 
@@ -130,7 +131,6 @@ const editItem = item => {
   name.value = item.name
   itemID.value = item.id
 
-  let organizationID;
 
   positions.value.map(el => {
     if (el.id === item.position.id) {
@@ -216,7 +216,7 @@ onMounted(async () => {
           </template>
           <template v-slot:item.image="{ item }">
             <div class="p-2">
-              <v-img :src="'http://192.168.1.84:8410/' + item.image" :alt="item.name" height="100px"></v-img>
+              <v-img :src="'http://95.142.94.22:8410/' + item.image" :alt="item.name" height="100px"></v-img>
             </div>
           </template>
           <template #item.icons="{ item }">
@@ -263,6 +263,11 @@ onMounted(async () => {
                     :items="positions"
                     item-title="name"
                     item-value="id"
+                />
+                <v-text-field
+                  @change="chooseFile"
+                  type="file"
+                  variant="outlined"
                 />
 
                 <div class="d-flex ga-2 justify-end align-center">
