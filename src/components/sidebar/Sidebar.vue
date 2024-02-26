@@ -1,21 +1,21 @@
 <script setup>
-import { ref, defineProps, defineEmits } from 'vue'
+import { ref, defineProps } from 'vue'
+import Icons from "../../composables/Icons/Icons.vue";
 import { useRouter } from 'vue-router';
 
 const props = defineProps(['rale'])
 const drawer = ref(true)
 const router = useRouter();
-const emit = defineEmits();
 
 const menu = ref([
-  { id: 1, title: 'Планирование', icon: 'widgets', link: '/planning' },
-  { id: 2, title: 'Закупки товаров', icon: 'assignment_return', link: '/procurementOfGoods' },
-  { id: 3, title: 'Продажа товаров ', icon: 'content_paste_go', link: '/sellingGoods' },
-  { id: 4, title: 'Учет складов', icon: 'save_as', link: '/storage' },
-  { id: 5, title: 'Касса и банки', icon: 'account_balance', link: '/cash' },
-  { id: 6, title: 'Зарплата и кадры', icon: 'payments', link: '/salary' },
-  { id: 7, title: 'Финансы и  анализ', icon: 'attach_money', link: '/financeAnalysis' },
-  { id: 8, title: 'Админ - панель', icon: 'analytics', link: '/adminPanel' },
+  { id: 1, title: 'Планирование', icon: 'planning', link: '/planning' },
+  { id: 2, title: 'Закупки товаров', icon: 'procurementOfGoods', link: '/procurementOfGoods' },
+  { id: 3, title: 'Продажа товаров ', icon: 'sellingGoods', link: '/sellingGoods' },
+  { id: 4, title: 'Учет складов', icon: 'storage', link: '/storage' },
+  { id: 5, title: 'Касса и банки', icon: 'cash', link: '/cash' },
+  { id: 6, title: 'Зарплата и кадры', icon: 'salary', link: '/salary' },
+  { id: 7, title: 'Финансы и  анализ', icon: 'financeAnalysis', link: '/financeAnalysis' },
+  { id: 8, title: 'Админ - панель', icon: 'adminPanel', link: '/adminPanel' },
 ]);
 
 function push(item) {
@@ -42,7 +42,7 @@ function push(item) {
               @mouseover="isHovering = true"
               @mouseleave="isHovering = false">
             <template v-slot:prepend>
-              <v-icon class="icon" color="info" :icon="item.icon"></v-icon>
+              <Icons class="icon" :name="item.icon" />
             </template>
           </v-list-item>
 
@@ -59,6 +59,10 @@ function push(item) {
   border-radius: none;
   box-shadow: none;
   /* height: 100%; */
+}
+
+.icon{
+  margin-right: 10px;
 }
 
 .admin:hover .icon {
