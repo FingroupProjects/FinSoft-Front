@@ -18,17 +18,19 @@ import {
 import Icons from "../../../composables/Icons/Icons.vue";
 import binarySearch from "../../../composables/binarySearch/binarySearch.js";
 import {tr} from "vuetify/locale";
+import showDate from "../../../composables/date/showDate.js";
 
 const router = useRouter()
 
 const loading = ref(true)
+const loadingRate = ref(true)
 const dialog = ref(false)
-const updateDialog = ref(false)
-const deleteDialog = ref(false)
 
 const idCurrency = ref(null)
 const isExistsCurrency = ref(false)
+const currencyInDialogTitle = ref(null)
 const search = ref('')
+
 const nameRef = ref(null)
 const symbolRef = ref(null)
 const digitalRef = ref(null)
@@ -37,12 +39,19 @@ const valueRef = ref(null)
 
 const currencies = ref([])
 const paginations = ref([])
+const rates = ref([])
+const paginationsRate = ref([])
 
 const headers = ref([
   { title: 'Наименование', key: 'name'},
   { title: 'Символьный код', key: 'symbol_code'},
   { title: 'Цифровой код', key: 'digital_code'},
   { title: 'Курс валюты', key: 'last_exchange_rate.value', sortable: false},
+])
+
+const headersRate = ref([
+  { title: 'Дата', key: 'date'},
+  { title: 'Курс', key: 'value'},
 ])
 
 const rules = {
@@ -61,6 +70,24 @@ const getCurrencyData = async ({ page, itemsPerPage, sortBy, search }) => {
 
   }
 }
+
+const getCurrencyRateData = async ({ page, itemsPerPage, sortBy, search}) => {
+  try {
+    const response = await currency.show(idCurrency.value)
+    const { data } = await currency.showRate(idCurrency.value, { page, itemsPerPage, sortBy }, search)
+    rates.value = data.result.data.map(item =>  ({
+      ...item,
+      date: showDate(item.date),
+      name: response.data.result.name,
+      digital_code: response.data.result.digital_code
+    }))
+    paginationsRate.value = data.result.pagination
+    loadingRate.value = false
+  } catch (e) {
+
+  }
+}
+
 
 
 const addCurrency = async ({ page, itemsPerPage, sortBy }) => {
@@ -111,7 +138,6 @@ const update = async ({page, itemsPerPage, sortBy}) => {
     const { status } = await currency.update(idCurrency.value, body)
     if (status === 200) {
       await getCurrencyData({page, itemsPerPage, sortBy})
-      updateDialog.value = false
       showToast(editMessage)
     }
   } catch (e) {
@@ -129,7 +155,6 @@ const removeCurrency = async ({page, itemsPerPage, sortBy}) => {
   } catch (e) {
 
   } finally {
-    deleteDialog.value = false
   }
 }
 
@@ -144,6 +169,7 @@ const openDialog = item => {
     nameRef.value = item.name
     symbolRef.value = item.symbol_code
     digitalRef.value = item.digital_code
+    currencyInDialogTitle.value = nameRef.value
   }
 
 }
@@ -154,9 +180,10 @@ onMounted(() => {
 
 watch(dialog, newVal => {
   if (!newVal) {
-    nameRef.value = null
     symbolRef.value = null
     digitalRef.value = null
+    rates.value = []
+    loadingRate.value = true
   }
 })
 </script>
@@ -165,24 +192,24 @@ watch(dialog, newVal => {
   <div>
     <v-col>
     <div class="d-flex justify-space-between text-uppercase ">
-      <div class="d-flex align-center pe-2">
-        Валюты
+      <div class="d-flex align-center ga-2 pe-2">
+        <span>Валюты</span>
+        <div class="d-flex ga-2 mt-1">
+          <Icons name="add"/>
+          <Icons name="copy"/>
+          <Icons name="delete"/>
+        </div>
       </div>
       <v-card variant="text" min-width="200" class="d-flex align-center ga-2">
-        <v-text-field
-            v-model="search"
-            prepend-inner-icon="search"
-            variant="outlined"
-            density="compact"
-            label="Поиск..."
-            color="info"
-            rounded="lg"
-            clearable
-            single-line
-            flat
-            hide-details
-        ></v-text-field>
-        <v-icon class="icon" color="info">filter_alt</v-icon>
+        <div>
+          <v-icon color="info" size="28">search</v-icon>
+          <input
+              class="input"
+              type="search"
+              v-model="search"
+          />
+        </div>
+        <Icons name="filter" class="mt-1"/>
       </v-card>
     </div>
 
@@ -216,84 +243,90 @@ watch(dialog, newVal => {
 
 <!-- Modal -->
     <v-card>
-      <v-dialog class="mt-2" v-model="dialog">
-        <v-card min-width="300" class="d-flex  justify-center flex-column mx-auto my-0" rounded="xl">
-          <div class="d-flex justify-space-between align-center pr-5 pt-3">
-            <span class="pl-5">{{ isExistsCurrency ? 'Изменение' : 'Добавление' }}</span>
-            <v-btn @click="dialog = false"  variant="text" :size="32" class="pt-2 pl-1">
-              <Icons name="close" />
-            </v-btn>
+      <v-dialog class="mt-2 pa-2"  v-model="dialog">
+        <v-card style="border: 2px solid #3AB700" min-width="300" class="d-flex pa-5 py-2 justify-center flex-column mx-auto my-0" rounded="xl">
+          <div class="d-flex justify-space-between align-center mb-2">
+            <span class="">{{ isExistsCurrency ? currencyInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
+            <div class="d-flex align-center justify-space-between">
+              <div class="d-flex ga-3 align-center mt-2 me-4">
+                <Icons name="delete"/>
+                <Icons @click="update" name="save"/>
+              </div>
+              <v-btn @click="dialog = false"  variant="text" :size="32" class="pt-2 pl-1">
+                <Icons name="close" />
+              </v-btn>
+            </div>
           </div>
-          <v-form class="d-flex w-100 pa-5" @submit.prevent="addCurrency">
+          <v-form class="d-flex w-100" @submit.prevent="addCurrency">
             <v-row class="w-100">
               <v-col class="d-flex flex-column w-100">
                 <v-text-field
                     v-model="nameRef"
                     :rules="[rules.required]"
-                    color="info"
+                    color="green"
                     rounded="lg"
                     variant="outlined"
                     class="w-auto text-sm-body-1"
                     density="compact"
                     placeholder="Доллар"
                     label="Название"
+                    clear-icon="close"
                     clearable
                 />
                 <v-text-field
                     v-model="symbolRef"
                     :rules="[rules.required]"
-                    color="info"
+                    color="green"
                     rounded="lg"
                     variant="outlined"
                     density="compact"
                     placeholder="USD"
                     v-mask="'AAA'"
                     label="Символный код"
+                    clear-icon="close"
                     clearable
                 />
                 <v-text-field
                     v-model="digitalRef"
                     :rules="[rules.required]"
-                    color="info"
+                    color="green"
                     rounded="lg"
                     density="compact"
                     variant="outlined"
                     placeholder="132"
                     v-mask="'###'"
                     label="Цифровой код"
+                    clear-icon="close"
                     clearable
                 />
-                <div class="d-flex justify-end ga-2">
-                  <v-btn :loading="loading" size="small" color="info" rounded="lg" class="mt-2" @click="dialog = false">{{ cancel }}</v-btn>
-                  <v-btn :loading="loading" size="small" color="green" rounded="lg" class="mt-2" type="submit">{{ add }}</v-btn>
-                </div>
               </v-col>
             </v-row>
           </v-form>
-
-          <v-card class="mt-2 table">
+          <div class="d-flex ga-1">
+            <span><Icons name="add"/></span>
+            <span><Icons name="delete"/></span>
+          </div>
+          <v-card class="table" style="border: 1px solid #3AB700">
             <v-data-table-server
-                style="height: 58vh"
+                style="height: 38vh"
                 items-per-page-text="Элементов на странице:"
                 loading-text="Загрузка"
                 no-data-text="Нет данных"
-                v-model:items-per-page="paginations.per_page"
-                :loading="loading"
-                :headers="headers"
-                :items-length="paginations.total || 0"
-                :items="currencies"
-                :item-value="headers.title"
+                v-model:items-per-page="paginationsRate.per_page"
+                :loading="loadingRate"
+                :headers="headersRate"
+                :items-length="paginationsRate.total || 0"
+                :items="rates"
+                :item-value="headersRate.title"
                 :search="search"
-                @update:options="getCurrencyData"
-                :item-key="currencies.id"
+                @update:options="getCurrencyRateData"
                 fixed-footer
                 hover
             >
               <template v-slot:item="{ item, index }">
-                <tr @click="dialog(item)">
-                  <td>{{ item.name }}</td>
-                  <td>{{ item.symbol_code }}</td>
-                  <td>{{ item.digital_code }}</td>
+                <tr>
+                  <td>{{ item.date }}</td>
+                  <td>{{ item.value }}</td>
                 </tr>
               </template>
             </v-data-table-server>
@@ -309,5 +342,13 @@ watch(dialog, newVal => {
 </template>
 
 <style scoped>
-
+input {
+  border: 1px solid #478bf6;
+  border-radius: 5px;
+  padding: 2px 5px;
+  font-size: 14px;
+}
+input:focus {
+  outline: none;
+}
 </style>
