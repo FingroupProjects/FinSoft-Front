@@ -11,7 +11,7 @@ const menu = ref([
   { id: 1, title: 'Планирование', icon: 'planning', link: '/planning' },
   { id: 2, title: 'Закупки товаров', icon: 'procurementOfGoods', link: '/procurementOfGoods' },
   { id: 3, title: 'Продажа товаров ', icon: 'sellingGoods', link: '/sellingGoods' },
-  { id: 4, title: 'Учет складов', icon: 'storage', link: '/storage' },
+  { id: 4, title: 'Учет складов', icon: 'storage', link: '/warehouseAccounting' },
   { id: 5, title: 'Касса и банки', icon: 'cash', link: '/cash' },
   { id: 6, title: 'Зарплата и кадры', icon: 'salary', link: '/salary' },
   { id: 7, title: 'Финансы и  анализ', icon: 'financeAnalysis', link: '/financeAnalysis' },
@@ -28,25 +28,28 @@ function push(item) {
   <v-card class="sidebar">
     <v-layout class="side">
 
-      <v-navigation-drawer :width="320" v-model="drawer" permanent :rail="props.rale">
+      <v-navigation-drawer :width="320" v-model="drawer" color="#70C94633" permanent :rail="props.rale">
           <v-list density="comfortable">
 
-          <v-list-item
-              v-for="item in menu"
-              color="info"
-              :key="item.id"
-              @click="push(item)"
-              :title="item.title"
-              :value="item.title"
-              class="admin"
-              @mouseover="isHovering = true"
-              @mouseleave="isHovering = false">
-            <template v-slot:prepend>
-              <Icons class="icon" :name="item.icon" />
-            </template>
-          </v-list-item>
+            <v-list-item
+                v-for="item in menu"
+                color="info"
+                :key="item.id"
+                @click="push(item)"
+                class="admin"
+            >
+              <template v-slot:default="{ active, toggle }">
+                <v-list-item-content class="title" :class="{ 'active': active }">
+                  <v-list-item-title>{{ item.title.toUpperCase() }}</v-list-item-title>
+                </v-list-item-content>
+              </template>
+              <template v-slot:prepend>
+                <Icons class="icons" :name="item.icon" />
+              </template>
+            </v-list-item>
 
-        </v-list>
+
+          </v-list>
       </v-navigation-drawer>
       <v-main style="height: 100vh"> </v-main>
     </v-layout>
@@ -56,16 +59,22 @@ function push(item) {
 <style scoped>
 .sidebar {
   border: none;
-  border-radius: none;
   box-shadow: none;
-  /* height: 100%; */
 }
 
-.icon{
-  margin-right: 10px;
+.title{
+  color: #274D87
 }
 
-.admin:hover .icon {
+.active{
+  color: blue
+}
+
+.icons{
+  margin-right: 20px;
+}
+
+.admin:hover .icons {
   animation: 0.2s tremor ease;
 }
 

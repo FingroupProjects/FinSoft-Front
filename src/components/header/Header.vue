@@ -54,19 +54,18 @@ const handleKeyDown = (event) => {
 <template>
   <v-app-bar
       :elevation="2"
-      color="#70C946"
+      color="#A5EB84DD"
       height="45"
   >
     <template v-slot:prepend>
       <v-app-bar-nav-icon @click="$emit('rale')"></v-app-bar-nav-icon>
-      <v-icon size="18" color="#000"  @click="$router.push('/')">home</v-icon>
-      <v-icon size="12" class="ms-1">chevron_right</v-icon>
+      <v-icon size="20" color="#000"  @click="$router.push('/')">home</v-icon>
     </template>
 
     <v-app-bar-title class="text-sm-body-1">Клиент</v-app-bar-title>
 
     <template v-slot:append>
-      <v-btn density="comfortable" variant="tonal" color="#70C946" class="d-flex justify-space-between ga-3  text-sm-body-2 bg-white rounded-lg py-1 cursor-pointer">
+      <v-btn density="comfortable" variant="tonal" color="#70C94633" class="d-flex justify-space-between ga-3  text-sm-body-2 bg-white rounded-lg py-1 cursor-pointer">
         <template v-slot:prepend>
           <v-icon>search</v-icon>
           <span class="ms-2">Поиск...</span>
@@ -259,8 +258,8 @@ const handleKeyDown = (event) => {
       >
         <template v-slot:activator="{ props }">
           <v-btn :variant="isProfile ? 'tonal' : 'text'" class="d-flex justify-space-between" v-bind="props" rounded="2">
-            <v-icon size="20">account_circle</v-icon>
             <span class="text-sm-body-2 mx-2">Admin</span>
+            <v-icon size="20">account_circle</v-icon>
             <v-icon size="20">{{ isLanguage ? 'expand_less' : 'expand_more' }}</v-icon>
           </v-btn>
         </template>

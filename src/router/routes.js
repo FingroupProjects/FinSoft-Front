@@ -25,8 +25,8 @@ const routes = [
     component: () => import("../pages/sellingGoods/index.vue"),
   },
   {
-    path: "/storage",
-    name: "storage",
+    path: "/warehouseAccounting",
+    name: "warehouseAccounting",
     component: () => import("../pages/storage/index.vue"),
   },
   {
@@ -100,8 +100,8 @@ const routes = [
     component: () => import("../pages/list/priceType/index.vue"),
   },
   {
-    path: "/list/counterpartyeAgreement",
-    name: "counterpartyeAgreement",
+    path: "/list/counterpartyAgreement",
+    name: "counterpartyAgreement",
     component: () => import("../pages/list/counterpartyAgreement/index.vue"),
   },
   {
@@ -134,7 +134,11 @@ const routes = [
     name: "storage",
     component: () => import("../pages/list/storage/index.vue"),
   },
-
+  {
+    path: "/programSettings",
+    name: "programSettings",
+    component: () => import("../pages/programSettings/index.vue"),
+  },
   {
     path: "/login",
     name: "login",
