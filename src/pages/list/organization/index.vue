@@ -27,10 +27,10 @@ const headers = ref([
 ])
 
 const goToEdit = item => {
-  idOrganizations.value = item.id;
-  nameRef.value = item.name;
-  updateDialog.value = true;
-};
+  updateDialog.value = true
+  idOrganizations.value = item.id
+  nameRef.value = item.name
+}
 
 const getOrganizationData = async ({ page, itemsPerPage, sortBy, search }) => {
   loading.value = true
@@ -47,9 +47,8 @@ const getOrganizationData = async ({ page, itemsPerPage, sortBy, search }) => {
 const addOrganization = async ({page, itemsPerPage, sortBy}) => {
   const body = {
     name: nameRef.value,
-  }
-  
-  try {
+}
+try {
     const {status} = await organization.add(body)
     if (status === 201) {
       await getOrganizationData({page, itemsPerPage, sortBy})
@@ -57,28 +56,27 @@ const addOrganization = async ({page, itemsPerPage, sortBy}) => {
       showToast(addMessage)
       nameRef.value = null
     }
-  } catch (e) {
+} catch (e) {
     console.log(e)
-  }
+}
 }
 
-
-const update = async ({page, itemsPerPage, sortBy}) => {
-  const body = {
-    name: nameRef.value,
-  }
-  
-  try {
-    const { status } = await organization.update(idOrganizations.value, body)
-    if (status === 200) {
-      await getOrganizationData({page, itemsPerPage, sortBy})
-      updateDialog.value = false
-      showToast(editMessage)
-    }
-  } catch (e) {
-    console.log(e)
-  }
+const update = async ({page, itemsPerPage, sortBy}) =>  {
+const body = {
+  name: nameRef.value,
 }
+try {
+  const { status } = await organization.update(idOrganizations.value, body)
+  if (status === 200) {
+    await getOrganizationData({page, itemsPerPage, sortBy})
+    updateDialog.value = false
+    showToast(editMessage)
+  }
+} catch (e) {
+  console.log(e)
+}
+}
+
 
 const removeOrganization = async ({page, itemsPerPage, sortBy}) => {
   try {
@@ -88,8 +86,7 @@ const removeOrganization = async ({page, itemsPerPage, sortBy}) => {
       await getOrganizationData({page, itemsPerPage, sortBy})
     }
   } catch (e) {
-
-  } 
+ } 
   finally {
    deleteDialog.value = false
  }
@@ -201,38 +198,36 @@ watch(updateDialog, (newValue) => {
          </v-dialog>
 
 
-      <v-dialog v-model="updateDialog" activator="parent">
-          <v-card width="30%" class="d-flex  justify-center flex-column mx-auto my-0" rounded="xl">
-            <div class="d-flex justify-space-between align-center pr-5 pt-3">
-              <span class="pl-5">Изменение</span>
-              <v-btn @click="updateDialog = false" color="info" variant="tonal" :size="38">
-                <v-icon size="22">close</v-icon>
-              </v-btn>
-            </div>
-            <v-form  class="d-flex w-100 pa-5" @submit.prevent="update">
-              <v-row class="w-100">
-                <v-col class="d-flex flex-column w-100">
-                  <v-text-field
-                      v-model="nameRef"
-                      :rules="[rules.required]"
-                      color="info"
-                      rounded="lg"
-                      variant="outlined"
-                      class="w-auto text-sm-body-1"
-                      density="compact"
-                      placeholder="name"
-                      label="name"
-                      clearable
-                  />
-                  <div class="d-flex justify-end ga-2">
-                    <v-btn :loading="loading" size="small" color="info" rounded="lg" class="mt-2" @click="updateDialog = false">{{ cancel }}</v-btn>
-                    <v-btn :loading="loading" size="small" color="green" rounded="lg" class="mt-2" type="submit" @click="updateDialog = false" >{{ edit }}</v-btn>
-                  </div>
-                </v-col>
-              </v-row>
-            </v-form>
-          </v-card>
-         </v-dialog>
+         <v-dialog v-model="updateDialog" activator="parent">
+        <v-card width="30%" class="d-flex  justify-center flex-column mx-auto my-0" rounded="xl">
+          <div class="d-flex justify-space-between align-center pr-5 pt-3">
+            <span class="pl-5">Изменение</span>
+            <v-btn @click="updateDialog = false" color="info" variant="tonal" :size="38">
+              <v-icon size="22">close</v-icon>
+            </v-btn>
+          </div>
+          <v-form  class="d-flex w-100 pa-5" @submit.prevent="update">
+            <v-row class="w-100">
+              <v-col class="d-flex flex-column w-100">
+                <v-text-field
+                    v-model="nameRef"
+                    :rules="[rules.required]"
+                    rounded="lg"
+                    variant="outlined"
+                    density="compact"
+                    placeholder="Огранизация"
+                    label="Название"
+                    clearable
+                />
+                <div class="d-flex justify-end ga-2">
+                  <v-btn :loading="loading" size="small" color="info" rounded="lg" class="mt-2" @click="updateDialog = false">{{ cancel }}</v-btn>
+                  <v-btn :loading="loading" size="small" color="green" rounded="lg" class="mt-2" type="submit" >{{ edit }}</v-btn>
+                </div>
+              </v-col>
+            </v-row>
+          </v-form>
+        </v-card>
+       </v-dialog>
          
        <v-dialog v-model="deleteDialog" activator="parent">
         <v-card width="30%" class="d-flex  justify-center flex-column mx-auto my-0" rounded="xl">
@@ -274,5 +269,4 @@ watch(updateDialog, (newValue) => {
 .error {
   color: red;
 }
-
 </style>

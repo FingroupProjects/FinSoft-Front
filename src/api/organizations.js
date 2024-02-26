@@ -5,14 +5,14 @@ export default {
     const params = buildParams(page, itemsPerPage, sortBy, search);
     return api.get('/organization', { params })
   },
+  update(id, body) {
+    return api.patch(`/organization/${id}`, body)
+  },
   add(data) {
     console.log(data)
     return api.post('/organization', data)
   },
-  update() {
-    return api.get('/counterparty')
-  },
   remove(id) {
-    return api.delete(`/currency/${id}`)
+    return api.delete(`/organization/${id}`)
   },
 }
