@@ -13,7 +13,7 @@ import {
   editIcon, editMessage,
   prevIcon, remove,
   removeIcon, removeMessage,
-  showIcon
+  showIcon, warningMessage
 } from "../../../composables/constant/buttons.js";
 import Icons from "../../../composables/Icons/Icons.vue";
 import binarySearch from "../../../composables/binarySearch/binarySearch.js";
@@ -28,6 +28,7 @@ const dialog = ref(false)
 
 const idCurrency = ref(null)
 const isExistsCurrency = ref(false)
+const markedID = ref(null)
 const currencyInDialogTitle = ref(null)
 const search = ref('')
 
@@ -43,6 +44,7 @@ const rates = ref([])
 const paginationsRate = ref([])
 
 const headers = ref([
+  { title: '№', key: 'id', align: 'center'},
   { title: 'Наименование', key: 'name'},
   { title: 'Символьный код', key: 'symbol_code'},
   { title: 'Цифровой код', key: 'digital_code'},
@@ -64,7 +66,10 @@ const getCurrencyData = async ({ page, itemsPerPage, sortBy, search }) => {
   try {
     const { data } = await currency.get({page, itemsPerPage, sortBy}, search)
     paginations.value = data.result.pagination
-    currencies.value = data.result.data
+    currencies.value = data.result.data.map(item => ({
+      ...item,
+      isActive: false
+    }))
     loading.value = false
   } catch (e) {
 
@@ -146,15 +151,16 @@ const update = async ({page, itemsPerPage, sortBy}) => {
 }
 
 const removeCurrency = async ({page, itemsPerPage, sortBy}) => {
+  if (markedID.value === null) return showToast(warningMessage, 'warning')
+
   try {
-    const {status} = await currency.remove(idCurrency.value)
+    const {status} = await currency.remove(markedID.value)
     if (status === 200) {
       showToast(removeMessage, 'red')
       await getCurrencyData({page, itemsPerPage, sortBy})
     }
   } catch (e) {
 
-  } finally {
   }
 }
 
@@ -171,7 +177,10 @@ const openDialog = item => {
     digitalRef.value = item.digital_code
     currencyInDialogTitle.value = nameRef.value
   }
+}
 
+const lineMarking = (item) => {
+  markedID.value = item.id;
 }
 
 onMounted(() => {
@@ -192,17 +201,17 @@ watch(dialog, newVal => {
   <div>
     <v-col>
     <div class="d-flex justify-space-between text-uppercase ">
-      <div class="d-flex align-center ga-2 pe-2">
+      <div class="d-flex align-center ga-2 pe-2 ms-4">
         <span>Валюты</span>
-        <div class="d-flex ga-2 mt-1">
-          <Icons name="add"/>
-          <Icons name="copy"/>
-          <Icons name="delete"/>
-        </div>
       </div>
       <v-card variant="text" min-width="200" class="d-flex align-center ga-2">
-        <div>
-          <v-icon color="info" size="28">search</v-icon>
+        <div class="d-flex">
+          <div class="d-flex ga-2 mt-1 me-3">
+            <Icons name="add"/>
+            <Icons name="copy"/>
+            <Icons @click="removeCurrency" name="delete"/>
+          </div>
+          <v-icon color="info" size="32">search</v-icon>
           <input
               class="input"
               type="search"
@@ -215,7 +224,7 @@ watch(dialog, newVal => {
 
     <v-card class="mt-2 table">
       <v-data-table-server
-          style="height: 58vh"
+          style="height: 78vh"
           items-per-page-text="Элементов на странице:"
           loading-text="Загрузка"
           no-data-text="Нет данных"
@@ -227,12 +236,18 @@ watch(dialog, newVal => {
           :item-value="headers.title"
           :search="search"
           @update:options="getCurrencyData"
-          fixed-footer
+          fixed-header
           hover
       >
         <template v-slot:item="{ item, index }">
-          <tr @dblclick="openDialog(item)">
-            <td>{{ item.name }}</td>
+          <tr @click="lineMarking(item)" @dblclick="openDialog(item)" :class="{'bg-grey-lighten-2' : markedID === item.id}">
+            <td class="d-flex  align-center">
+              <Icons class="mt-2 me-2" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
+              <span>{{ index + 1 }}</span>
+            </td>
+            <td>
+              <span>{{ item.name }}</span>
+            </td>
             <td>{{ item.symbol_code }}</td>
             <td>{{ item.digital_code }}</td>
             <td>{{ item.last_exchange_rate === null ? '' : item.last_exchange_rate.value}}</td>
@@ -244,7 +259,7 @@ watch(dialog, newVal => {
 <!-- Modal -->
     <v-card>
       <v-dialog class="mt-2 pa-2"  v-model="dialog">
-        <v-card style="border: 2px solid #3AB700" min-width="300" class="d-flex pa-5 py-2 justify-center flex-column mx-auto my-0" rounded="xl">
+        <v-card style="border: 2px solid #3AB700" min-width="300" class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
           <div class="d-flex justify-space-between align-center mb-2">
             <span class="">{{ isExistsCurrency ? currencyInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
             <div class="d-flex align-center justify-space-between">
@@ -302,11 +317,13 @@ watch(dialog, newVal => {
               </v-col>
             </v-row>
           </v-form>
-          <div class="d-flex ga-1">
-            <span><Icons name="add"/></span>
-            <span><Icons name="delete"/></span>
-          </div>
+
           <v-card class="table" style="border: 1px solid #3AB700">
+            <div class="d-flex w-100 rounded-t-lg mb-1 align-center " style="border-bottom: 1px solid #3AB700">
+              <div class="d-flex justify-end w-100 ga-2 pt-1 me-2" style="padding-top: 4px !important;">
+                <Icons name="add"/>
+              </div>
+            </div>
             <v-data-table-server
                 style="height: 38vh"
                 items-per-page-text="Элементов на странице:"
