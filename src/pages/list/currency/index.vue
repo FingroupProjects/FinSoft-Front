@@ -239,7 +239,7 @@ watch(dialog, newVal => {
           fixed-header
           hover
       >
-        <template v-slot:item="{ item, index }">
+        <template v-slot:item="{   item, index }">
           <tr @click="lineMarking(item)" @dblclick="openDialog(item)" :class="{'bg-grey-lighten-2' : markedID === item.id}">
             <td class="d-flex  align-center">
               <Icons class="mt-2 me-2" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>

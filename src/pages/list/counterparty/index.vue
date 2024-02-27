@@ -81,14 +81,16 @@ const removeCounterparty = async () => {
     <v-col>
 
       <div class="d-flex justify-space-between text-uppercase">
-        <span class="">Контрагенты</span>
+        <div class="d-flex ga-2 pe-2 ms-4 mt-4">
+          <span>Контрагенты</span>
+        </div>
         <div class="d-flex ga-5 ali">
           <div class="d-flex ga-2 mt-3">
             <Icons name="add"/>
             <Icons name="copy"/>
             <Icons name="delete"/>
           </div>
-          <v-card variant="text" min-width="300" class="d-flex ga-4">
+          <v-card variant="text" min-width="300" class="d-flex  ga-4">
             <div class="w-100">
               <v-text-field
                 v-model="search"
