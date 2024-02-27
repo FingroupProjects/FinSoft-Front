@@ -74,6 +74,12 @@ const getCurrencyData = async ({ page, itemsPerPage, sortBy, search }) => {
 }
 
 const getCurrencyRateData = async ({ page, itemsPerPage, sortBy, search}) => {
+
+  if (idCurrency.value === 0) {
+    loadingRate.value = false
+    return
+  }
+
   try {
     const response = await currency.show(idCurrency.value)
     const { data } = await currency.showRate(idCurrency.value, { page, itemsPerPage, sortBy }, search)
@@ -82,11 +88,14 @@ const getCurrencyRateData = async ({ page, itemsPerPage, sortBy, search}) => {
       date: showDate(item.date),
       name: response.data.result.name,
       digital_code: response.data.result.digital_code
-    }))
-    paginationsRate.value = data.result.pagination
-    loadingRate.value = false
+    })) || [];
+
+    paginationsRate.value = data.result.pagination || []
+
   } catch (e) {
 
+  } finally {
+    loadingRate.value = false
   }
 }
 
@@ -111,7 +120,7 @@ const addCurrency = async ({ page, itemsPerPage, sortBy }) => {
 }
 
 
-const createCurrentRate = async () => {
+const createCurrencyRate = async () => {
   const body = {
     date: changeTheDateForSending(dateRef.value),
     value: valueRef.value
@@ -162,22 +171,26 @@ const removeCurrency = async ({page, itemsPerPage, sortBy}) => {
 }
 
 
-const openDialog = item => {
+const openDialog = (item) => {
   dialog.value = true
-  idCurrency.value = item.id
-
-  const index = binarySearch(currencies.value, item.id)
-
-  if (index !== 1) {
-    isExistsCurrency.value = true
-    nameRef.value = item.name
-    symbolRef.value = item.symbol_code
-    digitalRef.value = item.digital_code
-    currencyInDialogTitle.value = nameRef.value
+  if (item === 0) {
+    idCurrency.value = 0
+    isExistsCurrency.value = false
   } else {
+    idCurrency.value = item.id
 
+    const index = binarySearch(currencies.value, item.id)
+
+    if (index !== 1) {
+      isExistsCurrency.value = true
+      nameRef.value = item.name
+      symbolRef.value = item.symbol_code
+      digitalRef.value = item.digital_code
+      currencyInDialogTitle.value = nameRef.value
+    } else {
+
+    }
   }
-
 
 }
 
@@ -191,6 +204,7 @@ onMounted(() => {
 
 watch(dialog, newVal => {
   if (!newVal) {
+    nameRef.value = null
     symbolRef.value = null
     digitalRef.value = null
     rates.value = []
@@ -210,7 +224,7 @@ watch(dialog, newVal => {
       <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
         <div class="d-flex w-100">
           <div class="d-flex ga-2 mt-1 me-3">
-            <Icons @click="openDialog" name="add"/>
+            <Icons @click="openDialog(0)" name="add"/>
             <Icons name="copy"/>
             <Icons @click="removeCurrency" name="delete"/>
           </div>
@@ -279,7 +293,8 @@ watch(dialog, newVal => {
             <div class="d-flex align-center justify-space-between">
               <div class="d-flex ga-3 align-center mt-2 me-4">
                 <Icons name="delete"/>
-                <Icons @click="update" name="save"/>
+                <Icons v-if="isExistsCurrency" @click="update" name="save"/>
+                <Icons v-else @click="addCurrency" name="save"/>
               </div>
               <v-btn @click="dialog = false"  variant="text" :size="32" class="pt-2 pl-1">
                 <Icons name="close" />
@@ -373,13 +388,4 @@ watch(dialog, newVal => {
 </template>
 
 <style scoped>
-input {
-  border: 1px solid #478bf6;
-  border-radius: 5px;
-  padding: 2px 5px;
-  font-size: 14px;
-}
-input:focus {
-  outline: none;
-}
 </style>
