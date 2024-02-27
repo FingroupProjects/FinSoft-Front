@@ -44,7 +44,7 @@ const rates = ref([])
 const paginationsRate = ref([])
 
 const headers = ref([
-  { title: '№', key: 'id', align: 'center'},
+  { title: '№', key: 'id', align: 'start'},
   { title: 'Наименование', key: 'name'},
   { title: 'Символьный код', key: 'symbol_code'},
   { title: 'Цифровой код', key: 'digital_code'},
@@ -66,10 +66,7 @@ const getCurrencyData = async ({ page, itemsPerPage, sortBy, search }) => {
   try {
     const { data } = await currency.get({page, itemsPerPage, sortBy}, search)
     paginations.value = data.result.pagination
-    currencies.value = data.result.data.map(item => ({
-      ...item,
-      isActive: false
-    }))
+    currencies.value = data.result.data
     loading.value = false
   } catch (e) {
 
@@ -170,13 +167,18 @@ const openDialog = item => {
   idCurrency.value = item.id
 
   const index = binarySearch(currencies.value, item.id)
+
   if (index !== 1) {
     isExistsCurrency.value = true
     nameRef.value = item.name
     symbolRef.value = item.symbol_code
     digitalRef.value = item.digital_code
     currencyInDialogTitle.value = nameRef.value
+  } else {
+
   }
+
+
 }
 
 const lineMarking = (item) => {
@@ -195,6 +197,7 @@ watch(dialog, newVal => {
     loadingRate.value = true
   }
 })
+
 </script>
 
 <template>
@@ -204,19 +207,30 @@ watch(dialog, newVal => {
       <div class="d-flex align-center ga-2 pe-2 ms-4">
         <span>Валюты</span>
       </div>
-      <v-card variant="text" min-width="200" class="d-flex align-center ga-2">
-        <div class="d-flex">
+      <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
+        <div class="d-flex w-100">
           <div class="d-flex ga-2 mt-1 me-3">
-            <Icons name="add"/>
+            <Icons @click="openDialog" name="add"/>
             <Icons name="copy"/>
             <Icons @click="removeCurrency" name="delete"/>
           </div>
-          <v-icon color="info" size="32">search</v-icon>
-          <input
-              class="input"
-              type="search"
-              v-model="search"
-          />
+
+          <div class="w-100">
+            <v-text-field
+                v-model="search"
+                prepend-inner-icon="search"
+                density="compact"
+                label="Поиск..."
+                variant="outlined"
+                color="info"
+                rounded="lg"
+                clear-icon="close"
+                hide-details
+                single-line
+                clearable
+                flat
+            ></v-text-field>
+          </div>
         </div>
         <Icons name="filter" class="mt-1"/>
       </v-card>
