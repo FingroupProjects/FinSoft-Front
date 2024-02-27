@@ -5,6 +5,7 @@ import counterpartyApi from "../../../api/counterparty";
 import showDate from "../../../composables/date/showDate"
 import { addIcon, prevIcon, showIcon, editIcon, removeIcon, remove, cancel, removeMessage } from "../../../composables/constant/buttons.js";
 import showToast from '../../../composables/toast'
+import Icons from "../../../composables/Icons/Icons.vue";
 
 const loading = ref(true);
 const deleteDialog = ref( false)
@@ -25,7 +26,6 @@ const headers = ref([
   { title: "Телефон", key: "phone" },
   { title: "Эл. почта", key: "email" },
   { title: "Дата создания", key: "created_at" },
-  { title: "#", key: "icons", align: "center", sortable: false },
 ]);
 
 const formatRole = (roles) => {
@@ -80,39 +80,38 @@ const removeCounterparty = async () => {
   <div>
     <v-col>
 
-      <div class="d-flex justify-space-between">
-        <v-btn color="info" class="rounded-circle mb-1" size="40" @click="$router.push('/adminPanel')">
-          <v-icon color="white" size="25" >{{ prevIcon }}</v-icon>
-        </v-btn>
-        <v-btn class="rounded-circle pa-2 mb-1" color="green" size="40" @click="$router.push('createCounterparty')">
-          <v-icon size="25">{{ addIcon }}</v-icon>
-        </v-btn>
+      <div class="d-flex justify-space-between text-uppercase">
+        <div class="d-flex ga-2 pe-2 ms-4 mt-4">
+          <span>Контрагенты</span>
+        </div>
+        <div class="d-flex ga-5 ali">
+          <div class="d-flex ga-2 mt-3">
+            <Icons name="add"/>
+            <Icons name="copy"/>
+            <Icons name="delete"/>
+          </div>
+          <v-card variant="text" min-width="300" class="d-flex  ga-4">
+            <div class="w-100">
+              <v-text-field
+                v-model="search"
+                density="compact"
+                prepend-inner-icon="search"
+                variant="outlined"
+                label="Поиск..."
+                rounded="lg"
+                color="info"
+                clearable
+              />
+            </div>
+            <Icons name="filter" class="mt-3"/>
+          </v-card>
+        </div>
       </div>
 
-      <v-card class="table mt-2">
-
-        <v-card-title class="d-flex align-center pe-2">
-          Список контрагентов
-          <v-spacer />
-          <v-spacer />
-          <v-spacer />
-          <v-text-field
-            v-model="search"
-            prepend-inner-icon="search"
-            clearable
-            density="compact"
-            label="Поиск..."
-            color="info"
-            rounded="lg"
-            single-line
-            flat
-            hide-details
-            variant="outlined"
-          />
-        </v-card-title>
+      <v-card class="table">
 
         <v-data-table-server
-          style="height: 58vh"
+          style="height: 78vh"
           fixed-header
           :items="counterparty"
           :headers="headers"
@@ -132,13 +131,7 @@ const removeCounterparty = async () => {
           <template v-slot:item.id="{ item, index }">
             <span>{{ index + 1 }}</span>
           </template>
-          <template #item.icons="{ item }">
-            <div class="d-flex ga-1">
-              <v-icon color="info" class="icon" @click="showDetail(item)">{{ showIcon }}</v-icon>
-              <v-icon color="orange" class="icon" @click="rename(item)">{{ editIcon }}</v-icon>
-              <v-icon color="red" class="icon" @click="showDelModal(item)">{{ removeIcon }}</v-icon>
-            </div>
-          </template>
+
         </v-data-table-server>
 
       </v-card>
