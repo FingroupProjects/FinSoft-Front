@@ -30,7 +30,7 @@ watch(route, (newVal) => {
       <Header @rale="toggleSidebar" />
       <div class="content">
         <Sidebar :rale="rale" />
-        <router-view class="w-100 px-4 py-4 block" />
+        <router-view class="w-100 block" />
       </div>
     </div>
   </v-app>

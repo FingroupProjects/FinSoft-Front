@@ -2,7 +2,8 @@ import 'toastify-js/src/toastify.css';
 import Toastify from 'toastify-js';
 
 export default function showToast(message, colour = 'green') {
-  let color 
+  let color
+
   if(colour === 'green'){
     color = '#08D411'
   }
@@ -10,8 +11,9 @@ export default function showToast(message, colour = 'green') {
     color = '#F21919'
   }
   if(colour === 'warning') {
-    color = '#F9F91F'
+    color = '#faa500'
   }
+
     Toastify({
       text: message,
       duration: 2000, 
