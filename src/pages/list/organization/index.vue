@@ -107,6 +107,7 @@ watch(updateDialog, (newValue) => {
 
 <template>
   <div>
+    <v-col>
     <div class="d-flex justify-space-between">
       <v-btn color="info" class="rounded-circle mb-1" size="40" @click="$router.push('/adminPanel')">
           <v-icon color="white" size="25" >{{ prevIcon }}</v-icon>
@@ -151,17 +152,20 @@ watch(updateDialog, (newValue) => {
             @update:options="getOrganizationData"
             fixed-footer
             :search="search"
+            hover
         >
+        
           <template v-slot:item.id="{ index }">
             <span>{{ index + 1 }}</span>
           </template>
           <template v-slot:item.icons="{ item }">
+            
             <v-icon color="warning" @click="goToEdit(item)" class="icon">{{ editIcon }}</v-icon>
             <v-icon color="red" @click="goToDelete(item)" class="icon">{{ removeIcon }}</v-icon>
           </template>
         </v-data-table-server>
       </v-card>
-  
+      </v-col>
     
     <v-card>
       <v-dialog v-model="addDialog" activator="parent">
