@@ -38,10 +38,8 @@ function push(item) {
                 @click="push(item)"
                 class="admin"
             >
-              <template v-slot:default="{ active, toggle }">
-                <v-list-item-content class="title" :class="{ 'active': active }">
+              <template v-slot:default>
                   <v-list-item-title>{{ item.title.toUpperCase() }}</v-list-item-title>
-                </v-list-item-content>
               </template>
               <template v-slot:prepend>
                 <Icons class="icons" :name="item.icon" />
@@ -60,14 +58,6 @@ function push(item) {
 .sidebar {
   border: none;
   box-shadow: none;
-}
-
-.title{
-  color: #274D87
-}
-
-.active{
-  color: blue
 }
 
 .icons{
