@@ -13,20 +13,19 @@ const admins = ref([
 
 const lists = ref([
   {
-    id: 1, title: 'Справочник', child: [
-      { id: 1, title: 'Банковские Счета Организаций', icon: 'account_balance', link: '/list/organizationBill' },
-      { id: 2, title: 'Валюты', link: '/list/currency', icon: 'currency_exchange' },
-      { id: 3, title: 'Виды Цен', link: '/list/priceType', icon: 'request_quote' },
-      { id: 4, title: 'Договоры Контрагентов', link: '/list/counterpartyAgreement', icon: 'contact_page' },
-      { id: 5, title: 'Кассы', link: '/list/cashRegister', icon: 'savings' },
-      { id: 6, title: 'Контрагенты', link: '/list/counterparty', icon: 'group' },
-      { id: 7, title: 'Номенклатура', icon: 'assignment' },
-      { id: 9, title: 'Пользователи', icon: 'groups', link: '/list/employee' },
-      { id: 8, title: 'Организации', link: '/list/organization', icon: 'corporate_fare' },
-      { id: 10, title: 'Прочие Расходы', icon: 'price_change' },
-      { id: 11, title: 'Склады', link: '/list/storage', icon: 'warehouse' },
-      { id: 12, title: 'Сотрудники', link: '/list/employee', icon: 'supervisor_account' },
-      { id: 13, title: 'Должность', link: '/list/position', icon: 'work' },
+    id: 1, title: 'Справочники', child: [
+      { id: 1, title: 'Договоры контрагентов', link: '/list/counterpartyAgreement'},
+      { id: 2, title: 'Банковские счета', link: '/list/organizationBill' },
+      { id: 3, title: 'Номенклатура', link: ''},
+      { id: 4, title: 'Пользователи', link: '/list/employee' },
+      { id: 5, title: 'Контрагенты', link: '/list/counterparty',},
+      { id: 6, title: 'Организации', link: '/list/organization',},
+      { id: 7, title: 'Сотрудники', link: '/list/employee',},
+      { id: 8, title: 'Должность', link: '/list/position',},
+      { id: 9, title: 'Виды цен', link: '/list/priceType',},
+      { id: 10, title: 'Валюты', link: '/list/currency',},
+      { id: 11, title: 'Склады', link: '/list/storage',},
+      { id: 12, title: 'Кассы', link: '/list/cashRegister',},
     ]
   }
 ]);
@@ -43,24 +42,23 @@ function push(item) {
       <div v-for="list in lists" :key="list.id">
         <h3 class="text-uppercase mb-4">{{ list.title }}</h3>
         <ul class="list">
-          <span class="d-flex align-center ga-4 cursor-pointer" nav v-for="child in list.child" :key="child.id"
+          <li class="d-flex align-center ga-4 cursor-pointer" v-for="child in list.child" :key="child.id"
             @click="push(child)">
-<!--            <div class="icon"><v-icon color="info">{{ child.icon }}</v-icon></div>-->
-            <li>
+            <span>
               {{ child.title }}
-            </li>
-          </span>
+            </span>
+          </li>
         </ul>
       </div>
       <div>
         <div class="mb-10" nav v-for="admin in admins" :key="admin.id">
           <h3 class="text-uppercase mb-4">{{ admin.title }}</h3>
           <ul class="list">
-            <span class="d-flex align-center ga-4 cursor-pointer" @click="push(admin)">
-              <li>
+            <li class="d-flex align-center ga-4 cursor-pointer" @click="push(admin)">
+              <span>
                 {{ admin.title }}
-              </li>
-            </span>
+              </span>
+            </li>
           </ul>
         </div>
       </div>
@@ -81,8 +79,9 @@ function push(item) {
 
 .panel{
   display: grid;
-  grid-template-columns: repeat(2, 1fr 1fr) ;
+  grid-template-columns: repeat(3, 2fr) ;
 }
+
 ul {
   list-style: none;
 }

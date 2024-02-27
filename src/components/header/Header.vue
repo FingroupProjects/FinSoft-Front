@@ -5,12 +5,13 @@ import FlagRU from '../../assets/svg/flags/flag-ru.svg'
 import FlagUS from '../../assets/svg/flags/flag-us.svg'
 import auth from "../../api/auth.js";
 import {deleteToken, deleteUser} from "../../composables/auth";
+import programSettingsApi from "../../api/programSettingsApi.js";
 
 const isDialog = ref(false)
 const router = useRouter()
 const isFastAdd = ref(false)
 const fastAddItems = ref([{title: 'Продажа',value: 1,},{title: "Возврат",value: 2,},{title: 'Клиент',value: 3,},{title: 'Заказ',  value: 4,},{title: 'Запросы на закупку',  value: 5,},{title: 'Заказ на закупку',  value: 6,},{title: 'Закуп',value: 7,},])
-
+const organizationName = ref('Организация')
 const isQuestion = ref(false)
 const questionItems = ref([{title: 'Продажа'}])
 
@@ -35,6 +36,7 @@ const listProfile = async (item) => {
 }
 
 onMounted(() => {
+  getOrganizationName()
   window.addEventListener('keydown', handleKeyDown);
 })
 
@@ -48,6 +50,14 @@ const handleKeyDown = (event) => {
   }
 }
 
+const getOrganizationName = async () => {
+  try{
+    const { data } = await programSettingsApi.get()
+    organizationName.value = data.name
+  }catch (e) {
+    console.log(e)
+  }
+}
 
 </script>
 
@@ -62,7 +72,7 @@ const handleKeyDown = (event) => {
       <v-icon size="20" color="#000"  @click="$router.push('/')">home</v-icon>
     </template>
 
-    <v-app-bar-title class="text-sm-body-1">Клиент</v-app-bar-title>
+    <v-app-bar-title class="text-sm-body-1">{{ organizationName }}</v-app-bar-title>
 
     <template v-slot:append>
       <v-btn density="comfortable" variant="tonal" color="#70C94633" class="d-flex justify-space-between ga-3  text-sm-body-2 bg-white rounded-lg py-1 cursor-pointer">
