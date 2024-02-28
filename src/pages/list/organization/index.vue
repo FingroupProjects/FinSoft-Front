@@ -3,11 +3,20 @@ import { ref, watch } from "vue";
 import organization from '../../../api/organizations';
 import {add, prevIcon,addIcon,editIcon,edit,removeIcon,remove,cancel, addMessage, editMessage, removeMessage} from '../../../composables/constant/buttons.js'
 import showToast from "../../../composables/toast";
+import binarySearch from "../../../composables/binarySearch/binarySearch.js";
+import Icons from "../../../composables/Icons/Icons.vue";
+
 
 const addDialog = ref(false);
 const updateDialog = ref(false)
 const deleteDialog = ref(false)
 const loading = ref(true)
+const dialog = ref(false)
+const markedID = ref(null)
+const valueRef = ref(null)
+const isExistsOrganization = ref(false)
+const organizationInDialogTitle = ref(null)
+
 
 const organizations = ref([]);
 const paginations = ref([])
@@ -25,6 +34,11 @@ const headers = ref([
   { title: 'Наименование', key: 'name'},
   { title: '#', key: 'icons', align:'center', sortable: false},
 ])
+
+const lineMarking = (item) => {
+  markedID.value = item.id;
+}
+
 
 const goToEdit = item => {
   updateDialog.value = true
@@ -44,22 +58,40 @@ const getOrganizationData = async ({ page, itemsPerPage, sortBy, search }) => {
   }
 }
 
-const addOrganization = async ({page, itemsPerPage, sortBy}) => {
-  const body = {
-    name: nameRef.value,
-}
-try {
-    const {status} = await organization.add(body)
-    if (status === 201) {
-      await getOrganizationData({page, itemsPerPage, sortBy})
-      addDialog.value = false
-      showToast(addMessage)
-      nameRef.value = null
+const openDialog = (item) => {
+  dialog.value = true
+  if (item === 0) {
+    idOrganizations.value = 0
+    isExistsOrganization.value = false
+  } else {
+    idOrganizations.value = item.id
+
+    const index = binarySearch(organizations.value, item.id)
+
+    if (index !== 1) {
+      isExistsOrganization.value = true
+      nameRef.value = item.name
+      organizationInDialogTitle.value = nameRef.value
+    } else {
     }
-} catch (e) {
-    console.log(e)
+  }
+
+}
+
+const addOrganization = async ({ page, itemsPerPage, sortBy }) => {
+
+const body = {
+  name: nameRef.value,
+}
+const res = await organizations.add(body)
+if (res.status === 201) {
+  await getOrganizationData({ page, itemsPerPage, sortBy })
+  showToast(addMessage)
+  valueRef.value = null
+  idOrganizations.value = res.data.result.id
 }
 }
+
 
 const update = async ({page, itemsPerPage, sortBy}) =>  {
 const body = {
@@ -103,43 +135,64 @@ watch(updateDialog, (newValue) => {
   }
 })
 
+watch(dialog, newVal => {
+  if (!newVal) {
+    nameRef.value = null
+  }
+})
+
+
 </script>
 
 <template>
   <div>
     <v-col>
-    <div class="d-flex justify-space-between">
-      <v-btn color="info" class="rounded-circle mb-1" size="40" @click="$router.push('/adminPanel')">
-          <v-icon color="white" size="25" >{{ prevIcon }}</v-icon>
-      </v-btn> 
-      <v-btn class="rounded-circle pa-2 mb-1" stacked color="green" size="40" @click="addDialog = true">
-          <v-icon size="25">{{ addIcon }}</v-icon>
-        </v-btn>
+      <div class="d-flex justify-space-between text-uppercase ">
+      <div class="d-flex align-center ga-2 pe-2 ms-4">
+        <span>Организации</span>
+      </div>
+      <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
+        <div class="d-flex w-100">
+          <div class="d-flex ga-2 mt-1 me-3">
+            <Icons @click="openDialog(0)" name="add"/>
+            <Icons name="copy"/>
+            <Icons @click="removeOrganization" name="delete"/>
+          </div>
+
+          <div class="w-100">
+            <v-text-field
+                v-model="search"
+                prepend-inner-icon="search"
+                density="compact"
+                label="Поиск..."
+                variant="outlined"
+                color="info"
+                rounded="lg"
+                clear-icon="close"
+                hide-details
+                single-line
+                clearable
+                flat
+            ></v-text-field>
+          </div>
+        </div>
+        <Icons name="filter" class="mt-1"/>
+      </v-card>
     </div>
 
-    
+    <template v-slot:item="{ item, index }">
+          <tr @click="lineMarking(item)" @dblclick="openDialog(item)" :class="{'bg-grey-lighten-2' : markedID === item.id}">
+            <td class="d-flex  align-center">
+              <Icons class="mt-2 me-2" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
+              <span>{{ index + 1 }}</span>
+            </td>
+            <td>
+              <span>{{ item.name }}</span>
+            </td>
+          </tr>
+        </template>
+
     <v-card class="mt-4 table ">
-      <v-card-title class="d-flex align-center pe-2">
-        Организации
-
-        <v-spacer />
-        <v-spacer />
-        <v-spacer />
-
-        <v-text-field
-            v-model="search"
-            prepend-inner-icon="search"
-            variant="outlined"
-            density="compact"
-            label="Поиск..."
-            color="info"
-            rounded="lg"
-            clearable
-            single-line
-            flat
-            hide-details
-        ></v-text-field>
-      </v-card-title>
         <v-data-table-server
             style="height: 65vh"
             fixed-header
@@ -158,51 +211,53 @@ watch(updateDialog, (newValue) => {
           <template v-slot:item.id="{ index }">
             <span>{{ index + 1 }}</span>
           </template>
-          <template v-slot:item.icons="{ item }">
-            
-            <v-icon color="warning" @click="goToEdit(item)" class="icon">{{ editIcon }}</v-icon>
-            <v-icon color="red" @click="goToDelete(item)" class="icon">{{ removeIcon }}</v-icon>
-          </template>
         </v-data-table-server>
       </v-card>
       </v-col>
     
-    <v-card>
-      <v-dialog v-model="addDialog" activator="parent">
-          <v-card width="30%" class="d-flex  justify-center flex-column mx-auto my-0" rounded="xl">
-            <div class="d-flex justify-space-between align-center pr-5 pt-3">
-              <span class="pl-5">Добавление</span>
-              <v-btn @click="addDialog = false" color="info" variant="tonal" :size="38">
-                <v-icon size="22">close</v-icon>
+      <v-card>
+      <v-dialog class="mt-2 pa-2"  v-model="dialog">
+        <v-card style="border: 2px solid #3AB700" min-width="300" class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
+          <div class="d-flex justify-space-between align-center mb-2">
+            <span class="">{{ isExistsOrganization ? organizationInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
+            <div class="d-flex align-center justify-space-between">
+              <div class="d-flex ga-3 align-center mt-2 me-4">
+                <Icons name="delete"/>
+                <Icons v-if="isExistsOrganization" @click="update" name="save"/>
+                <Icons v-else @click="addOrganization" name="save"/>
+              </div>
+              <v-btn @click="dialog = false"  variant="text" :size="32" class="pt-2 pl-1">
+                <Icons name="close" />
               </v-btn>
             </div>
-            <v-form  class="d-flex w-100 pa-5" @submit.prevent="addOrganization">
-              <v-row class="w-100">
-                <v-col class="d-flex flex-column w-100">
-                  <v-text-field
-                      v-model="nameRef"
-                      :rules="[rules.required]"
-                      color="info"
-                      rounded="lg"
-                      variant="outlined"
-                      class="w-auto text-sm-body-1"
-                      density="compact"
-                      placeholder="name"
-                      label="Наименование"
-                      clearable
-                  />
-                  <div class="d-flex justify-end ga-2">
-                    <v-btn :loading="loading" size="small" color="info" rounded="lg" class="mt-2" @click="addDialog = false">{{ cancel }}</v-btn>
-                    <v-btn :loading="loading" size="small" color="green" rounded="lg" class="mt-2" type="submit" >{{ add }}</v-btn>
-                  </div>
-                </v-col>
-              </v-row>
-            </v-form>
-          </v-card>
-         </v-dialog>
+          </div>
+          <v-form class="d-flex w-100" @submit.prevent="addOrganization">
+            <v-row class="w-100">
+              <v-col class="d-flex flex-column w-100">
+                <v-text-field
+                    v-model="nameRef"
+                    :rules="[rules.required]"
+                    color="green"
+                    rounded="lg"
+                    variant="outlined"
+                    class="w-auto text-sm-body-1"
+                    density="compact"
+                    placeholder="Огранизация"
+                    label="Название"
+                    clear-icon="close"
+                    clearable
+                />
+              </v-col>
+            </v-row>
+          </v-form>
+        </v-card>
+      </v-dialog>
+    </v-card>
 
 
-         <v-dialog v-model="updateDialog" activator="parent">
+    <v-card>
+      <!-- modal -->      
+        <v-dialog v-model="updateDialog" activator="parent">
         <v-card width="30%" class="d-flex  justify-center flex-column mx-auto my-0" rounded="xl">
           <div class="d-flex justify-space-between align-center pr-5 pt-3">
             <span class="pl-5">Изменение</span>
@@ -273,4 +328,6 @@ watch(updateDialog, (newValue) => {
 .error {
   color: red;
 }
-</style>
+</style> 
+
+
