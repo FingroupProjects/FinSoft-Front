@@ -25,8 +25,10 @@ const router = useRouter()
 const loading = ref(true)
 const loadingRate = ref(true)
 const dialog = ref(false)
+const rateDialog = ref(false)
 
 const idCurrency = ref(null)
+const idCurrencyRate = ref(null)
 const isExistsCurrency = ref(false)
 const markedID = ref(null)
 const currencyInDialogTitle = ref(null)
@@ -116,9 +118,7 @@ const addCurrency = async ({ page, itemsPerPage, sortBy }) => {
     valueRef.value = null
     idCurrency.value = res.data.result.id
   }
-
 }
-
 
 const createCurrencyRate = async () => {
   const body = {
@@ -164,9 +164,51 @@ const removeCurrency = async ({page, itemsPerPage, sortBy}) => {
     if (status === 200) {
       showToast(removeMessage, 'red')
       await getCurrencyData({page, itemsPerPage, sortBy})
+      dialog.value = false
+      markedID.value = null
     }
   } catch (e) {
 
+  }
+}
+
+const addRate = async ({ page, itemsPerPage, sortBy }) => {
+
+  const body = {
+    date: showDate(dateRef.value, '-'),
+    value: valueRef.value
+  }
+
+  try {
+    await currency.addRate(body, idCurrency.value)
+    await getCurrencyRateData({ page, itemsPerPage, sortBy })
+    await getCurrencyData({ page, itemsPerPage, sortBy })
+    showToast(addMessage)
+    valueRef.value = null
+    rateDialog.value = false
+  } catch(e) {
+    showToast(e.response.data.message, 'red')
+  }
+
+}
+
+const updateRate = async ({page, itemsPerPage, sortBy}) => {
+
+  const body = {
+    date: dateRef.value.split('.').reverse().join('-'),
+    value: Number(valueRef.value)
+  }
+
+  try {
+    const {status} = await currency.updateRate(idCurrency.value, body)
+
+    if (status === 200) {
+      await getCurrencyRateData({page, itemsPerPage, sortBy})
+      showToast(editMessage)
+      updateDialog.value = false
+    }
+  } catch (e) {
+    console.log(e)
   }
 }
 
@@ -224,9 +266,9 @@ watch(dialog, newVal => {
       <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
         <div class="d-flex w-100">
           <div class="d-flex ga-2 mt-1 me-3">
-            <Icons @click="openDialog(0)" name="add"/>
-            <Icons name="copy"/>
-            <Icons @click="removeCurrency" name="delete"/>
+            <Icons @click="openDialog(0)" name="add" />
+            <Icons name="copy" />
+            <Icons @click="removeCurrency" name="delete" />
           </div>
 
           <div class="w-100">
@@ -292,7 +334,7 @@ watch(dialog, newVal => {
             <span class="">{{ isExistsCurrency ? currencyInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
             <div class="d-flex align-center justify-space-between">
               <div class="d-flex ga-3 align-center mt-2 me-4">
-                <Icons name="delete"/>
+                <Icons @click="removeCurrency" name="delete"/>
                 <Icons v-if="isExistsCurrency" @click="update" name="save"/>
                 <Icons v-else @click="addCurrency" name="save"/>
               </div>
@@ -350,7 +392,7 @@ watch(dialog, newVal => {
           <v-card class="table" style="border: 1px solid #3AB700">
             <div class="d-flex w-100 rounded-t-lg mb-1 align-center " style="border-bottom: 1px solid #3AB700">
               <div class="d-flex justify-end w-100 ga-2 pt-1 me-2" style="padding-top: 4px !important;">
-                <Icons name="add"/>
+                <Icons @click="rateDialog = true" name="add"/>
               </div>
             </div>
             <v-data-table-server
@@ -379,8 +421,57 @@ watch(dialog, newVal => {
           </v-card>
         </v-card>
       </v-dialog>
-    </v-card>
 
+<!--  addCurrencyRate    -->
+      <v-dialog v-model="rateDialog" activator="parent">
+        <v-card style="border: 2px solid #3AB700" min-width="400" class="d-flex  justify-center flex-column mx-auto my-0" rounded="xl">
+          <div class="d-flex justify-space-between align-center pr-5 pt-3">
+            <span class="pl-5">Добавить курс</span>
+            <div class="d-flex align-center justify-space-between">
+              <div class="d-flex ga-3 align-center mt-2 me-4">
+                <Icons @click="removeCurrency" name="delete"/>
+                <Icons v-if="isExistsCurrency" @click="addRate" name="save"/>
+                <Icons v-else @click="updateRate" name="save"/>
+              </div>
+              <v-btn @click="rateDialog = false"  variant="text" :size="32" class="pt-2 pl-1">
+                <Icons name="close" />
+              </v-btn>
+            </div>
+          </div>
+          <v-form class="d-flex w-100 pa-5">
+            <v-row class="w-100">
+              <v-col class="d-flex flex-column justify-between w-100 ga-5">
+                <v-text-field
+                    v-model="dateRef"
+                    :rules="[rules.required]"
+                    type="date"
+                    label="Дата"
+                    rounded="lg"
+                    color="green"
+                    variant="outlined"
+                    density="compact"
+                    clear-icon="close"
+                    clearable
+                />
+                <v-text-field
+                    v-model="valueRef"
+                    :rules="[rules.required]"
+                    type="number"
+                    hide-spin-buttons
+                    placeholder="1.0000"
+                    label="Значение"
+                    rounded="lg"
+                    color="green"
+                    variant="outlined"
+                    density="compact"
+                    clearable
+                />
+              </v-col>
+            </v-row>
+          </v-form>
+        </v-card>
+      </v-dialog>
+    </v-card>
   </v-col>
   </div>
   
