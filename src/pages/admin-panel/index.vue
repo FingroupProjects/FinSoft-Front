@@ -14,18 +14,17 @@ const admins = ref([
 const lists = ref([
   {
     id: 1, title: 'Справочники', child: [
-      { id: 1, title: 'Договоры контрагентов', link: '/list/counterpartyAgreement'},
-      { id: 2, title: 'Банковские счета', link: '/list/organizationBill' },
-      { id: 3, title: 'Номенклатура', link: ''},
-      { id: 4, title: 'Пользователи', link: '/list/employee' },
-      { id: 5, title: 'Контрагенты', link: '/list/counterparty',},
-      { id: 6, title: 'Организации', link: '/list/organization',},
-      { id: 7, title: 'Сотрудники', link: '/list/employee',},
-      { id: 8, title: 'Должность', link: '/list/position',},
-      { id: 9, title: 'Виды цен', link: '/list/priceType',},
-      { id: 10, title: 'Валюты', link: '/list/currency',},
-      { id: 11, title: 'Склады', link: '/list/storage',},
-      { id: 12, title: 'Кассы', link: '/list/cashRegister',},
+      { id: 1, title: 'Банковские счета', link: '/list/organizationBill' },
+      { id: 2, title: 'Номенклатура', link: ''},
+      { id: 3, title: 'Пользователи', link: '/list/employee' },
+      { id: 4, title: 'Контрагенты', link: '/list/counterparty',},
+      { id: 5, title: 'Организации', link: '/list/organization',},
+      { id: 6, title: 'Сотрудники', link: '/list/employee',},
+      { id: 7, title: 'Должность', link: '/list/position',},
+      { id: 8, title: 'Виды цен', link: '/list/priceType',},
+      { id: 9, title: 'Валюты', link: '/list/currency',},
+      { id: 10,title: 'Склады', link: '/list/storage',},
+      { id: 11,title: 'Кассы', link: '/list/cashRegister',},
     ]
   }
 ]);
