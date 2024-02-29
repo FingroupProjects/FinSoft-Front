@@ -17,8 +17,8 @@ export default {
   remove(id) {
     return api.delete(`/currency/${id}`)
   },
-  addRate(data, id) {
-    return api.post(`/currencyRate/add/${id}`, data)
+  addRate(id, body) {
+    return api.post(`/currencyRate/add/${id}`, body)
   },
   showRate(id, {page = 1, itemsPerPage = 10, sortBy}, search = '') {
     const params = buildParams(page, itemsPerPage, sortBy, search);

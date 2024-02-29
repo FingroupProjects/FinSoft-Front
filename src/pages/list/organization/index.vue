@@ -1,7 +1,11 @@
 <script setup>
 import { ref, watch } from "vue";
 import organization from '../../../api/organizations';
-import {add, prevIcon,addIcon,editIcon,edit,removeIcon,remove,cancel, addMessage, editMessage, removeMessage} from '../../../composables/constant/buttons.js'
+import { 
+   addMessage,
+   editMessage,
+   removeMessage,
+   warningMessage} from '../../../composables/constant/buttons.js'
 import showToast from "../../../composables/toast";
 import binarySearch from "../../../composables/binarySearch/binarySearch.js";
 import Icons from "../../../composables/Icons/Icons.vue";
@@ -32,7 +36,7 @@ const rules = {
 const headers = ref([
   { title: '№', key: 'id'},
   { title: 'Наименование', key: 'name'},
-  { title: '#', key: 'icons', align:'center', sortable: false},
+  { key: 'icons', align:'center', sortable: false},
 ])
 
 const lineMarking = (item) => {
@@ -40,11 +44,6 @@ const lineMarking = (item) => {
 }
 
 
-const goToEdit = item => {
-  updateDialog.value = true
-  idOrganizations.value = item.id
-  nameRef.value = item.name
-}
 
 const getOrganizationData = async ({ page, itemsPerPage, sortBy, search }) => {
   loading.value = true
@@ -54,7 +53,6 @@ const getOrganizationData = async ({ page, itemsPerPage, sortBy, search }) => {
     organizations.value = data.result.data
     loading.value = false
   } catch (e) {
-
   }
 }
 
@@ -83,7 +81,7 @@ const addOrganization = async ({ page, itemsPerPage, sortBy }) => {
 const body = {
   name: nameRef.value,
 }
-const res = await organizations.add(body)
+const res = await organization.add(body)
 if (res.status === 201) {
   await getOrganizationData({ page, itemsPerPage, sortBy })
   showToast(addMessage)
@@ -93,15 +91,16 @@ if (res.status === 201) {
 }
 
 
-const update = async ({page, itemsPerPage, sortBy}) =>  {
+const update = async ({page, itemsPerPage, sortBy}) => {
+
 const body = {
   name: nameRef.value,
 }
+
 try {
   const { status } = await organization.update(idOrganizations.value, body)
   if (status === 200) {
     await getOrganizationData({page, itemsPerPage, sortBy})
-    updateDialog.value = false
     showToast(editMessage)
   }
 } catch (e) {
@@ -109,24 +108,19 @@ try {
 }
 }
 
-
 const removeOrganization = async ({page, itemsPerPage, sortBy}) => {
+  if (markedID.value === null) return showToast(warningMessage, 'warning')
+
   try {
-    const {status} = await organization.remove(idOrganizations.value)
+    const {status} = await organization.remove(markedID.value)
     if (status === 200) {
       showToast(removeMessage, 'red')
       await getOrganizationData({page, itemsPerPage, sortBy})
+      dialog.value = false
+      markedID.value = null
     }
   } catch (e) {
- } 
-  finally {
-   deleteDialog.value = false
- }
-}
-
-const goToDelete = item => {
-  idOrganizations.value = item.id
-  deleteDialog.value = true
+  }
 }
 
 watch(updateDialog, (newValue) => {
@@ -140,8 +134,6 @@ watch(dialog, newVal => {
     nameRef.value = null
   }
 })
-
-
 </script>
 
 <template>
@@ -180,18 +172,6 @@ watch(dialog, newVal => {
       </v-card>
     </div>
 
-    <template v-slot:item="{ item, index }">
-          <tr @click="lineMarking(item)" @dblclick="openDialog(item)" :class="{'bg-grey-lighten-2' : markedID === item.id}">
-            <td class="d-flex  align-center">
-              <Icons class="mt-2 me-2" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
-              <span>{{ index + 1 }}</span>
-            </td>
-            <td>
-              <span>{{ item.name }}</span>
-            </td>
-          </tr>
-        </template>
-
     <v-card class="mt-4 table ">
         <v-data-table-server
             style="height: 65vh"
@@ -208,21 +188,30 @@ watch(dialog, newVal => {
             hover
         >
         
-          <template v-slot:item.id="{ index }">
-            <span>{{ index + 1 }}</span>
-          </template>
-        </v-data-table-server>
+        <template v-slot:item="{ item, index }">
+          <tr @click="lineMarking(item)" @dblclick="openDialog(item)" :class="{'bg-grey-lighten-2' : markedID === item.id}">
+            <td class="d-flex  align-center">
+              <Icons class="mt-2 me-2" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
+              <span>{{ index + 1 }}</span>
+            </td>
+            <td>
+              <span>{{ item.name }}</span>
+            </td>
+          </tr>
+        </template>
+      </v-data-table-server>
       </v-card>
       </v-col>
     
+      <!-- modal -->
       <v-card>
       <v-dialog class="mt-2 pa-2"  v-model="dialog">
         <v-card style="border: 2px solid #3AB700" min-width="300" class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
           <div class="d-flex justify-space-between align-center mb-2">
             <span class="">{{ isExistsOrganization ? organizationInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
-            <div class="d-flex align-center justify-space-between">
+             <div class="d-flex align-center justify-space-between">
               <div class="d-flex ga-3 align-center mt-2 me-4">
-                <Icons name="delete"/>
+                <Icons @click="removeOrganization" name="delete"/>
                 <Icons v-if="isExistsOrganization" @click="update" name="save"/>
                 <Icons v-else @click="addOrganization" name="save"/>
               </div>
@@ -253,81 +242,12 @@ watch(dialog, newVal => {
         </v-card>
       </v-dialog>
     </v-card>
-
-
-    <v-card>
-      <!-- modal -->      
-        <v-dialog v-model="updateDialog" activator="parent">
-        <v-card width="30%" class="d-flex  justify-center flex-column mx-auto my-0" rounded="xl">
-          <div class="d-flex justify-space-between align-center pr-5 pt-3">
-            <span class="pl-5">Изменение</span>
-            <v-btn @click="updateDialog = false" color="info" variant="tonal" :size="38">
-              <v-icon size="22">close</v-icon>
-            </v-btn>
-          </div>
-          <v-form  class="d-flex w-100 pa-5" @submit.prevent="update">
-            <v-row class="w-100">
-              <v-col class="d-flex flex-column w-100">
-                <v-text-field
-                    v-model="nameRef"
-                    :rules="[rules.required]"
-                    rounded="lg"
-                    variant="outlined"
-                    density="compact"
-                    placeholder="Огранизация"
-                    label="Название"
-                    clearable
-                />
-                <div class="d-flex justify-end ga-2">
-                  <v-btn :loading="loading" size="small" color="info" rounded="lg" class="mt-2" @click="updateDialog = false">{{ cancel }}</v-btn>
-                  <v-btn :loading="loading" size="small" color="green" rounded="lg" class="mt-2" type="submit" >{{ edit }}</v-btn>
-                </div>
-              </v-col>
-            </v-row>
-          </v-form>
-        </v-card>
-       </v-dialog>
-         
-       <v-dialog v-model="deleteDialog" activator="parent">
-        <v-card width="30%" class="d-flex  justify-center flex-column mx-auto my-0" rounded="xl">
-          <div class="d-flex justify-end align-center pr-5 pt-3">
-
-            <v-btn @click="deleteDialog = false" color="info" variant="tonal" :size="38">
-              <v-icon size="22">close</v-icon>
-            </v-btn>
-          </div>
-          <v-card class="d-flex flex-column w-100 pr-5 pl-5 pb-5 mt-2 justify-space-between h-100 " min-height="240">
-            <div class="d-flex justify-center align-center flex-column text-center">
-              <v-icon size="60" color="warning">error</v-icon>
-              <span class="mt-4 text-h6">Вы точно хотите удалить?</span>
-            </div>
-            <div class="d-flex flex-column justify-end ga-2 flex-grow-1 w-100 align-center">
-              <v-btn :loading="loading" size="small" color="red" rounded="xl" height="35" class="mt-2 w-100" @click="removeOrganization">
-                {{ remove }}
-              </v-btn>
-              <v-btn :loading="loading" size="small" color="info" rounded="xl" height="35" class="mt-1 w-100" @click="deleteDialog = false">
-                {{ cancel }}
-              </v-btn>
-            </div>
-          </v-card>
-        </v-card>
-      </v-dialog>
-    </v-card>
 </div>
 
 </template>
 
 <style scoped>
-.table {
-  background: white;
-  padding: 5px;
-  border-radius: 16px;
-  max-height: 90vh;
-  overflow: auto;
-}
-.error {
-  color: red;
-}
+
 </style> 
 
 
