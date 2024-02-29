@@ -16,7 +16,6 @@ const props = defineProps(['checked'])
     <slot></slot>
   </label>
 </template>
-
 <style scoped lang="scss">
 $main: black; //#008cff;
 $grey: #8d9aa9;
@@ -27,8 +26,6 @@ $bezier: cubic-bezier(0.65, 0.25, 0.56, 0.96);
   display: flex;
   align-items: center;
   user-select: none;
-  padding: 0.6em 0;
-  box-sizing: border-box;
 
   input[type="checkbox"],
   input[type="radio"] {
