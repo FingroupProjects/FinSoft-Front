@@ -12,5 +12,6 @@ export const showIcon = 'visibility'
 export const addMessage = 'Успешно добавлено!'
 export const editMessage = 'Успешно обновлено!'
 export const removeMessage = 'Успешно удалено!'
+export const restoreMessage = 'Успешно востановлено!'
 export const warningMessage = 'Выберите запись!'
 

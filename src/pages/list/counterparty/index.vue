@@ -3,7 +3,7 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import counterpartyApi from "../../../api/counterparty";
 import showDate from "../../../composables/date/showDate"
-import { remove, cancel, removeMessage, warningMessage } from "../../../composables/constant/buttons.js";
+import {remove, cancel, removeMessage, warningMessage, restoreMessage} from "../../../composables/constant/buttons.js";
 import showToast from '../../../composables/toast'
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
@@ -34,7 +34,7 @@ const formatRole = (roles) => {
   const roleMap = {
     1: "Клиент",
     2: "Поставщик",
-    3: "Прочие отношения",
+    3: "Прочие",
   };
 
   return roles.map((role) => roleMap[role] || "Неизвестная роль").join(", ");
@@ -49,10 +49,30 @@ const showDetail = item => {
 };
 
 const lineMarking = (item) => {
-  markedID.value.push(item.id)
-  markedItem.value = item
+  const index = markedID.value.indexOf(item.id);
+  if (index !== -1) {
+    markedID.value.splice(index, 1);
+  } else {
+    markedID.value.push(item.id);
+  }
+  markedItem.value = item;
 }
 
+const handleCheckboxClick = function (item) {
+  lineMarking(item)
+}
+const compute = ({ page, itemsPerPage, sortBy, search }) => {
+  if(markedID.value.length === 1 && markedItem.value.deleted_at === null) {
+    return removeCounterparty({page, itemsPerPage, sortBy, search})
+  }
+  else if(markedID.value.length === 1 && markedItem.value.deleted_at) {
+    return restoreCounterparty({ page, itemsPerPage, sortBy })
+  }
+  else{
+    return massDel({ page, itemsPerPage, sortBy, search })
+
+  }
+}
 const getCounterparty = async ({ page, itemsPerPage, sortBy, search }) => {
   loading.value = true;
   try {
@@ -69,19 +89,49 @@ const getCounterparty = async ({ page, itemsPerPage, sortBy, search }) => {
   }
 };
 
-const removeCounterparty = async ({page, itemsPerPage, sortBy}) => {
-  if(markedItem.deleted_at !== null) return
+const removeCounterparty = async ({page, itemsPerPage, sortBy  }) => {
   if (markedID.value === null) return showToast(warningMessage, 'warning')
   try{
     const {status} = await counterpartyApi.delete(markedID.value)
     if (status === 200) {
       showToast(removeMessage, 'red')
       await getCounterparty({page, itemsPerPage, sortBy})
+      markedID.value = []
     }
   }catch (e) {
     console.log(e)
   }
 }
+
+const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
+  const body = {
+    ids: markedID.value
+  }
+  try{
+    const { status } = await counterpartyApi.massDeletion(body)
+    if (status === 200) {
+      showToast(removeMessage, 'red')
+      await getCounterparty({page, itemsPerPage, sortBy}, search)
+      markedID.value = []
+    }
+  }catch(e){
+    console.log(e)
+  }
+}
+
+const restoreCounterparty = async ({ page, itemsPerPage, sortBy }) => {
+  try{
+    const { status } = await  counterpartyApi.restore(markedID.value)
+    if (status === 200) {
+      showToast(restoreMessage, 'green')
+      await getCounterparty({ page, itemsPerPage, sortBy })
+      markedID.value = []
+    }
+  }catch (e) {
+    console.log(e)
+  }
+}
+
 </script>
 
 <template>
@@ -97,9 +147,8 @@ const removeCounterparty = async ({page, itemsPerPage, sortBy}) => {
             <div class="d-flex ga-2 mt-1 me-3">
               <Icons @click="openDialog(0)" name="add"/>
               <Icons name="copy"/>
-              <Icons @click="removeCounterparty" name="delete"/>
+              <Icons @click="compute({ page, itemsPerPage, sortBy, search })" name="delete"/>
             </div>
-
             <div class="w-100">
               <v-text-field
                   v-model="search"
@@ -143,8 +192,8 @@ const removeCounterparty = async ({page, itemsPerPage, sortBy}) => {
           <template v-slot:item="{ item, index }">
             <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)" :class="{'bg-grey-lighten-2': markedID.includes(item.id)}">
               <td class="d-flex align-center">
-                <template v-if="hoveredRowIndex === index">
-                  <CustomCheckbox>
+                <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
+                  <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)" @change="handleCheckboxClick(item)">
                     <span>{{ index + 1 }}</span>
                   </CustomCheckbox>
                 </template>
@@ -155,7 +204,6 @@ const removeCounterparty = async ({page, itemsPerPage, sortBy}) => {
               </td>
               <td>
                 <span>{{ item.name }}</span>
-<!--                <v-checkbox class="mt-6 me-2"></v-checkbox>-->
               </td>
               <td>
                 <span>{{ item.address }}</span>
@@ -176,14 +224,9 @@ const removeCounterparty = async ({page, itemsPerPage, sortBy}) => {
           </template>
 
         </v-data-table-server>
-
+        {{ markedID }}
       </v-card>
 
     </v-col>
   </div>
 </template>
-
-<style scoped lang="scss">
-
-
-</style>
