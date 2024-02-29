@@ -1,24 +1,18 @@
 <script setup>
 import {onMounted, ref, watch} from "vue";
 import {useRouter} from "vue-router";
-import showToast from '../../../composables/toast'
-import changeTheDateForSending from '../../../composables/date/changeTheDateForSending'
-import currentDate from "../../../composables/date/currentDate.js";
-import currency from '../../../api/currency.js'
+import showToast from '@/composables/toast'
+import currentDate from "@/composables/date/currentDate.js";
+import currency from '@/api/currency.js'
 import {
-  add,
-  addIcon, addMessage,
-  cancel,
-  edit,
-  editIcon, editMessage,
-  prevIcon, remove,
-  removeIcon, removeMessage,
-  showIcon, warningMessage
-} from "../../../composables/constant/buttons.js";
-import Icons from "../../../composables/Icons/Icons.vue";
-import binarySearch from "../../../composables/binarySearch/binarySearch.js";
-import {tr} from "vuetify/locale";
-import showDate from "../../../composables/date/showDate.js";
+ addMessage,
+ editMessage,
+  removeMessage,
+  warningMessage
+} from "@/composables/constant/buttons.js";
+import Icons from "@/composables/Icons/Icons.vue";
+import binarySearch from "@/composables/binarySearch/binarySearch.js";
+import showDate from "@/composables/date/showDate.js";
 
 const router = useRouter()
 
@@ -249,6 +243,20 @@ const removeCurrencyRate = async ({page, itemsPerPage, sortBy}) => {
   }
 }
 
+const addBasedOnCurrency = () => {
+  if (markedID.value === null) return showToast(warningMessage, 'warning')
+
+  dialog.value = true
+
+  currencies.value.forEach(item => {
+    if (markedID.value === item.id) {
+      nameRef.value = item.name
+      symbolRef.value = item.symbol_code
+      digitalRef.value = item.digital_code
+    }
+  })
+}
+
 const lineMarking = (item) => {
   markedID.value = item.id;
 }
@@ -288,7 +296,7 @@ watch(rateDialog, newVal => {
         <div class="d-flex w-100">
           <div class="d-flex ga-2 mt-1 me-3">
             <Icons @click="openDialog(0)" name="add" />
-            <Icons name="copy" />
+            <Icons @click="addBasedOnCurrency" name="copy" />
             <Icons @click="removeCurrency" name="delete" />
           </div>
 
