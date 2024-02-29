@@ -71,7 +71,6 @@ const getCurrencyData = async ({ page, itemsPerPage, sortBy, search }) => {
     currencies.value = data.result.data
     loading.value = false
   } catch (e) {
-
   }
 }
 
