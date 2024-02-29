@@ -17,4 +17,10 @@ export default {
   delete(id) {
     return api.delete(`/counterparty/${id}`);
   },
+  massDeletion(data) {
+    return api.post(`/counterparty/massDelete/`, data);
+  },
+  restore(id) {
+    return api.get(`/counterparty/restore/${id}`);
+  },
 };
