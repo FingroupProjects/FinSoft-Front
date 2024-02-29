@@ -30,9 +30,12 @@ const rateDialog = ref(false)
 const idCurrency = ref(null)
 const idCurrencyRate = ref(null)
 const isExistsCurrency = ref(false)
+const isExistsCurrencyRate = ref(false)
 const markedID = ref(null)
 const currencyInDialogTitle = ref(null)
 const search = ref('')
+const selected = ref([])
+const selectedRate = ref([])
 
 const nameRef = ref(null)
 const symbolRef = ref(null)
@@ -54,6 +57,7 @@ const headers = ref([
 ])
 
 const headersRate = ref([
+  { title: '№', key: 'id'},
   { title: 'Дата', key: 'date'},
   { title: 'Курс', key: 'value'},
 ])
@@ -119,23 +123,6 @@ const addCurrency = async ({ page, itemsPerPage, sortBy }) => {
   }
 }
 
-const createCurrencyRate = async () => {
-  const body = {
-    date: changeTheDateForSending(dateRef.value),
-    value: valueRef.value
-  }
-
-  const {status} = await currency.addRate(body, String(idCurrency.value))
-
-  if (status === 201) {
-    showToast(addMessage)
-    nameRef.value = null
-    symbolRef.value = null
-    digitalRef.value = null
-    dialog.value = false
-  }
-}
-
 const update = async ({page, itemsPerPage, sortBy}) => {
 
   const body = {
@@ -155,6 +142,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
   }
 }
 
+
 const removeCurrency = async ({page, itemsPerPage, sortBy}) => {
   if (markedID.value === null) return showToast(warningMessage, 'warning')
 
@@ -170,47 +158,6 @@ const removeCurrency = async ({page, itemsPerPage, sortBy}) => {
 
   }
 }
-
-const addRate = async ({ page, itemsPerPage, sortBy }) => {
-
-  const body = {
-    date: showDate(dateRef.value, '-'),
-    value: valueRef.value
-  }
-
-  try {
-    await currency.addRate(body, idCurrency.value)
-    await getCurrencyRateData({ page, itemsPerPage, sortBy })
-    await getCurrencyData({ page, itemsPerPage, sortBy })
-    showToast(addMessage)
-    valueRef.value = null
-    rateDialog.value = false
-  } catch(e) {
-    showToast(e.response.data.message, 'red')
-  }
-
-}
-
-const updateRate = async ({page, itemsPerPage, sortBy}) => {
-
-  const body = {
-    date: dateRef.value.split('.').reverse().join('-'),
-    value: Number(valueRef.value)
-  }
-
-  try {
-    const {status} = await currency.updateRate(idCurrency.value, body)
-
-    if (status === 200) {
-      await getCurrencyRateData({page, itemsPerPage, sortBy})
-      showToast(editMessage)
-      updateDialog.value = false
-    }
-  } catch (e) {
-    console.log(e)
-  }
-}
-
 
 const openDialog = (item) => {
   dialog.value = true
@@ -235,6 +182,73 @@ const openDialog = (item) => {
 
 }
 
+const addRate = async ({ page, itemsPerPage, sortBy }) => {
+  const body = {
+    date: showDate(dateRef.value, '-'),
+    value: valueRef.value
+  }
+
+  try {
+    await currency.addRate(idCurrency.value, body)
+    await getCurrencyRateData({ page, itemsPerPage, sortBy })
+    await getCurrencyData({ page, itemsPerPage, sortBy })
+    showToast(addMessage)
+    valueRef.value = null
+    rateDialog.value = false
+  } catch(e) {
+    showToast(e.response.data.message, 'red')
+  }
+
+}
+
+const updateRate = async ({page, itemsPerPage, sortBy}) => {
+
+  const body = {
+    date: dateRef.value.split('.').reverse().join('-'),
+    value: Number(valueRef.value)
+  }
+
+  try {
+    const {status} = await currency.updateRate(idCurrencyRate.value, body)
+
+    if (status === 200) {
+      await getCurrencyRateData({page, itemsPerPage, sortBy})
+      await getCurrencyData({ page, itemsPerPage, sortBy })
+      showToast(editMessage)
+      rateDialog.value = false
+    }
+  } catch (e) {
+    console.log(e)
+  }
+}
+
+const editDialogRate = (item) => {
+  rateDialog.value = true
+  isExistsCurrencyRate.value = true
+  idCurrencyRate.value = item.id
+  dateRef.value = item.date.split('.').reverse().join('-')
+  valueRef.value = item.value
+}
+
+const addDialogRate = () => {
+  rateDialog.value = true
+  isExistsCurrencyRate.value = false
+}
+
+const removeCurrencyRate = async ({page, itemsPerPage, sortBy}) => {
+  try {
+    const { data } = await currency.removeRate(idCurrencyRate.value)
+    if (data.result) {
+      showToast(removeMessage, 'red')
+      await getCurrencyRateData({page, itemsPerPage, sortBy})
+    }
+  } catch (e) {
+
+  } finally {
+    rateDialog.value = false
+  }
+}
+
 const lineMarking = (item) => {
   markedID.value = item.id;
 }
@@ -250,6 +264,14 @@ watch(dialog, newVal => {
     digitalRef.value = null
     rates.value = []
     loadingRate.value = true
+  }
+})
+
+watch(rateDialog, newVal => {
+  if (!newVal) {
+    dateRef.value = currentDate()
+    valueRef.value = null
+    isExistsCurrencyRate.value = false
   }
 })
 
@@ -314,9 +336,7 @@ watch(dialog, newVal => {
               <Icons class="mt-2 me-2" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
               <span>{{ index + 1 }}</span>
             </td>
-            <td>
-              <span>{{ item.name }}</span>
-            </td>
+            <td>{{ item.name }}</td>
             <td>{{ item.symbol_code }}</td>
             <td>{{ item.digital_code }}</td>
             <td>{{ item.last_exchange_rate === null ? '' : item.last_exchange_rate.value}}</td>
@@ -330,7 +350,7 @@ watch(dialog, newVal => {
       <v-dialog class="mt-2 pa-2"  v-model="dialog">
         <v-card style="border: 2px solid #3AB700" min-width="300" class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
           <div class="d-flex justify-space-between align-center mb-2">
-            <span class="">{{ isExistsCurrency ? currencyInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
+            <span>{{ isExistsCurrency ? currencyInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
             <div class="d-flex align-center justify-space-between">
               <div class="d-flex ga-3 align-center mt-2 me-4">
                 <Icons @click="removeCurrency" name="delete"/>
@@ -391,7 +411,8 @@ watch(dialog, newVal => {
           <v-card class="table" style="border: 1px solid #3AB700">
             <div class="d-flex w-100 rounded-t-lg mb-1 align-center " style="border-bottom: 1px solid #3AB700">
               <div class="d-flex justify-end w-100 ga-2 pt-1 me-2" style="padding-top: 4px !important;">
-                <Icons @click="rateDialog = true" name="add"/>
+                <Icons @click="removeCurrencyRate" name="delete"/>
+                <Icons @click="addDialogRate" name="add"/>
               </div>
             </div>
             <v-data-table-server
@@ -411,7 +432,11 @@ watch(dialog, newVal => {
                 hover
             >
               <template v-slot:item="{ item, index }">
-                <tr>
+                <tr @dblclick="editDialogRate(item)">
+                  <td class="d-flex align-center">
+                    <Icons class="mt-2 me-2" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
+                    <span>{{ index + 1 }}</span>
+                  </td>
                   <td>{{ item.date }}</td>
                   <td>{{ item.value }}</td>
                 </tr>
@@ -425,12 +450,12 @@ watch(dialog, newVal => {
       <v-dialog v-model="rateDialog" activator="parent">
         <v-card style="border: 2px solid #3AB700" min-width="400" class="d-flex  justify-center flex-column mx-auto my-0" rounded="xl">
           <div class="d-flex justify-space-between align-center pr-5 pt-3">
-            <span class="pl-5">Добавить курс</span>
+            <span class="pl-5">{{ isExistsCurrencyRate ? 'Изменить' : 'Добавить' }} курс</span>
             <div class="d-flex align-center justify-space-between">
               <div class="d-flex ga-3 align-center mt-2 me-4">
-                <Icons @click="removeCurrency" name="delete"/>
-                <Icons v-if="isExistsCurrency" @click="addRate" name="save"/>
-                <Icons v-else @click="updateRate" name="save"/>
+                <Icons @click="removeCurrencyRate" name="delete"/>
+                <Icons v-if="isExistsCurrencyRate" @click="updateRate" name="save"/>
+                <Icons v-else @click="addRate" name="save"/>
               </div>
               <v-btn @click="rateDialog = false"  variant="text" :size="32" class="pt-2 pl-1">
                 <Icons name="close" />
@@ -478,4 +503,5 @@ watch(dialog, newVal => {
 </template>
 
 <style scoped>
+
 </style>
