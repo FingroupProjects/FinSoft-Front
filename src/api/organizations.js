@@ -1,9 +1,9 @@
 import { api, buildParams } from './api.js'
 
 export default {
-  getAll({page = 1, itemsPerPage = 10, sortBy}, search = '') {
-    const params = buildParams(page, itemsPerPage, sortBy, search);
-    return api.get('/organization', { params })
+  get(page = 1, itemsPerPage = 10, sortBy) {
+    const params = buildParams(page, itemsPerPage, sortBy);
+    return api.get('/organization', { params });
   },
   update(id, body) {
     return api.patch(`/organization/${id}`, body)

@@ -13,5 +13,12 @@ export default {
   },
   delete(id) {
     return api.delete(`/cashRegister/${id}`)
+  },
+
+  massDeletion(data) {
+    return api.post('/cashRegister/massDelete', data)
+  },
+  massRestore(data) {
+    return api.post('/cashRegister/massRestore', data)
   }
 }
