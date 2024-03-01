@@ -116,6 +116,7 @@ const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
       showToast(removeMessage, 'red')
       await getCounterparty({page, itemsPerPage, sortBy}, search)
       markedID.value = []
+
     }
   }catch(e){
     console.log(e)

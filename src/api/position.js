@@ -13,5 +13,17 @@ export default {
   },
   delete(id) {
     return api.delete(`/position/${id}`)
+  },
+
+  massDeletion(data) {
+    return api.post(`/position/massDelete/`, data);
+  },
+
+  restore(id) {
+    return api.get(`/position/restore/${id}`)
+  },
+
+  massRestore(data) {
+    return api.post('/position/massRestore', data)
   }
 }
