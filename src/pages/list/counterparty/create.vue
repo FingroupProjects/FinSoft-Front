@@ -1,12 +1,14 @@
 <script setup>
-import { ref, defineProps } from "vue";
+import { ref, defineProps, defineEmits, watch } from "vue";
 import { useRouter } from "vue-router";
 import counterpartyApi from "../../../api/counterparty";
 import showToast from "../../../composables/toast";
 import { add, prevIcon } from "../../../composables/constant/buttons.js";
+import Icons from "@/composables/Icons/Icons.vue";
 
 const router = useRouter();
 const props = defineProps(['isOpen'])
+const emits = defineEmits()
 
 const name = ref("");
 const phone = ref("");
@@ -14,6 +16,22 @@ const address = ref("");
 const email = ref("");
 const roles = ref([]);
 const error_message = ref('')
+
+const dialog = ref(false)
+
+watch(() => dialog.value, (newValue, oldValue) => {
+  if (newValue === false) {
+    emits('toggleIsOpen');
+  }
+});
+
+watch(() => props.isOpen, (newValue, oldValue) => {
+  if (newValue === true || oldValue === true) {
+    dialog.value = newValue;
+  }
+});
+
+
 const CreateCounterparty = async () => {
   try {
     error_message.value = ''
@@ -27,7 +45,6 @@ const CreateCounterparty = async () => {
     if(roles.value.length === 0) {
       error_message.value = 'Выберите хотя бы одну роль!'
     }
-    console.log(body);
     await counterpartyApi.create(body);
     router.push("counterparty");
     showToast("Успешно добавлена", "green");
@@ -44,6 +61,11 @@ const handleCheckboxChange = (index) => {
   }
 };
 
+const isExistsCurrency = ref(true)
+const removeCurrency = () => {
+    console.log('remove')
+}
+
 const rules = {
   required: v => !!v || 'Поле обязательно для заполнения',
   email: v => (/.+@.+\..+/.test(v)) || 'Введите валидную почту',
@@ -54,11 +76,143 @@ const rules = {
 
 <template>
   <div>
-      <v-dialog width="500px" v-model="props.isOpen">
-        <v-card>
-         <span>Добавление</span>
-        </v-card>
-      </v-dialog>
+    <v-dialog max-width="500px" v-model="dialog" class="mt-2 pa-2">
+      <v-card style="border: 2px solid #3AB700" width="500" class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
+        <div class="d-flex justify-space-between align-center mb-2">
+          <span>Добавление</span>
+          <div class="d-flex align-center justify-space-between">
+            <div class="d-flex ga-3 align-center mt-2 me-4">
+              <Icons @click="removeCurrency" name="delete"/>
+              <Icons v-if="isExistsCurrency" @click="removeCurrency" name="save"/>
+              <Icons v-else @click="CreateCounterparty" name="save"/>
+            </div>
+            <v-btn @click="dialog = false"  variant="text" :size="32" class="pt-2 pl-1">
+              <Icons name="close" />
+            </v-btn>
+          </div>
+        </div>
+        <v-form class="d-flex w-100" @submit.prevent="removeCurrency">
+          <v-row class="w-100">
+            <v-col class="d-flex flex-column w-100">
+              <div class="d-flex justify-space-between ga-6">
+              <v-text-field
+                v-model="name"
+                :rules="[rules.required]"
+                color="green"
+                rounded="lg"
+                variant="outlined"
+                class="w-auto text-sm-body-1"
+                density="compact"
+                placeholder="Доллар"
+                label="Название"
+                clear-icon="close"
+                clearable
+              />
+              <span style="color: red; font-weight: bolder" class="mr-4 mt-1">2500,00</span>
+              </div>
+<!--              <v-text-field-->
+<!--                variant="outlined"-->
+<!--                :rules="[rules.required, rules.phone]"-->
+<!--                label="Тел номер"-->
+<!--                v-model.trim="phone"-->
+<!--                density="compact"-->
+<!--                v-mask="'+992#########'"-->
+<!--                rounded="lg"-->
+<!--                color="info"-->
+<!--                :append-inner-icon="phone.length > 1 ? 'cancel' : ''"-->
+<!--                @click:append-inner="phone = ''"-->
+<!--              />-->
+<!--              <v-text-field-->
+<!--                variant="outlined"-->
+<!--                :rules="[rules.required]"-->
+<!--                label="Адрес"-->
+<!--                v-model="address"-->
+<!--                density="compact"-->
+<!--                rounded="lg"-->
+<!--                color="info"-->
+<!--                :append-inner-icon="address.length > 1 ? 'cancel' : ''"-->
+<!--                @click:append-inner="address = ''"-->
+<!--              />-->
+<!--              <v-text-field-->
+<!--                variant="outlined"-->
+<!--                prepend-inner-icon="email"-->
+<!--                :rules="[rules.required, rules.email]"-->
+<!--                label="Почта"-->
+<!--                v-model="email"-->
+<!--                density="compact"-->
+<!--                rounded="lg"-->
+<!--                color="info"-->
+<!--                :append-inner-icon="email.length > 1 ? 'cancel' : ''"-->
+<!--                @click:append-inner="email = ''"-->
+<!--              />-->
+<!--              <v-text-field-->
+<!--                  v-model="symbolRef"-->
+<!--                  :rules="[rules.required]"-->
+<!--                  color="green"-->
+<!--                  rounded="lg"-->
+<!--                  variant="outlined"-->
+<!--                  density="compact"-->
+<!--                  placeholder="USD"-->
+<!--                  v-mask="'AAA'"-->
+<!--                  label="Символный код"-->
+<!--                  clear-icon="close"-->
+<!--                  clearable-->
+<!--              />-->
+<!--              <v-text-field-->
+<!--                  v-model="digitalRef"-->
+<!--                  :rules="[rules.required]"-->
+<!--                  color="green"-->
+<!--                  rounded="lg"-->
+<!--                  density="compact"-->
+<!--                  variant="outlined"-->
+<!--                  placeholder="132"-->
+<!--                  v-mask="'###'"-->
+<!--                  label="Цифровой код"-->
+<!--                  clear-icon="close"-->
+<!--                  clearable-->
+<!--              />-->
+            </v-col>
+          </v-row>
+        </v-form>
+
+<!--        <v-card class="table" style="border: 1px solid #3AB700">-->
+<!--          <div class="d-flex w-100 rounded-t-lg mb-1 align-center " style="border-bottom: 1px solid #3AB700">-->
+<!--            <div class="d-flex justify-end w-100 ga-2 pt-1 me-2" style="padding-top: 4px !important;">-->
+<!--              <Icons @click="removeCurrencyRate" name="delete"/>-->
+<!--              <Icons @click="addDialogRate" name="add"/>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--          <v-data-table-server-->
+<!--              style="height: 38vh"-->
+<!--              items-per-page-text="Элементов на странице:"-->
+<!--              loading-text="Загрузка"-->
+<!--              no-data-text="Нет данных"-->
+<!--              v-model:items-per-page="paginationsRate.per_page"-->
+<!--              :loading="loadingRate"-->
+<!--              :headers="headersRate"-->
+<!--              :items-length="paginationsRate.total || 0"-->
+<!--              :items="rates"-->
+<!--              :item-value="headersRate.title"-->
+<!--              :search="search"-->
+<!--              @update:options="getCurrencyRateData"-->
+<!--              fixed-footer-->
+<!--              hover-->
+<!--          >-->
+<!--            <template v-slot:item="{ item, index }">-->
+<!--              <tr @dblclick="editDialogRate(item)">-->
+<!--                <td class="d-flex align-center">-->
+<!--                  <Icons class="mt-2 me-2" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>-->
+<!--                  <span>{{ index + 1 }}</span>-->
+<!--                </td>-->
+<!--                <td>{{ item.date }}</td>-->
+<!--                <td>{{ item.value }}</td>-->
+<!--              </tr>-->
+<!--            </template>-->
+<!--          </v-data-table-server>-->
+<!--        </v-card>-->
+      </v-card>
+    </v-dialog>
+
 <!--    <v-col>-->
 <!--      <div class="d-flex justify-start mb-2 ">-->
 <!--        <v-btn color="info" class="rounded-circle mb-1" size="40" @click="$router.push({name: 'counterparty'})">-->

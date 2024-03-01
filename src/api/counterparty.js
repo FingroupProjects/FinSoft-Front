@@ -14,13 +14,10 @@ export default {
   getById(id) {
     return api.get(`/counterparty/${id}`);
   },
-  delete(id) {
-    return api.delete(`/counterparty/${id}`);
-  },
   massDeletion(data) {
     return api.post(`/counterparty/massDelete/`, data);
   },
-  restore(id) {
-    return api.get(`/counterparty/restore/${id}`);
+  massRestore(data) {
+    return api.post(`/counterparty/massRestore/`, data);
   },
 };
