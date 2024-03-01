@@ -5,19 +5,20 @@ import showToast from '@/composables/toast'
 import currentDate from "@/composables/date/currentDate.js";
 import currency from '@/api/currency.js'
 import {
- addMessage,
- editMessage,
+  addMessage,
+  editMessage,
   removeMessage,
   warningMessage
 } from "@/composables/constant/buttons.js";
 import Icons from "@/composables/Icons/Icons.vue";
-import binarySearch from "@/composables/binarySearch/binarySearch.js";
 import showDate from "@/composables/date/showDate.js";
+import useLineMarking from "./scripts/lineMarking.js";
+import useCurrencyData from "./requests/currencyData.js";
+import useCurrencyRateData from "./requests/currencyRateData.js";
+
 
 const router = useRouter()
 
-const loading = ref(true)
-const loadingRate = ref(true)
 const dialog = ref(false)
 const rateDialog = ref(false)
 
@@ -25,22 +26,15 @@ const idCurrency = ref(null)
 const idCurrencyRate = ref(null)
 const isExistsCurrency = ref(false)
 const isExistsCurrencyRate = ref(false)
-const markedID = ref(null)
 const currencyInDialogTitle = ref(null)
 const search = ref('')
 const selected = ref([])
-const selectedRate = ref([])
 
 const nameRef = ref(null)
 const symbolRef = ref(null)
 const digitalRef = ref(null)
 const dateRef = ref(null)
 const valueRef = ref(null)
-
-const currencies = ref([])
-const paginations = ref([])
-const rates = ref([])
-const paginationsRate = ref([])
 
 const headers = ref([
   { title: '№', key: 'id', align: 'start'},
@@ -61,44 +55,9 @@ const rules = {
   date: v => (v && /^\d{2}-\d{2}-\d{4}$/.test(v)) || 'Формат даты должен быть DD-MM-YYYY',
 }
 
-const getCurrencyData = async ({ page, itemsPerPage, sortBy, search }) => {
-  loading.value = true
-  try {
-    const { data } = await currency.get({page, itemsPerPage, sortBy}, search)
-    paginations.value = data.result.pagination
-    currencies.value = data.result.data
-    loading.value = false
-  } catch (e) {
-
-  }
-}
-
-const getCurrencyRateData = async ({ page, itemsPerPage, sortBy, search}) => {
-
-  if (idCurrency.value === 0) {
-    loadingRate.value = false
-    return
-  }
-
-  try {
-    const response = await currency.show(idCurrency.value)
-    const { data } = await currency.showRate(idCurrency.value, { page, itemsPerPage, sortBy }, search)
-    rates.value = data.result.data.map(item =>  ({
-      ...item,
-      date: showDate(item.date),
-      name: response.data.result.name,
-      digital_code: response.data.result.digital_code
-    })) || [];
-
-    paginationsRate.value = data.result.pagination || []
-
-  } catch (e) {
-
-  } finally {
-    loadingRate.value = false
-  }
-}
-
+const { lineMarking, markedID } = useLineMarking()
+const { loading, currencies, paginations, getCurrencyData } = useCurrencyData()
+const { loadingRate, rates, paginationsRate, getCurrencyRateData } = useCurrencyRateData()
 
 
 const addCurrency = async ({ page, itemsPerPage, sortBy }) => {
@@ -118,7 +77,7 @@ const addCurrency = async ({ page, itemsPerPage, sortBy }) => {
   }
 }
 
-const update = async ({page, itemsPerPage, sortBy}) => {
+const update = async ({page, itemsPerPage, sortBy, search}) => {
 
   const body = {
     name: nameRef.value,
@@ -129,7 +88,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
   try {
     const { status } = await currency.update(idCurrency.value, body)
     if (status === 200) {
-      await getCurrencyData({page, itemsPerPage, sortBy})
+      await getCurrencyData({page, itemsPerPage, sortBy, search})
       showToast(editMessage)
     }
   } catch (e) {
@@ -161,18 +120,11 @@ const openDialog = (item) => {
     isExistsCurrency.value = false
   } else {
     idCurrency.value = item.id
-
-    const index = binarySearch(currencies.value, item.id)
-
-    if (index !== 1) {
-      isExistsCurrency.value = true
-      nameRef.value = item.name
-      symbolRef.value = item.symbol_code
-      digitalRef.value = item.digital_code
-      currencyInDialogTitle.value = nameRef.value
-    } else {
-
-    }
+    isExistsCurrency.value = true
+    nameRef.value = item.name
+    symbolRef.value = item.symbol_code
+    digitalRef.value = item.digital_code
+    currencyInDialogTitle.value = nameRef.value
   }
 
 }
@@ -185,7 +137,7 @@ const addRate = async ({ page, itemsPerPage, sortBy }) => {
 
   try {
     await currency.addRate(idCurrency.value, body)
-    await getCurrencyRateData({ page, itemsPerPage, sortBy })
+    await getCurrencyRateData({ page, itemsPerPage, sortBy }, idCurrency.value)
     await getCurrencyData({ page, itemsPerPage, sortBy })
     showToast(addMessage)
     valueRef.value = null
@@ -207,7 +159,7 @@ const updateRate = async ({page, itemsPerPage, sortBy}) => {
     const {status} = await currency.updateRate(idCurrencyRate.value, body)
 
     if (status === 200) {
-      await getCurrencyRateData({page, itemsPerPage, sortBy})
+      await getCurrencyRateData({page, itemsPerPage, sortBy}, idCurrency.value)
       await getCurrencyData({ page, itemsPerPage, sortBy })
       showToast(editMessage)
       rateDialog.value = false
@@ -235,7 +187,7 @@ const removeCurrencyRate = async ({page, itemsPerPage, sortBy}) => {
     const { data } = await currency.removeRate(idCurrencyRate.value)
     if (data.result) {
       showToast(removeMessage, 'red')
-      await getCurrencyRateData({page, itemsPerPage, sortBy})
+      await getCurrencyRateData({page, itemsPerPage, sortBy}, idCurrency.value)
     }
   } catch (e) {
 
@@ -258,11 +210,8 @@ const addBasedOnCurrency = () => {
   })
 }
 
-const lineMarking = (item) => {
-  markedID.value = item.id;
-}
 
-onMounted(() => {
+onMounted(async () => {
   dateRef.value = currentDate()
 })
 
@@ -436,7 +385,7 @@ watch(rateDialog, newVal => {
                 :items="rates"
                 :item-value="headersRate.title"
                 :search="search"
-                @update:options="getCurrencyRateData"
+                @update:options="getCurrencyRateData({}, idCurrency)"
                 fixed-footer
                 hover
             >
@@ -484,19 +433,19 @@ watch(rateDialog, newVal => {
                     variant="outlined"
                     density="compact"
                     clear-icon="close"
-                    clearable
                 />
                 <v-text-field
                     v-model="valueRef"
                     :rules="[rules.required]"
                     type="number"
-                    hide-spin-buttons
                     placeholder="1.0000"
-                    label="Значение"
+                    label="Курс"
                     rounded="lg"
                     color="green"
                     variant="outlined"
                     density="compact"
+                    clear-icon="close"
+                    hide-spin-buttons
                     clearable
                 />
               </v-col>
