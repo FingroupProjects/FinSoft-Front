@@ -15,4 +15,10 @@ export default {
   remove(id) {
     return api.delete(`/organization/${id}`)
   },
+  restore(id) {
+    return api.get(`/organization/restore/${id}`);
+  },
+  massDeletion(data) {
+    return api.post(`/organization/massDelete/`, data);
+  },
 }
