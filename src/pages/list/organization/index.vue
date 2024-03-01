@@ -5,9 +5,11 @@ import {
    addMessage,
    editMessage,
    removeMessage,
-   warningMessage} from '../../../composables/constant/buttons.js'
+   warningMessage,
+   restoreMessage} from '../../../composables/constant/buttons.js'
 import showToast from "../../../composables/toast";
 import binarySearch from "../../../composables/binarySearch/binarySearch.js";
+import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import Icons from "../../../composables/Icons/Icons.vue";
 
 
@@ -16,8 +18,10 @@ const updateDialog = ref(false)
 const deleteDialog = ref(false)
 const loading = ref(true)
 const dialog = ref(false)
-const markedID = ref(null)
+const markedID = ref([])
+const markedItem = ref([])
 const valueRef = ref(null)
+const hoveredRowIndex = ref(null)
 const isExistsOrganization = ref(false)
 const organizationInDialogTitle = ref(null)
 
@@ -36,13 +40,17 @@ const rules = {
 const headers = ref([
   { title: '№', key: 'id'},
   { title: 'Наименование', key: 'name'},
-  { key: 'icons', align:'center', sortable: false},
 ])
 
 const lineMarking = (item) => {
-  markedID.value = item.id;
+  const index = markedID.value.indexOf(item.id);
+  if (index !== -1) {
+    markedID.value.splice(index, 1);
+  } else {
+    markedID.value.push(item.id);
+  }
+  markedItem.value = item;
 }
-
 
 
 const getOrganizationData = async ({ page, itemsPerPage, sortBy, search }) => {
@@ -73,7 +81,6 @@ const openDialog = (item) => {
     } else {
     }
   }
-
 }
 
 const addOrganization = async ({ page, itemsPerPage, sortBy }) => {
@@ -90,6 +97,51 @@ if (res.status === 201) {
 }
 }
 
+const compute = ({ page, itemsPerPage, sortBy, search }) => {
+  if(markedID.value.length === 1 && markedItem.value.deleted_at === null) {
+    return removeOrganization({page, itemsPerPage, sortBy, search})
+  }
+  else if(markedID.value.length === 1 && markedItem.value.deleted_at) {
+    return restoreCounterparty({ page, itemsPerPage, sortBy })
+  }
+  else{
+    return massDel({ page, itemsPerPage, sortBy, search })
+
+  }
+}
+
+const restoreCounterparty = async ({ page, itemsPerPage, sortBy }) => {
+  try{
+    const { status } = await  organization.restore(markedID.value)
+    if (status === 200) {
+      showToast(restoreMessage, 'green')
+      await getOrganizationData({ page, itemsPerPage, sortBy })
+      markedID.value = []
+    }
+  }catch (e) {
+    console.log(e)
+  }
+}
+
+const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
+  const body = {
+    ids: markedID.value
+  }
+  try{
+    const { status } = await organization.massDeletion(body)
+    if (status === 200) {
+      showToast(removeMessage, 'red')
+      await getOrganizationData({page, itemsPerPage, sortBy}, search)
+      markedID.value = []
+    }
+  }catch(e){
+    console.log(e)
+  }
+}
+
+const handleCheckboxClick = function (item) {
+  lineMarking(item)
+}
 
 const update = async ({page, itemsPerPage, sortBy}) => {
 
@@ -148,7 +200,7 @@ watch(dialog, newVal => {
           <div class="d-flex ga-2 mt-1 me-3">
             <Icons @click="openDialog(0)" name="add"/>
             <Icons name="copy"/>
-            <Icons @click="removeOrganization" name="delete"/>
+            <Icons @click="compute({ page, itemsPerPage, sortBy, search })" name="delete"/>
           </div>
 
           <div class="w-100">
@@ -188,17 +240,24 @@ watch(dialog, newVal => {
             hover
         >
         
-        <template v-slot:item="{ item, index }">
-          <tr @click="lineMarking(item)" @dblclick="openDialog(item)" :class="{'bg-grey-lighten-2' : markedID === item.id}">
-            <td class="d-flex  align-center">
-              <Icons class="mt-2 me-2" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
-              <span>{{ index + 1 }}</span>
-            </td>
-            <td>
-              <span>{{ item.name }}</span>
-            </td>
-          </tr>
-        </template>
+        <template v-slot:item="{ item, index }" >
+            <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @dblclick="openDialog(item)" @click="lineMarking(item)" :class="{'bg-grey-lighten-2': markedID.includes(item.id)}">
+              <td class="">
+                <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
+                  <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)" @change="handleCheckboxClick(item)">
+                    <span>{{ index + 1 }}</span>
+                  </CustomCheckbox>
+                </template>
+                <template v-else>
+                  <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
+                  <span>{{ index + 1 }}</span>
+                </template>
+              </td>
+              <td>
+                <span>{{ item.name }}</span>
+              </td>
+            </tr>
+          </template>
       </v-data-table-server>
       </v-card>
       </v-col>
@@ -208,7 +267,7 @@ watch(dialog, newVal => {
       <v-dialog class="mt-2 pa-2"  v-model="dialog">
         <v-card style="border: 2px solid #3AB700" min-width="300" class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
           <div class="d-flex justify-space-between align-center mb-2">
-            <span class="">{{ isExistsOrganization ? organizationInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
+            <span class="">{{ isExistsOrganization ? organizationInDialogTitle + '' : 'Добавление' }}</span>
              <div class="d-flex align-center justify-space-between">
               <div class="d-flex ga-3 align-center mt-2 me-4">
                 <Icons @click="removeOrganization" name="delete"/>
@@ -216,7 +275,7 @@ watch(dialog, newVal => {
                 <Icons v-else @click="addOrganization" name="save"/>
               </div>
               <v-btn @click="dialog = false"  variant="text" :size="32" class="pt-2 pl-1">
-                <Icons name="close" />
+                <Icons name="close"/>
               </v-btn>
             </div>
           </div>
