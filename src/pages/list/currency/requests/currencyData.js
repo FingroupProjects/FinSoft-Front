@@ -24,5 +24,5 @@ export default function useCurrencyData() {
         currencies,
         paginations,
         getCurrencyData,
-    };
+    }
 }
