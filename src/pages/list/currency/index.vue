@@ -55,6 +55,7 @@ const rules = {
   date: v => (v && /^\d{2}-\d{2}-\d{4}$/.test(v)) || 'Формат даты должен быть DD-MM-YYYY',
 }
 
+
 const { lineMarking, markedID } = useLineMarking()
 const { loading, currencies, paginations, getCurrencyData } = useCurrencyData()
 const { loadingRate, rates, paginationsRate, getCurrencyRateData } = useCurrencyRateData()

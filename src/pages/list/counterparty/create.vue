@@ -1,11 +1,12 @@
 <script setup>
-import { ref } from "vue";
+import { ref, defineProps } from "vue";
 import { useRouter } from "vue-router";
 import counterpartyApi from "../../../api/counterparty";
 import showToast from "../../../composables/toast";
 import { add, prevIcon } from "../../../composables/constant/buttons.js";
 
 const router = useRouter();
+const props = defineProps(['isOpen'])
 
 const name = ref("");
 const phone = ref("");
@@ -53,76 +54,81 @@ const rules = {
 
 <template>
   <div>
-    <v-col>
-      <div class="d-flex justify-start mb-2 ">
-        <v-btn color="info" class="rounded-circle mb-1" size="40" @click="$router.push({name: 'counterparty'})">
-          <v-icon color="white" size="25" >{{ prevIcon }}</v-icon>
-        </v-btn>
-      </div>
-      <v-card class="block">
-        <v-form @submit.prevent="CreateCounterparty">
-          <div class="d-flex ga-5">
-            <v-text-field
-              variant="outlined"
-              :rules="[rules.required]"
-              v-model="name"
-              density="compact"
-              label="Наименование"
-              rounded="lg"
-              color="info"
-              :append-inner-icon="name.length > 1 ? 'cancel' : ''"
-              @click:append-inner="name = ''"
-            />
-            <v-text-field
-              variant="outlined"
-              :rules="[rules.required, rules.phone]"
-              label="Тел номер"
-              v-model.trim="phone"
-              density="compact"
-              v-mask="'+992#########'"
-              rounded="lg"
-              color="info"
-              :append-inner-icon="phone.length > 1 ? 'cancel' : ''"
-              @click:append-inner="phone = ''"
-            />
-            <v-text-field
-              variant="outlined"
-              :rules="[rules.required]"
-              label="Адрес"
-              v-model="address"
-              density="compact"
-              rounded="lg"
-              color="info"
-              :append-inner-icon="address.length > 1 ? 'cancel' : ''"
-              @click:append-inner="address = ''"
-            />
-            <v-text-field
-              variant="outlined"
-              prepend-inner-icon="email"
-              :rules="[rules.required, rules.email]"
-              label="Почта"
-              v-model="email"
-              density="compact"
-              rounded="lg"
-              color="info"
-              :append-inner-icon="email.length > 1 ? 'cancel' : ''"
-              @click:append-inner="email = ''"
-            />
-          </div>
-          <div class="d-flex ga-16 flex-wrap">
-            <v-switch label="Клиент" base-color="info" color="info" @change="handleCheckboxChange(0)" />
-            <v-switch label="Поставщик" base-color="info" color="info" @change="handleCheckboxChange(1)" />
-            <v-switch label="Прочие отношения" base-color="info" color="info" @change="handleCheckboxChange(2)" />
-          </div>
-          <div class="error_message">
-            {{ error_message }}
-          </div>
-          <div class="d-flex justify-end">
-            <v-btn rounded="lg" color="info" type="submit">{{ add }}</v-btn>
-          </div>
-        </v-form>
-      </v-card>
-    </v-col>
+      <v-dialog width="500px" v-model="props.isOpen">
+        <v-card>
+         <span>Добавление</span>
+        </v-card>
+      </v-dialog>
+<!--    <v-col>-->
+<!--      <div class="d-flex justify-start mb-2 ">-->
+<!--        <v-btn color="info" class="rounded-circle mb-1" size="40" @click="$router.push({name: 'counterparty'})">-->
+<!--          <v-icon color="white" size="25" >{{ prevIcon }}</v-icon>-->
+<!--        </v-btn>-->
+<!--      </div>-->
+<!--      <v-card class="block">-->
+<!--        <v-form @submit.prevent="CreateCounterparty">-->
+<!--          <div class="d-flex ga-5">-->
+<!--            <v-text-field-->
+<!--              variant="outlined"-->
+<!--              :rules="[rules.required]"-->
+<!--              v-model="name"-->
+<!--              density="compact"-->
+<!--              label="Наименование"-->
+<!--              rounded="lg"-->
+<!--              color="info"-->
+<!--              :append-inner-icon="name.length > 1 ? 'cancel' : ''"-->
+<!--              @click:append-inner="name = ''"-->
+<!--            />-->
+<!--            <v-text-field-->
+<!--              variant="outlined"-->
+<!--              :rules="[rules.required, rules.phone]"-->
+<!--              label="Тел номер"-->
+<!--              v-model.trim="phone"-->
+<!--              density="compact"-->
+<!--              v-mask="'+992#########'"-->
+<!--              rounded="lg"-->
+<!--              color="info"-->
+<!--              :append-inner-icon="phone.length > 1 ? 'cancel' : ''"-->
+<!--              @click:append-inner="phone = ''"-->
+<!--            />-->
+<!--            <v-text-field-->
+<!--              variant="outlined"-->
+<!--              :rules="[rules.required]"-->
+<!--              label="Адрес"-->
+<!--              v-model="address"-->
+<!--              density="compact"-->
+<!--              rounded="lg"-->
+<!--              color="info"-->
+<!--              :append-inner-icon="address.length > 1 ? 'cancel' : ''"-->
+<!--              @click:append-inner="address = ''"-->
+<!--            />-->
+<!--            <v-text-field-->
+<!--              variant="outlined"-->
+<!--              prepend-inner-icon="email"-->
+<!--              :rules="[rules.required, rules.email]"-->
+<!--              label="Почта"-->
+<!--              v-model="email"-->
+<!--              density="compact"-->
+<!--              rounded="lg"-->
+<!--              color="info"-->
+<!--              :append-inner-icon="email.length > 1 ? 'cancel' : ''"-->
+<!--              @click:append-inner="email = ''"-->
+<!--            />-->
+<!--          </div>-->
+<!--          <div class="d-flex ga-16 flex-wrap">-->
+<!--            <v-switch label="Клиент" base-color="info" color="info" @change="handleCheckboxChange(0)" />-->
+<!--            <v-switch label="Поставщик" base-color="info" color="info" @change="handleCheckboxChange(1)" />-->
+<!--            <v-switch label="Прочие отношения" base-color="info" color="info" @change="handleCheckboxChange(2)" />-->
+<!--          </div>-->
+<!--          <div class="error_message">-->
+<!--            {{ error_message }}-->
+<!--          </div>-->
+<!--          <div class="d-flex justify-end">-->
+<!--            <v-btn rounded="lg" color="info" type="submit">{{ add }}</v-btn>-->
+<!--          </div>-->
+<!--        </v-form>-->
+<!--      </v-card>-->
+<!--    </v-col>-->
   </div>
 </template>
 

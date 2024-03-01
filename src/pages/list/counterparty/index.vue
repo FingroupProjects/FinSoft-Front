@@ -7,10 +7,13 @@ import {remove, cancel, removeMessage, warningMessage, restoreMessage} from "../
 import showToast from '../../../composables/toast'
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
+import createCounterparty from "./create.vue"
 
 const router = useRouter();
 
 const loading = ref(true);
+const isCreate = ref(false)
+
 const hoveredRowIndex = ref(null)
 
 const markedID = ref([])
@@ -145,7 +148,7 @@ const restoreCounterparty = async ({ page, itemsPerPage, sortBy }) => {
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons @click="openDialog(0)" name="add"/>
+              <Icons @click="isCreate = true" name="add"/>
               <Icons name="copy"/>
               <Icons @click="compute({ page, itemsPerPage, sortBy, search })" name="delete"/>
             </div>
@@ -191,14 +194,14 @@ const restoreCounterparty = async ({ page, itemsPerPage, sortBy }) => {
         >
           <template v-slot:item="{ item, index }">
             <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)" :class="{'bg-grey-lighten-2': markedID.includes(item.id)}">
-              <td class="d-flex align-center">
+              <td class="">
                 <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
                   <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)" @change="handleCheckboxClick(item)">
                     <span>{{ index + 1 }}</span>
                   </CustomCheckbox>
                 </template>
                 <template v-else>
-                  <Icons class="mt-2 me-2" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
+                  <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
                   <span>{{ index + 1 }}</span>
                 </template>
               </td>
@@ -224,9 +227,9 @@ const restoreCounterparty = async ({ page, itemsPerPage, sortBy }) => {
           </template>
 
         </v-data-table-server>
-        {{ markedID }}
-      </v-card>
 
+      </v-card>
+        <create-counterparty :isOpen="isCreate"/>
     </v-col>
   </div>
 </template>
