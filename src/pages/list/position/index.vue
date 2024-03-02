@@ -9,7 +9,8 @@ import {
   addMessage,
   editMessage,
   removeMessage,
-  warningMessage
+  warningMessage,
+  selectOneItemMessage
 } from "@/composables/constant/buttons.js";
 import Icons from "@/composables/Icons/Icons.vue";
 import binarySearch from "@/composables/binarySearch/binarySearch.js";
@@ -82,6 +83,8 @@ const addPosition = async ({ page, itemsPerPage, sortBy }) => {
     valueRef.value = null
     idPosition.value = res.data.result.id
     dialog.value = false
+    markedID.value = []
+    markedItem.value = []
   }
 }
 
@@ -203,30 +206,24 @@ const openDialog = (item) => {
 
 
 const addBasedOnPosition = () => {
-  if (markedID.value === null) return showToast(warningMessage, 'warning')
+  if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
+  if (markedID.value.length > 1) return showToast(selectOneItemMessage, 'warning')
 
   dialog.value = true
 
   positions.value.forEach(item => {
-    if (markedID.value === item.id) {
+    if (markedID.value[0] === item.id) {
       nameRef.value = item.name
     }
   })
 }
 
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
-
-  if(markedID.value.length === 1 && markedItem.value.deleted_at === null) {
-    return destroy({page, itemsPerPage, sortBy, search})
+  if(markedItem.value.deleted_at) {
+    return massRestore({ page, itemsPerPage, sortBy })
   }
-  else if(markedID.value.length === 1 && markedItem.value.deleted_at) {
-    return restore({ page, itemsPerPage, sortBy })
-  }
-  else if(markedID.value.length > 1) {
+  else{
     return massDel({ page, itemsPerPage, sortBy, search })
-  }
-  else {
-    showToast(warningMessage, 'warning')
   }
 }
 
@@ -306,7 +303,7 @@ watch(dialog, newVal => {
             hover
         >
           <template v-slot:item="{ item, index }">
-            <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)" :class="{'bg-grey-lighten-2': markedID.includes(item.id) }">
+            <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)" :class="{'bg-grey-lighten-2': markedID.includes(item.id) }" @dblclick="openDialog(item)">
               <td class="">
                 <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
                   <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)" @change="handleCheckboxClick(item)">
@@ -334,7 +331,7 @@ watch(dialog, newVal => {
               <span>{{ isExistsPosition ? positionInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons @click="destroy" name="delete"/>
+                  <Icons  v-if="isExistsPosition"  @click="compute" name="delete"/>
                   <Icons v-if="isExistsPosition" @click="update" name="save"/>
                   <Icons v-else @click="addPosition" name="save"/>
                 </div>
