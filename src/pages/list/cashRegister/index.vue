@@ -270,7 +270,7 @@ const handleCheckboxClick = function (item) {
 }
 
 const openDialog = (item) => {
-  if(markedID.value.length > 1) {
+  if(markedID.value.length > 0) {
     return showToast(selectOneItemMessage, 'warning');
   }
 
@@ -310,14 +310,15 @@ const addBasedOncashRegister = () => {
       nameRef.value = item.name
       currencyAdd.value = item.currency.id
       organizationAdd.value = item.organization.id
-      employeeAdd.value = item.responsible_person.id
+      employeeAdd.value = item.responsiblePerson.id
     }
   })
-
 
 }
 
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
+  if(markedID.value.length === 0) return showToast(warningMessage, 'warning')
+
   if(markedItem.value.deleted_at) {
     return massRestore({ page, itemsPerPage, sortBy })
   }
@@ -474,7 +475,7 @@ watch(dialog, newVal => {
                       v-model="nameRef"
                       :rules="[rules.required]"
                       color="green"
-                      rounded="lg"
+                      rounded="md"
                       variant="outlined"
                       class="w-auto text-sm-body-1"
                       density="compact"

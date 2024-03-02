@@ -182,6 +182,10 @@ const handleCheckboxClick = function (item) {
 }
 
 const openDialog = (item) => {
+  if(markedID.value.length > 0) {
+    return showToast(selectOneItemMessage, 'warning');
+  }
+
   dialog.value = true
   console.log(dialog.value)
   if (item === 0) {
