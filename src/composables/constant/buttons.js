@@ -16,4 +16,5 @@ export const restoreMessage = 'Успешно востановлено!'
 export const warningMessage = 'Выберите запись!'
 export const selectOneItemMessage = 'Выберите одну запись!'
 export const ErrorSelectMessage = 'Выберите одинаковые записи!'
+export const firstRestoreRecordMessage = 'Восстановите чтобы просмотреть!'
 

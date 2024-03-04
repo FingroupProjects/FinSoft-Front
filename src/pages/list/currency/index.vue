@@ -6,9 +6,8 @@ import currentDate from "../../../composables/date/currentDate.js";
 import currency from '../../../api/currency.js'
 import {
   addMessage,
-  editMessage,
-  removeMessage, restoreMessage,
-  warningMessage
+  editMessage, ErrorSelectMessage, firstRestoreRecordMessage,
+  removeMessage, restoreMessage, selectOneItemMessage,
 } from "../../../composables/constant/buttons.js";
 import Icons from "../../../composables/Icons/Icons.vue";
 import showDate from "../../../composables/date/showDate.js";
@@ -27,15 +26,21 @@ const isExistsCurrencyRate = ref(false)
 const idCurrency = ref(null)
 const currencyInDialogTitle = ref(null)
 const search = ref('')
-const hoveredRowIndex = ref(null)
 
+const hoveredRowIndex = ref(null)
+const markedItem = ref(null)
 const markedID = ref([])
+
+const hoveredRowIndexRate = ref(null)
+const markedItemRate = ref(null)
+const markedIDRate = ref([])
+
+
 const nameRef = ref(null)
 const symbolRef = ref(null)
 const digitalRef = ref(null)
 const dateRef = ref(null)
 const valueRef = ref(null)
-const markedItem = ref(null)
 
 const rates = ref([])
 const currencies = ref([]);
@@ -67,6 +72,7 @@ const getCurrencyData = async ({ page, itemsPerPage, sortBy, search }) => {
     const { data } = await currency.get({ page, itemsPerPage, sortBy }, search);
     paginations.value = data.result.pagination;
     currencies.value = data.result.data;
+    markedID.value = []
   } catch (e) {
 
   } finally {
@@ -91,7 +97,7 @@ const getCurrencyRateData = async ({ page, itemsPerPage, sortBy, search}, idCurr
     })) || [];
 
     paginationsRate.value = data.result.pagination || []
-
+    markedIDRate.value = []
   } catch (e) {
 
   } finally {
@@ -163,11 +169,16 @@ const restoreCurrency = async ({page, itemsPerPage, sortBy}) => {
 }
 
 const openDialog = (item) => {
+
   dialog.value = true
   if (item === 0) {
     idCurrency.value = 0
     isExistsCurrency.value = false
   } else {
+    if (item.deleted_at !== null) {
+      showToast(firstRestoreRecordMessage, 'red')
+      return
+    }
     idCurrency.value = item.id
     isExistsCurrency.value = true
     nameRef.value = item.name
@@ -231,27 +242,43 @@ const addDialogRate = () => {
   isExistsCurrencyRate.value = false
 }
 
+
 const removeCurrencyRate = async ({page, itemsPerPage, sortBy}) => {
   try {
-    const { data } = await currency.removeRate(idCurrencyRate.value)
-    if (data.result) {
+    console.log(markedIDRate.value)
+    const {status} = await currency.removeRate({ids: markedIDRate.value})
+    if (status === 200) {
       showToast(removeMessage, 'red')
       await getCurrencyRateData({page, itemsPerPage, sortBy}, idCurrency.value)
+      markedIDRate.value = []
     }
   } catch (e) {
+    console.log(e)
+  }
+}
 
-  } finally {
-    rateDialog.value = false
+const restoreCurrencyRate = async ({page, itemsPerPage, sortBy}) => {
+  try {
+    console.log(markedIDRate.value)
+    const {status} = await currency.restoreRate({ids: markedIDRate.value})
+    if (status === 200) {
+      showToast(restoreMessage)
+      await getCurrencyRateData({page, itemsPerPage, sortBy}, idCurrency.value)
+      markedIDRate.value = []
+    }
+  } catch (e) {
+    console.log(e)
   }
 }
 
 const addBasedOnCurrency = () => {
-  if (markedID.value === null) return showToast(warningMessage, 'warning')
-
+  if (markedID.value.length !== 1) return showToast(selectOneItemMessage, 'warning')
+  console.log(markedID.value.length)
   dialog.value = true
 
   currencies.value.forEach(item => {
-    if (markedID.value === item.id) {
+    if (markedID.value[0] === item.id) {
+      idCurrency.value = item.id
       nameRef.value = item.name
       symbolRef.value = item.symbol_code
       digitalRef.value = item.digital_code
@@ -260,6 +287,22 @@ const addBasedOnCurrency = () => {
 }
 
 const lineMarking = (item) => {
+  if (markedID.value.length > 0) {
+    const firstMarkedItem = currencies.value.find(el => el.id === markedID.value[0]);
+    if (firstMarkedItem && firstMarkedItem.deleted_at) {
+      if (item.deleted_at === null) {
+        showToast(ErrorSelectMessage, 'warning')
+        return;
+      }
+    }
+    if (firstMarkedItem && firstMarkedItem.deleted_at === null) {
+      if (item.deleted_at !== null) {
+        showToast(ErrorSelectMessage, 'warning')
+        return;
+      }
+    }
+  }
+
   const index = markedID.value.indexOf(item.id);
   if (index !== -1) {
     markedID.value.splice(index, 1);
@@ -273,16 +316,52 @@ const handleCheckboxClick = (item) => {
   lineMarking(item)
 }
 
-const compute = ({ page, itemsPerPage, sortBy, search }) => {
-  if(markedItem.value.deleted_at === null) {
-    return restoreCurrency({ page, itemsPerPage, sortBy })
-  }
-  else{
-    return removeCurrency({ page, itemsPerPage, sortBy, search })
+const compute = ({page, itemsPerPage, sortBy, search}) => {
+  if (markedItem.value.deleted_at !== null) {
+    return restoreCurrency({page, itemsPerPage, sortBy})
+  } else {
+    return removeCurrency({page, itemsPerPage, sortBy, search})
   }
 }
 
 
+const lineMarkingRate = (item) => {
+  if (markedIDRate.value.length > 0) {
+    const firstMarkedItem = rates.value.find(el => el.id === markedIDRate.value[0]);
+    if (firstMarkedItem && firstMarkedItem.deleted_at) {
+      if (item.deleted_at === null) {
+        showToast(ErrorSelectMessage, 'warning')
+        return;
+      }
+    }
+    if (firstMarkedItem && firstMarkedItem.deleted_at === null) {
+      if (item.deleted_at !== null) {
+        showToast(ErrorSelectMessage, 'warning')
+        return;
+      }
+    }
+  }
+
+  const index = markedIDRate.value.indexOf(item.id);
+  if (index !== -1) {
+    markedIDRate.value.splice(index, 1);
+  } else {
+    markedIDRate.value.push(item.id);
+  }
+  markedItemRate.value = item;
+}
+
+const handleCheckboxClickRate = (item) => {
+  lineMarkingRate(item)
+}
+
+const computeRate = ({page, itemsPerPage, sortBy}) => {
+  if (markedItemRate.value.deleted_at !== null) {
+    return restoreCurrencyRate({page, itemsPerPage, sortBy})
+  } else {
+    return removeCurrencyRate({page, itemsPerPage, sortBy})
+  }
+}
 
 onMounted(async () => {
   dateRef.value = currentDate()
@@ -393,7 +472,7 @@ watch(rateDialog, newVal => {
             <span>{{ isExistsCurrency ? currencyInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
             <div class="d-flex align-center justify-space-between">
               <div class="d-flex ga-3 align-center mt-2 me-4">
-                <Icons v-show="isExistsCurrency" @click="removeCurrency" name="delete"/>
+                <Icons v-show="isExistsCurrency" @click="compute" name="delete"/>
                 <Icons v-if="isExistsCurrency" @click="update" name="save"/>
                 <Icons v-else @click="addCurrency" name="save"/>
               </div>
@@ -451,7 +530,7 @@ watch(rateDialog, newVal => {
           <v-card class="table" style="border: 1px solid #3AB700">
             <div class="d-flex w-100 rounded-t-lg mb-1 align-center " style="border-bottom: 1px solid #3AB700">
               <div class="d-flex justify-end w-100 ga-2 pt-1 me-2" style="padding-top: 4px !important;">
-                <Icons @click="removeCurrencyRate" name="delete"/>
+                <Icons @click="computeRate" name="delete"/>
                 <Icons @click="addDialogRate" name="add"/>
               </div>
             </div>
@@ -472,10 +551,19 @@ watch(rateDialog, newVal => {
                 hover
             >
               <template v-slot:item="{ item, index }">
-                <tr @dblclick="editDialogRate(item)">
-                  <td class="d-flex align-center">
-                    <Icons class="mt-2 me-2" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
-                    <span>{{ index + 1 }}</span>
+                <tr @mouseenter="hoveredRowIndexRate = index" @mouseleave="hoveredRowIndexRate = null" @dblclick="editDialogRate(item)" @click="lineMarkingRate(item)" :class="{'bg-grey-lighten-2': markedIDRate.includes(item.id)}">
+                  <td>
+                    <template v-if="hoveredRowIndexRate === index || markedIDRate.includes(item.id)">
+                      <CustomCheckbox v-model="markedIDRate" :checked="markedIDRate.includes(item.id)" @change="handleCheckboxClickRate(item)">
+                        <span>{{ index + 1 }}</span>
+                      </CustomCheckbox>
+                    </template>
+                    <template v-else>
+                      <div>
+                        <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
+                        <span>{{ index + 1 }}</span>
+                      </div>
+                    </template>
                   </td>
                   <td>{{ item.date }}</td>
                   <td>{{ item.value }}</td>
@@ -493,7 +581,7 @@ watch(rateDialog, newVal => {
             <span class="pl-5">{{ isExistsCurrencyRate ? 'Изменить' : 'Добавить' }} курс</span>
             <div class="d-flex align-center justify-space-between">
               <div class="d-flex ga-3 align-center mt-2 me-4">
-                <Icons @click="removeCurrencyRate" name="delete"/>
+                <Icons v-show="isExistsCurrencyRate" @click="removeCurrencyRate" name="delete"/>
                 <Icons v-if="isExistsCurrencyRate" @click="updateRate" name="save"/>
                 <Icons v-else @click="addRate" name="save"/>
               </div>
