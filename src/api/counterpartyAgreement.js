@@ -23,4 +23,10 @@ export default {
       params,
     });
   },
+  massDeletion(data) {
+    return api.post(`/cpAgreement/massDelete/`, data);
+  },
+  massRestore(data) {
+    return api.post(`/cpAgreement/massRestore/`, data);
+  },
 };

@@ -6,7 +6,7 @@ import showDate from "../../../composables/date/showDate"
 
 const router = useRouter()
 
-const loading = ref(true)
+                                                                                                                                                                                                                                                                                                                                                                                                                                          const loading = ref(true)
 
 const result = ref([])
 const pagination = ref([])
@@ -53,7 +53,7 @@ const pushToRename = (item) => {
 <template>
   <div>
     <v-col class="d-flex flex-column ga-5">
-      <div class="d-flex w-100 justify-space-between">
+      <div class="d-flex justify-space-between">
         <v-btn rounded="lg" variant="outlined" color="info" @click.prevent="$router.push('/adminPanel')">Назад</v-btn>
         <v-btn rounded="lg" color="info" @click="$router.push('createCounterpartyAgreement')">Добавить</v-btn>
       </div>

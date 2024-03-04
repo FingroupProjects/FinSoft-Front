@@ -14,8 +14,11 @@ export default {
     const params = buildParams(page, itemsPerPage, sortBy, search);
     return api.get('/currency', { params });
   },
-  remove(id) {
-    return api.delete(`/currency/${id}`)
+  remove(ids) {
+    return api.post(`/currency/massDelete`, ids)
+  },
+  restore(ids) {
+    return api.post(`/currency/massRestore`, ids)
   },
   addRate(id, body) {
     return api.post(`/currencyRate/add/${id}`, body)

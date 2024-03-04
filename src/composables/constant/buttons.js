@@ -14,4 +14,6 @@ export const editMessage = 'Успешно обновлено!'
 export const removeMessage = 'Успешно удалено!'
 export const restoreMessage = 'Успешно востановлено!'
 export const warningMessage = 'Выберите запись!'
+export const selectOneItemMessage = 'Выберите одну запись!'
+export const ErrorSelectMessage = 'Выберите одинаковые записи!'
 
