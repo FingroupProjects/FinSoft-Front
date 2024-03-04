@@ -11,7 +11,9 @@ import {
   addMessage,
   editMessage,
   removeMessage,
-  warningMessage
+  warningMessage,
+  ErrorSelectMessage,
+  selectOneItemMessage
 } from "@/composables/constant/buttons.js";
 import Icons from "@/composables/Icons/Icons.vue";
 import binarySearch from "@/composables/binarySearch/binarySearch.js";
@@ -61,7 +63,7 @@ const headers = ref([
   {title: 'Наименование', key: 'name'},
   {title: 'Организация', key: 'organization.name'},
   {title: 'Валюта', key: 'currency.name'},
-  {title: 'Ответственное лицо', key: 'user.name'}
+  {title: 'Ответственное лицо', key: 'responsiblePerson.name'}
 ])
 
 const rules = {
@@ -85,24 +87,30 @@ const getcashRegisterData = async ({page, itemsPerPage, sortBy, search}) => {
 
 const addcashRegister = async ({page, itemsPerPage, sortBy}) => {
 
-
   const body = {
     name: nameRef.value,
     currency_id: currencyAdd.value,
     organization_id: organizationAdd.value,
-    employee_id: employeeAdd.value
+    responsible_person_id: employeeAdd.value
   }
 
-
-
   const res = await cashRegister.add(body)
+
   if (res.status === 201) {
     await getcashRegisterData({page, itemsPerPage, sortBy})
     showToast(addMessage)
     valueRef.value = null
+    currencyAdd.value = null
+    organizationAdd.value = null
+    employeeAdd.value = null
     idCashRegister.value = res.data.result.id
     dialog.value = false
+
+    markedID.value = []
+    markedItem.value = []
+
   }
+
 }
 
 const massDel = async ({page, itemsPerPage, sortBy, search}) => {
@@ -118,6 +126,7 @@ const massDel = async ({page, itemsPerPage, sortBy, search}) => {
       showToast(removeMessage, 'red')
       await getcashRegisterData({page, itemsPerPage, sortBy}, search)
       markedID.value = []
+      dialog.value = false
     }
 
   } catch (e) {
@@ -138,6 +147,7 @@ const massRestore = async ({page, itemsPerPage, sortBy, search}) => {
       showToast(restoreMessage, 'red')
       await getcashRegisterData({page, itemsPerPage, sortBy}, search)
       markedID.value = []
+      dialog.value = false
     }
   } catch (e) {
 
@@ -149,14 +159,20 @@ const update = async ({page, itemsPerPage, sortBy}) => {
 
   const body = {
     name: nameRef.value,
-    employee_id: employeeUpdate.value,
-    organization_id: organizationUpdate.value,
-    currency_id: currencyUpdate.value
+    responsible_person_id: employeeAdd.value,
+    organization_id: organizationAdd.value,
+    currency_id: currencyAdd.value
   }
 
   try {
     const {status} = await cashRegister.update(idCashRegister.value, body)
     if (status === 200) {
+      nameRef.value = null
+      employeeUpdate.value = null;
+      organizationUpdate.value = null;
+      currencyUpdate.value = null;
+
+      dialog.value = null
       await getcashRegisterData({page, itemsPerPage, sortBy})
       showToast(editMessage)
     }
@@ -254,6 +270,10 @@ const handleCheckboxClick = function (item) {
 }
 
 const openDialog = (item) => {
+  if(markedID.value.length > 0) {
+    return showToast(selectOneItemMessage, 'warning');
+  }
+
   dialog.value = true
 
   if (item === 0) {
@@ -262,11 +282,15 @@ const openDialog = (item) => {
   } else {
     idCashRegister.value = item.id
 
+    markedID.value.push(item.id);
     const index = binarySearch(cashRegisters.value, item.id)
 
     if (index !== 1) {
       isExistsCashRegister.value = true
       nameRef.value = item.name
+      employeeAdd.value = item.responsiblePerson.id
+      organizationAdd.value = item.organization.id
+      currencyAdd.value = item.currency.id
       cashRegisterInDialogTitle.value = nameRef.value
     } else {
 
@@ -277,31 +301,49 @@ const openDialog = (item) => {
 
 
 const addBasedOncashRegister = () => {
-  if (markedID.value === null) return showToast(warningMessage, 'warning')
-
+  if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
+  if (markedID.value.length > 1) return showToast(selectOneItemMessage, 'warning')
   dialog.value = true
 
   cashRegisters.value.forEach(item => {
-    if (markedID.value === item.id) {
+    if (markedID.value[0] === item.id) {
       nameRef.value = item.name
+      currencyAdd.value = item.currency.id
+      organizationAdd.value = item.organization.id
+      employeeAdd.value = item.responsiblePerson.id
     }
   })
+
 }
 
-const compute = ({page, itemsPerPage, sortBy, search}) => {
+const compute = ({ page, itemsPerPage, sortBy, search }) => {
+  if(markedID.value.length === 0) return showToast(warningMessage, 'warning')
 
-  if (markedID.value.length === 1 && markedItem.value.deleted_at === null) {
-    return destroy({page, itemsPerPage, sortBy, search})
-  } else if (markedID.value.length === 1 && markedItem.value.deleted_at) {
-    return restore({page, itemsPerPage, sortBy})
-  } else if (markedID.value.length > 1) {
-    return massDel({page, itemsPerPage, sortBy, search})
-  } else {
-    showToast(warningMessage, 'warning')
+  if(markedItem.value.deleted_at) {
+    return massRestore({ page, itemsPerPage, sortBy })
+  }
+  else{
+    return massDel({ page, itemsPerPage, sortBy, search })
   }
 }
 
 const lineMarking = (item) => {
+  if (markedID.value.length > 0) {
+    const firstMarkedItem = cashRegisters.value.find(el => el.id === markedID.value[0]);
+    if (firstMarkedItem && firstMarkedItem.deleted_at) {
+      if(item.deleted_at === null) {
+        showToast(ErrorSelectMessage, 'warning')
+        return;
+      }
+    }
+    if (firstMarkedItem && firstMarkedItem.deleted_at === null) {
+      if(item.deleted_at !== null) {
+        showToast(ErrorSelectMessage, 'warning')
+        return;
+      }
+    }
+  }
+
   const index = markedID.value.indexOf(item.id);
   if (index !== -1) {
     markedID.value.splice(index, 1);
@@ -315,6 +357,12 @@ const lineMarking = (item) => {
 watch(dialog, newVal => {
   if (!newVal) {
     nameRef.value = null
+    currencyUpdate.value = null
+    currencyAdd.value = null
+    organizationUpdate.value = null
+    organizationAdd.value = null
+    employeeAdd.value = null
+    employeeUpdate.value = null;
 
     loadingRate.value = true
   }
@@ -328,7 +376,7 @@ watch(dialog, newVal => {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Должность</span>
+          <span>Кассы</span>
         </div>
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
@@ -378,7 +426,7 @@ watch(dialog, newVal => {
             hover
         >
           <template v-slot:item="{ item, index }">
-            <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)" @dblclick="openDialog"
+            <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)" @dblclick="openDialog(item)"
                 :class="{'bg-grey-lighten-2': markedID.includes(item.id) }">
               <td class="">
                 <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
@@ -395,7 +443,7 @@ watch(dialog, newVal => {
               <td>{{ item.name }}</td>
               <td>{{ item.organization.name }}</td>
               <td>{{ item.currency.name }}</td>
-              <td>{{ item.name }}</td>
+              <td>{{ item.responsiblePerson.name }}</td>
 
             </tr>
           </template>
@@ -411,7 +459,7 @@ watch(dialog, newVal => {
               <span>{{ isExistsCashRegister ? cashRegisterInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons @click="compute" name="delete"/>
+                  <Icons v-if="isExistsCashRegister"  @click="compute" name="delete"/>
                   <Icons v-if="isExistsCashRegister" @click="update" name="save"/>
                   <Icons v-else @click="addcashRegister" name="save"/>
                 </div>
@@ -427,7 +475,7 @@ watch(dialog, newVal => {
                       v-model="nameRef"
                       :rules="[rules.required]"
                       color="green"
-                      rounded="lg"
+                      rounded="md"
                       variant="outlined"
                       class="w-auto text-sm-body-1"
                       density="compact"

@@ -1,299 +1,463 @@
 <script setup>
 import {onMounted, ref, watch} from "vue";
-import showToast from '../../../composables/toast'
-import priceType from '../../../api/priceType.js'
-import currency from "../../../api/currency.js";
-import {add, editIcon, remove, removeIcon, cancel} from "../../../composables/constant/buttons.js";
+import {useRouter} from "vue-router";
+import showToast from '@/composables/toast'
+import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
+import priceType from '../../../api/priceType.js';
+import currency from '../../../api/currency.js';
 
+import {
+  addMessage,
+  editMessage,
+  removeMessage,
+  warningMessage,
+  ErrorSelectMessage,
+  selectOneItemMessage
+} from "@/composables/constant/buttons.js";
+import Icons from "@/composables/Icons/Icons.vue";
+import binarySearch from "@/composables/binarySearch/binarySearch.js";
 
-const search = ref('')
-const isDialog = ref(false);
-const updateDialog = ref(false);
-const deleteDialog = ref(false);
-const loading = ref(true);
+import {restoreMessage} from "../../../composables/constant/buttons.js";
 
-const ID = ref(null)
+const router = useRouter()
 
-const name = ref(null)
-const itemID = ref(null)
-const nameError = ref(null)
+const loading = ref(true)
+const loadingRate = ref(true)
+const dialog = ref(false)
+const digitalRef = ref(null)
 
-const currencies = ref([])
+const idPriceType = ref(null)
+const hoveredRowIndex = ref(null)
 
-const priceTypes = ref([])
-const paginations = ref([])
 
 const currencyAdd = ref([])
 const currencyUpdate = ref([])
 
+const currencies = ref([])
+
+
+
+const isExistsPriceType = ref(false)
+const markedID = ref([]);
+const markedItem = ref([])
+const priceTypeInDialogTitle = ref(null)
+const search = ref('')
+const selected = ref([])
+
+const nameRef = ref(null)
+const descriptionRef = ref(null)
+
+const valueRef = ref(null)
+
+const priceTypes = ref([])
+const paginations = ref([])
+
 const headers = ref([
-  { title: '№', key: 'id'},
-  { title: 'Название', key: 'name'},
-  { title: 'Валюта', key: 'currency.symbol_code'},
-  { title: '#', key: 'deleted_at', align: 'center', sortable: false},
+  {title: '№', key: 'id', align: 'start'},
+  {title: 'Наименование', key: 'name'},
+  {title: 'Валюта', key: 'currency.name'},
 ])
 
-const getPriceTypeData = async ({ page, itemsPerPage, sortBy, search }) => {
-  loading.value = true
+const rules = {
+  required: v => !!v,
+}
 
+
+const getPriceTypeData = async ({page, itemsPerPage, sortBy, search}) => {
+  loading.value = true
   try {
-    const { data } = await priceType.get({page, itemsPerPage, sortBy}, search)
+    const {data} = await priceType.get({page, itemsPerPage, sortBy}, search)
+
     paginations.value = data.result.pagination
     priceTypes.value = data.result.data
     loading.value = false
   } catch (e) {
-
   }
 }
 
-const validate = () => {
-  nameError.value = null
-  if (name.value.length < 1) {
-    return nameError.value = 'Заполните поле!'
-  }
 
-  return true
-}
-
-const getCurrency = async () => {
-  try {
-    const { data } = await currency.get({itemsPerPage: 1000})
-    currencies.value = data.result.data.map(item => {
-      return {
-        id: item.id,
-        symbol_code: item.symbol_code
-      }
-    })
-  } catch (e) {
-
-  }
-}
-
-const create = async ({ page, itemsPerPage, sortBy }) => {
-  if (validate() !== true) return
-
+const addpriceType = async ({page, itemsPerPage, sortBy}) => {
 
   const body = {
-    name: name.value,
-    currency_id: currencyAdd.value
+    name: nameRef.value,
+    currency_id: currencyAdd.value,
+    description: descriptionRef.value
   }
 
   const res = await priceType.add(body)
 
   if (res.status === 201) {
-    showToast('Успешно добавлена')
-    isDialog.value = false;
-    name.value = null;
-    await getPriceTypeData({ page, itemsPerPage, sortBy })
+    await getPriceTypeData({page, itemsPerPage, sortBy})
+    showToast(addMessage)
+    valueRef.value = null
+    currencyAdd.value = null
+    descriptionRef.value = null;
+    idPriceType.value = res.data.result.id
+    dialog.value = false
+
+    markedID.value = []
+    markedItem.value = []
+
   }
 
 }
 
-const editItem = item => {
-  updateDialog.value = true
-  name.value = item.name
-  itemID.value = item.id
-  currencies.value.map(el => {
-    if (el.id === item.currency.id) {
-      currencyUpdate.value = {
-        id: item.currency.id,
-        symbol_code: item.currency.symbol_code
-      }
+const massDel = async ({page, itemsPerPage, sortBy, search}) => {
+  const body = {
+    ids: markedID.value
+  }
+
+  try {
+    const {status} = await priceType.massDeletion(body)
+
+    if (status === 200) {
+
+      showToast(removeMessage, 'red')
+      await getPriceTypeData({page, itemsPerPage, sortBy}, search)
+      markedID.value = []
+      dialog.value = false
     }
-  })
+
+  } catch (e) {
+
+  }
 }
 
-const update = async ({ page, itemsPerPage, sortBy }) => {
 
-  if (validate() !== true) return
+const massRestore = async ({page, itemsPerPage, sortBy, search}) => {
+  const body = {
+    ids: markedID.value
+  }
+
+  try {
+    const {status} = await priceType.massRestore(body)
+
+    if (status === 200) {
+      showToast(restoreMessage, 'red')
+      await getPriceTypeData({page, itemsPerPage, sortBy}, search)
+      markedID.value = []
+      dialog.value = false
+    }
+  } catch (e) {
+
+  }
+}
+
+
+const update = async ({page, itemsPerPage, sortBy}) => {
 
   const body = {
-    name: name.value,
-    currency_id: currencyUpdate.value.id
+    name: nameRef.value,
+    currency_id: currencyAdd.value,
+    description: descriptionRef.value
   }
 
-  const res = await priceType.update(itemID.value, body)
+  try {
+    const {status} = await priceType.update(idPriceType.value, body)
+    if (status === 200) {
+      nameRef.value = null
+      descriptionRef.value = null;
+      currencyUpdate.value = null;
 
-  if (res.status === 200) {
-    showToast('Успешно обновлено')
-    updateDialog.value = false
-    name.value = null;
-    await getPriceTypeData({ page, itemsPerPage, sortBy })
-  }
-}
-
-const deleteItem = item => {
-  ID.value = item.id
-  deleteDialog.value = true
-}
-
-const deleteModal = async ({ page, itemsPerPage, sortBy }) => {
-  const { status } = await priceType.delete(ID.value)
-
-  if (status === 200) {
-    showToast('Успешно удалено', 'red')
-    deleteDialog.value = false
-    ID.value = null;
-    await getPriceTypeData({ page, itemsPerPage, sortBy })
+      dialog.value = null
+      await getPriceTypeData({page, itemsPerPage, sortBy})
+      showToast(editMessage)
+    }
+  } catch (e) {
+    console.log(e)
   }
 }
 
-watch(isDialog, () => {
-  if (isDialog.value === false) {
-    name.value = null;
+
+const destroy = async ({page, itemsPerPage, sortBy}) => {
+  if (markedID.value === null) return showToast(warningMessage, 'warning')
+  try {
+    const {status} = await priceType.delete(markedID.value)
+    if (status === 200) {
+      showToast(removeMessage, 'red')
+      await getPriceTypeData({page, itemsPerPage, sortBy})
+      dialog.value = false
+      markedID.value = []
+    }
+  } catch (e) {
+
   }
-})
-watch(updateDialog,() => {
-  if (updateDialog.value === false) {
-    name.value = null;
+}
+
+const restore = async ({page, itemsPerPage, sortBy}) => {
+  try {
+    const {status} = await priceType.restore(markedID.value)
+    if (status === 200) {
+      showToast(restoreMessage, 'green')
+      await getPriceTypeData({page, itemsPerPage, sortBy})
+      markedID.value = []
+    }
+  } catch (e) {
+
   }
-})
+}
+
+
+const getCurrencies = async () => {
+  try {
+    const {data} = await currency.get({page: 1, itemsPerPage: 100000})
+
+
+    currencies.value = data.result.data.map(item => {
+      return {
+        id: item.id,
+        name: item.name
+      }
+    })
+
+  } catch (e) {
+
+  }
+}
 
 
 onMounted(async () => {
-  await getCurrency()
+  await getCurrencies()
 })
+
+
+const handleCheckboxClick = function (item) {
+  lineMarking(item)
+}
+
+const openDialog = (item) => {
+  if(markedID.value.length > 0) {
+    return showToast(selectOneItemMessage, 'warning');
+  }
+
+  dialog.value = true
+
+  if (item === 0) {
+    idPriceType.value = 0
+    isExistsPriceType.value = false
+  } else {
+    idPriceType.value = item.id
+
+    markedID.value.push(item.id);
+    const index = binarySearch(priceTypes.value, item.id)
+
+    if (index !== 1) {
+      isExistsPriceType.value = true
+      nameRef.value = item.name
+      descriptionRef.value = item.description
+      currencyAdd.value = item.currency.id
+      priceTypeInDialogTitle.value = nameRef.value
+    } else {
+
+    }
+  }
+
+}
+
+
+const addBasedOnPriceType = () => {
+  if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
+  if (markedID.value.length > 1) return showToast(selectOneItemMessage, 'warning')
+  dialog.value = true
+
+  priceTypes.value.forEach(item => {
+    if (markedID.value[0] === item.id) {
+      nameRef.value = item.name
+      currencyAdd.value = item.currency.id
+      descriptionRef.value = item.description
+    }
+  })
+
+}
+
+const compute = ({ page, itemsPerPage, sortBy, search }) => {
+  if(markedID.value.length === 0) return showToast(warningMessage, 'warning')
+
+  if(markedItem.value.deleted_at) {
+    return massRestore({ page, itemsPerPage, sortBy })
+  }
+  else{
+    return massDel({ page, itemsPerPage, sortBy, search })
+  }
+}
+
+const lineMarking = (item) => {
+  if (markedID.value.length > 0) {
+    const firstMarkedItem = priceTypes.value.find(el => el.id === markedID.value[0]);
+    if (firstMarkedItem && firstMarkedItem.deleted_at) {
+      if(item.deleted_at === null) {
+        showToast(ErrorSelectMessage, 'warning')
+        return;
+      }
+    }
+    if (firstMarkedItem && firstMarkedItem.deleted_at === null) {
+      if(item.deleted_at !== null) {
+        showToast(ErrorSelectMessage, 'warning')
+        return;
+      }
+    }
+  }
+
+  const index = markedID.value.indexOf(item.id);
+  if (index !== -1) {
+    markedID.value.splice(index, 1);
+  } else {
+    markedID.value.push(item.id);
+  }
+  markedItem.value = item;
+}
+
+
+watch(dialog, newVal => {
+  if (!newVal) {
+    nameRef.value = null
+    currencyUpdate.value = null
+    currencyAdd.value = null
+    descriptionRef.value = null
+
+    loadingRate.value = true
+  }
+})
+
 
 </script>
 
 <template>
   <div>
     <v-col>
-      <div class="d-flex w-100 justify-end">
-        <v-btn rounded="lg" @click="isDialog = true" color="info">Создать</v-btn>
+      <div class="d-flex justify-space-between text-uppercase ">
+        <div class="d-flex align-center ga-2 pe-2 ms-4">
+          <span>Виды цен</span>
+        </div>
+        <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
+          <div class="d-flex w-100">
+            <div class="d-flex ga-2 mt-1 me-3">
+              <Icons @click="openDialog(0)" name="add"/>
+              <Icons @click="addBasedOnPriceType" name="copy"/>
+              <Icons @click="compute" name="delete"/>
+            </div>
+
+            <div class="w-100">
+              <v-text-field
+                  v-model="search"
+                  prepend-inner-icon="search"
+                  density="compact"
+                  label="Поиск..."
+                  variant="outlined"
+                  color="info"
+                  rounded="lg"
+                  clear-icon="close"
+                  hide-details
+                  single-line
+                  clearable
+                  flat
+              ></v-text-field>
+
+            </div>
+          </div>
+          <Icons name="filter" class="mt-1"/>
+        </v-card>
       </div>
-      <v-card class="mt-4 table">
-        <v-card-title class="d-flex align-center pe-2">
-          Виды цен
 
-          <v-spacer />
-          <v-spacer />
-          <v-spacer />
-
-          <v-text-field
-              v-model="search"
-              prepend-inner-icon="search"
-              density="compact"
-              label="Поиск..."
-              single-line
-              flat
-              hide-details
-              variant="outlined"
-          ></v-text-field>
-        </v-card-title>
-
+      <v-card class="mt-2 table">
         <v-data-table-server
+            style="height: 78vh"
             items-per-page-text="Элементов на странице:"
             loading-text="Загрузка"
             no-data-text="Нет данных"
-            :loading="loading"
             v-model:items-per-page="paginations.per_page"
+            :loading="loading"
             :headers="headers"
             :items-length="paginations.total || 0"
             :items="priceTypes"
-            :search="search"
             :item-value="headers.title"
+            :search="search"
             @update:options="getPriceTypeData"
+            fixed-header
+            hover
         >
-          <template v-slot:item.id="{ index }">
-            <span>{{ index + 1 }}</span>
+          <template v-slot:item="{ item, index }">
+            <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)" @dblclick="openDialog(item)"
+                :class="{'bg-grey-lighten-2': markedID.includes(item.id) }">
+              <td class="">
+                <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
+                  <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)"
+                                  @change="handleCheckboxClick(item)">
+                    <span>{{ index + 1 }}</span>
+                  </CustomCheckbox>
+                </template>
+                <template v-else>
+                  <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
+                  <span>{{ index + 1 }}</span>
+                </template>
+              </td>
+              <td>{{ item.name }}</td>
+              <td>{{ item.currency.name }}</td>
+
+            </tr>
           </template>
-          <template v-slot:item.deleted_at="{ item }">
-            <div class="d-flex justify-center">
-              <div class="d-flex align-center justify-center ga-1" v-if="!item.deleted_at">
-                <v-icon color="warning" @click="editItem(item)" class="icon">{{ editIcon }}</v-icon>
-                <v-icon color="red" @click="deleteItem(item)" class="icon">{{ removeIcon }}</v-icon>
-              </div>
-              <v-icon v-else color="red" class=" cursor-pointer">close</v-icon>
-            </div>
-           </template>
         </v-data-table-server>
       </v-card>
-    </v-col>
 
-  <!-- addDialog   -->
-    <v-card>
-      <v-dialog width="500" v-model="isDialog" activator="parent">
-        <v-card class="rounded-xl pl-4" :title="'Добавление'">
-          <v-form class="w-100 pa-4" @submit.prevent="create">
-            <v-row class="w-100">
-              <v-col class="d-flex flex-column justify-between w-100 ga-5">
-                <v-text-field
-                    variant="outlined"
-                    label="Наименование"
-                    type="text"
-                    v-model="name"
-                    :error-messages="nameError"
-                />
-                <v-select
-                    v-model="currencyAdd"
-                    :items="currencies"
-                    variant="outlined"
-                    label="Выберите валюту"
-                    item-title="symbol_code"
-                    item-value="id"
-                />
-                <div class="d-flex ga-2 justify-end align-center">
-                  <v-btn :loading="loading" color="green" type="submit">{{ add }}</v-btn>
+      <!-- Modal -->
+      <v-card>
+        <v-dialog class="mt-2 pa-2" v-model="dialog">
+          <v-card style="border: 2px solid #3AB700" min-width="500"
+                  class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
+            <div class="d-flex justify-space-between align-center mb-2">
+              <span>{{ isExistsPriceType ? priceTypeInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
+              <div class="d-flex align-center justify-space-between">
+                <div class="d-flex ga-3 align-center mt-2 me-4">
+                  <Icons v-if="isExistsPriceType"  @click="compute" name="delete"/>
+                  <Icons v-if="isExistsPriceType" @click="update" name="save"/>
+                  <Icons v-else @click="addpriceType" name="save"/>
                 </div>
-              </v-col>
-            </v-row>
-          </v-form>
-        </v-card>
-      </v-dialog>
-    </v-card>
-
-    <!-- updateDialog   -->
-    <v-card>
-      <v-dialog width="500" v-model="updateDialog" activator="parent">
-        <v-card class="rounded-xl pl-4" :title="'Изменение '">
-          <v-form class="w-100 pa-4" @submit.prevent="update">
-            <v-row class="w-100">
-              <v-col class="d-flex flex-column justify-between w-100 ga-5">
-                <v-text-field v-model="name" variant="outlined" type="text" :error-messages="nameError"
-                  label="Наименование" />
-                <v-select :items="currencies" v-model="currencyUpdate" item-title="symbol_code" item-value="id"
-                  :hint="`${currencyUpdate.symbol_code} ${currencyUpdate.id}`" variant="outlined" label="Выберите валюту"
-                  persistent-hint return-object single-line />
-                <div class="d-flex ga-2 justify-end align-center">
-                  <v-btn :loading="loading" color="green" type="submit">{{ add }}</v-btn>
-                </div>
-              </v-col>
-            </v-row>
-          </v-form>
-        </v-card>
-      </v-dialog>
-    </v-card>
-
-    <!-- deleteDialog   -->
-    <v-card>
-      <v-dialog v-model="deleteDialog" activator="parent">
-        <v-card width="30%" class="d-flex  justify-center flex-column mx-auto my-0" rounded="xl">
-          <div class="d-flex justify-end align-center pr-5 pt-3">
-
-            <v-btn @click="deleteDialog = false" color="info" variant="tonal" :size="38">
-              <v-icon size="22">close</v-icon>
-            </v-btn>
-          </div>
-          <v-card class="d-flex flex-column w-100 pr-5 pl-5 pb-5 mt-2 justify-space-between h-100 " min-height="240">
-            <div class="d-flex justify-center align-center flex-column text-center">
-              <v-icon size="60" color="warning">error</v-icon>
-              <span class="mt-4 text-h6">Вы точно хотите удалить?</span>
+                <v-btn @click="dialog = false" variant="text" :size="32" class="pt-2 pl-1">
+                  <Icons name="close"/>
+                </v-btn>
+              </div>
             </div>
-            <div class="d-flex flex-column justify-end ga-2 flex-grow-1 w-100 align-center">
-              <v-btn :loading="loading" size="small" color="red" rounded="xl" height="35" class="mt-2 w-100" @click="deleteModal">
-                {{ remove }}
-              </v-btn>
-              <v-btn :loading="loading" size="small" color="info" rounded="xl" height="35" class="mt-1 w-100" @click="deleteDialog = false">
-                {{ cancel }}
-              </v-btn>
-            </div>
+            <v-form class="d-flex w-100" @submit.prevent="addpriceType">
+              <v-row class="w-100">
+                <v-col class="d-flex flex-column w-100">
+                  <v-text-field
+                      v-model="nameRef"
+                      :rules="[rules.required]"
+                      color="green"
+                      rounded="md"
+                      variant="outlined"
+                      class="w-auto text-sm-body-1"
+                      density="compact"
+                      placeholder="Доллар"
+                      label="Название"
+                      clear-icon="close"
+                      clearable
+                  />
+                  <v-select
+                      variant="outlined"
+                      label="Выберите валюту"
+                      v-model="currencyAdd"
+                      :items="currencies"
+                      item-title="name"
+                      item-value="id"
+                  />
+
+                </v-col>
+              </v-row>
+            </v-form>
+
+
           </v-card>
-        </v-card>
-      </v-dialog>
-    </v-card>
+        </v-dialog>
 
+
+      </v-card>
+    </v-col>
   </div>
+
+
 </template>
 
-<style scoped></style>
+<style scoped>
+
+</style>
