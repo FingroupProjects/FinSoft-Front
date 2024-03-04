@@ -1,13 +1,12 @@
 <script setup>
 import { ref, defineProps, defineEmits, watch } from "vue";
-import { useRouter } from "vue-router";
 import counterpartyApi from "../../../api/counterparty";
 import showToast from "../../../composables/toast";
-import { add, prevIcon } from "../../../composables/constant/buttons.js";
 import Icons from "@/composables/Icons/Icons.vue";
+import CustomCheckbox from "@/components/checkbox/CustomCheckbox.vue";
 
-const router = useRouter();
-const props = defineProps(['isOpen'])
+
+const props = defineProps(['isOpen', 'isEdit', 'item'])
 const emits = defineEmits()
 
 const name = ref("");
@@ -17,7 +16,11 @@ const email = ref("");
 const roles = ref([]);
 const error_message = ref('')
 
+const isValid = ref(false)
 const dialog = ref(false)
+const a = ref(false);
+const b = ref(false);
+const c = ref(false);
 
 watch(() => dialog.value, (newValue, oldValue) => {
   if (newValue === false) {
@@ -25,16 +28,54 @@ watch(() => dialog.value, (newValue, oldValue) => {
   }
 });
 
+watch(() => isValid.value, (newValue, oldValue) => {
+  console.log(newValue, 'new')
+});
+
+
 watch(() => props.isOpen, (newValue, oldValue) => {
   if (newValue === true || oldValue === true) {
     dialog.value = newValue;
   }
 });
 
+watch(() => props.isEdit, (newValue) => {
+  if (newValue === true) {
+    getId()
+  }if(!newValue){
+    clearForm()
+  }
+});
+
+
+const clearForm = () => {
+  name.value = ""
+  phone.value = ""
+  address.value = ""
+  email.value = ""
+  roles.value = []
+
+}
+
+const getId = async () => {
+  try {
+    const { data } = await counterpartyApi.getById(id.value);
+    console.log(data)
+    // form.value = data.result;
+    // form.value.roles.forEach((roleIndex) => {
+    //   if (roleIndex === 1) a.value = true;
+    //   else if (roleIndex === 2) b.value = true;
+    //   else if (roleIndex === 3) c.value = true;
+    // });
+  } catch (e) {
+    console.error(e);
+  }
+};
 
 const CreateCounterparty = async () => {
   try {
-    error_message.value = ''
+    isValid.value = true;
+    error_message.value = '';
     const body = {
       name: name.value,
       phone: phone.value,
@@ -42,16 +83,24 @@ const CreateCounterparty = async () => {
       email: email.value,
       roles: roles.value,
     };
-    if(roles.value.length === 0) {
-      error_message.value = 'Выберите хотя бы одну роль!'
+    if (roles.value.length === 0) {
+      error_message.value = 'Выберите хотя бы одну роль!';
     }
-    await counterpartyApi.create(body);
-    router.push("counterparty");
+    const { response } = await counterpartyApi.create(body);
+    console.log(response);
     showToast("Успешно добавлена", "green");
+    emits('toggleIsOpen');
+    clearForm();
   } catch (error) {
-    console.error(error);
+    isValid.value = true;
+    if (error.response && error.response.status === 422) {
+      showToast("Заполните поля!", "warning");
+    } else {
+      console.error(error);
+    }
   }
 };
+
 
 const handleCheckboxChange = (index) => {
   if (roles.value.includes(index + 1)) {
@@ -61,15 +110,14 @@ const handleCheckboxChange = (index) => {
   }
 };
 
-const isExistsCurrency = ref(true)
 const removeCurrency = () => {
     console.log('remove')
 }
 
 const rules = {
-  required: v => !!v || 'Поле обязательно для заполнения',
-  email: v => (/.+@.+\..+/.test(v)) || 'Введите валидную почту',
-  phone: v => v.length === 13 || "Введите валидный номер телефона",
+  required: v => !!v ,
+  email: v => (/.+@.+\..+/.test(v)) ,
+  phone: v => v.length === 13 ,
 }
 
 </script>
@@ -79,19 +127,18 @@ const rules = {
     <v-dialog max-width="500px" v-model="dialog" class="mt-2 pa-2">
       <v-card style="border: 2px solid #3AB700" width="500" class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
         <div class="d-flex justify-space-between align-center mb-2">
-          <span>Добавление</span>
+          <span>{{ isEdit ? 'Изменение' : 'Добавление' }}</span>
           <div class="d-flex align-center justify-space-between">
             <div class="d-flex ga-3 align-center mt-2 me-4">
               <Icons @click="removeCurrency" name="delete"/>
-              <Icons v-if="isExistsCurrency" @click="removeCurrency" name="save"/>
-              <Icons v-else @click="CreateCounterparty" name="save"/>
+              <Icons  @click="CreateCounterparty" name="save"/>
             </div>
             <v-btn @click="dialog = false"  variant="text" :size="32" class="pt-2 pl-1">
               <Icons name="close" />
             </v-btn>
           </div>
         </div>
-        <v-form class="d-flex w-100" @submit.prevent="removeCurrency">
+        <v-form class="d-flex w-100">
           <v-row class="w-100">
             <v-col class="d-flex flex-column w-100">
               <div class="d-flex justify-space-between ga-6">
@@ -99,17 +146,76 @@ const rules = {
                 v-model="name"
                 :rules="[rules.required]"
                 color="green"
-                rounded="lg"
+                rounded="md"
                 variant="outlined"
                 class="w-auto text-sm-body-1"
                 density="compact"
-                placeholder="Доллар"
+                placeholder="Контрагент"
                 label="Название"
                 clear-icon="close"
                 clearable
+                hide-details
               />
               <span style="color: red; font-weight: bolder" class="mr-4 mt-1">2500,00</span>
               </div>
+              <div class="d-flex justify-space-between ga-5 align-center my-3">
+              <v-text-field
+                  :rules="isValid ? [rules.required] : []"
+                  color="green"
+                  rounded="md"
+                  variant="outlined"
+                  class="text-sm-body-1"
+                  density="compact"
+                  label="Дата"
+                  clear-icon="close"
+                  type="date"
+                  clearable
+                  hide-details
+              />
+                <CustomCheckbox v-model="a" @change="handleCheckboxChange(0)" >Клиент</CustomCheckbox>
+                <CustomCheckbox v-model="b" @change="handleCheckboxChange(1)" >Поставщик</CustomCheckbox>
+                <CustomCheckbox v-model="c" @change="handleCheckboxChange(2)" >Прочее</CustomCheckbox>
+              </div>
+              <div class="d-flex ga-4 mb-3">
+                <v-text-field
+                  variant="outlined"
+                  :rules="isValid? [rules.required, rules.phone]  : []"
+                  label="Тел номер"
+                  v-model.trim="phone"
+                  density="compact"
+                  v-mask="'+992#########'"
+                  rounded="md"
+                  color="info"
+                  hide-details
+                  :append-inner-icon="phone.length > 1 ? 'close' : ''"
+                  @click:append-inner="phone = ''"
+                />
+                <v-text-field
+                  variant="outlined"
+                  prepend-inner-icon="email"
+                  :rules="isValid ? [rules.required, rules.email] : []"
+                  label="Почта"
+                  v-model="email"
+                  density="compact"
+                  rounded="md"
+                  color="info"
+                  hide-details
+                  :append-inner-icon="email.length > 1 ? 'close' : ''"
+                  @click:append-inner="email = ''"
+                />
+              </div>
+              <v-text-field
+                  variant="outlined"
+                  :rules="isValid ? [rules.required] : []"
+                  label="Адрес"
+                  v-model="address"
+                  density="compact"
+                  rounded="md"
+                  color="info"
+                  hide-details
+                  :append-inner-icon="address.length > 1 ? 'close' : ''"
+                  @click:append-inner="address = ''"
+              />
 <!--              <v-text-field-->
 <!--                variant="outlined"-->
 <!--                :rules="[rules.required, rules.phone]"-->

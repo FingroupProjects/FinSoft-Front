@@ -8,12 +8,13 @@ import showToast from '../../../composables/toast'
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import createCounterparty from "./create.vue"
+import {tr} from "vuetify/locale";
 
 const router = useRouter();
 
 const loading = ref(true);
 const isCreate = ref(false)
-
+const isEdit = ref(false)
 const hoveredRowIndex = ref(null)
 
 const markedID = ref([])
@@ -53,10 +54,6 @@ const lineMarking = (item) => {
   markedItem.value = item;
 }
 
-const handleCheckboxClick = function (item) {
-  lineMarking(item)
-}
-
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
   if(markedItem.value.deleted_at) {
     return massRestoreCounterparty({ page, itemsPerPage, sortBy })
@@ -92,7 +89,6 @@ const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
       showToast(removeMessage, 'red')
       await getCounterparty({page, itemsPerPage, sortBy}, search)
       markedID.value = []
-
     }
   }catch(e){
     console.log(e)
@@ -173,18 +169,18 @@ const massRestoreCounterparty = async ({ page, itemsPerPage, sortBy }) => {
           fixed-footer
         >
           <template v-slot:item="{ item, index }">
-            <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)" :class="{'bg-grey-lighten-2': markedID.includes(item.id)}">
+            <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)" @dblclick="isCreate = true;isEdit = true" :class="{'bg-grey-lighten-2': markedID.includes(item.id)}">
               <td>
                 <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
-                  <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)" @change="handleCheckboxClick(item)">
+                  <CustomCheckbox :checked="markedID.includes(item.id)" @change="lineMarking(item)">
                     <span>{{ index + 1 }}</span>
                   </CustomCheckbox>
                 </template>
                 <template v-else>
-                  <span class="">
-                  <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
-                  <span>{{ index + 1 }}</span>
-                    </span>
+                  <span class="d-flex">
+                    <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
+                    <span>{{ index + 1 }}</span>
+                  </span>
                 </template>
               </td>
               <td>
@@ -211,7 +207,7 @@ const massRestoreCounterparty = async ({ page, itemsPerPage, sortBy }) => {
         </v-data-table-server>
 
       </v-card>
-        <create-counterparty :isOpen="isCreate" @toggleIsOpen="isCreate = false"/>
+        <create-counterparty :isEdit="isEdit" :isOpen="isCreate" @toggleIsOpen="isCreate = false; isEdit = false" :item="markedItem.id"/>
     </v-col>
   </div>
 </template>
