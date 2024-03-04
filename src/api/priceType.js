@@ -13,5 +13,11 @@ export default {
   },
   delete(id) {
     return api.delete(`/priceType/${id}`)
-  }
+  },
+  massDeletion(data) {
+    return api.post(`/priceType/massDelete/`, data);
+  },
+  massRestore(data) {
+    return api.post('/priceType/massRestore/', data);
+  },
 }
