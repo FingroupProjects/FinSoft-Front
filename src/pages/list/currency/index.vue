@@ -1,40 +1,46 @@
 <script setup>
 import {onMounted, ref, watch} from "vue";
 import {useRouter} from "vue-router";
-import showToast from '@/composables/toast'
-import currentDate from "@/composables/date/currentDate.js";
-import currency from '@/api/currency.js'
+import showToast from '../../../composables/toast'
+import currentDate from "../../../composables/date/currentDate.js";
+import currency from '../../../api/currency.js'
 import {
   addMessage,
   editMessage,
-  removeMessage,
+  removeMessage, restoreMessage,
   warningMessage
-} from "@/composables/constant/buttons.js";
-import Icons from "@/composables/Icons/Icons.vue";
-import showDate from "@/composables/date/showDate.js";
-import useLineMarking from "./scripts/lineMarking.js";
-import useCurrencyData from "./requests/currencyData.js";
-import useCurrencyRateData from "./requests/currencyRateData.js";
-
+} from "../../../composables/constant/buttons.js";
+import Icons from "../../../composables/Icons/Icons.vue";
+import showDate from "../../../composables/date/showDate.js";
+import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 
 const router = useRouter()
 
+const loading = ref(false);
+const loadingRate = ref(true)
 const dialog = ref(false)
 const rateDialog = ref(false)
 
-const idCurrency = ref(null)
 const idCurrencyRate = ref(null)
 const isExistsCurrency = ref(false)
 const isExistsCurrencyRate = ref(false)
+const idCurrency = ref(null)
 const currencyInDialogTitle = ref(null)
 const search = ref('')
-const selected = ref([])
+const hoveredRowIndex = ref(null)
 
+const markedID = ref([])
 const nameRef = ref(null)
 const symbolRef = ref(null)
 const digitalRef = ref(null)
 const dateRef = ref(null)
 const valueRef = ref(null)
+const markedItem = ref(null)
+
+const rates = ref([])
+const currencies = ref([]);
+const paginationsRate = ref([])
+const paginations = ref([]);
 
 const headers = ref([
   { title: '№', key: 'id', align: 'start'},
@@ -55,11 +61,43 @@ const rules = {
   date: v => (v && /^\d{2}-\d{2}-\d{4}$/.test(v)) || 'Формат даты должен быть DD-MM-YYYY',
 }
 
+const getCurrencyData = async ({ page, itemsPerPage, sortBy, search }) => {
+  loading.value = true;
+  try {
+    const { data } = await currency.get({ page, itemsPerPage, sortBy }, search);
+    paginations.value = data.result.pagination;
+    currencies.value = data.result.data;
+  } catch (e) {
 
-const { lineMarking, markedID } = useLineMarking()
-const { loading, currencies, paginations, getCurrencyData } = useCurrencyData()
-const { loadingRate, rates, paginationsRate, getCurrencyRateData } = useCurrencyRateData()
+  } finally {
+    loading.value = false;
+  }
+};
 
+const getCurrencyRateData = async ({ page, itemsPerPage, sortBy, search}, idCurrency) => {
+  if (idCurrency === 0) {
+    loadingRate.value = false
+    return
+  }
+
+  try {
+    const response = await currency.show(idCurrency)
+    const { data } = await currency.showRate(idCurrency, { page, itemsPerPage, sortBy }, search)
+    rates.value = data.result.data.map(item =>  ({
+      ...item,
+      date: showDate(item.date),
+      name: response.data.result.name,
+      digital_code: response.data.result.digital_code
+    })) || [];
+
+    paginationsRate.value = data.result.pagination || []
+
+  } catch (e) {
+
+  } finally {
+    loadingRate.value = false
+  }
+}
 
 const addCurrency = async ({ page, itemsPerPage, sortBy }) => {
 
@@ -71,7 +109,7 @@ const addCurrency = async ({ page, itemsPerPage, sortBy }) => {
   
   const res = await currency.add(body)
   if (res.status === 201) {
-    await getCurrencyData({ page, itemsPerPage, sortBy })
+    await getCurrencyData({ page, itemsPerPage, sortBy, search })
     showToast(addMessage)
     valueRef.value = null
     idCurrency.value = res.data.result.id
@@ -99,18 +137,28 @@ const update = async ({page, itemsPerPage, sortBy, search}) => {
 
 
 const removeCurrency = async ({page, itemsPerPage, sortBy}) => {
-  if (markedID.value === null) return showToast(warningMessage, 'warning')
-
   try {
-    const {status} = await currency.remove(markedID.value)
+    const {status} = await currency.remove({ids: markedID.value})
     if (status === 200) {
       showToast(removeMessage, 'red')
       await getCurrencyData({page, itemsPerPage, sortBy})
-      dialog.value = false
-      markedID.value = null
+      markedID.value = []
     }
   } catch (e) {
+    console.log(e)
+  }
+}
 
+const restoreCurrency = async ({page, itemsPerPage, sortBy}) => {
+  try {
+    const {status} = await currency.restore({ids: markedID.value})
+    if (status === 200) {
+      showToast(restoreMessage)
+      await getCurrencyData({page, itemsPerPage, sortBy})
+      markedID.value = []
+    }
+  } catch (e) {
+    console.log(e)
   }
 }
 
@@ -211,6 +259,30 @@ const addBasedOnCurrency = () => {
   })
 }
 
+const lineMarking = (item) => {
+  const index = markedID.value.indexOf(item.id);
+  if (index !== -1) {
+    markedID.value.splice(index, 1);
+  } else {
+    markedID.value.push(item.id);
+  }
+  markedItem.value = item;
+}
+
+const handleCheckboxClick = (item) => {
+  lineMarking(item)
+}
+
+const compute = ({ page, itemsPerPage, sortBy, search }) => {
+  if(markedItem.value.deleted_at === null) {
+    return restoreCurrency({ page, itemsPerPage, sortBy })
+  }
+  else{
+    return removeCurrency({ page, itemsPerPage, sortBy, search })
+  }
+}
+
+
 
 onMounted(async () => {
   dateRef.value = currentDate()
@@ -248,7 +320,7 @@ watch(rateDialog, newVal => {
           <div class="d-flex ga-2 mt-1 me-3">
             <Icons @click="openDialog(0)" name="add" />
             <Icons @click="addBasedOnCurrency" name="copy" />
-            <Icons @click="removeCurrency" name="delete" />
+            <Icons @click="compute" name="delete" />
           </div>
 
           <div class="w-100">
@@ -290,10 +362,19 @@ watch(rateDialog, newVal => {
           hover
       >
         <template v-slot:item="{ item, index }">
-          <tr @click="lineMarking(item)" @dblclick="openDialog(item)" :class="{'bg-grey-lighten-2' : markedID === item.id}">
-            <td class="d-flex  align-center">
-              <Icons class="mt-2 me-2" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
-              <span>{{ index + 1 }}</span>
+          <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @dblclick="openDialog(item)" @click="lineMarking(item)" :class="{'bg-grey-lighten-2': markedID.includes(item.id)}">
+            <td>
+              <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
+                <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)" @change="handleCheckboxClick(item)">
+                  <span>{{ index + 1 }}</span>
+                </CustomCheckbox>
+              </template>
+              <template v-else>
+                <div>
+                  <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
+                  <span>{{ index + 1 }}</span>
+                </div>
+              </template>
             </td>
             <td>{{ item.name }}</td>
             <td>{{ item.symbol_code }}</td>
@@ -312,7 +393,7 @@ watch(rateDialog, newVal => {
             <span>{{ isExistsCurrency ? currencyInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
             <div class="d-flex align-center justify-space-between">
               <div class="d-flex ga-3 align-center mt-2 me-4">
-                <Icons @click="removeCurrency" name="delete"/>
+                <Icons v-show="isExistsCurrency" @click="removeCurrency" name="delete"/>
                 <Icons v-if="isExistsCurrency" @click="update" name="save"/>
                 <Icons v-else @click="addCurrency" name="save"/>
               </div>
