@@ -1,6 +1,5 @@
 <script setup>
-import { ref } from "vue";
-import { useRouter } from "vue-router";
+import {ref, watch} from "vue";
 import counterpartyApi from "../../../api/counterparty";
 import showDate from "../../../composables/date/showDate"
 import { removeMessage, restoreMessage} from "../../../composables/constant/buttons.js";
@@ -8,9 +7,6 @@ import showToast from '../../../composables/toast'
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import createCounterparty from "./create.vue"
-import {tr} from "vuetify/locale";
-
-const router = useRouter();
 
 const loading = ref(true);
 const isCreate = ref(false)
@@ -28,7 +24,7 @@ const headers = ref([
   { title: "№", key: "id", align: "start" },
   { title: "Наименование", key: "name" },
   { title: "Адрес", key: "address" },
-  { title: "Тип контрагента", key: "roles" },
+  { title: "Тип контрагента", key: "roles", sortable: false },
   { title: "Телефон", key: "phone" },
   { title: "Эл. почта", key: "email" },
   { title: "Дата создания", key: "created_at" },
@@ -44,6 +40,12 @@ const formatRole = (roles) => {
   return roles.map((role) => roleMap[role] || "Неизвестная роль").join(", ");
 };
 
+watch(() => isEdit.value, (newValue, {page, itemsPerPage, sortBy}, search ) => {
+  if (newValue === false) {
+    getCounterparty({page, itemsPerPage, sortBy}, search)
+  }
+});
+
 const lineMarking = (item) => {
   const index = markedID.value.indexOf(item.id);
   if (index !== -1) {
@@ -52,6 +54,12 @@ const lineMarking = (item) => {
     markedID.value.push(item.id);
   }
   markedItem.value = item;
+}
+
+const editItem = (item) => {
+  isCreate.value = true;
+  isEdit.value = true;
+  markedItem.value = item.id
 }
 
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
@@ -169,7 +177,7 @@ const massRestoreCounterparty = async ({ page, itemsPerPage, sortBy }) => {
           fixed-footer
         >
           <template v-slot:item="{ item, index }">
-            <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)" @dblclick="isCreate = true;isEdit = true" :class="{'bg-grey-lighten-2': markedID.includes(item.id)}">
+            <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)" @dblclick="editItem(item)" :class="{'bg-grey-lighten-2': markedID.includes(item.id)}">
               <td>
                 <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
                   <CustomCheckbox :checked="markedID.includes(item.id)" @change="lineMarking(item)">
@@ -207,7 +215,7 @@ const massRestoreCounterparty = async ({ page, itemsPerPage, sortBy }) => {
         </v-data-table-server>
 
       </v-card>
-        <create-counterparty :isEdit="isEdit" :isOpen="isCreate" @toggleIsOpen="isCreate = false; isEdit = false" :item="markedItem.id"/>
+        <create-counterparty :isEdit="isEdit" :isOpen="isCreate" @toggleIsOpen="isCreate = false; isEdit = false" :item="markedItem" />
     </v-col>
   </div>
 </template>
