@@ -1,41 +1,32 @@
 <script setup>
 import {onMounted, ref, watch} from "vue";
 import {useRouter} from "vue-router";
-import showToast from '@/composables/toast'
+import showToast from '../../../composables/toast'
+import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import priceType from '../../../api/priceType.js';
 import currency from '../../../api/currency.js';
-
 import {
   addMessage,
   editMessage,
   removeMessage,
   warningMessage,
   ErrorSelectMessage,
-  selectOneItemMessage
-} from "@/composables/constant/buttons.js";
-import Icons from "@/composables/Icons/Icons.vue";
-import binarySearch from "@/composables/binarySearch/binarySearch.js";
-
-import {restoreMessage} from "../../../composables/constant/buttons.js";
+  selectOneItemMessage,
+  restoreMessage
+} from "../../../composables/constant/buttons.js";
 
 const router = useRouter()
 
 const loading = ref(true)
 const loadingRate = ref(true)
 const dialog = ref(false)
-const digitalRef = ref(null)
-
 const idPriceType = ref(null)
 const hoveredRowIndex = ref(null)
 
-
 const currencyAdd = ref([])
 const currencyUpdate = ref([])
-
 const currencies = ref([])
-
-
 
 const isExistsPriceType = ref(false)
 const markedID = ref([]);
@@ -43,12 +34,8 @@ const markedItem = ref([])
 const priceTypeInDialogTitle = ref(null)
 const search = ref('')
 const selected = ref([])
-
 const nameRef = ref(null)
 const descriptionRef = ref(null)
-
-const valueRef = ref(null)
-
 const priceTypes = ref([])
 const paginations = ref([])
 
@@ -56,6 +43,7 @@ const headers = ref([
   {title: '№', key: 'id', align: 'start'},
   {title: 'Наименование', key: 'name'},
   {title: 'Валюта', key: 'currency.name'},
+  {title: 'Описание', key: 'description'},
 ])
 
 const rules = {
@@ -66,7 +54,7 @@ const rules = {
 const getPriceTypeData = async ({page, itemsPerPage, sortBy, search}) => {
   loading.value = true
   try {
-    const {data} = await priceType.get({page, itemsPerPage, sortBy}, search)
+    const { data } = await priceType.get({page, itemsPerPage, sortBy}, search)
 
     paginations.value = data.result.pagination
     priceTypes.value = data.result.data
@@ -76,7 +64,7 @@ const getPriceTypeData = async ({page, itemsPerPage, sortBy, search}) => {
 }
 
 
-const addpriceType = async ({page, itemsPerPage, sortBy}) => {
+const addPriceType = async ({page, itemsPerPage, sortBy}) => {
 
   const body = {
     name: nameRef.value,
@@ -89,15 +77,13 @@ const addpriceType = async ({page, itemsPerPage, sortBy}) => {
   if (res.status === 201) {
     await getPriceTypeData({page, itemsPerPage, sortBy})
     showToast(addMessage)
-    valueRef.value = null
     currencyAdd.value = null
-    descriptionRef.value = null;
+    descriptionRef.value = null
     idPriceType.value = res.data.result.id
     dialog.value = false
 
     markedID.value = []
     markedItem.value = []
-
   }
 
 }
@@ -133,7 +119,7 @@ const massRestore = async ({page, itemsPerPage, sortBy, search}) => {
     const {status} = await priceType.massRestore(body)
 
     if (status === 200) {
-      showToast(restoreMessage, 'red')
+      showToast(restoreMessage)
       await getPriceTypeData({page, itemsPerPage, sortBy}, search)
       markedID.value = []
       dialog.value = false
@@ -169,39 +155,9 @@ const update = async ({page, itemsPerPage, sortBy}) => {
 }
 
 
-const destroy = async ({page, itemsPerPage, sortBy}) => {
-  if (markedID.value === null) return showToast(warningMessage, 'warning')
-  try {
-    const {status} = await priceType.delete(markedID.value)
-    if (status === 200) {
-      showToast(removeMessage, 'red')
-      await getPriceTypeData({page, itemsPerPage, sortBy})
-      dialog.value = false
-      markedID.value = []
-    }
-  } catch (e) {
-
-  }
-}
-
-const restore = async ({page, itemsPerPage, sortBy}) => {
-  try {
-    const {status} = await priceType.restore(markedID.value)
-    if (status === 200) {
-      showToast(restoreMessage, 'green')
-      await getPriceTypeData({page, itemsPerPage, sortBy})
-      markedID.value = []
-    }
-  } catch (e) {
-
-  }
-}
-
-
 const getCurrencies = async () => {
   try {
     const {data} = await currency.get({page: 1, itemsPerPage: 100000})
-
 
     currencies.value = data.result.data.map(item => {
       return {
@@ -216,20 +172,13 @@ const getCurrencies = async () => {
 }
 
 
-onMounted(async () => {
-  await getCurrencies()
-})
 
 
-const handleCheckboxClick = function (item) {
+const handleCheckboxClick = (item) => {
   lineMarking(item)
 }
 
 const openDialog = (item) => {
-  if(markedID.value.length > 0) {
-    return showToast(selectOneItemMessage, 'warning');
-  }
-
   dialog.value = true
 
   if (item === 0) {
@@ -237,19 +186,12 @@ const openDialog = (item) => {
     isExistsPriceType.value = false
   } else {
     idPriceType.value = item.id
-
     markedID.value.push(item.id);
-    const index = binarySearch(priceTypes.value, item.id)
-
-    if (index !== 1) {
-      isExistsPriceType.value = true
-      nameRef.value = item.name
-      descriptionRef.value = item.description
-      currencyAdd.value = item.currency.id
-      priceTypeInDialogTitle.value = nameRef.value
-    } else {
-
-    }
+    isExistsPriceType.value = true
+    nameRef.value = item.name
+    descriptionRef.value = item.description
+    currencyAdd.value = item.currency.id
+    priceTypeInDialogTitle.value = nameRef.value
   }
 
 }
@@ -319,6 +261,10 @@ watch(dialog, newVal => {
   }
 })
 
+onMounted(async () => {
+  await getCurrencies()
+})
+
 
 </script>
 
@@ -379,7 +325,7 @@ watch(dialog, newVal => {
           <template v-slot:item="{ item, index }">
             <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)" @dblclick="openDialog(item)"
                 :class="{'bg-grey-lighten-2': markedID.includes(item.id) }">
-              <td class="">
+              <td>
                 <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
                   <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)"
                                   @change="handleCheckboxClick(item)">
@@ -387,13 +333,15 @@ watch(dialog, newVal => {
                   </CustomCheckbox>
                 </template>
                 <template v-else>
-                  <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
-                  <span>{{ index + 1 }}</span>
+                 <div  class="d-flex">
+                   <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
+                   <span>{{ index + 1 }}</span>
+                 </div>
                 </template>
               </td>
               <td>{{ item.name }}</td>
               <td>{{ item.currency.name }}</td>
-
+              <td>{{ item.description }}</td>
             </tr>
           </template>
         </v-data-table-server>
@@ -410,14 +358,14 @@ watch(dialog, newVal => {
                 <div class="d-flex ga-3 align-center mt-2 me-4">
                   <Icons v-if="isExistsPriceType"  @click="compute" name="delete"/>
                   <Icons v-if="isExistsPriceType" @click="update" name="save"/>
-                  <Icons v-else @click="addpriceType" name="save"/>
+                  <Icons v-else @click="addPriceType" name="save"/>
                 </div>
                 <v-btn @click="dialog = false" variant="text" :size="32" class="pt-2 pl-1">
                   <Icons name="close"/>
                 </v-btn>
               </div>
             </div>
-            <v-form class="d-flex w-100" @submit.prevent="addpriceType">
+            <v-form class="d-flex w-100" @submit.prevent="addPriceType">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100">
                   <v-text-field
@@ -441,16 +389,22 @@ watch(dialog, newVal => {
                       item-title="name"
                       item-value="id"
                   />
-
+                  <v-textarea
+                      v-model="descriptionRef"
+                      :rules="[rules.required]"
+                      color="green"
+                      rounded="md"
+                      variant="outlined"
+                      class="w-auto text-sm-body-1"
+                      density="compact"
+                      placeholder="Описание..."
+                      label="Описание"
+                  />
                 </v-col>
               </v-row>
             </v-form>
-
-
           </v-card>
         </v-dialog>
-
-
       </v-card>
     </v-col>
   </div>

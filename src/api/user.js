@@ -2,22 +2,22 @@ import {api, buildParams} from './api.js'
 
 export default {
   add(data) {
-    return  api.post('/employee', data)
+    return  api.post('/user', data)
   },
   get({page = 1, itemsPerPage = 10, sortBy}, search = '') {
     const params = buildParams(page, itemsPerPage, sortBy, search);
-    return api.get('/employee', { params });
+    return api.get('/user', { params });
   },
   show(id) {
-    return api.get(`/employee/${id}`)
+    return api.get(`/user/${id}`)
   },
   update(id, body) {
-    return api.patch(`/employee/${id}`, body)
+    return api.patch(`/user/${id}`, body)
   },
   remove(ids) {
-    return api.post('/employee/massRemove', ids)
+    return api.post('/user/massRemove', ids)
   },
   restore(ids) {
-    return api.post('/employee/massRestore', ids)
+    return api.post('/user/massRestore', ids)
   }
 }
