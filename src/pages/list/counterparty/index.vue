@@ -1,8 +1,8 @@
 <script setup>
-import {ref, watch} from "vue";
+import { ref, watch } from "vue";
 import counterpartyApi from "../../../api/counterparty";
 import showDate from "../../../composables/date/showDate"
-import { removeMessage, restoreMessage} from "../../../composables/constant/buttons.js";
+import { removeMessage, restoreMessage } from "../../../composables/constant/buttons.js";
 import showToast from '../../../composables/toast'
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
@@ -40,9 +40,9 @@ const formatRole = (roles) => {
   return roles.map((role) => roleMap[role] || "Неизвестная роль").join(", ");
 };
 
-watch(() => isEdit.value, (newValue, {page, itemsPerPage, sortBy}, search ) => {
+watch(() => isEdit.value, (newValue, { page, itemsPerPage, sortBy }, search) => {
   if (newValue === false) {
-    getCounterparty({page, itemsPerPage, sortBy}, search)
+    getCounterparty({ page, itemsPerPage, sortBy }, search)
   }
 });
 
@@ -63,10 +63,10 @@ const editItem = (item) => {
 }
 
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
-  if(markedItem.value.deleted_at) {
+  if (markedItem.value.deleted_at) {
     return massRestoreCounterparty({ page, itemsPerPage, sortBy })
   }
-  else{
+  else {
     return massDel({ page, itemsPerPage, sortBy, search })
   }
 }
@@ -91,30 +91,30 @@ const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
   const body = {
     ids: markedID.value
   }
-  try{
+  try {
     const { status } = await counterpartyApi.massDeletion(body)
     if (status === 200) {
       showToast(removeMessage, 'red')
-      await getCounterparty({page, itemsPerPage, sortBy}, search)
+      await getCounterparty({ page, itemsPerPage, sortBy }, search)
       markedID.value = []
     }
-  }catch(e){
+  } catch (e) {
     console.log(e)
   }
 }
 
 const massRestoreCounterparty = async ({ page, itemsPerPage, sortBy }) => {
-  try{
+  try {
     const body = {
       ids: markedID.value
     }
-    const { status } = await  counterpartyApi.massRestore(body)
+    const { status } = await counterpartyApi.massRestore(body)
     if (status === 200) {
       showToast(restoreMessage, 'green')
       await getCounterparty({ page, itemsPerPage, sortBy })
       markedID.value = []
     }
-  }catch (e) {
+  } catch (e) {
     console.log(e)
   }
 }
@@ -132,61 +132,41 @@ const massRestoreCounterparty = async ({ page, itemsPerPage, sortBy }) => {
         <v-card variant="text" min-width="500" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons @click="isCreate = true" name="add"/>
-              <Icons name="copy"/>
-              <Icons @click="compute({ page, itemsPerPage, sortBy, search })" name="delete"/>
+              <Icons @click="isCreate = true" name="add" />
+              <Icons name="copy" />
+              <Icons @click="compute({ page, itemsPerPage, sortBy, search })" name="delete" />
             </div>
             <div class="w-100">
-              <v-text-field
-                  v-model="search"
-                  prepend-inner-icon="search"
-                  density="compact"
-                  label="Поиск..."
-                  variant="outlined"
-                  color="info"
-                  rounded="lg"
-                  clear-icon="close"
-                  hide-details
-                  single-line
-                  clearable
-                  flat
-              ></v-text-field>
+              <v-text-field v-model="search" prepend-inner-icon="search" density="compact" label="Поиск..."
+                variant="outlined" color="info" rounded="lg" clear-icon="close" hide-details single-line clearable
+                flat></v-text-field>
             </div>
           </div>
-          <Icons name="filter" class="mt-1"/>
+          <Icons name="filter" class="mt-1" />
         </v-card>
       </div>
 
       <v-card class="table mt-2">
 
-        <v-data-table-server
-          style="height: 78vh"
-          fixed-header
-          :items="counterparty"
-          :headers="headers"
-          :loading="loading"
-          items-per-page-text="Элементов на странице:"
-          loading-text="Загрузка"
-          no-data-text="Нет данных"
-          :search="search"
-          @update:options="getCounterparty"
-          v-model:items-per-page="paginations.per_page"
-          :items-length="paginations.total || 0"
-          :item-value="headers.title"
-          hover
-          fixed-footer
-        >
+        <v-data-table-server style="height: 78vh" fixed-header :items="counterparty" :headers="headers"
+          :loading="loading" items-per-page-text="Элементов на странице:" loading-text="Загрузка"
+          no-data-text="Нет данных" :search="search" @update:options="getCounterparty"
+          v-model:items-per-page="paginations.per_page" :items-length="paginations.total || 0"
+          :item-value="headers.title" hover fixed-footer>
           <template v-slot:item="{ item, index }">
-            <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)" @dblclick="editItem(item)" :class="{'bg-grey-lighten-2': markedID.includes(item.id)}">
+            <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)"
+              @dblclick="editItem(item)" :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }">
               <td>
                 <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
                   <CustomCheckbox :checked="markedID.includes(item.id)" @change="lineMarking(item)">
                     <span>{{ index + 1 }}</span>
                   </CustomCheckbox>
                 </template>
+
                 <template v-else>
                   <span class="d-flex">
-                    <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
+                    <Icons style="margin-right: 10px; margin-top: 2px;"
+                      :name="item.deleted_at === null ? 'valid' : 'inValid'" />
                     <span>{{ index + 1 }}</span>
                   </span>
                 </template>
@@ -215,7 +195,8 @@ const massRestoreCounterparty = async ({ page, itemsPerPage, sortBy }) => {
         </v-data-table-server>
 
       </v-card>
-        <create-counterparty :isEdit="isEdit" :isOpen="isCreate" @toggleIsOpen="isCreate = false; isEdit = false" :item="markedItem" />
+      <create-counterparty :isEdit="isEdit" :isOpen="isCreate" @toggleIsOpen="isCreate = false; isEdit = false"
+        :item="markedItem" />
     </v-col>
   </div>
 </template>
