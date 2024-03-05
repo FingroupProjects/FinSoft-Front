@@ -13,7 +13,6 @@ import {
   selectOneItemMessage,
   restoreMessage
 } from "../../../composables/constant/buttons.js";
-import employee from "../../../api/employee.js";
 import organization from "../../../api/organizations.js";
 import priceType from "../../../api/priceType.js";
 
@@ -21,18 +20,18 @@ const router = useRouter()
 
 const loading = ref(true)
 const dialog = ref(false)
-const idEmployee = ref(null)
+const idUser = ref(null)
 const hoveredRowIndex = ref(null)
 
-const isExistsEmployee = ref(false)
+const isExistsUser = ref(false)
 const markedID = ref([]);
 const markedItem = ref([])
-const employeeDialogTitle = ref(null)
+const userDialogTitle = ref(null)
 const search = ref('')
 
 const nameRef = ref(null)
 
-const employees = ref([])
+const users = ref([])
 const organizations = ref([])
 const paginations = ref([])
 
@@ -46,13 +45,13 @@ const rules = {
 }
 
 
-const getEmployee = async ({page, itemsPerPage, sortBy, search}) => {
+const getUser = async ({page, itemsPerPage, sortBy, search}) => {
   loading.value = true
   try {
-    const { data } = await employee.get({page, itemsPerPage, sortBy}, search)
+    const { data } = await user.get({page, itemsPerPage, sortBy}, search)
 
     paginations.value = data.result.pagination
-    employees.value = data.result.data
+    users.value = data.result.data
     loading.value = false
   } catch (e) {
   }
@@ -68,9 +67,9 @@ const addPriceType = async ({page, itemsPerPage, sortBy}) => {
   const res = await priceType.add(body)
 
   if (res.status === 201) {
-    await getEmployee({page, itemsPerPage, sortBy})
+    await getUser({page, itemsPerPage, sortBy})
     showToast(addMessage)
-    idEmployee.value = res.data.result.id
+    idUser.value = res.data.result.id
     dialog.value = false
 
     markedID.value = []
@@ -90,7 +89,7 @@ const massDel = async ({page, itemsPerPage, sortBy, search}) => {
     if (status === 200) {
 
       showToast(removeMessage, 'red')
-      await getEmployee({page, itemsPerPage, sortBy}, search)
+      await getUser({page, itemsPerPage, sortBy}, search)
       markedID.value = []
       dialog.value = false
     }
@@ -130,7 +129,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
   }
 
   try {
-    const {status} = await priceType.update(idEmployee.value, body)
+    const {status} = await priceType.update(idUser.value, body)
     if (status === 200) {
       nameRef.value = null
 
@@ -168,25 +167,25 @@ const openDialog = (item) => {
   dialog.value = true
 
   if (item === 0) {
-    idEmployee.value = 0
-    isExistsEmployee.value = false
+    idUser.value = 0
+    isExistsUser.value = false
   } else {
-    idEmployee.value = item.id
+    idUser.value = item.id
     markedID.value.push(item.id);
-    isExistsEmployee.value = true
+    isExistsUser.value = true
     nameRef.value = item.name
-    employeeDialogTitle.value = nameRef.value
+    userDialogTitle.value = nameRef.value
   }
 
 }
 
 
-const addBasedOnEmployee = () => {
+const addBasedOnUser = () => {
   if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
   if (markedID.value.length > 1) return showToast(selectOneItemMessage, 'warning')
   dialog.value = true
 
-  employees.value.forEach(item => {
+  users.value.forEach(item => {
     if (markedID.value[0] === item.id) {
       nameRef.value = item.name
     }
@@ -211,13 +210,13 @@ const lineMarking = (item) => {
     if (firstMarkedItem && firstMarkedItem.deleted_at) {
       if(item.deleted_at === null) {
         showToast(ErrorSelectMessage, 'warning')
-        return;
+        return
       }
     }
     if (firstMarkedItem && firstMarkedItem.deleted_at === null) {
       if(item.deleted_at !== null) {
         showToast(ErrorSelectMessage, 'warning')
-        return;
+        return
       }
     }
   }
@@ -250,13 +249,13 @@ onMounted(async () => {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Сотрудники</span>
+          <span>Пользователи</span>
         </div>
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
               <Icons @click="openDialog(0)" name="add"/>
-              <Icons @click="addBasedOnEmployee" name="copy"/>
+              <Icons @click="addBasedOnUser" name="copy"/>
               <Icons @click="compute" name="delete"/>
             </div>
 
@@ -292,10 +291,10 @@ onMounted(async () => {
             :loading="loading"
             :headers="headers"
             :items-length="paginations.total || 0"
-            :items="employees"
+            :items="users"
             :item-value="headers.title"
             :search="search"
-            @update:options="getEmployee"
+            @update:options="getUser"
             fixed-header
             hover
         >
@@ -328,11 +327,11 @@ onMounted(async () => {
           <v-card style="border: 2px solid #3AB700" min-width="500"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
-              <span>{{ isExistsEmployee ? employeeDialogTitle + ' (изменение)' : 'Добавление' }}</span>
+              <span>{{ isExistsUser ? userDialogTitle + ' (изменение)' : 'Добавление' }}</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons v-if="isExistsEmployee"  @click="compute" name="delete"/>
-                  <Icons v-if="isExistsEmployee" @click="update" name="save"/>
+                  <Icons v-if="isExistsUser"  @click="compute" name="delete"/>
+                  <Icons v-if="isExistsUser" @click="update" name="save"/>
                   <Icons v-else @click="addPriceType" name="save"/>
                 </div>
                 <v-btn @click="dialog = false" variant="text" :size="32" class="pt-2 pl-1">
