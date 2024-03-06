@@ -4,7 +4,7 @@ export default {
   add(data) {
     return  api.post('/position', data)
   },
-  get({page = 1, itemsPerPage = 10, sortBy}, search) {
+  get({page = 1, itemsPerPage = 25, sortBy}, search) {
     const params = buildParams(page, itemsPerPage, sortBy, search);
     return api.get('/position', { params });
   },

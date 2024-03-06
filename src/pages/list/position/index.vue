@@ -60,7 +60,7 @@ const getPositionData = async ({ page, itemsPerPage, sortBy, search }) => {
   loading.value = true
   try {
     const { data } = await position.get({page, itemsPerPage, sortBy}, search)
-
+    console.log(data.result)
     paginations.value = data.result.pagination
     positions.value = data.result.data
     loading.value = false
@@ -301,8 +301,19 @@ watch(dialog, newVal => {
             :items-length="paginations.total || 0"
             :items="positions"
             :item-value="headers.title"
-            :search="search"
+            :items-per-page="25"
             @update:options="getPositionData"
+            page-text =  '{0}-{1} от {2}'
+            :items-per-page-options="[
+        {value: 25, title: '25'},
+        {value: 50, title: '50'},
+        {value: 100, title: '100'},
+    ]"
+
+
+            :search="search"
+
+
             fixed-header
             hover
         >
