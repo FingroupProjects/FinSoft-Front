@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch,onMounted } from "vue";
 import organization from '../../../api/organizations';
 import { 
    addMessage,
@@ -11,11 +11,14 @@ import showToast from "../../../composables/toast";
 import binarySearch from "../../../composables/binarySearch/binarySearch.js";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import Icons from "../../../composables/Icons/Icons.vue";
+import employee from "../../../api/employee";
 
 
 const addDialog = ref(false);
 const updateDialog = ref(false)
 const deleteDialog = ref(false)
+const isCreate = ref(false)
+const isEdit = ref(false)
 const loading = ref(true)
 const dialog = ref(false)
 const markedID = ref([])
@@ -28,9 +31,15 @@ const organizationInDialogTitle = ref(null)
 
 const organizations = ref([]);
 const paginations = ref([])
+const employees = ref([]);
 const idOrganizations = ref(null)
 
 const nameRef = ref(null)
+const innRef = ref(null);
+const directorRef = ref(null);
+const accountantRef = ref(null);
+const addressRef = ref(null);
+const descriptionRef = ref(null);
 const search = ref('')
 
 const rules = {
@@ -53,72 +62,94 @@ const lineMarking = (item) => {
 }
 
 
-const getOrganizationData = async ({ page, itemsPerPage, sortBy, search }) => {
-  loading.value = true
+const getEmployees = async () => {
   try {
-    const { data } = await organization.getAll({page, itemsPerPage, sortBy}, search)
-    paginations.value = data.result.pagination
-    organizations.value = data.result.data
-    loading.value = false
-  } catch (e) {
+    const response = await employee.get();
+    employees.value = response.data;
+  } catch (error) {
+    console.error(error);
   }
-}
+};
+onMounted(getEmployees);
+
+const getOrganizationData = async ({ page, itemsPerPage, sortBy, search }) => {
+  loading.value = true;
+  try {
+    const { data } = await organization.get({ page, itemsPerPage, sortBy }, search);
+    organizations.value = data.result.data.map((item) => ({
+      ...item,
+    }));
+    paginations.value = data.result.pagination;
+    loading.value = false;
+  } catch (error) {
+    console.error(error);
+  }
+};
 
 const openDialog = (item) => {
-  dialog.value = true
+  addDialog.value = true;
   if (item === 0) {
-    idOrganizations.value = 0
-    isExistsOrganization.value = false
+    idOrganizations.value = 0;
+    isExistsOrganization.value = false;
   } else {
-    idOrganizations.value = item.id
-
-    const index = binarySearch(organizations.value, item.id)
-
+    idOrganizations.value = item.id;
+    const index = binarySearch(organizations.value, item.id);
     if (index !== 1) {
-      isExistsOrganization.value = true
-      nameRef.value = item.name
-      organizationInDialogTitle.value = nameRef.value
+      isExistsOrganization.value = true;
+      nameRef.value = item.name;
+      organizationInDialogTitle.value = nameRef.value;
     } else {
     }
   }
-}
+};
+
 
 const addOrganization = async ({ page, itemsPerPage, sortBy }) => {
+  const body = {
+    name: nameRef.value,
+    inn: innRef.value,
+    director: directorRef.value,
+    accountant: accountantRef.value,
+    address: addressRef.value,
+    description: descriptionRef.value,
+  };
 
-const body = {
-  name: nameRef.value,
-}
-const res = await organization.add(body)
-if (res.status === 201) {
-  await getOrganizationData({ page, itemsPerPage, sortBy })
-  showToast(addMessage)
-  valueRef.value = null
-  idOrganizations.value = res.data.result.id
-}
-}
+  const res = await organization.add(body);
+  if (res.status === 201) {
+    await getOrganizationData({ page, itemsPerPage, sortBy });
+    showToast(addMessage);
+    valueRef.value = null;
+    idOrganizations.value = res.data.result.id;
+  }
+};
+
+const addNewOrganization = async () => {
+  await addOrganization({ page, itemsPerPage, sortBy });
+  addDialog.value = false; 
+};
+
 
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
-  if(markedID.value.length === 1 && markedItem.value.deleted_at === null) {
-    return removeOrganization({page, itemsPerPage, sortBy, search})
+  if (markedItem.value.deleted_at) {
+    return massRestoreCounterparty({ page, itemsPerPage, sortBy })
   }
-  else if(markedID.value.length === 1 && markedItem.value.deleted_at) {
-    return restoreCounterparty({ page, itemsPerPage, sortBy })
-  }
-  else{
+  else {
     return massDel({ page, itemsPerPage, sortBy, search })
-
   }
 }
 
-const restoreCounterparty = async ({ page, itemsPerPage, sortBy }) => {
-  try{
-    const { status } = await  organization.restore(markedID.value)
+const massRestoreCounterparty = async ({ page, itemsPerPage, sortBy }) => {
+  try {
+    const body = {
+      ids: markedID.value
+    }
+    const { status } = await organization.massRestore(body)
     if (status === 200) {
       showToast(restoreMessage, 'green')
       await getOrganizationData({ page, itemsPerPage, sortBy })
       markedID.value = []
     }
-  }catch (e) {
+  } catch (e) {
     console.log(e)
   }
 }
@@ -127,14 +158,14 @@ const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
   const body = {
     ids: markedID.value
   }
-  try{
+  try {
     const { status } = await organization.massDeletion(body)
     if (status === 200) {
       showToast(removeMessage, 'red')
-      await getOrganizationData({page, itemsPerPage, sortBy}, search)
+      await getOrganizationData({ page, itemsPerPage, sortBy }, search)
       markedID.value = []
     }
-  }catch(e){
+  } catch (e) {
     console.log(e)
   }
 }
@@ -143,49 +174,17 @@ const handleCheckboxClick = function (item) {
   lineMarking(item)
 }
 
-const update = async ({page, itemsPerPage, sortBy}) => {
-
-const body = {
-  name: nameRef.value,
+const editItem = (item) => {
+  isCreate.value = true;
+  isEdit.value = true;
+  markedItem.value = item.id
 }
 
-try {
-  const { status } = await organization.update(idOrganizations.value, body)
-  if (status === 200) {
-    await getOrganizationData({page, itemsPerPage, sortBy})
-    showToast(editMessage)
+watch(() => isEdit.value, (newValue, { page, itemsPerPage, sortBy }, search) => {
+  if (newValue === false) {
+    getOrganizationData({ page, itemsPerPage, sortBy }, search)
   }
-} catch (e) {
-  console.log(e)
-}
-}
-
-const removeOrganization = async ({page, itemsPerPage, sortBy}) => {
-  if (markedID.value === null) return showToast(warningMessage, 'warning')
-
-  try {
-    const {status} = await organization.remove(markedID.value)
-    if (status === 200) {
-      showToast(removeMessage, 'red')
-      await getOrganizationData({page, itemsPerPage, sortBy})
-      dialog.value = false
-      markedID.value = null
-    }
-  } catch (e) {
-  }
-}
-
-watch(updateDialog, (newValue) => {
-  if(!newValue) {
-    nameRef.value = null
-  }
-})
-
-watch(dialog, newVal => {
-  if (!newVal) {
-    nameRef.value = null
-  }
-})
+});
 </script>
 
 <template>
@@ -198,9 +197,9 @@ watch(dialog, newVal => {
       <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
         <div class="d-flex w-100">
           <div class="d-flex ga-2 mt-1 me-3">
-            <Icons @click="openDialog(0)" name="add"/>
-            <Icons name="copy"/>
-            <Icons @click="compute({ page, itemsPerPage, sortBy, search })" name="delete"/>
+            <Icons @click="addDialog = true" name="add" />
+              <Icons name="copy" />
+              <Icons @click="compute({ page, itemsPerPage, sortBy, search })" name="delete" />
           </div>
 
           <div class="w-100">
@@ -226,7 +225,7 @@ watch(dialog, newVal => {
 
     <v-card class="mt-4 table ">
         <v-data-table-server
-            style="height: 65vh"
+            style="height: 78vh"
             fixed-header
             :loading="loading"
             v-model:items-per-page="paginations.per_page"
@@ -264,40 +263,96 @@ watch(dialog, newVal => {
     
       <!-- modal -->
       <v-card>
-      <v-dialog class="mt-2 pa-2"  v-model="dialog">
-        <v-card style="border: 2px solid #3AB700" min-width="300" class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
+      <v-dialog class="mt-2 pa-2"  v-model="addDialog">
+        <v-card style="border: 2px solid #3AB700" min-width="500" class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
           <div class="d-flex justify-space-between align-center mb-2">
             <span class="">{{ isExistsOrganization ? organizationInDialogTitle + '' : 'Добавление' }}</span>
              <div class="d-flex align-center justify-space-between">
               <div class="d-flex ga-3 align-center mt-2 me-4">
                 <Icons @click="removeOrganization" name="delete"/>
                 <Icons v-if="isExistsOrganization" @click="update" name="save"/>
-                <Icons v-else @click="addOrganization" name="save"/>
+                <Icons v-else @click="addNewOrganization" name="save"/>
               </div>
               <v-btn @click="dialog = false"  variant="text" :size="32" class="pt-2 pl-1">
-                <Icons name="close"/>
+                <Icons name="close" @click="addDialog = false"/>
               </v-btn>
             </div>
           </div>
           <v-form class="d-flex w-100" @submit.prevent="addOrganization">
-            <v-row class="w-100">
-              <v-col class="d-flex flex-column w-100">
-                <v-text-field
-                    v-model="nameRef"
-                    :rules="[rules.required]"
-                    color="green"
-                    rounded="lg"
-                    variant="outlined"
-                    class="w-auto text-sm-body-1"
-                    density="compact"
-                    placeholder="Огранизация"
-                    label="Название"
-                    clear-icon="close"
-                    clearable
-                />
-              </v-col>
-            </v-row>
-          </v-form>
+  <v-row class="w-100">
+    <v-col class="d-flex flex-column w-100">
+      <v-text-field
+          v-model="nameRef"
+          :rules="[rules.required]"
+          color="green"
+          rounded="lg"
+          variant="outlined"
+          class="w-auto text-sm-body-1"
+          density="compact"
+          placeholder="Организация"
+          label="Наименования"
+          clear-icon="close"
+          clearable
+      />
+      <v-text-field
+          v-model="innRef"
+          color="green"
+          rounded="lg"
+          variant="outlined"
+          class="w-auto text-sm-body-1"
+          density="compact"
+          placeholder="ИНН"
+          label="ИНН"
+          clear-icon="close"
+          clearable
+      />
+        <v-select
+        v-model="directorRef"
+        :items="employees"
+        item-text="name"
+        item-value="id"
+        label="Директор"
+        dense
+        outlined
+      ></v-select>
+      <v-select
+        v-model="accountantRef"
+        :items="employees"
+        item-text="name"
+        item-value="id"
+        label="Гл. бухгалтер"
+        dense
+        outlined
+      ></v-select>
+      <v-text-field
+          v-model="addressRef"
+          color="green"
+          rounded="lg"
+          variant="outlined"
+          class="w-auto text-sm-body-1"
+          density="compact"
+          placeholder="Адрес"
+          label="Адрес"
+          clear-icon="close"
+          clearable
+      />
+      <v-text-field
+          v-model="descriptionRef"
+          color="green"
+          rounded="lg"
+          variant="outlined"
+          class="w-auto text-sm-body-1"
+          density="compact"
+          placeholder="Описание"
+          label="Описание"
+          clear-icon="close"
+          style="height: 120px; margin-bottom: -20px;"
+          clearable
+      />
+    </v-col>
+  </v-row>
+</v-form>
+
         </v-card>
       </v-dialog>
     </v-card>
