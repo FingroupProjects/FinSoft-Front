@@ -50,29 +50,9 @@ const routes = [
     component: () => import("../pages/list/currency/index.vue"),
   },
   {
-    path: "/list/currency/:id",
-    name: "currencyShow",
-    component: () => import("../pages/list/currency/show.vue"),
-  },
-  {
     path: "/list/counterparty",
     name: "counterparty",
     component: () => import("../pages/list/counterparty/index.vue"),
-  },
-  {
-    path: "/list/createCounterparty",
-    name: "createCounterparty",
-    component: () => import("../pages/list/counterparty/create.vue"),
-  },
-  {
-    path: "/list/renameCounterparty/:id",
-    name: "renameCounterparty",
-    component: () => import("../pages/list/counterparty/update.vue"),
-  },
-  {
-    path: "/list/detailCounterparty/:id",
-    name: "detailCounterparty",
-    component: () => import("../pages/list/counterparty/detail.vue"),
   },
   {
     path: "/list/organizationBill",
@@ -85,34 +65,9 @@ const routes = [
     component: () => import("../pages/list/organization/index.vue"), 
   },
   {
-    path: "/list/organizationBill/create",
-    name: "createOrganizationBill",
-    component: () => import("../pages/list/organizationBill/create.vue"),
-  },
-  {
-    path: "/list/organizationBill/edit/:id",
-    name: "editOrganizationBill",
-    component: () => import("../pages/list/organizationBill/edit.vue"),
-  },
-  {
     path: "/list/priceType",
     name: "priceType",
     component: () => import("../pages/list/priceType/index.vue"),
-  },
-  {
-    path: "/list/counterpartyAgreement",
-    name: "counterpartyAgreement",
-    component: () => import("../pages/list/counterpartyAgreement/index.vue"),
-  },
-  {
-    path: "/list/createCounterpartyAgreement",
-    name: "createCounterpartyAgreement",
-    component: () => import("../pages/list/counterpartyAgreement/create.vue"),
-  },
-  {
-    path: "/list/updateCounterpartyAgreement/:id",
-    name: "updateCounterpartyAgreement",
-    component: () => import("../pages/list/counterpartyAgreement/update.vue"),
   },
   {
     path: "/list/cashRegister",
