@@ -15,6 +15,7 @@ import {
 } from "../../../composables/constant/buttons.js";
 import organization from "../../../api/organizations.js";
 import priceType from "../../../api/priceType.js";
+import user from "../../../api/user.js";
 
 const router = useRouter()
 
@@ -52,13 +53,14 @@ const getUser = async ({page, itemsPerPage, sortBy, search}) => {
 
     paginations.value = data.result.pagination
     users.value = data.result.data
+    console.log(users.value)
     loading.value = false
   } catch (e) {
   }
 }
 
 
-const addPriceType = async ({page, itemsPerPage, sortBy}) => {
+const addUser = async ({page, itemsPerPage, sortBy}) => {
 
   const body = {
     name: nameRef.value,
@@ -171,6 +173,7 @@ const openDialog = (item) => {
     isExistsUser.value = false
   } else {
     idUser.value = item.id
+    console.log(markedID.value)
     markedID.value.push(item.id);
     isExistsUser.value = true
     nameRef.value = item.name
@@ -305,13 +308,13 @@ onMounted(async () => {
                 <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
                   <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)"
                                   @change="handleCheckboxClick(item)">
-                    <span>{{ index + 1 }}</span>
+                    <span>{{ item.id }}</span>
                   </CustomCheckbox>
                 </template>
                 <template v-else>
                   <div  class="d-flex">
                     <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
-                    <span>{{ index + 1 }}</span>
+                    <span>{{ item.id }}</span>
                   </div>
                 </template>
               </td>
@@ -324,37 +327,45 @@ onMounted(async () => {
       <!-- Modal -->
       <v-card>
         <v-dialog class="mt-2 pa-2" v-model="dialog">
-          <v-card style="border: 2px solid #3AB700" min-width="500"
+          <v-card style="border: 2px solid #3AB700" min-width="600"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
-              <span>{{ isExistsUser ? userDialogTitle + ' (изменение)' : 'Добавление' }}</span>
+              <span>{{ isExistsUser ?  'Пользователь: ' + userDialogTitle : 'Добавление' }}</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
                   <Icons v-if="isExistsUser"  @click="compute" name="delete"/>
                   <Icons v-if="isExistsUser" @click="update" name="save"/>
-                  <Icons v-else @click="addPriceType" name="save"/>
+                  <Icons v-else @click="addUser" name="save"/>
                 </div>
                 <v-btn @click="dialog = false" variant="text" :size="32" class="pt-2 pl-1">
                   <Icons name="close"/>
                 </v-btn>
               </div>
             </div>
-            <v-form class="d-flex w-100" @submit.prevent="addPriceType">
+            <v-form class="d-flex w-100" @submit.prevent="addUser">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100">
-                  <v-text-field
-                      v-model="nameRef"
-                      :rules="[rules.required]"
-                      color="green"
-                      rounded="md"
-                      variant="outlined"
-                      class="w-auto text-sm-body-1"
-                      density="compact"
-                      placeholder="Доллар"
-                      label="Название"
-                      clear-icon="close"
-                      clearable
-                  />
+                  <div>
+                    <v-text-field
+                        v-model="nameRef"
+                        :rules="[rules.required]"
+                        color="green"
+                        rounded="md"
+                        variant="outlined"
+                        class="w-auto text-sm-body-1"
+                        density="compact"
+                        placeholder="Доллар"
+                        label="Название"
+                        clear-icon="close"
+                        clearable
+                    />
+                    <CustomCheckbox
+                        v-model="markedID"
+                        :checked="markedID.includes(item.id)"
+                        @change="handleCheckboxClick(item)">
+                      <span>{{ item.id }}</span>
+                    </CustomCheckbox>
+                  </div>
                   <v-select
                       variant="outlined"
                       label="Выберите валюту"

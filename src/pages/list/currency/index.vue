@@ -175,10 +175,7 @@ const openDialog = (item) => {
     idCurrency.value = 0
     isExistsCurrency.value = false
   } else {
-    if (item.deleted_at !== null) {
-      showToast(firstRestoreRecordMessage, 'red')
-      return
-    }
+
     idCurrency.value = item.id
     isExistsCurrency.value = true
     nameRef.value = item.name
@@ -272,7 +269,7 @@ const restoreCurrencyRate = async ({page, itemsPerPage, sortBy}) => {
 }
 
 const addBasedOnCurrency = () => {
-  if (markedID.value.length !== 1) return showToast(selectOneItemMessage, 'warning')
+  if (markedID.value.length !== 1 && !isExistsCurrency.value) return showToast(selectOneItemMessage, 'warning')
   console.log(markedID.value.length)
   dialog.value = true
 
@@ -372,8 +369,9 @@ watch(dialog, newVal => {
     nameRef.value = null
     symbolRef.value = null
     digitalRef.value = null
-    rates.value = []
     loadingRate.value = true
+    isExistsCurrency.value = false
+    rates.value = []
   }
 })
 
@@ -445,13 +443,13 @@ watch(rateDialog, newVal => {
             <td>
               <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
                 <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)" @change="handleCheckboxClick(item)">
-                  <span>{{ index + 1 }}</span>
+                  <span>{{ item.id }}</span>
                 </CustomCheckbox>
               </template>
               <template v-else>
                 <div>
                   <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
-                  <span>{{ index + 1 }}</span>
+                  <span>{{ item.id }}</span>
                 </div>
               </template>
             </td>
@@ -528,7 +526,7 @@ watch(rateDialog, newVal => {
           </v-form>
 
           <v-card class="table" style="border: 1px solid #3AB700">
-            <div class="d-flex w-100 rounded-t-lg mb-1 align-center " style="border-bottom: 1px solid #3AB700">
+            <div v-if="isExistsCurrency" class="d-flex w-100 rounded-t-lg mb-1 align-center " style="border-bottom: 1px solid #3AB700">
               <div class="d-flex justify-end w-100 ga-2 pt-1 me-2" style="padding-top: 4px !important;">
                 <Icons @click="computeRate" name="delete"/>
                 <Icons @click="addDialogRate" name="add"/>
