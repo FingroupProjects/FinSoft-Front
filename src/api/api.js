@@ -12,7 +12,7 @@ export const api = axios.create({
   headers,
 });
 
-export function buildParams(page = 1, itemsPerPage = 25, sortBy, search = '') {
+export function buildParams(page = 1, itemsPerPage = 10, sortBy, search = '') {
   const params = {
     page: page,
     itemsPerPage: itemsPerPage,
