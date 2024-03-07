@@ -42,6 +42,7 @@ const formatRole = (roles) => {
 
 watch(() => isEdit.value, (newValue, { page, itemsPerPage, sortBy }, search) => {
   if (newValue === false) {
+
     getCounterparty({ page, itemsPerPage, sortBy }, search)
   }
 });
@@ -148,11 +149,28 @@ const massRestoreCounterparty = async ({ page, itemsPerPage, sortBy }) => {
 
       <v-card class="table mt-2">
 
-        <v-data-table-server style="height: 78vh" fixed-header :items="counterparty" :headers="headers"
-          :loading="loading" items-per-page-text="Элементов на странице:" loading-text="Загрузка"
-          no-data-text="Нет данных" :search="search" @update:options="getCounterparty"
-          v-model:items-per-page="paginations.per_page" :items-length="paginations.total || 0"
-          :item-value="headers.title" hover fixed-footer>
+        <v-data-table-server
+          style="height: 78vh"
+          fixed-header
+          :items="counterparty"
+          :headers="headers"
+          :loading="loading"
+          items-per-page-text="Элементов на странице:"
+          loading-text="Загрузка"
+          no-data-text="Нет данных"
+          :search="search"
+          @update:options="getCounterparty"
+          v-model:items-per-page="paginations.per_page"
+          :items-length="paginations.total || 0"
+          :item-value="headers.title"
+          hover
+          fixed-footer
+          page-text =  '{0}-{1} от {2}'
+          :items-per-page-options="[
+          {value: 25, title: '25'},
+          {value: 50, title: '50'},
+          {value: 100, title: '100'},]"
+        >
           <template v-slot:item="{ item, index }">
             <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)"
               @dblclick="editItem(item)" :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }">

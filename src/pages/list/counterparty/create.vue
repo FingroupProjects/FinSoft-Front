@@ -87,6 +87,10 @@ watch(() => props.isEdit, (newValue) => {
   clearForm()
   if (newValue === true) {
     getId()
+  }else{
+    a.value = false
+    b.value = false
+    c.value = false
   }
 });
 
@@ -240,7 +244,7 @@ const CreateCounterparty = async () => {
       email: email.value,
       roles: roles.value,
     };
-    const { response } = await counterpartyApi.create(body);
+    await counterpartyApi.create(body);
     showToast("Успешно добавлена", "green");
     emits('toggleIsOpen');
     clearForm();
@@ -425,7 +429,7 @@ const currencyProps = (item) => {
           <span>{{ isEdit ? `Контрагент: ${modalTitle}` : 'Добавление' }}</span>
           <div class="d-flex align-center justify-space-between">
             <div class="d-flex align-center mt-2 me-4">
-              <Icons @click="isEdit ? updateCounterparty() : CreateCounterparty" name="save" />
+              <Icons @click="isEdit ? updateCounterparty() : CreateCounterparty()" name="save" />
             </div>
             <v-btn @click="dialog = false" variant="text" :size="32" class="pt-2 pl-1">
               <Icons name="close" />
@@ -493,7 +497,13 @@ const currencyProps = (item) => {
             :search="search"
             @update:options="getDocuments({}, idAgreement)"
             fixed-footer
-            hover>
+            hover
+            page-text =  '{0}-{1} от {2}'
+            :items-per-page-options="[
+            {value: 25, title: '25'},
+            {value: 50, title: '50'},
+            {value: 100, title: '100'},]"
+          >
             <template v-slot:item="{ item, index }">
               <tr
                 @mouseenter="hoveredRowIndex = index"
@@ -620,7 +630,7 @@ const currencyProps = (item) => {
                   :items="priceTypes"
                   variant="outlined"
                   item-title="name"
-                  label="Виды цен"
+                  label="Вид цены"
                   item-value="id"
                   hide-details
                   class="w-25"

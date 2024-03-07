@@ -25,8 +25,8 @@ $bezier: cubic-bezier(0.65, 0.25, 0.56, 0.96);
 }
 .check_svg{
   position: absolute;
-  top:0px;
-  left: 0px
+  top: 1px;
+  left: -0.5px
 }
 .mcui-checkbox,
 .mcui-radio {
