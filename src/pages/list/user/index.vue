@@ -25,7 +25,7 @@ const idUser = ref(null)
 const hoveredRowIndex = ref(null)
 
 const isExistsUser = ref(false)
-const markedID = ref([]);
+const markedID = ref([])
 const markedItem = ref([])
 const userDialogTitle = ref(null)
 const search = ref('')
@@ -167,13 +167,13 @@ const handleCheckboxClick = (item) => {
 
 const openDialog = (item) => {
   dialog.value = true
+  console.log(item)
 
   if (item === 0) {
     idUser.value = 0
     isExistsUser.value = false
   } else {
     idUser.value = item.id
-    console.log(markedID.value)
     markedID.value.push(item.id);
     isExistsUser.value = true
     nameRef.value = item.name
@@ -209,7 +209,7 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
 
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
-    const firstMarkedItem = priceTypes.value.find(el => el.id === markedID.value[0]);
+    const firstMarkedItem = users.value.find(el => el.id === markedID.value[0]);
     if (firstMarkedItem && firstMarkedItem.deleted_at) {
       if(item.deleted_at === null) {
         showToast(ErrorSelectMessage, 'warning')
@@ -298,6 +298,12 @@ onMounted(async () => {
             :item-value="headers.title"
             :search="search"
             @update:options="getUser"
+            page-text =  '{0}-{1} от {2}'
+            :items-per-page-options="[
+                {value: 25, title: '25'},
+                {value: 50, title: '50'},
+                {value: 100, title: '100'},
+            ]"
             fixed-header
             hover
         >
@@ -359,11 +365,8 @@ onMounted(async () => {
                         clear-icon="close"
                         clearable
                     />
-                    <CustomCheckbox
-                        v-model="markedID"
-                        :checked="markedID.includes(item.id)"
-                        @change="handleCheckboxClick(item)">
-                      <span>{{ item.id }}</span>
+                    <CustomCheckbox v-model="statusID">
+                      <span>Активный</span>
                     </CustomCheckbox>
                   </div>
                   <v-select
