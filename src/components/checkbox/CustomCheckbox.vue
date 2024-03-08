@@ -8,8 +8,8 @@ const props = defineProps(['checked'])
 <template>
   <label class="mcui-checkbox">
     <input type="checkbox" :checked="props.checked">
-    <div class="mr-2">
-      <svg class="mcui-check" viewBox="-2 -2 35 35" aria-hidden="true">
+    <div class="mr-2 block">
+      <svg class="mcui-check check_svg" viewBox="2 2 25 35" aria-hidden="true">
         <polyline points="7.57 15.87 12.62 21.07 23.43 9.93" />
       </svg>
     </div>
@@ -20,7 +20,14 @@ const props = defineProps(['checked'])
 $main: black; //#008cff;
 $grey: #8d9aa9;
 $bezier: cubic-bezier(0.65, 0.25, 0.56, 0.96);
-
+.block{
+  position: realtive;
+}
+.check_svg{
+  position: absolute;
+  top:0px;
+  left: 0px
+}
 .mcui-checkbox,
 .mcui-radio {
   display: flex;
@@ -116,8 +123,8 @@ $bezier: cubic-bezier(0.65, 0.25, 0.56, 0.96);
 }
 
 .mcui-check {
-  height: 100%;
-  width: 100%;
+  height: 15px;
+  width: 15px;
   transform: scale(1);
   color: $main;
   opacity: 0;
