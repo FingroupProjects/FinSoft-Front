@@ -319,6 +319,12 @@ onMounted(async () => {
             :item-value="headers.title"
             :search="search"
             @update:options="getPriceTypeData"
+            page-text =  '{0}-{1} от {2}'
+            :items-per-page-options="[
+                {value: 25, title: '25'},
+                {value: 50, title: '50'},
+                {value: 100, title: '100'},
+            ]"
             fixed-header
             hover
         >

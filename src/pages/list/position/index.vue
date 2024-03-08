@@ -1,8 +1,7 @@
 <script setup>
-import {onMounted, ref, watch} from "vue";
+import {ref, watch} from "vue";
 import {useRouter} from "vue-router";
-import showToast from '@/composables/toast'
-import currentDate from "@/composables/date/currentDate.js";
+import showToast from '../../../composables/toast'
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import position from '../../../api/position.js'
 import {
@@ -11,39 +10,32 @@ import {
   removeMessage,
   warningMessage,
   selectOneItemMessage
-} from "@/composables/constant/buttons.js";
-import Icons from "@/composables/Icons/Icons.vue";
-import binarySearch from "@/composables/binarySearch/binarySearch.js";
+} from "../../../composables/constant/buttons.js";
+import Icons from "../../../composables/Icons/Icons.vue";
+import binarySearch from "../../../composables/binarySearch/binarySearch.js";
 
 import {restoreMessage} from "../../../composables/constant/buttons.js";
 
 const router = useRouter()
 
 const loading = ref(true)
-const loadingRate = ref(true)
 const dialog = ref(false)
-const digitalRef = ref(null)
 
 const idPosition = ref(null)
 const hoveredRowIndex = ref(null)
 
-
 const isExistsPosition = ref(false)
-const isExistsPositionRate = ref(false)
 const markedID = ref([]);
 const markedItem = ref([])
 const positionInDialogTitle = ref(null)
 const search = ref('')
 const selected = ref([])
 
-
 const nameRef = ref(null)
 const valueRef = ref(null)
 
 const positions = ref([])
 const paginations = ref([])
-const rates = ref([])
-const paginationsRate = ref([])
 
 const headers = ref([
   { title: '№', key: 'id', align: 'start'},
@@ -147,36 +139,6 @@ const update = async ({page, itemsPerPage, sortBy}) => {
   }
 }
 
-
-const destroy = async ({page, itemsPerPage, sortBy}) => {
-  if (markedID.value === null) return showToast(warningMessage, 'warning')
-  try {
-    const {status} = await position.delete(markedID.value)
-    if (status === 200) {
-      showToast(removeMessage, 'red')
-      await getPositionData({page, itemsPerPage, sortBy})
-      dialog.value = false
-      markedID.value = []
-    }
-  } catch (e) {
-
-  }
-}
-
-const restore = async ({ page, itemsPerPage, sortBy }) => {
-  try{
-    const { status } = await  position.restore(markedID.value)
-    if (status === 200) {
-      showToast(restoreMessage, 'green')
-      await getPositionData({ page, itemsPerPage, sortBy })
-      markedID.value = []
-    }
-  }catch (e) {
-    console.log(e)
-  }
-}
-
-
 const handleCheckboxClick = function (item) {
   lineMarking(item)
 }
@@ -187,7 +149,6 @@ const openDialog = (item) => {
   }
 
   dialog.value = true
-  console.log(dialog.value)
   if (item === 0) {
     idPosition.value = 0
     isExistsPosition.value = false
@@ -245,8 +206,6 @@ const lineMarking = (item) => {
 watch(dialog, newVal => {
   if (!newVal) {
     nameRef.value = null
-    rates.value = []
-    loadingRate.value = true
   }
 })
 
@@ -301,19 +260,14 @@ watch(dialog, newVal => {
             :items-length="paginations.total || 0"
             :items="positions"
             :item-value="headers.title"
-            :items-per-page="25"
             @update:options="getPositionData"
             page-text =  '{0}-{1} от {2}'
             :items-per-page-options="[
-        {value: 25, title: '25'},
-        {value: 50, title: '50'},
-        {value: 100, title: '100'},
-    ]"
-
-
+                {value: 25, title: '25'},
+                {value: 50, title: '50'},
+                {value: 100, title: '100'},
+            ]"
             :search="search"
-
-
             fixed-header
             hover
         >

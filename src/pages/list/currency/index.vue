@@ -12,6 +12,7 @@ import {
 import Icons from "../../../composables/Icons/Icons.vue";
 import showDate from "../../../composables/date/showDate.js";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
+import {tr} from "vuetify/locale";
 
 const router = useRouter()
 
@@ -115,10 +116,13 @@ const addCurrency = async ({ page, itemsPerPage, sortBy }) => {
   
   const res = await currency.add(body)
   if (res.status === 201) {
-    await getCurrencyData({ page, itemsPerPage, sortBy, search })
+    await getCurrencyData({ page, itemsPerPage, sortBy })
     showToast(addMessage)
     valueRef.value = null
     idCurrency.value = res.data.result.id
+    currencyInDialogTitle.value = res.data.result.name
+    markedID.value.push(res.data.result.id)
+    isExistsCurrency.value = true
   }
 }
 
@@ -435,6 +439,12 @@ watch(rateDialog, newVal => {
           :item-value="headers.title"
           :search="search"
           @update:options="getCurrencyData"
+          page-text =  '{0}-{1} от {2}'
+          :items-per-page-options="[
+                {value: 25, title: '25'},
+                {value: 50, title: '50'},
+                {value: 100, title: '100'},
+            ]"
           fixed-header
           hover
       >
@@ -545,6 +555,12 @@ watch(rateDialog, newVal => {
                 :item-value="headersRate.title"
                 :search="search"
                 @update:options="getCurrencyRateData({}, idCurrency)"
+                page-text =  '{0}-{1} от {2}'
+                :items-per-page-options="[
+                {value: 25, title: '25'},
+                {value: 50, title: '50'},
+                {value: 100, title: '100'},
+            ]"
                 fixed-footer
                 hover
             >
