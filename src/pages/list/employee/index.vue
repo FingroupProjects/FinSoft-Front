@@ -50,7 +50,6 @@ const getEmployee = async ({page, itemsPerPage, sortBy, search}) => {
   loading.value = true
   try {
     const { data } = await employee.get({page, itemsPerPage, sortBy}, search)
-
     paginations.value = data.result.pagination
     employees.value = data.result.data
     loading.value = false

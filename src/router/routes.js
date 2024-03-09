@@ -100,6 +100,11 @@ const routes = [
     component: () => import("../pages/programSettings/index.vue"),
   },
   {
+    path: "/list/nomenclature",
+    name: "nomenclature",
+    component: () => import("../pages/list/nomenclature/index.vue"),
+  },
+  {
     path: "/login",
     name: "login",
     component: () => import("../pages/authentication/authentication.vue"),
