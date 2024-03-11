@@ -86,6 +86,12 @@ const editItem = (item) => {
   markedItem.value = item
 }
 
+const toggleModal = () => {
+  isCreate.value = false
+   setTimeout(() => {
+     isEdit.value = false
+   }, 100)
+}
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
   if (markedItem.value.deleted_at) {
     return massRestoreCounterparty({ page, itemsPerPage, sortBy })
@@ -241,7 +247,7 @@ const massRestoreCounterparty = async ({ page, itemsPerPage, sortBy }) => {
         </v-data-table-server>
 
       </v-card>
-      <create-counterparty :isEdit="isEdit" :isOpen="isCreate" @toggleIsOpen="isCreate = false; isEdit = false"
+      <create-counterparty :isEdit="isEdit" :isOpen="isCreate" @toggleIsOpen="toggleModal()"
         :item="markedItem" :createOnBase="createOnBase" />
     </v-col>
   </div>

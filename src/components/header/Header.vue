@@ -11,7 +11,7 @@ const isDialog = ref(false)
 const router = useRouter()
 const isFastAdd = ref(false)
 const fastAddItems = ref([{title: 'Продажа',value: 1,},{title: "Возврат",value: 2,},{title: 'Клиент',value: 3,},{title: 'Заказ',  value: 4,},{title: 'Запросы на закупку',  value: 5,},{title: 'Заказ на закупку',  value: 6,},{title: 'Закуп',value: 7,},])
-const organizationName = ref('Организация')
+const organizationName = ref('')
 const isQuestion = ref(false)
 const questionItems = ref([{title: 'Продажа'}])
 
@@ -53,7 +53,7 @@ const handleKeyDown = (event) => {
 const getOrganizationName = async () => {
   try{
     const { data } = await programSettingsApi.get()
-    organizationName.value = data.name
+    if(data) organizationName.value = data.name
   }catch (e) {
     console.log(e)
   }

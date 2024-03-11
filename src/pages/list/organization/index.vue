@@ -71,12 +71,7 @@ const getEmployees = async ({ page, itemsPerPage, sortBy, search }) => {
 const getOrganizationData = async ({ page, itemsPerPage, sortBy, search }) => {
   loading.value = true;
   try {
-    const { data } = await organization.get({
-      page,
-      itemsPerPage,
-      sortBy,
-      search,
-    });
+    const { data } = await organization.get({ page, itemsPerPage, sortBy, search });
     organizations.value = data.result.data.map((item) => ({
       ...item,
     }));
@@ -86,6 +81,8 @@ const getOrganizationData = async ({ page, itemsPerPage, sortBy, search }) => {
     console.error(error);
   }
 };
+
+
 const addBasedOnOrganization = () => {
   if (markedID.value.length !== 1 && !isExistsOrganization.value) return showToast(selectOneItemMessage, 'warning')
   console.log(markedID.value.length)
@@ -109,11 +106,17 @@ const openDialog = (item) => {
     idOrganizations.value = item.id;
     isExistsOrganization.value = true;
     nameRef.value = item.name;
+    innRef.value = item.INN;
+    directorRef.value = item.director_id;
+    accountantRef.value = item.chief_accountant_id;
+    addressRef.value = item.address;
+    descriptionRef.value = item.description;
     organizationInDialogTitle.value = nameRef.value;
   }
 };
 
-const addOrganization = async ({ page, itemsPerPage, sortBy }) => {
+
+const addOrganization = async ({ page, itemsPerPage, sortBy, search }) => {
   const body = {
     name: nameRef.value,
     INN: innRef.value,
@@ -125,7 +128,7 @@ const addOrganization = async ({ page, itemsPerPage, sortBy }) => {
   console.log(body);
   const res = await organization.add(body);
   if (res.status === 201) {
-    await getOrganizationData({ page, itemsPerPage, sortBy });
+    await getOrganizationData({ page, itemsPerPage, sortBy, search });
     showToast(addMessage);
     valueRef.value = null;
     idOrganizations.value = res.data.result.id;
@@ -135,27 +138,27 @@ const addOrganization = async ({ page, itemsPerPage, sortBy }) => {
   }
 };
 
+
 const update = async ({page, itemsPerPage, sortBy, search}) => {
 
 const body = {
   name: nameRef.value,
-  INN: innRef.value,
-  director_id: directorRef.value,
-  chief_accountant_id: accountantRef.value,
-  address: addressRef.value,
-  description: descriptionRef.value,
+    INN: innRef.value,
+    director_id: directorRef.value,
+    chief_accountant_id: accountantRef.value,
+    address: addressRef.value,
+    description: descriptionRef.value,
 }
 try {
   const { status } = await organization.update(idOrganizations.value, body)
   if (status === 200) {
-    await getOrganizationData({page, itemsPerPage, sortBy, search})
+    await getOrganizationData({ page, itemsPerPage, sortBy, search });
     showToast(editMessage)
   }
 } catch (e) {
   console.log(e)
 }
 }
-
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
   if (markedItem.value.deleted_at) {
     return massRestoreOrganization({ page, itemsPerPage, sortBy });
@@ -178,7 +181,7 @@ const massRestoreOrganization = async ({ page, itemsPerPage, sortBy }) => {
   } catch (e) {
     console.log(e);
   }
-};
+}; 
 
 const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
   const body = {
@@ -234,7 +237,7 @@ watch(addDialog, (newVal) => {
               <Icons @click="openDialog(0)" name="add" />
               <Icons name="copy" @click="addBasedOnOrganization"/>
               <Icons
-                @click="compute({ page, itemsPerPage, sortBy, search })"
+                @click="compute"
                 name="delete"
               />
             </div>
@@ -272,7 +275,7 @@ watch(addDialog, (newVal) => {
           :items-length="paginations.total || 0"
           :items="organizations"
           :item-value="headers.title"
-          @update:options="getOrganizationData"
+          @update:options="({ page, itemsPerPage, sortBy }) => getOrganizationData({ page, itemsPerPage, sortBy, search })"
           page-text =  '{0}-{1} от {2}'
           :items-per-page-options="[
                 {value: 25, title: '25'},

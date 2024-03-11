@@ -27,7 +27,7 @@ const form = ref({
 })
 const editID = ref(null)
 const name = ref("");
-const date = ref(null);
+const date = ref("дд.мм.гггг");
 const phone = ref("");
 const address = ref("");
 const email = ref("");
@@ -67,6 +67,7 @@ const headers = ref([
 watch(() => dialog.value, (newValue, oldValue) => {
   if (newValue === false) {
     emits('toggleIsOpen');
+    isValid.value = false
   }
 });
 
@@ -257,7 +258,7 @@ const getId = async () => {
       });
     }
   } catch (e) {
-    console.error(e);
+    console.log(e);
   }
 };
 
@@ -282,13 +283,18 @@ const CreateCounterparty = async () => {
   } catch (error) {
     isValid.value = true;
     if (error.response && error.response.status === 422) {
-      if(error.response.data.message){
-        showToast(error.response.data.message, "warning")
+      if(error.response.data.errors.email){
+        showToast(error.response.data.errors.email[0], "warning")
       }
-      showToast("Заполните поля!", "warning");
-    } else {
-      console.log(error);
+      if(error.response.data.errors.phone){
+        showToast("Поле тел. номер должно быть не короче 13 символов", "warning")
+      }
+      if(error.response.data.errors.name){
+        showToast("Поле Наименование не должно быть не длинее 25 символов", "warning")
+      }
+      showToast("Заполните все поля!", "warning");
     }
+      console.log(error);
   }
 };
 
@@ -352,6 +358,7 @@ const restore = async ({ page, itemsPerPage, sortBy }) => {
 
 const updateCounterparty = async () => {
   try {
+    isValid.value = true;
     const body = {
       name: name.value,
       address: address.value,
@@ -366,16 +373,21 @@ const updateCounterparty = async () => {
     await counterpartyApi.update(props.item, body);
     showToast("Успешно изменено", "#");
     emits('toggleIsOpen');
-  } catch (error) {
+  }  catch (error) {
     isValid.value = true;
     if (error.response && error.response.status === 422) {
-      if(error.response.data.message){
-        showToast(error.response.data.message, "warning")
+      if(error.response.data.errors.email){
+        showToast(error.response.data.errors.email[0], "warning")
       }
-      showToast("Заполните поля!", "warning");
-    } else {
-      console.log(error);
+      if(error.response.data.errors.phone){
+        showToast("Поле тел. номер должно быть не короче 13 символов", "warning")
+      }
+      if(error.response.data.errors.name){
+        showToast("Поле Наименование не должно быть не длинее 25 символов", "warning")
+      }
+      showToast("Заполните все поля!", "warning");
     }
+    console.log(error);
   }
 };
 
@@ -403,8 +415,12 @@ const createCpAgreement = async () => {
     showToast("Успешно добавлена", "green");
     agreementDialog.value = false
     clearInputs()
-  } catch (e) {
-    console.log(e)
+  }  catch (error) {
+    isValid.value = true;
+    if (error.response && error.response.status === 422) {
+      showToast("Заполните все поля!", "warning");
+    }
+    console.log(error);
   }
 }
 
@@ -433,9 +449,10 @@ const updateCpAgreement = async () => {
 
 const rules = {
   required: v => !!v,
-  email: v => (/.+@.+\..+/.test()),
+  email: v => /.+@.+\..+/.test(v),
   phone: v => v.length === 13,
 }
+
 
 const price_typeProps = (item) => {
   return {
@@ -717,10 +734,23 @@ const currencyProps = (item) => {
                   class="w-25"
               />
               </div>
-              <v-text-field v-model="form.contact_person" variant="outlined" :rules="isValid ? [rules.required] : []"
-                label="Контактное лицо" density="compact" rounded="md" color="info" hide-details />
+              <v-text-field
+                v-model="form.contact_person"
+                variant="outlined"
+                :rules="isValid ? [rules.required] : []"
+                label="Контактное лицо"
+                density="compact"
+                rounded="md"
+                color="info"
+                hide-details
+              />
               <v-container class="pa-0 mt-3">
-                <v-textarea v-model="form.comment" variant="outlined" label="Комментарий"></v-textarea>
+                <v-textarea
+                  v-model="form.comment"
+                  variant="outlined"
+                  label="Комментарий"
+                  :rules="isValid ? [rules.required] : []"
+                />
               </v-container>
             </v-col>
 
