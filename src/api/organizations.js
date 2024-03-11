@@ -9,7 +9,6 @@ export default {
     return api.patch(`/organization/${id}`, body)
   },
   add(data) {
-    console.log(data)
     return api.post('/organization', data)
   },
   remove(id) {
