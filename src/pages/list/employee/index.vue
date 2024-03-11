@@ -13,9 +13,10 @@ import {
   selectOneItemMessage,
   restoreMessage
 } from "../../../composables/constant/buttons.js";
-import employee from "../../../api/employee.js";
+
 import organization from "../../../api/organizations.js";
-import priceType from "../../../api/priceType.js";
+import employee from "../../../api/employee.js";
+import counterpartyApi from "../../../api/counterparty.js";
 
 const router = useRouter()
 
@@ -23,22 +24,28 @@ const loading = ref(true)
 const dialog = ref(false)
 const idEmployee = ref(null)
 const hoveredRowIndex = ref(null)
+const url = ref(null)
 
 const isExistsEmployee = ref(false)
 const markedID = ref([]);
 const markedItem = ref([])
 const employeeDialogTitle = ref(null)
+const employees = ref([])
 const search = ref('')
 
 const nameRef = ref(null)
+const phoneRef = ref(null)
+const emailRef = ref(null)
+const addressRef = ref(null)
 
-const employees = ref([])
-const organizations = ref([])
 const paginations = ref([])
 
 const headers = ref([
   {title: '№', key: 'id', align: 'start'},
   {title: 'Наименование', key: 'name'},
+  {title: 'Номер телефона', key: 'phone'},
+  {title: 'Эл.Почта', key: 'email'},
+  {title: 'Адрес', key: 'address'}
 ])
 
 const rules = {
@@ -49,8 +56,7 @@ const rules = {
 const getEmployee = async ({page, itemsPerPage, sortBy, search}) => {
   loading.value = true
   try {
-    const { data } = await employee.get({page, itemsPerPage, sortBy}, search)
-
+    const {data} = await employee.get({page, itemsPerPage, sortBy}, search)
     paginations.value = data.result.pagination
     employees.value = data.result.data
     loading.value = false
@@ -59,24 +65,76 @@ const getEmployee = async ({page, itemsPerPage, sortBy, search}) => {
 }
 
 
-const addPriceType = async ({page, itemsPerPage, sortBy}) => {
+const selectAvatar = event => {
+  url.value = event.target.files[0];
+}
 
-  const body = {
-    name: nameRef.value,
+const addEmployee = async ({page, itemsPerPage, sortBy}) => {
+  const formData = new FormData();
+
+  function appendIfNotNull(key, value) {
+    if (value !== null) {
+      formData.append(key, value);
+    }
   }
 
-  const res = await priceType.add(body)
+  appendIfNotNull('name', nameRef.value);
+  appendIfNotNull('phone', phoneRef.value);
+  appendIfNotNull('email', emailRef.value);
+  appendIfNotNull('address', addressRef.value);
 
-  if (res.status === 201) {
-    await getEmployee({page, itemsPerPage, sortBy})
-    showToast(addMessage)
-    idEmployee.value = res.data.result.id
-    dialog.value = false
+  try {
 
-    markedID.value = []
-    markedItem.value = []
+    const res = await employee.add(formData)
+
+    if (res.status === 201) {
+      await getEmployee({page, itemsPerPage, sortBy})
+      showToast(addMessage)
+      idEmployee.value = res.data.result.id
+      dialog.value = false
+      cleanForm()
+
+      markedID.value = []
+      markedItem.value = []
+
+    }
+
+
+  } catch (error) {
+
+
+    if (error.response && error.response.status === 422) {
+
+      if (error.response.data.errors.name) {
+        showToast("Поле ФИО не может быть пустым", "warning")
+      }
+
+      else if (error.response.data.errors.phone) {
+        showToast("Поле тел. номер должно быть не короче 13 символов", "warning")
+      }
+
+      else if (error.response.data.errors.email) {
+        showToast(error.response.data.errors.email[0], "warning")
+      }
+      else if (error.response.data.errors.address) {
+        showToast("Поле Адрес не может быть пустым", "warning")
+      }
+
+      else {
+        showToast("Заполните все поля!", "warning");
+      }
+    }
+    console.log(error);
   }
 
+}
+
+const cleanForm = () => {
+  nameRef.value = null
+  addressRef.value = null
+  phoneRef.value = null
+  emailRef.value = null
+  url.value = null
 }
 
 const massDel = async ({page, itemsPerPage, sortBy, search}) => {
@@ -85,7 +143,7 @@ const massDel = async ({page, itemsPerPage, sortBy, search}) => {
   }
 
   try {
-    const {status} = await priceType.massDeletion(body)
+    const {status} = await employee.massDeletion(body)
 
     if (status === 200) {
 
@@ -107,11 +165,11 @@ const massRestore = async ({page, itemsPerPage, sortBy, search}) => {
   }
 
   try {
-    const {status} = await priceType.massRestore(body)
+    const {status} = await employee.massRestore(body)
 
     if (status === 200) {
       showToast(restoreMessage)
-      await getPriceTypeData({page, itemsPerPage, sortBy}, search)
+      await getemployeeData({page, itemsPerPage, sortBy}, search)
       markedID.value = []
       dialog.value = false
     }
@@ -130,12 +188,12 @@ const update = async ({page, itemsPerPage, sortBy}) => {
   }
 
   try {
-    const {status} = await priceType.update(idEmployee.value, body)
+    const {status} = await employee.update(idEmployee.value, body)
     if (status === 200) {
       nameRef.value = null
 
       dialog.value = null
-      await getPriceTypeData({page, itemsPerPage, sortBy})
+      await getEmployee({page, itemsPerPage, sortBy})
       showToast(editMessage)
     }
   } catch (e) {
@@ -170,11 +228,15 @@ const openDialog = (item) => {
   if (item === 0) {
     idEmployee.value = 0
     isExistsEmployee.value = false
+
   } else {
     idEmployee.value = item.id
     markedID.value.push(item.id);
     isExistsEmployee.value = true
     nameRef.value = item.name
+    phoneRef.value = item.phone
+    emailRef.value = item.email
+    addressRef.value = item.address
     employeeDialogTitle.value = nameRef.value
   }
 
@@ -188,34 +250,37 @@ const addBasedOnEmployee = () => {
 
   employees.value.forEach(item => {
     if (markedID.value[0] === item.id) {
-      nameRef.value = item.name
+      nameRef.value = item.name,
+          phoneRef.value = item.phone,
+          emailRef.value = item.email,
+          addressRef.value = item.address
+
     }
   })
 
 }
 
-const compute = ({ page, itemsPerPage, sortBy, search }) => {
-  if(markedID.value.length === 0) return showToast(warningMessage, 'warning')
+const compute = ({page, itemsPerPage, sortBy, search}) => {
+  if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
 
-  if(markedItem.value.deleted_at) {
-    return massRestore({ page, itemsPerPage, sortBy })
-  }
-  else{
-    return massDel({ page, itemsPerPage, sortBy, search })
+  if (markedItem.value.deleted_at) {
+    return massRestore({page, itemsPerPage, sortBy})
+  } else {
+    return massDel({page, itemsPerPage, sortBy, search})
   }
 }
 
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
-    const firstMarkedItem = priceTypes.value.find(el => el.id === markedID.value[0]);
+    const firstMarkedItem = employees.value.find(el => el.id === markedID.value[0]);
     if (firstMarkedItem && firstMarkedItem.deleted_at) {
-      if(item.deleted_at === null) {
+      if (item.deleted_at === null) {
         showToast(ErrorSelectMessage, 'warning')
         return;
       }
     }
     if (firstMarkedItem && firstMarkedItem.deleted_at === null) {
-      if(item.deleted_at !== null) {
+      if (item.deleted_at !== null) {
         showToast(ErrorSelectMessage, 'warning')
         return;
       }
@@ -234,14 +299,9 @@ const lineMarking = (item) => {
 
 watch(dialog, newVal => {
   if (!newVal) {
-    nameRef.value = null
+    cleanForm()
   }
 })
-
-onMounted(async () => {
-  await getOrganization()
-})
-
 
 </script>
 
@@ -300,7 +360,8 @@ onMounted(async () => {
             hover
         >
           <template v-slot:item="{ item, index }">
-            <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)" @dblclick="openDialog(item)"
+            <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)"
+                @dblclick="openDialog(item)"
                 :class="{'bg-grey-lighten-2': markedID.includes(item.id) }">
               <td>
                 <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
@@ -310,13 +371,16 @@ onMounted(async () => {
                   </CustomCheckbox>
                 </template>
                 <template v-else>
-                  <div  class="d-flex">
+                  <div class="d-flex">
                     <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
                     <span>{{ index + 1 }}</span>
                   </div>
                 </template>
               </td>
               <td>{{ item.name }}</td>
+              <td>{{ item.phone }}</td>
+              <td>{{ item.email }}</td>
+              <td>{{ item.address }}</td>
             </tr>
           </template>
         </v-data-table-server>
@@ -325,22 +389,23 @@ onMounted(async () => {
       <!-- Modal -->
       <v-card>
         <v-dialog class="mt-2 pa-2" v-model="dialog">
-          <v-card style="border: 2px solid #3AB700" min-width="500"
+          <v-card style="border: 2px solid #3AB700" min-width="540"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
-              <span>{{ isExistsEmployee ? employeeDialogTitle + ' (изменение)' : 'Добавление' }}</span>
+              <span>{{ isExistsEmployee ? 'сотрудник: ' + employeeDialogTitle : 'Добавление' }}</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons v-if="isExistsEmployee"  @click="compute" name="delete"/>
+                  <Icons v-if="isExistsEmployee" @click="compute" name="delete"/>
                   <Icons v-if="isExistsEmployee" @click="update" name="save"/>
-                  <Icons v-else @click="addPriceType" name="save"/>
+                  <Icons v-else @click="addEmployee" name="save"/>
                 </div>
                 <v-btn @click="dialog = false" variant="text" :size="32" class="pt-2 pl-1">
                   <Icons name="close"/>
                 </v-btn>
               </div>
             </div>
-            <v-form class="d-flex w-100" @submit.prevent="addPriceType">
+            <v-form class="d-flex w-100" @submit.prevent="addEmployee">
+
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100">
                   <v-text-field
@@ -351,31 +416,69 @@ onMounted(async () => {
                       variant="outlined"
                       class="w-auto text-sm-body-1"
                       density="compact"
-                      placeholder="Доллар"
-                      label="Название"
+                      placeholder="Фио"
+                      label="Фио"
                       clear-icon="close"
                       clearable
                   />
-                  <v-select
-                      variant="outlined"
-                      label="Выберите валюту"
-                      v-model="currencyAdd"
-                      :items="currencies"
-                      item-title="name"
-                      item-value="id"
-                  />
-                  <v-textarea
-                      v-model="descriptionRef"
-                      :rules="[rules.required]"
-                      color="green"
-                      rounded="md"
-                      variant="outlined"
-                      class="w-auto text-sm-body-1"
-                      density="compact"
-                      placeholder="Описание..."
-                      label="Описание"
-                  />
+                  <div class="d-flex">
+                    <div class="border me-4" style="width: 40%">
+                      <v-text-field
+                          @change="selectAvatar"
+                          color="green"
+                          type="file"
+                          rounded="md"
+                          class="w-auto text-sm-body-1 mt-10"
+                          density="compact"
+                      />
+                      <!--                      <img src="../../../assets/vue.svg" alt="">-->
+                    </div>
+
+                    <div class="d-flex flex-column" style="width: 60%">
+                      <v-text-field
+                          v-model="phoneRef"
+                          :rules="[rules.required]"
+                          color="green"
+                          rounded="md"
+                          variant="outlined"
+                          class="w-auto text-sm-body-1"
+                          density="compact"
+                          placeholder="номер телефона"
+                          label="Номер телефона"
+                          clear-icon="close"
+                          clearable
+                      />
+                      <v-text-field
+                          v-model="emailRef"
+                          :rules="[rules.required]"
+                          color="green"
+                          rounded="md"
+                          variant="outlined"
+                          class="w-auto text-sm-body-1"
+                          density="compact"
+                          placeholder="email"
+                          label="Электронная почта"
+                          clear-icon="close"
+                          clearable
+                      />
+                      <v-text-field
+                          v-model="addressRef"
+                          :rules="[rules.required]"
+                          color="green"
+                          rounded="md"
+                          variant="outlined"
+                          class="w-auto text-sm-body-1"
+                          density="compact"
+                          placeholder="Адрес"
+                          label="Адрес"
+                          clear-icon="close"
+                          clearable
+                      />
+                    </div>
+                  </div>
                 </v-col>
+
+
               </v-row>
             </v-form>
           </v-card>

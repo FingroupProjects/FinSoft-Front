@@ -2,7 +2,7 @@
 import { ref, watch } from "vue";
 import counterpartyApi from "../../../api/counterparty";
 import showDate from "../../../composables/date/showDate"
-import { removeMessage, restoreMessage } from "../../../composables/constant/buttons.js";
+import { ErrorSelectMessage, removeMessage, restoreMessage, selectOneItemMessage} from "../../../composables/constant/buttons.js";
 import showToast from '../../../composables/toast'
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
@@ -11,12 +11,13 @@ import createCounterparty from "./create.vue"
 const loading = ref(true);
 const isCreate = ref(false)
 const isEdit = ref(false)
+const createOnBase = ref(false)
 const hoveredRowIndex = ref(null)
 
 const markedID = ref([])
 const markedItem = ref([])
 const counterparty = ref([]);
-const paginations = ref([]);
+const pagination = ref([]);
 
 const search = ref('')
 
@@ -42,11 +43,28 @@ const formatRole = (roles) => {
 
 watch(() => isEdit.value, (newValue, { page, itemsPerPage, sortBy }, search) => {
   if (newValue === false) {
+
     getCounterparty({ page, itemsPerPage, sortBy }, search)
   }
 });
 
 const lineMarking = (item) => {
+  if (markedID.value.length > 0) {
+    const firstMarkedItem = counterparty.value.find(el => el.id === markedID.value[0]);
+    if (firstMarkedItem && firstMarkedItem.deleted_at) {
+      if (item.deleted_at === null) {
+        showToast(ErrorSelectMessage, 'warning')
+        return;
+      }
+    }
+    if (firstMarkedItem && firstMarkedItem.deleted_at === null) {
+      if (item.deleted_at !== null) {
+        showToast(ErrorSelectMessage, 'warning')
+        return;
+      }
+    }
+  }
+
   const index = markedID.value.indexOf(item.id);
   if (index !== -1) {
     markedID.value.splice(index, 1);
@@ -56,12 +74,24 @@ const lineMarking = (item) => {
   markedItem.value = item;
 }
 
+const createBase = () => {
+  if(markedID.value.length !== 1) return showToast(selectOneItemMessage, "warning")
+  isCreate.value = true
+  createOnBase.value = true
+  editItem(markedID.value[0])
+}
 const editItem = (item) => {
   isCreate.value = true;
   isEdit.value = true;
-  markedItem.value = item.id
+  markedItem.value = item
 }
 
+const toggleModal = () => {
+  isCreate.value = false
+   setTimeout(() => {
+     isEdit.value = false
+   }, 100)
+}
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
   if (markedItem.value.deleted_at) {
     return massRestoreCounterparty({ page, itemsPerPage, sortBy })
@@ -80,7 +110,7 @@ const getCounterparty = async ({ page, itemsPerPage, sortBy, search }) => {
       created_at: showDate(item.created_at),
       roles: formatRole(item.roles),
     }));
-    paginations.value = data.result.pagination;
+    pagination.value = data.result.pagination;
     loading.value = false;
   } catch (error) {
     console.error(error);
@@ -133,7 +163,7 @@ const massRestoreCounterparty = async ({ page, itemsPerPage, sortBy }) => {
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
               <Icons @click="isCreate = true" name="add" />
-              <Icons name="copy" />
+              <Icons @click="createBase()" name="copy" />
               <Icons @click="compute({ page, itemsPerPage, sortBy, search })" name="delete" />
             </div>
             <div class="w-100">
@@ -148,26 +178,48 @@ const massRestoreCounterparty = async ({ page, itemsPerPage, sortBy }) => {
 
       <v-card class="table mt-2">
 
-        <v-data-table-server style="height: 78vh" fixed-header :items="counterparty" :headers="headers"
-          :loading="loading" items-per-page-text="Элементов на странице:" loading-text="Загрузка"
-          no-data-text="Нет данных" :search="search" @update:options="getCounterparty"
-          v-model:items-per-page="paginations.per_page" :items-length="paginations.total || 0"
-          :item-value="headers.title" hover fixed-footer>
+        <v-data-table-server
+          style="height: 78vh"
+          fixed-header
+          :items="counterparty"
+          :headers="headers"
+          :loading="loading"
+          items-per-page-text="Элементов на странице:"
+          loading-text="Загрузка"
+          no-data-text="Нет данных"
+          :search="search"
+          @update:options="getCounterparty"
+          v-model:items-per-page="pagination.per_page"
+          :items-length="pagination.total || 0"
+          :item-value="headers.title"
+          hover
+          fixed-footer
+          page-text =  '{0}-{1} от {2}'
+          :items-per-page-options="[
+          {value: 25, title: '25'},
+          {value: 50, title: '50'},
+          {value: 100, title: '100'},]"
+        >
           <template v-slot:item="{ item, index }">
-            <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)"
-              @dblclick="editItem(item)" :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }">
+            <tr
+              @mouseenter="hoveredRowIndex = index"
+              @mouseleave="hoveredRowIndex = null"
+              @click="lineMarking(item)"
+              @dblclick="editItem(item.id)"
+              :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
+             >
               <td>
                 <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
                   <CustomCheckbox :checked="markedID.includes(item.id)" @change="lineMarking(item)">
-                    <span>{{ index + 1 }}</span>
+                    <span>{{ item.id }}</span>
                   </CustomCheckbox>
                 </template>
 
                 <template v-else>
-                  <span class="d-flex">
-                    <Icons style="margin-right: 10px; margin-top: 2px;"
+                  <span class="d-flex align-center">
+                    <Icons style="margin-right: 10px; margin-top: 4px"
                       :name="item.deleted_at === null ? 'valid' : 'inValid'" />
-                    <span>{{ index + 1 }}</span>
+                    <span>{{ item.id }}</span>
                   </span>
                 </template>
               </td>
@@ -195,8 +247,8 @@ const massRestoreCounterparty = async ({ page, itemsPerPage, sortBy }) => {
         </v-data-table-server>
 
       </v-card>
-      <create-counterparty :isEdit="isEdit" :isOpen="isCreate" @toggleIsOpen="isCreate = false; isEdit = false"
-        :item="markedItem" />
+      <create-counterparty :isEdit="isEdit" :isOpen="isCreate" @toggleIsOpen="toggleModal()"
+        :item="markedItem" :createOnBase="createOnBase" />
     </v-col>
   </div>
 </template>

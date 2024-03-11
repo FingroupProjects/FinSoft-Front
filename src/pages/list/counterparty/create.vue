@@ -1,17 +1,17 @@
 <script setup>
-import { ref, defineProps, defineEmits, watch } from "vue";
+import {ref, defineProps, defineEmits, watch, computed} from "vue";
 import showToast from "../../../composables/toast";
 import Icons from "@/composables/Icons/Icons.vue";
 import CustomCheckbox from "@/components/checkbox/CustomCheckbox.vue";
 import counterpartyAgreement from "@/api/counterpartyAgreement.js";
 import showDate from "@/composables/date/showDate.js";
-import { removeMessage, restoreMessage } from "@/composables/constant/buttons.js";
+import { ErrorSelectMessage, removeMessage, restoreMessage } from "@/composables/constant/buttons.js";
 import currencyApi from '../../../api/currency.js'
 import organizationApi from "@/api/organizations.js";
 import counterpartyApi from "../../../api/counterparty.js";
 import priceTypeApi from "@/api/priceType.js";
 
-const props = defineProps(['isOpen', 'isEdit', 'item'])
+const props = defineProps(['isOpen', 'isEdit', 'item', 'createOnBase'])
 const emits = defineEmits()
 
 const form = ref({
@@ -27,7 +27,7 @@ const form = ref({
 })
 const editID = ref(null)
 const name = ref("");
-const date = ref(null);
+const date = ref("дд.мм.гггг");
 const phone = ref("");
 const address = ref("");
 const email = ref("");
@@ -67,6 +67,7 @@ const headers = ref([
 watch(() => dialog.value, (newValue, oldValue) => {
   if (newValue === false) {
     emits('toggleIsOpen');
+    isValid.value = false
   }
 });
 
@@ -76,9 +77,16 @@ watch(() => props.isOpen, (newValue, oldValue) => {
   }
 });
 
+watch(() => props.createOnBase, (newValue, oldValue) => {
+  if (newValue === true || oldValue === true) {
+    getId()
+  }
+});
+
 watch(() => agreementDialog.value, (newValue, oldValue) => {
   if (newValue === false) {
     clearInputs()
+    isValid.value = false
     editAgreementDialog.value = false
   }
 });
@@ -87,10 +95,38 @@ watch(() => props.isEdit, (newValue) => {
   clearForm()
   if (newValue === true) {
     getId()
+  }else{
+    a.value = false
+    b.value = false
+    c.value = false
   }
 });
 
+const computeRoles = computed(() => {
+  roles.value.forEach((roleIndex) => {
+    if (roleIndex === 1) a.value = true;
+    else if (roleIndex === 2) b.value = true;
+    else if (roleIndex === 3) c.value = true;
+  })
+})
+
 const lineMarking = (item) => {
+  if (markedID.value.length > 0) {
+    const firstMarkedItem = result.value.find(el => el.id === markedID.value[0]);
+    if (firstMarkedItem && firstMarkedItem.deleted_at) {
+      if (item.deleted_at === null) {
+        showToast(ErrorSelectMessage, 'warning')
+        return;
+      }
+    }
+    if (firstMarkedItem && firstMarkedItem.deleted_at === null) {
+      if (item.deleted_at !== null) {
+        showToast(ErrorSelectMessage, 'warning')
+        return;
+      }
+    }
+  }
+
   const index = markedID.value.indexOf(item.id);
   if (index !== -1) {
     markedID.value.splice(index, 1);
@@ -155,7 +191,6 @@ const cpAgreementGetById = async (id) => {
   try{
     const { data } = await counterpartyAgreement.getById(id)
     const item = data.result
-    console.log(item, 'itme')
     form.value = {
       ...item,
       date: showDate(item.date, '-', true),
@@ -164,7 +199,6 @@ const cpAgreementGetById = async (id) => {
       counterparty_id: item.counterparty_id.id,
       price_type_id: item.price_type_id.id,
     };
-    console.log(form.value)
   }catch (e) {
     console.log(e)
   }
@@ -198,8 +232,6 @@ const getCounterparties = async ({ page, itemsPerPage }) => {
 }
 
 const getCurrencies = async ({ page, itemsPerPage }) => {
-  console.log(itemsPerPage,'134')
-
   try {
     const { data } = await currencyApi.get({ page, itemsPerPage })
     currencies.value = data.result.data
@@ -226,7 +258,7 @@ const getId = async () => {
       });
     }
   } catch (e) {
-    console.error(e);
+    console.log(e);
   }
 };
 
@@ -240,17 +272,29 @@ const CreateCounterparty = async () => {
       email: email.value,
       roles: roles.value,
     };
-    const { response } = await counterpartyApi.create(body);
+    if(roles.value.length === 0) {
+      showToast("Выберите хотя бы одну роль!", "warning")
+      return
+    }
+    await counterpartyApi.create(body);
     showToast("Успешно добавлена", "green");
     emits('toggleIsOpen');
     clearForm();
   } catch (error) {
     isValid.value = true;
     if (error.response && error.response.status === 422) {
-      showToast("Заполните поля!", "warning");
-    } else {
-      console.error(error);
+      if(error.response.data.errors.email){
+        showToast(error.response.data.errors.email[0], "warning")
+      }
+      if(error.response.data.errors.phone){
+        showToast("Поле тел. номер должно быть не короче 13 символов", "warning")
+      }
+      if(error.response.data.errors.name){
+        showToast("Поле Наименование не должно быть не длинее 25 символов", "warning")
+      }
+      showToast("Заполните все поля!", "warning");
     }
+      console.log(error);
   }
 };
 
@@ -314,6 +358,7 @@ const restore = async ({ page, itemsPerPage, sortBy }) => {
 
 const updateCounterparty = async () => {
   try {
+    isValid.value = true;
     const body = {
       name: name.value,
       address: address.value,
@@ -321,11 +366,28 @@ const updateCounterparty = async () => {
       email: email.value,
       roles: roles.value
     }
+    if(roles.value.length === 0) {
+      showToast("Выберите хотя бы одну роль!", "warning")
+      return
+    }
     await counterpartyApi.update(props.item, body);
     showToast("Успешно изменено", "#");
     emits('toggleIsOpen');
-  } catch (e) {
-    console.error(e);
+  }  catch (error) {
+    isValid.value = true;
+    if (error.response && error.response.status === 422) {
+      if(error.response.data.errors.email){
+        showToast(error.response.data.errors.email[0], "warning")
+      }
+      if(error.response.data.errors.phone){
+        showToast("Поле тел. номер должно быть не короче 13 символов", "warning")
+      }
+      if(error.response.data.errors.name){
+        showToast("Поле Наименование не должно быть не длинее 25 символов", "warning")
+      }
+      showToast("Заполните все поля!", "warning");
+    }
+    console.log(error);
   }
 };
 
@@ -353,14 +415,17 @@ const createCpAgreement = async () => {
     showToast("Успешно добавлена", "green");
     agreementDialog.value = false
     clearInputs()
-  } catch (e) {
-    console.log(e)
+  }  catch (error) {
+    isValid.value = true;
+    if (error.response && error.response.status === 422) {
+      showToast("Заполните все поля!", "warning");
+    }
+    console.log(error);
   }
 }
 
 const updateCpAgreement = async () => {
   try{
-    console.log(form.value, 'form')
     const body = {
       name: form.value.name,
       currency_id: form.value.currency_id,
@@ -373,12 +438,10 @@ const updateCpAgreement = async () => {
       contract_number: form.value.contract_number,
       payment_id: 2,
     }
-    console.log(body)
     const res = await counterpartyAgreement.update(editID.value, body)
     showToast("Успешно изменено", "#");
     agreementDialog.value = false
     editAgreementDialog.value = false
-    console.log(res)
   }catch (e) {
     console.log(e)
   }
@@ -386,9 +449,10 @@ const updateCpAgreement = async () => {
 
 const rules = {
   required: v => !!v,
-  email: v => (/.+@.+\..+/.test(v)),
+  email: v => /.+@.+\..+/.test(v),
   phone: v => v.length === 13,
 }
+
 
 const price_typeProps = (item) => {
   return {
@@ -422,10 +486,10 @@ const currencyProps = (item) => {
       <v-card style="border: 2px solid #3AB700" min-width="350"
         class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0" rounded="xl">
         <div class="d-flex justify-space-between align-center mb-2">
-          <span>{{ isEdit ? `Контрагент: ${modalTitle}` : 'Добавление' }}</span>
+          <span>{{ isEdit && !createOnBase ? `Контрагент: ${modalTitle}` : createOnBase ? 'Добавление на основании' : 'Добавление' }}</span>
           <div class="d-flex align-center justify-space-between">
             <div class="d-flex align-center mt-2 me-4">
-              <Icons @click="isEdit ? updateCounterparty() : CreateCounterparty" name="save" />
+              <Icons @click="isEdit && !createOnBase ? updateCounterparty() : CreateCounterparty()" name="save" />
             </div>
             <v-btn @click="dialog = false" variant="text" :size="32" class="pt-2 pl-1">
               <Icons name="close" />
@@ -436,9 +500,20 @@ const currencyProps = (item) => {
           <v-row class="w-100">
             <v-col class="d-flex flex-column w-100">
               <div class="d-flex justify-space-between ga-6">
-                <v-text-field v-model="name" :rules="[rules.required]" color="green" rounded="md" variant="outlined"
-                  class="w-auto text-sm-body-1" density="compact" placeholder="Контрагент" label="Наименование"
-                  clear-icon="close" clearable hide-details />
+                <v-text-field
+                  v-model="name"
+                  :rules="isValid ? [rules.required] : []"
+                  color="green"
+                  rounded="md"
+                  variant="outlined"
+                  class="w-auto text-sm-body-1"
+                  density="compact"
+                  placeholder="Контрагент"
+                  label="Наименование"
+                  clear-icon="close"
+                  clearable
+                  hide-details
+              />
                 <span style="color: red; font-weight: bolder" class="mr-4 mt-1">2500,00</span>
               </div>
               <div :class="isEdit ? 'justify-space-between' : 'justify-end'"
@@ -453,18 +528,44 @@ const currencyProps = (item) => {
                 <CustomCheckbox :checked="c" @change="handleCheckboxChange(2)">Прочее</CustomCheckbox>
               </div>
               <div class="d-flex ga-4 mb-3">
-                <v-text-field variant="outlined" :rules="isValid ? [rules.required, rules.phone] : []" label="Тел номер"
-                  v-model.trim="phone" density="compact" v-mask="'+992#########'" rounded="md" color="info" hide-details
-                  :append-inner-icon="phone.length > 1 ? 'close' : ''" @click:append-inner="phone = ''" />
-                <v-text-field variant="outlined" prepend-inner-icon="email"
-                  :rules="isValid ? [rules.required, rules.email] : []" label="Почта" v-model="email" density="compact"
-                  rounded="md" color="info" hide-details :append-inner-icon="email.length > 1 ? 'close' : ''"
-                  @click:append-inner="email = ''" />
+                <v-text-field
+                  variant="outlined"
+                  :rules="isValid ? [rules.required, rules.phone] : []"
+                  label="Тел номер"
+                  v-model.trim="phone"
+                  density="compact"
+                  v-mask="'+992#########'"
+                  rounded="md"
+                  color="info"
+                  hide-details
+                  :append-inner-icon="phone.length > 1 ? 'close' : ''"
+                  @click:append-inner="phone = ''"
+                />
+                <v-text-field
+                  variant="outlined"
+                  prepend-inner-icon="email"
+                  :rules="isValid ? [rules.required, rules.email] : []"
+                  label="Почта"
+                  v-model="email"
+                  density="compact"
+                  rounded="md" color="info"
+                  hide-details
+                  :append-inner-icon="email.length > 1 ? 'close' : ''"
+                  @click:append-inner="email = ''"
+                />
               </div>
-              <v-text-field variant="outlined" :rules="isValid ? [rules.required] : []" label="Адрес" v-model="address"
-                density="compact" rounded="md" color="info" hide-details
-                :append-inner-icon="address.length > 1 ? 'close' : ''" @click:append-inner="address = ''" />
-
+              <v-text-field
+                variant="outlined"
+                :rules="isValid ? [rules.required] : []"
+                label="Адрес"
+                v-model="address"
+                density="compact"
+                rounded="md"
+                color="info"
+                hide-details
+                :append-inner-icon="address.length > 1 ? 'close' : ''"
+                @click:append-inner="address = ''"
+              />
             </v-col>
 
           </v-row>
@@ -488,12 +589,19 @@ const currencyProps = (item) => {
             v-model:items-per-page="pagination.per_page"
             :loading="loading"
             :headers="headers"
-            :items-length="pagination.total || 0" :items="result"
+            :items-length="pagination.total || 0"
+            :items="result"
             :item-value="headers.title"
             :search="search"
             @update:options="getDocuments({}, idAgreement)"
             fixed-footer
-            hover>
+            hover
+            page-text =  '{0}-{1} от {2}'
+            :items-per-page-options="[
+            {value: 25, title: '25'},
+            {value: 50, title: '50'},
+            {value: 100, title: '100'},]"
+          >
             <template v-slot:item="{ item, index }">
               <tr
                 @mouseenter="hoveredRowIndex = index"
@@ -620,16 +728,29 @@ const currencyProps = (item) => {
                   :items="priceTypes"
                   variant="outlined"
                   item-title="name"
-                  label="Виды цен"
+                  label="Вид цены"
                   item-value="id"
                   hide-details
                   class="w-25"
               />
               </div>
-              <v-text-field v-model="form.contact_person" variant="outlined" :rules="isValid ? [rules.required] : []"
-                label="Контактное лицо" density="compact" rounded="md" color="info" hide-details />
+              <v-text-field
+                v-model="form.contact_person"
+                variant="outlined"
+                :rules="isValid ? [rules.required] : []"
+                label="Контактное лицо"
+                density="compact"
+                rounded="md"
+                color="info"
+                hide-details
+              />
               <v-container class="pa-0 mt-3">
-                <v-textarea v-model="form.comment" variant="outlined" label="Комментарий"></v-textarea>
+                <v-textarea
+                  v-model="form.comment"
+                  variant="outlined"
+                  label="Комментарий"
+                  :rules="isValid ? [rules.required] : []"
+                />
               </v-container>
             </v-col>
 
