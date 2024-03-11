@@ -5,7 +5,6 @@ import showToast from '../../../composables/toast'
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import {
-  addMessage,
   editMessage,
   removeMessage,
   warningMessage,
@@ -13,7 +12,7 @@ import {
   selectOneItemMessage,
   restoreMessage
 } from "../../../composables/constant/buttons.js";
-import organization from "../../../api/organizations.js";
+import organizationApi from "../../../api/organizations.js";
 import priceType from "../../../api/priceType.js";
 import user from "../../../api/user.js";
 
@@ -29,8 +28,17 @@ const markedID = ref([])
 const markedItem = ref([])
 const userDialogTitle = ref(null)
 const search = ref('')
+const organization = ref('')
 
-const nameRef = ref(null)
+const fioRef = ref(null)
+const status = ref(null)
+const loginRef = ref(null)
+const passwordRef = ref(null)
+const phoneRef = ref(null)
+const emailRef = ref(null)
+const imageRef = ref(null)
+const imagePreview = ref(null)
+const fileInput = ref(null)
 
 const users = ref([])
 const organizations = ref([])
@@ -50,33 +58,55 @@ const getUser = async ({page, itemsPerPage, sortBy, search}) => {
   loading.value = true
   try {
     const { data } = await user.get({page, itemsPerPage, sortBy}, search)
-
     paginations.value = data.result.pagination
     users.value = data.result.data
-    console.log(users.value)
     loading.value = false
   } catch (e) {
+
   }
 }
 
+const onPickFile = () => {
+  fileInput.value.click()
+}
+
+const selectAvatar = event => {
+  const files = event.target.files
+  imageRef.value = files[0];
+  let filename = files[0].name
+  if (filename.lastIndexOf('.') <= 0) {
+    return showToast('Пожалуйста, добавьте заново!')
+  }
+  const fileReader = new FileReader()
+  fileReader.addEventListener('load', () => {
+    imagePreview.value = fileReader.result
+  })
+  fileReader.readAsDataURL(files[0])
+}
 
 const addUser = async ({page, itemsPerPage, sortBy}) => {
+  const formData = new FormData()
+  formData.append('name', fioRef.value);
+  formData.append('organization_id', organization.value.id)
+  formData.append('login', loginRef.value);
+  formData.append('password', passwordRef.value);
+  formData.append('phone', phoneRef.value);
+  formData.append('email', emailRef.value);
+  formData.append('image', imageRef.value);
 
-  const body = {
-    name: nameRef.value,
-  }
 
-  const res = await priceType.add(body)
-
-  if (res.status === 201) {
-    await getUser({page, itemsPerPage, sortBy})
-    showToast(addMessage)
-    idUser.value = res.data.result.id
-    dialog.value = false
-
-    markedID.value = []
-    markedItem.value = []
-  }
+  const res = await user.add(formData)
+  console.log(res)
+  //
+  // if (res.status === 201) {
+  //   await getUser({page, itemsPerPage, sortBy})
+  //   showToast(addMessage)
+  //   idUser.value = res.data.result.id
+  //   dialog.value = false
+  //
+  //   markedID.value = []
+  //   markedItem.value = []
+  // }
 
 }
 
@@ -125,7 +155,7 @@ const massRestore = async ({page, itemsPerPage, sortBy, search}) => {
 const update = async ({page, itemsPerPage, sortBy}) => {
 
   const body = {
-    name: nameRef.value,
+    name: fioRef.value,
     currency_id: currencyAdd.value,
     description: descriptionRef.value
   }
@@ -133,7 +163,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
   try {
     const {status} = await priceType.update(idUser.value, body)
     if (status === 200) {
-      nameRef.value = null
+      fioRef.value = null
 
       dialog.value = null
       await getPriceTypeData({page, itemsPerPage, sortBy})
@@ -146,7 +176,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
 
 const getOrganization = async () => {
   try {
-    const {data} = await organization.get({page: 1, itemsPerPage: 100000})
+    const {data} = await organizationApi.get({page: 1, itemsPerPage: 100000})
 
     organizations.value = data.result.data.map(item => {
       return {
@@ -160,12 +190,17 @@ const getOrganization = async () => {
   }
 }
 
+const organizationProps = item => {
+  return {
+    title: item.name,
+  }
+}
 
-const handleCheckboxClick = (item) => {
+const handleCheckboxClick = item => {
   lineMarking(item)
 }
 
-const openDialog = (item) => {
+const openDialog = item => {
   dialog.value = true
   console.log(item)
 
@@ -176,8 +211,8 @@ const openDialog = (item) => {
     idUser.value = item.id
     markedID.value.push(item.id);
     isExistsUser.value = true
-    nameRef.value = item.name
-    userDialogTitle.value = nameRef.value
+    fioRef.value = item.name
+    userDialogTitle.value = fioRef.value
   }
 
 }
@@ -190,7 +225,7 @@ const addBasedOnUser = () => {
 
   users.value.forEach(item => {
     if (markedID.value[0] === item.id) {
-      nameRef.value = item.name
+      fioRef.value = item.name
     }
   })
 
@@ -207,7 +242,7 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
   }
 }
 
-const lineMarking = (item) => {
+const lineMarking = item => {
   if (markedID.value.length > 0) {
     const firstMarkedItem = users.value.find(el => el.id === markedID.value[0]);
     if (firstMarkedItem && firstMarkedItem.deleted_at) {
@@ -236,7 +271,7 @@ const lineMarking = (item) => {
 
 watch(dialog, newVal => {
   if (!newVal) {
-    nameRef.value = null
+    fioRef.value = null
   }
 })
 
@@ -277,7 +312,6 @@ onMounted(async () => {
                   clearable
                   flat
               ></v-text-field>
-
             </div>
           </div>
           <Icons name="filter" class="mt-1"/>
@@ -312,8 +346,11 @@ onMounted(async () => {
                 :class="{'bg-grey-lighten-2': markedID.includes(item.id) }">
               <td>
                 <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
-                  <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)"
-                                  @change="handleCheckboxClick(item)">
+                  <CustomCheckbox
+                      v-model="markedID"
+                      :checked="markedID.includes(item.id)"
+                      @change="handleCheckboxClick(item)"
+                  >
                     <span>{{ item.id }}</span>
                   </CustomCheckbox>
                 </template>
@@ -351,43 +388,111 @@ onMounted(async () => {
             <v-form class="d-flex w-100" @submit.prevent="addUser">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100">
-                  <div>
+                  <div class="d-flex" style="width: 98%;">
                     <v-text-field
-                        v-model="nameRef"
+                        v-model="fioRef"
                         :rules="[rules.required]"
                         color="green"
                         rounded="md"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
                         density="compact"
-                        placeholder="Доллар"
+                        placeholder="Хусрав"
                         label="Название"
                         clear-icon="close"
                         clearable
                     />
-                    <CustomCheckbox v-model="statusID">
-                      <span>Активный</span>
-                    </CustomCheckbox>
+                    <div class="mt-2 ms-4">
+                      <CustomCheckbox v-model="status">
+                        <span>Активный</span>
+                      </CustomCheckbox>
+                    </div>
                   </div>
-                  <v-select
-                      variant="outlined"
-                      label="Выберите валюту"
-                      v-model="currencyAdd"
-                      :items="currencies"
-                      item-title="name"
-                      item-value="id"
-                  />
-                  <v-textarea
-                      v-model="descriptionRef"
-                      :rules="[rules.required]"
-                      color="green"
-                      rounded="md"
-                      variant="outlined"
-                      class="w-auto text-sm-body-1"
-                      density="compact"
-                      placeholder="Описание..."
-                      label="Описание"
-                  />
+                  <div class="d-flex w-100 ga-4">
+                    <div class="border d-flex justify-center align-center" style="width: 70%;">
+                     <div v-if="imagePreview === null">
+                       <v-btn  @click="onPickFile">Загрузить фото</v-btn>
+                       <input
+                           accept="image/*"
+                           type="file"
+                           @change="selectAvatar"
+                           style="display: none;"
+                           ref="fileInput"
+                       />
+                     </div>
+                      <img v-else :src="imagePreview" width="150" height="150" alt="">
+                    </div>
+                    <div class="w-100">
+                      <v-select
+                          v-model="organization"
+                          :items="organizations"
+                          :item-props="organizationProps"
+                          :rules="[rules.required]"
+                          variant="outlined"
+                      />
+                      <v-text-field
+                          v-model="loginRef"
+                          :rules="[rules.required]"
+                          color="green"
+                          rounded="md"
+                          variant="outlined"
+                          class="w-auto text-sm-body-1"
+                          density="compact"
+                          placeholder="Khusrav"
+                          label="Логин"
+                          clear-icon="close"
+                          clearable
+                      />
+                      <div class="d-flex">
+                        <v-text-field
+                            v-model="passwordRef"
+                            :rules="[rules.required]"
+                            color="green"
+                            rounded="md"
+                            type="password"
+                            variant="outlined"
+                            class="w-auto text-sm-body-1"
+                            density="compact"
+                            placeholder="********"
+                            label="Пароль"
+                            clear-icon="close"
+                            hide-details
+                            clearable
+                        />
+                        <span class="mt-1 ms-2 text-blue-darken-4 cursor-pointer">Изменить пароль</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="d-flex ga-4 mt-5">
+                    <v-text-field
+                        v-model="phoneRef"
+                        :rules="[rules.required]"
+                        color="green"
+                        rounded="md"
+                        variant="outlined"
+                        class="w-auto text-sm-body-1"
+                        density="compact"
+                        placeholder="+992119111881"
+                        label="Номер телефона"
+                        clear-icon="close"
+                        hide-details
+                        clearable
+                    />
+                    <v-text-field
+                        v-model="emailRef"
+                        :rules="[rules.required]"
+                        color="green"
+                        rounded="md"
+                        variant="outlined"
+                        class="w-auto text-sm-body-1"
+                        density="compact"
+                        placeholder="khusrav@gmail.com"
+                        label="Почта"
+                        clear-icon="close"
+                        hide-details
+                        clearable
+                    />
+                  </div>
                 </v-col>
               </v-row>
             </v-form>
