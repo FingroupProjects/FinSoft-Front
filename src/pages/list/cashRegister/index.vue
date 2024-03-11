@@ -212,7 +212,7 @@ const restore = async ({page, itemsPerPage, sortBy}) => {
 
 const getEmployee = async () => {
   try {
-    const {data} = await employee.get(1, 10000)
+    const {data} = await employee.get({page: 1, itemsPerPage: 100000})
     employees.value = data.result.data.map(item => {
       return {
         id: item.id,
