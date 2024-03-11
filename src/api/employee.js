@@ -14,10 +14,10 @@ export default {
   update(id, body) {
     return api.patch(`/employee/${id}`, body)
   },
-  remove(ids) {
-    return api.post('/employee/massRemove', ids)
+  massDeletion(data) {
+    return api.post('/employee/massDelete', data)
   },
-  restore(ids) {
-    return api.post('/employee/massRestore', ids)
+  massRestore(data) {
+    return api.post('/employee/massRestore', data)
   }
 }
