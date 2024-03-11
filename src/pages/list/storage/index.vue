@@ -98,6 +98,12 @@ const getStorageData = async ({page, itemsPerPage, sortBy, search}) => {
 }
 
 const getStorageEmployeeData = async ({page, itemsPerPage, sortBy, search}) => {
+
+  if (idStorage.value === 0) {
+    loadingStorageData.value = false
+    return
+  }
+
   loadingStorageData.value = true
   try {
     const {data} = await storage.getStorageEmployee({page, itemsPerPage, sortBy}, search, idStorage.value)
@@ -424,6 +430,8 @@ const openDialog = (item) => {
     return showToast(selectOneItemMessage, 'warning');
   }
 
+
+
   dialog.value = true
 
   if (item === 0) {
@@ -468,6 +476,7 @@ const compute = ({page, itemsPerPage, sortBy, search}) => {
   }
 }
 
+
 const removeStorageEmployee = ({page, itemsPerPage, sortBy, search}) => {
 
   if (markedEmployeeID.value.length === 0) return showToast(warningMessage, 'warning')
@@ -479,6 +488,8 @@ const removeStorageEmployee = ({page, itemsPerPage, sortBy, search}) => {
     return massDelEmployee({page, itemsPerPage, sortBy, search})
   }
 }
+
+
 const editDialogStorageData = (item) => {
   if (markedEmployeeID.value.length > 1) {
     return showToast(selectOneItemMessage, 'warning');
@@ -695,6 +706,8 @@ watch(dialog, newVal => {
                       clear-icon="close"
                       clearable
                   />
+
+
                   <v-select
                       variant="outlined"
                       label="Выберите организацию"
