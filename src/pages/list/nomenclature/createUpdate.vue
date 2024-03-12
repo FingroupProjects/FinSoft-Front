@@ -10,9 +10,24 @@ const dialog = ref(true);
 
 const name = ref("");
 const articul = ref("");
+const location = ref("");
+const group_id = ref(null);
+const url = ref([]);
+
+const groups = ref([]);
 
 const rules = {
   required: (v) => !!v,
+};
+
+const itemsProps = (item) => {
+  return {
+    title: item.name,
+  };
+};
+
+const selectAvatar = (event) => {
+  url.value = event.target.files[0];
 };
 </script>
 
@@ -80,16 +95,6 @@ const rules = {
                   clearable
                   hide-details
                 />
-                <v-select
-                  variant="outlined"
-                  label="Организация"
-                  v-model="group_id"
-                  :items="groups"
-                  item-title="name"
-                  item-value="id"
-                  :item-props="itemsProps"
-                  hide-details
-                />
                 <v-text-field
                   v-model="location"
                   :rules="isValid ? [rules.required] : []"
@@ -98,12 +103,48 @@ const rules = {
                   variant="outlined"
                   class="w-auto text-sm-body-1"
                   density="compact"
-                  placeholder="Местоположение"
-                  label="Местоположение"
+                  placeholder="Место расположение"
+                  label="Место расположение"
                   clear-icon="close"
                   clearable
                   hide-details
                 />
+                <v-select
+                  :item-props="itemsProps"
+                  placeholder="Группа номенклатуры"
+                  label="Группа номенклатуры"
+                  v-model="group_id"
+                  variant="outlined"
+                  item-title="name"
+                  item-value="id"
+                  :items="groups"
+                  color="green"
+                  hide-details
+                />
+                <v-select
+                  :item-props="itemsProps"
+                  placeholder="Ед измерения"
+                  label="Ед измерения"
+                  v-model="group_id"
+                  variant="outlined"
+                  item-title="name"
+                  item-value="id"
+                  :items="groups"
+                  color="green"
+                  hide-details
+                />
+                <div>
+                  <v-text-field
+                    @change="selectAvatar"
+                    variant="outlined"
+                    color="green"
+                    type="file"
+                    rounded="md"
+                    class="w-auto text-sm-body-1 mt-10"
+                    density="compact"
+                  />
+                  <img :src="url.name" />
+                </div>
               </v-col>
             </v-row>
           </v-form>
