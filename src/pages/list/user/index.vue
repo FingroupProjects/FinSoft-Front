@@ -28,7 +28,7 @@ const markedID = ref([])
 const markedItem = ref([])
 const userDialogTitle = ref(null)
 const search = ref('')
-const organization = ref('')
+const organization = ref([])
 
 const fioRef = ref(null)
 const status = ref(null)
@@ -176,25 +176,17 @@ const update = async ({page, itemsPerPage, sortBy}) => {
 
 const getOrganization = async () => {
   try {
-    const {data} = await organizationApi.get({page: 1, itemsPerPage: 100000})
-
-    organizations.value = data.result.data.map(item => {
-      return {
-        id: item.id,
-        name: item.name
-      }
-    })
-
+    const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000})
+    organizations.value = data.result.data.map(item => ({
+      id: item.id,
+      name: item.name
+    }))
   } catch (e) {
 
   }
 }
 
-const organizationProps = item => {
-  return {
-    title: item.name,
-  }
-}
+const organizationProps = item => ({title: item.name})
 
 const handleCheckboxClick = item => {
   lineMarking(item)
@@ -202,7 +194,6 @@ const handleCheckboxClick = item => {
 
 const openDialog = item => {
   dialog.value = true
-  console.log(item)
 
   if (item === 0) {
     idUser.value = 0
@@ -212,6 +203,15 @@ const openDialog = item => {
     markedID.value.push(item.id);
     isExistsUser.value = true
     fioRef.value = item.name
+    loginRef.value = item.login
+    phoneRef.value = item.phone
+    passwordRef.value = '#########'
+
+    if (item.organization !== null) {
+      organization.value = item.organization.name
+    }
+    imagePreview.value = import.meta.env.VITE_IMG_URL + item.image
+    emailRef.value = item.email
     userDialogTitle.value = fioRef.value
   }
 
@@ -272,6 +272,8 @@ const lineMarking = item => {
 watch(dialog, newVal => {
   if (!newVal) {
     fioRef.value = null
+    organization.value = []
+    passwordRef.value = null
   }
 })
 
@@ -426,7 +428,8 @@ onMounted(async () => {
                       <v-select
                           v-model="organization"
                           :items="organizations"
-                          :item-props="organizationProps"
+                          item-title="name"
+                          item-value="id"
                           :rules="[rules.required]"
                           variant="outlined"
                       />
@@ -456,6 +459,7 @@ onMounted(async () => {
                             placeholder="********"
                             label="Пароль"
                             clear-icon="close"
+                            :disabled="passwordRef === '#########'"
                             hide-details
                             clearable
                         />
