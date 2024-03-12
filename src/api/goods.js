@@ -4,6 +4,12 @@ export default {
   create(data) {
     return api.post("/good", data);
   },
+  group(data) {
+    return api.post("/group", data);
+  },
+  getGroup() {
+    return api.get("/group");
+  },
   update(id, data) {
     return api.patch(`/good/${id}`, data);
   },
