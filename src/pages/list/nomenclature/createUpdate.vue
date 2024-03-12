@@ -11,7 +11,13 @@ const dialog = ref(true);
 const name = ref("");
 const articul = ref("");
 const location = ref("");
+const description = ref("");
+
 const group_id = ref(null);
+const imageRef = ref(null);
+const imagePreview = ref(null);
+const fileInput = ref(null);
+
 const url = ref([]);
 
 const groups = ref([]);
@@ -27,8 +33,35 @@ const itemsProps = (item) => {
 };
 
 const selectAvatar = (event) => {
-  url.value = event.target.files[0];
+  const files = event.target.files;
+  imageRef.value = files[0];
+  let filename = files[0].name;
+  if (filename.lastIndexOf(".") <= 0) {
+    return showToast("Пожалуйста, добавьте заново!");
+  }
+  const fileReader = new FileReader();
+  fileReader.addEventListener("load", () => {
+    imagePreview.value = fileReader.result;
+  });
+  fileReader.readAsDataURL(files[0]);
 };
+
+const getGroups = async () => {
+  try {
+    const { data } = await goodsApi.getGroup();
+    console.log(data);
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+const onPickFile = () => {
+  fileInput.value.click();
+};
+
+// onMounted(() => {
+//   getGroups();
+// });
 </script>
 
 <template>
@@ -133,18 +166,35 @@ const selectAvatar = (event) => {
                   color="green"
                   hide-details
                 />
-                <div>
-                  <v-text-field
-                    @change="selectAvatar"
-                    variant="outlined"
-                    color="green"
-                    type="file"
-                    rounded="md"
-                    class="w-auto text-sm-body-1 mt-10"
-                    density="compact"
+                <div
+                  class="border d-flex justify-center align-center py-2"
+                  style="width: 35%; height: 160px"
+                >
+                  <div v-if="imagePreview === null">
+                    <v-btn @click="onPickFile">Загрузить фото</v-btn>
+                    <input
+                      accept="image/*"
+                      type="file"
+                      @change="selectAvatar"
+                      style="display: none"
+                      ref="fileInput"
+                    />
+                  </div>
+                  <img
+                    v-else
+                    :src="imagePreview"
+                    width="150"
+                    height="150"
+                    alt=""
                   />
-                  <img :src="url.name" />
                 </div>
+                <v-container class="pa-0 mt-3">
+                  <v-textarea
+                    v-model="description"
+                    variant="outlined"
+                    label="Описание"
+                  />
+                </v-container>
               </v-col>
             </v-row>
           </v-form>

@@ -1,9 +1,10 @@
 <script setup>
-import { onMounted, ref } from "vue";
+import { ref } from "vue";
 import goodsApi from "../../../api/goods";
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
+import createGroup from "./createGroup.vue";
 import createUpdate from "./createUpdate.vue";
 import {
   ErrorSelectMessage,
@@ -14,6 +15,7 @@ import {
 
 const loading = ref(true);
 const isCreate = ref(false);
+const isCreateGroup = ref(false);
 
 const hoveredRowIndex = ref(null);
 
@@ -76,8 +78,8 @@ const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
     const { status } = await goodsApi.massDeletion(body);
     if (status === 200) {
       showToast(removeMessage, "red");
-      await getGoods({ page, itemsPerPage, sortBy }, search);
       markedID.value = [];
+      await getGoods({ page, itemsPerPage, sortBy }, search);
     }
   } catch (e) {
     console.log(e);
@@ -92,8 +94,8 @@ const massRestore = async ({ page, itemsPerPage, sortBy }) => {
     const { status } = await goodsApi.massRestore(body);
     if (status === 200) {
       showToast(restoreMessage, "green");
-      await getGoods({ page, itemsPerPage, sortBy });
       markedID.value = [];
+      await getGoods({ page, itemsPerPage, sortBy });
     }
   } catch (e) {
     console.log(e);
@@ -128,6 +130,7 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
                   font-size: 12px;
                   border: 1px solid red;
                 "
+                @click="isCreateGroup = true"
               >
                 <span class="px-2 py-0">создать группу</span>
               </button>
@@ -222,6 +225,9 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
       </v-card>
       <div v-if="isCreate">
         <createUpdate @toggleDialog="isCreate = false" />
+      </div>
+      <div v-if="isCreateGroup">
+        <createGroup @toggleDialog="isCreateGroup = false" />
       </div>
     </v-col>
   </div>
