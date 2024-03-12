@@ -1,127 +1,148 @@
 <script setup>
-import {ref, defineProps, defineEmits, watch, computed} from "vue";
+import { ref, defineProps, defineEmits, watch, computed } from "vue";
 import showToast from "../../../composables/toast";
 import Icons from "@/composables/Icons/Icons.vue";
 import CustomCheckbox from "@/components/checkbox/CustomCheckbox.vue";
 import counterpartyAgreement from "@/api/counterpartyAgreement.js";
 import showDate from "@/composables/date/showDate.js";
-import { ErrorSelectMessage, removeMessage, restoreMessage } from "@/composables/constant/buttons.js";
-import currencyApi from '../../../api/currency.js'
+import {
+  ErrorSelectMessage,
+  removeMessage,
+  restoreMessage,
+} from "@/composables/constant/buttons.js";
+import currencyApi from "../../../api/currency.js";
 import organizationApi from "@/api/organizations.js";
 import counterpartyApi from "../../../api/counterparty.js";
 import priceTypeApi from "@/api/priceType.js";
 
-const props = defineProps(['isOpen', 'isEdit', 'item', 'createOnBase'])
-const emits = defineEmits()
+const props = defineProps(["isOpen", "isEdit", "item", "createOnBase"]);
+const emits = defineEmits();
 
 const form = ref({
-  name: '',
+  name: "",
   date: null,
   currency_id: null,
   organization_id: null,
   counterparty_id: null,
   price_type_id: null,
-  contact_person: '',
-  comment: '',
-  contract_number: ''
-})
-const editID = ref(null)
+  contact_person: "",
+  comment: "",
+  contract_number: "",
+});
+const editID = ref(null);
 const name = ref("");
 const date = ref("дд.мм.гггг");
 const phone = ref("");
 const address = ref("");
 const email = ref("");
-const search = ref("")
-const modalTitle = ref("")
+const search = ref("");
+const modalTitle = ref("");
 
-const pagination = ref([])
+const pagination = ref([]);
 const roles = ref([]);
-const result = ref([])
-const markedID = ref([])
-const markedItem = ref([])
-const currencies = ref([])
-const organizations = ref([])
-const priceTypes = ref([])
-const counterparties = ref([])
+const result = ref([]);
+const markedID = ref([]);
+const markedItem = ref([]);
+const currencies = ref([]);
+const organizations = ref([]);
+const priceTypes = ref([]);
+const counterparties = ref([]);
 
-const editAgreementDialog = ref(false)
-const agreementDialog = ref(false)
-const loading = ref(true)
-const isValid = ref(false)
-const dialog = ref(false)
-const isDocumentEdit = ref(false)
+const editAgreementDialog = ref(false);
+const agreementDialog = ref(false);
+const loading = ref(true);
+const isValid = ref(false);
+const dialog = ref(false);
+const isDocumentEdit = ref(false);
 const a = ref(false);
 const b = ref(false);
 const c = ref(false);
 
-const idAgreement = ref(null)
-const hoveredRowIndex = ref(null)
+const idAgreement = ref(null);
+const hoveredRowIndex = ref(null);
 
 const headers = ref([
-  { title: '№', key: 'id', align: 'start', },
-  { title: 'Номер договора', key: 'contract_number' },
-  { title: 'Валюта', key: 'currency_id.name' },
-  { title: 'Баланс', key: 'balance' },
+  { title: "№", key: "id", align: "start" },
+  { title: "Номер договора", key: "contract_number" },
+  { title: "Валюта", key: "currency_id.name" },
+  { title: "Баланс", key: "balance" },
 ]);
 
-watch(() => dialog.value, (newValue, oldValue) => {
-  if (newValue === false) {
-    emits('toggleIsOpen');
-    isValid.value = false
+watch(
+  () => dialog.value,
+  (newValue, oldValue) => {
+    if (newValue === false) {
+      emits("toggleIsOpen");
+      isValid.value = false;
+    }
   }
-});
+);
 
-watch(() => props.isOpen, (newValue, oldValue) => {
-  if (newValue === true || oldValue === true) {
-    dialog.value = newValue;
+watch(
+  () => props.isOpen,
+  (newValue, oldValue) => {
+    if (newValue === true || oldValue === true) {
+      dialog.value = newValue;
+    }
   }
-});
+);
 
-watch(() => props.createOnBase, (newValue, oldValue) => {
-  if (newValue === true || oldValue === true) {
-    getId()
+watch(
+  () => props.createOnBase,
+  (newValue, oldValue) => {
+    if (newValue === true || oldValue === true) {
+      getId();
+    }
   }
-});
+);
 
-watch(() => agreementDialog.value, (newValue, oldValue) => {
-  if (newValue === false) {
-    clearInputs()
-    isValid.value = false
-    editAgreementDialog.value = false
+watch(
+  () => agreementDialog.value,
+  (newValue, oldValue) => {
+    if (newValue === false) {
+      clearInputs();
+      isValid.value = false;
+      editAgreementDialog.value = false;
+    }
   }
-});
+);
 
-watch(() => props.isEdit, (newValue) => {
-  clearForm()
-  if (newValue === true) {
-    getId()
-  }else{
-    a.value = false
-    b.value = false
-    c.value = false
+watch(
+  () => props.isEdit,
+  (newValue) => {
+    clearForm();
+    if (newValue === true) {
+      getId();
+    } else {
+      a.value = false;
+      b.value = false;
+      c.value = false;
+    }
   }
-});
+);
 
 const computeRoles = computed(() => {
   roles.value.forEach((roleIndex) => {
     if (roleIndex === 1) a.value = true;
     else if (roleIndex === 2) b.value = true;
     else if (roleIndex === 3) c.value = true;
-  })
-})
+  });
+});
 
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
-    const firstMarkedItem = result.value.find(el => el.id === markedID.value[0]);
+    const firstMarkedItem = result.value.find(
+      (el) => el.id === markedID.value[0]
+    );
     if (firstMarkedItem && firstMarkedItem.deleted_at) {
       if (item.deleted_at === null) {
-        showToast(ErrorSelectMessage, 'warning')
+        showToast(ErrorSelectMessage, "warning");
         return;
       }
     }
     if (firstMarkedItem && firstMarkedItem.deleted_at === null) {
       if (item.deleted_at !== null) {
-        showToast(ErrorSelectMessage, 'warning')
+        showToast(ErrorSelectMessage, "warning");
         return;
       }
     }
@@ -134,122 +155,121 @@ const lineMarking = (item) => {
     markedID.value.push(item.id);
   }
   markedItem.value = item;
-}
+};
 
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
   if (markedItem.value.deleted_at) {
-    return restore({ page, itemsPerPage, sortBy })
+    return restore({ page, itemsPerPage, sortBy });
+  } else {
+    return del({ page, itemsPerPage, sortBy, search });
   }
-  else {
-    return del({ page, itemsPerPage, sortBy, search })
-  }
-}
+};
 
 const openAgreementDialog = () => {
-  getDated()
-}
+  getDated();
+};
 
 const getDated = () => {
-  agreementDialog.value = true
-  const page = 1
-  const Items = 100
-  getOrganization(page, Items)
-  getPriceType({ page, Items })
-  getCounterparties({ page, Items })
-  getCurrencies({ page, itemsPerPage: 1000 })
-}
+  agreementDialog.value = true;
+  const page = 1;
+  const Items = 100;
+  getOrganization(page, Items);
+  getPriceType({ page, Items });
+  getCounterparties({ page, Items });
+  getCurrencies({ page, itemsPerPage: 1000 });
+};
 
 const clearForm = () => {
-  name.value = ""
-  phone.value = ""
-  address.value = ""
-  email.value = ""
-  roles.value = []
-}
+  name.value = "";
+  phone.value = "";
+  address.value = "";
+  email.value = "";
+  roles.value = [];
+};
 
 const clearInputs = () => {
   form.value = {
-    name: '',
+    name: "",
     date: null,
     currency_id: null,
     organization_id: null,
     counterparty_id: null,
     price_type_id: null,
-    contact_person: '',
-    comment: '',
-  }
-}
+    contact_person: "",
+    comment: "",
+  };
+};
 const editDialog = (item) => {
-  editID.value = item.id
-  editAgreementDialog.value = true
-  agreementDialog.value = true
-  getDated()
-  cpAgreementGetById(item.id)
-}
+  editID.value = item.id;
+  editAgreementDialog.value = true;
+  agreementDialog.value = true;
+  getDated();
+  cpAgreementGetById(item.id);
+};
 
 const cpAgreementGetById = async (id) => {
-  try{
-    const { data } = await counterpartyAgreement.getById(id)
-    const item = data.result
+  try {
+    const { data } = await counterpartyAgreement.getById(id);
+    const item = data.result;
     form.value = {
       ...item,
-      date: showDate(item.date, '-', true),
+      date: showDate(item.date, "-", true),
       currency_id: item.currency_id.id,
       organization_id: item.organization_id.id,
       counterparty_id: item.counterparty_id.id,
       price_type_id: item.price_type_id.id,
     };
-  }catch (e) {
-    console.log(e)
+  } catch (e) {
+    console.log(e);
   }
-}
+};
 
 const getOrganization = async (page, items) => {
   try {
-    const { data } = await organizationApi.get(page, items)
-    organizations.value = data.result.data
+    const { data } = await organizationApi.get(page, items);
+    organizations.value = data.result.data;
   } catch (e) {
-    console.log(e)
+    console.log(e);
   }
-}
+};
 
 const getPriceType = async ({ page, itemsPerPage }) => {
   try {
-    const { data } = await priceTypeApi.get({ page, itemsPerPage })
-    priceTypes.value = data.result.data
+    const { data } = await priceTypeApi.get({ page, itemsPerPage });
+    priceTypes.value = data.result.data;
   } catch (e) {
-    console.log(e)
+    console.log(e);
   }
-}
+};
 
 const getCounterparties = async ({ page, itemsPerPage }) => {
   try {
-    const { data } = await counterpartyApi.get({ page, itemsPerPage })
-    counterparties.value = data.result.data
+    const { data } = await counterpartyApi.get({ page, itemsPerPage });
+    counterparties.value = data.result.data;
   } catch (e) {
-    console.log(e)
+    console.log(e);
   }
-}
+};
 
 const getCurrencies = async ({ page, itemsPerPage }) => {
   try {
-    const { data } = await currencyApi.get({ page, itemsPerPage })
-    currencies.value = data.result.data
+    const { data } = await currencyApi.get({ page, itemsPerPage });
+    currencies.value = data.result.data;
   } catch (e) {
-    console.log(e)
+    console.log(e);
   }
-}
+};
 
 const getId = async () => {
   try {
     const { data } = await counterpartyApi.getById(props.item);
     name.value = data.result.name;
-    modalTitle.value = data.result.name
-    date.value = showDate(data.result.created_at)
+    modalTitle.value = data.result.name;
+    date.value = showDate(data.result.created_at);
     address.value = data.result.address;
     phone.value = data.result.phone;
     email.value = data.result.email;
-    roles.value = data.result.roles
+    roles.value = data.result.roles;
     if (roles.value) {
       roles.value.forEach((roleIndex) => {
         if (roleIndex === 1) a.value = true;
@@ -272,89 +292,97 @@ const CreateCounterparty = async () => {
       email: email.value,
       roles: roles.value,
     };
-    if(roles.value.length === 0) {
-      showToast("Выберите хотя бы одну роль!", "warning")
-      return
-    }
     await counterpartyApi.create(body);
     showToast("Успешно добавлена", "green");
-    emits('toggleIsOpen');
+    emits("toggleIsOpen");
     clearForm();
   } catch (error) {
     isValid.value = true;
     if (error.response && error.response.status === 422) {
-      if(error.response.data.errors.email){
-        showToast(error.response.data.errors.email[0], "warning")
+      if (error.response.data.errors.name) {
+        let message = "Поле Наименование не должно быть не длинее 25 символов";
+        if (name.value.length === 0) {
+          message = "Поле Наименование не может быть пустым";
+        }
+        showToast(`${message}`, "warning");
+      } else if (roles.value.length === 0) {
+        showToast("Выберите хотя бы одну роль!", "warning");
+        return;
+      } else if (error.response.data.errors.phone) {
+        showToast("Поле тел. номер должно состоять из 13 символов", "warning");
+      } else if (error.response.data.errors.email) {
+        showToast(error.response.data.errors.email[0], "warning");
+      } else {
+        showToast("Заполните все поля!", "warning");
       }
-      if(error.response.data.errors.phone){
-        showToast("Поле тел. номер должно быть не короче 13 символов", "warning")
-      }
-      if(error.response.data.errors.name){
-        showToast("Поле Наименование не должно быть не длинее 25 символов", "warning")
-      }
-      showToast("Заполните все поля!", "warning");
     }
-      console.log(error);
+    console.log(error);
   }
 };
 
 const getDocuments = async ({ page, itemsPerPage, sortBy, search }) => {
   try {
-    loading.value = true
+    loading.value = true;
     if (props.isEdit === true) {
-      const { data } = await counterpartyAgreement.getCounterpartyById(props.item, { page, itemsPerPage, sortBy }, search)
-      result.value = data.result.data.map(item => ({
+      const { data } = await counterpartyAgreement.getCounterpartyById(
+        props.item,
+        { page, itemsPerPage, sortBy },
+        search
+      );
+      result.value = data.result.data.map((item) => ({
         ...item,
-        date: showDate(item.date)
-      }))
-      pagination.value = data.result.pagination
+        date: showDate(item.date),
+      }));
+      pagination.value = data.result.pagination;
     } else {
-      const { data } = await counterpartyAgreement.get({ page, itemsPerPage, sortBy }, search)
-      result.value = data.result.data.map(item => ({
+      const { data } = await counterpartyAgreement.get(
+        { page, itemsPerPage, sortBy },
+        search
+      );
+      result.value = data.result.data.map((item) => ({
         ...item,
-        date: showDate(item.date)
-      }))
-      pagination.value = data.result.pagination
+        date: showDate(item.date),
+      }));
+      pagination.value = data.result.pagination;
     }
 
-    loading.value = false
-  }
-  catch (e) {
+    loading.value = false;
+  } catch (e) {
     console.log(e);
   }
-}
+};
 
 const del = async ({ page, itemsPerPage, sortBy, search }) => {
   const body = {
-    ids: markedID.value
-  }
+    ids: markedID.value,
+  };
   try {
-    const { status } = await counterpartyAgreement.massDeletion(body)
+    const { status } = await counterpartyAgreement.massDeletion(body);
     if (status === 200) {
-      showToast(removeMessage, 'red')
-      await getDocuments({ page, itemsPerPage, sortBy })
-      markedID.value = []
+      showToast(removeMessage, "red");
+      await getDocuments({ page, itemsPerPage, sortBy });
+      markedID.value = [];
     }
   } catch (e) {
-    console.log(e)
+    console.log(e);
   }
-}
+};
 
 const restore = async ({ page, itemsPerPage, sortBy }) => {
   try {
     const body = {
-      ids: markedID.value
-    }
-    const { status } = await counterpartyAgreement.massRestore(body)
+      ids: markedID.value,
+    };
+    const { status } = await counterpartyAgreement.massRestore(body);
     if (status === 200) {
-      showToast(restoreMessage, 'green')
-      await getDocuments({ page, itemsPerPage, sortBy })
-      markedID.value = []
+      showToast(restoreMessage, "green");
+      await getDocuments({ page, itemsPerPage, sortBy });
+      markedID.value = [];
     }
   } catch (e) {
-    console.log(e)
+    console.log(e);
   }
-}
+};
 
 const updateCounterparty = async () => {
   try {
@@ -364,28 +392,34 @@ const updateCounterparty = async () => {
       address: address.value,
       phone: phone.value,
       email: email.value,
-      roles: roles.value
-    }
-    if(roles.value.length === 0) {
-      showToast("Выберите хотя бы одну роль!", "warning")
-      return
+      roles: roles.value,
+    };
+    if (roles.value.length === 0) {
+      showToast("Выберите хотя бы одну роль!", "warning");
+      return;
     }
     await counterpartyApi.update(props.item, body);
     showToast("Успешно изменено", "#");
-    emits('toggleIsOpen');
-  }  catch (error) {
+    emits("toggleIsOpen");
+  } catch (error) {
     isValid.value = true;
     if (error.response && error.response.status === 422) {
-      if(error.response.data.errors.email){
-        showToast(error.response.data.errors.email[0], "warning")
+      if (error.response.data.errors.name) {
+        let message = "Поле Наименование не должно быть не длинее 25 символов";
+        if (name.value.length === 0) {
+          message = "Поле Наименование не может быть пустым";
+        }
+        showToast(`${message}`, "warning");
+      } else if (roles.value.length === 0) {
+        showToast("Выберите хотя бы одну роль!", "warning");
+        return;
+      } else if (error.response.data.errors.phone) {
+        showToast("Поле тел. номер должно состоять из 13 символов", "warning");
+      } else if (error.response.data.errors.email) {
+        showToast(error.response.data.errors.email[0], "warning");
+      } else {
+        showToast("Заполните все поля!", "warning");
       }
-      if(error.response.data.errors.phone){
-        showToast("Поле тел. номер должно быть не короче 13 символов", "warning")
-      }
-      if(error.response.data.errors.name){
-        showToast("Поле Наименование не должно быть не длинее 25 символов", "warning")
-      }
-      showToast("Заполните все поля!", "warning");
     }
     console.log(error);
   }
@@ -410,22 +444,22 @@ const createCpAgreement = async () => {
       contact_person: form.value.contact_person,
       comment: form.value.comment,
       date: form.value.date,
-    }
-    await counterpartyAgreement.create(body)
+    };
+    await counterpartyAgreement.create(body);
     showToast("Успешно добавлена", "green");
-    agreementDialog.value = false
-    clearInputs()
-  }  catch (error) {
+    agreementDialog.value = false;
+    clearInputs();
+  } catch (error) {
     isValid.value = true;
     if (error.response && error.response.status === 422) {
       showToast("Заполните все поля!", "warning");
     }
     console.log(error);
   }
-}
+};
 
 const updateCpAgreement = async () => {
-  try{
+  try {
     const body = {
       name: form.value.name,
       currency_id: form.value.currency_id,
@@ -437,61 +471,81 @@ const updateCpAgreement = async () => {
       date: form.value.date,
       contract_number: form.value.contract_number,
       payment_id: 2,
-    }
-    const res = await counterpartyAgreement.update(editID.value, body)
+    };
+    const res = await counterpartyAgreement.update(editID.value, body);
     showToast("Успешно изменено", "#");
-    agreementDialog.value = false
-    editAgreementDialog.value = false
-  }catch (e) {
-    console.log(e)
+    agreementDialog.value = false;
+    editAgreementDialog.value = false;
+  } catch (e) {
+    console.log(e);
   }
-}
+};
 
 const rules = {
-  required: v => !!v,
-  email: v => /.+@.+\..+/.test(v),
-  phone: v => v.length === 13,
-}
-
+  required: (v) => !!v,
+  email: (v) => /.+@.+\..+/.test(v),
+  phone: (v) => v.length === 13,
+};
 
 const price_typeProps = (item) => {
   return {
     title: item.name,
-  }
-}
+  };
+};
 
 const organizationProps = (item) => {
   return {
     title: item.name,
-  }
-}
+  };
+};
 
 const counterpartyProps = (item) => {
   return {
     title: item.name,
-  }
-}
+  };
+};
 
 const currencyProps = (item) => {
   return {
     title: item.name,
-  }
-}
-
+  };
+};
 </script>
 
 <template>
   <div>
     <v-dialog v-model="dialog" class="mt-2 pa-2">
-      <v-card style="border: 2px solid #3AB700" min-width="350"
-        class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0" rounded="xl">
+      <v-card
+        style="border: 2px solid #3ab700"
+        min-width="350"
+        class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
+        rounded="xl"
+      >
         <div class="d-flex justify-space-between align-center mb-2">
-          <span>{{ isEdit && !createOnBase ? `Контрагент: ${modalTitle}` : createOnBase ? 'Добавление на основании' : 'Добавление' }}</span>
+          <span>{{
+            isEdit && !createOnBase
+              ? `Контрагент: ${modalTitle}`
+              : createOnBase
+              ? "Добавление на основании"
+              : "Добавление"
+          }}</span>
           <div class="d-flex align-center justify-space-between">
             <div class="d-flex align-center mt-2 me-4">
-              <Icons @click="isEdit && !createOnBase ? updateCounterparty() : CreateCounterparty()" name="save" />
+              <Icons
+                @click="
+                  isEdit && !createOnBase
+                    ? updateCounterparty()
+                    : CreateCounterparty()
+                "
+                name="save"
+              />
             </div>
-            <v-btn @click="dialog = false" variant="text" :size="32" class="pt-2 pl-1">
+            <v-btn
+              @click="dialog = false"
+              variant="text"
+              :size="32"
+              class="pt-2 pl-1"
+            >
               <Icons name="close" />
             </v-btn>
           </div>
@@ -513,19 +567,36 @@ const currencyProps = (item) => {
                   clear-icon="close"
                   clearable
                   hide-details
-              />
-                <span style="color: red; font-weight: bolder" class="mr-4 mt-1">2500,00</span>
+                />
+                <span style="color: red; font-weight: bolder" class="mr-4 mt-1"
+                  >2500,00</span
+                >
               </div>
-              <div :class="isEdit ? 'justify-space-between' : 'justify-end'"
-                class="d-flex justify-space-between ga-5 align-center my-3">
-                <div v-if="isEdit" style="border: 1.5px solid #cbc8c8; border-radius: 4px; padding: 2px 12px">
+              <div
+                :class="isEdit ? 'justify-space-between' : 'justify-end'"
+                class="d-flex justify-space-between ga-5 align-center my-3"
+              >
+                <div
+                  v-if="isEdit"
+                  style="
+                    border: 1.5px solid #cbc8c8;
+                    border-radius: 4px;
+                    padding: 2px 12px;
+                  "
+                >
                   <span>
                     {{ date }}
                   </span>
                 </div>
-                <CustomCheckbox :checked="a" @change="handleCheckboxChange(0)">Клиент</CustomCheckbox>
-                <CustomCheckbox :checked="b" @change="handleCheckboxChange(1)">Поставщик</CustomCheckbox>
-                <CustomCheckbox :checked="c" @change="handleCheckboxChange(2)">Прочее</CustomCheckbox>
+                <CustomCheckbox :checked="a" @change="handleCheckboxChange(0)"
+                  >Клиент</CustomCheckbox
+                >
+                <CustomCheckbox :checked="b" @change="handleCheckboxChange(1)"
+                  >Поставщик</CustomCheckbox
+                >
+                <CustomCheckbox :checked="c" @change="handleCheckboxChange(2)"
+                  >Прочее</CustomCheckbox
+                >
               </div>
               <div class="d-flex ga-4 mb-3">
                 <v-text-field
@@ -548,7 +619,8 @@ const currencyProps = (item) => {
                   label="Почта"
                   v-model="email"
                   density="compact"
-                  rounded="md" color="info"
+                  rounded="md"
+                  color="info"
                   hide-details
                   :append-inner-icon="email.length > 1 ? 'close' : ''"
                   @click:append-inner="email = ''"
@@ -567,12 +639,17 @@ const currencyProps = (item) => {
                 @click:append-inner="address = ''"
               />
             </v-col>
-
           </v-row>
         </v-form>
-        <v-card class="table mt-3" style="border: 1px solid #3AB700">
-          <div class="d-flex w-100 rounded-t-md mb-1 align-center " style="border-bottom: 1px solid #3AB700">
-            <div class="d-flex justify-space-between w-100 ga-2 pt-1 me-2" style="padding-top: 4px !important;">
+        <v-card class="table mt-3" style="border: 1px solid #3ab700">
+          <div
+            class="d-flex w-100 rounded-t-md mb-1 align-center"
+            style="border-bottom: 1px solid #3ab700"
+          >
+            <div
+              class="d-flex justify-space-between w-100 ga-2 pt-1 me-2"
+              style="padding-top: 4px !important"
+            >
               <span>Договоры</span>
               <span>
                 <Icons @click="compute" class="mr-3" name="delete" />
@@ -596,11 +673,12 @@ const currencyProps = (item) => {
             @update:options="getDocuments({}, idAgreement)"
             fixed-footer
             hover
-            page-text =  '{0}-{1} от {2}'
+            page-text="{0}-{1} от {2}"
             :items-per-page-options="[
-            {value: 25, title: '25'},
-            {value: 50, title: '50'},
-            {value: 100, title: '100'},]"
+              { value: 25, title: '25' },
+              { value: 50, title: '50' },
+              { value: 100, title: '100' },
+            ]"
           >
             <template v-slot:item="{ item, index }">
               <tr
@@ -611,7 +689,10 @@ const currencyProps = (item) => {
                 :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
               >
                 <td class="d-flex align-center">
-                  <Icons class="mt-2 me-2" :name="item.deleted_at === null ? 'valid' : 'inValid'" />
+                  <Icons
+                    class="mt-2 me-2"
+                    :name="item.deleted_at === null ? 'valid' : 'inValid'"
+                  />
                   <span>{{ index + 1 }}</span>
                 </td>
                 <td>{{ item.contract_number }}</td>
@@ -622,22 +703,35 @@ const currencyProps = (item) => {
           </v-data-table-server>
         </v-card>
       </v-card>
-
     </v-dialog>
-
-
 
     <!--Create Agreement-->
     <v-dialog v-model="agreementDialog" class="mt-2 pa-2">
-      <v-card style="border: 2px solid #3AB700" min-width="650"
-        class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
+      <v-card
+        style="border: 2px solid #3ab700"
+        min-width="650"
+        class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
+        rounded="xl"
+      >
         <div class="d-flex justify-space-between align-center mb-2">
-          <span>{{ editAgreementDialog ? 'Изменение' : 'Добавление' }}</span>
+          <span>{{ editAgreementDialog ? "Изменение" : "Добавление" }}</span>
           <div class="d-flex align-center justify-space-between">
             <div class="d-flex ga-3 align-center mt-2 me-4">
-              <Icons @click="editAgreementDialog ? updateCpAgreement() : createCpAgreement()" name="save" />
+              <Icons
+                @click="
+                  editAgreementDialog
+                    ? updateCpAgreement()
+                    : createCpAgreement()
+                "
+                name="save"
+              />
             </div>
-            <v-btn @click="agreementDialog = false" variant="text" :size="32" class="pt-2 pl-1">
+            <v-btn
+              @click="agreementDialog = false"
+              variant="text"
+              :size="32"
+              class="pt-2 pl-1"
+            >
               <Icons name="close" />
             </v-btn>
           </div>
@@ -657,19 +751,36 @@ const currencyProps = (item) => {
                   placeholder="Наименование"
                   label="Наименование"
                   lear-icon="close"
-                  clearable hide-details
+                  clearable
+                  hide-details
                 />
-                <span style="color: red; font-weight: bolder" class="mr-4 mt-1">2500,00</span>
+                <span style="color: red; font-weight: bolder" class="mr-4 mt-1"
+                  >2500,00</span
+                >
               </div>
               <div class="d-flex justify-space-between ga-5 align-center my-3">
-                <div v-if="isDocumentEdit" class="w-25"
-                  style="border: 1.5px solid #cbc8c8; border-radius: 4px; padding: 2px 12px">
+                <div
+                  v-if="isDocumentEdit"
+                  class="w-25"
+                  style="
+                    border: 1.5px solid #cbc8c8;
+                    border-radius: 4px;
+                    padding: 2px 12px;
+                  "
+                >
                   <span>
                     {{ date }}
                   </span>
                 </div>
-                <div v-if="isDocumentEdit" class="w-25"
-                  style="border: 1.5px solid #cbc8c8; border-radius: 4px; padding: 2px 12px">
+                <div
+                  v-if="isDocumentEdit"
+                  class="w-25"
+                  style="
+                    border: 1.5px solid #cbc8c8;
+                    border-radius: 4px;
+                    padding: 2px 12px;
+                  "
+                >
                   <span>
                     {{ date }}
                   </span>
@@ -732,7 +843,7 @@ const currencyProps = (item) => {
                   item-value="id"
                   hide-details
                   class="w-25"
-              />
+                />
               </div>
               <v-text-field
                 v-model="form.contact_person"
@@ -753,12 +864,9 @@ const currencyProps = (item) => {
                 />
               </v-container>
             </v-col>
-
           </v-row>
         </v-form>
       </v-card>
     </v-dialog>
-
-
   </div>
 </template>
