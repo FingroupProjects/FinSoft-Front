@@ -25,7 +25,7 @@ const authentication = async () => {
       setToken(res.data.token)
       setUser(res.data.user)
       await router.push('/')
-      await location.reload()
+
     }
   } catch (e) {
     if (e.response.data.errors.login) {
@@ -40,6 +40,7 @@ const authentication = async () => {
     body.password = ''
   }
 }
+
 </script>
 
 <template>
