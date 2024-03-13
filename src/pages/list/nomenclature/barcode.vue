@@ -1,77 +1,80 @@
 <script setup>
 import { ref } from "vue";
+import Icons from "../../../composables/Icons/Icons.vue";
+import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 
+const pagination = ref([]);
 const barcodes = ref([]);
+const loading = ref(true);
 
 const getBarcodes = async () => {
   // try{
   //   const { data } = await
   // }
 };
+
+const headers = ref([
+  { title: "№", key: "id", align: "start" },
+  { title: "Наименование", key: "name" },
+]);
+
+const lineMarking = (item) => {
+  if (markedID.value.length > 0) {
+    const firstMarkedItem = barcodes.value.find(
+      (el) => el.id === markedID.value[0]
+    );
+    if (firstMarkedItem && firstMarkedItem.deleted_at) {
+      if (item.deleted_at === null) {
+        showToast(ErrorSelectMessage, "warning");
+        return;
+      }
+    }
+    if (firstMarkedItem && firstMarkedItem.deleted_at === null) {
+      if (item.deleted_at !== null) {
+        showToast(ErrorSelectMessage, "warning");
+        return;
+      }
+    }
+  }
+  const index = markedID.value.indexOf(item.id);
+  if (index !== -1) {
+    markedID.value.splice(index, 1);
+  } else {
+    markedID.value.push(item.id);
+  }
+  markedItem.value = item;
+};
 </script>
 
 <template>
   <div>
     <v-col>
-      <div class="d-flex justify-space-between text-uppercase">
-        <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Номенклатура</span>
+      <div class="d-flex justify-space-between text-uppercase ga-10">
+        <div class="d-flex align-center ga-2 pe-2 w-75 text-sm-body-1">
+          <span>Штрих - код</span>
         </div>
-        <v-card variant="text" min-width="500" class="d-flex align-center ga-2">
-          <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-2 me-3">
-              <button
-                style="
-                  background-color: #4ecb71;
-                  border-radius: 12px;
-                  white-space: nowrap;
-                  height: 25px;
-                  font-size: 12px;
-                  border: 1px solid red;
-                "
-              >
-                <span class="px-2 py-0">создать группу</span>
-              </button>
-              <Icons @click="isCreate = true" name="add" />
-              <Icons name="copy" />
-              <Icons
-                @click="compute({ page, itemsPerPage, sortBy, search })"
-                name="delete"
-              />
-            </div>
-            <div class="w-100">
-              <v-text-field
-                v-model="search"
-                prepend-inner-icon="search"
-                density="compact"
-                label="Поиск..."
-                variant="outlined"
-                color="info"
-                rounded="lg"
-                clear-icon="close"
-                hide-details
-                single-line
-                clearable
-                flat
-              ></v-text-field>
-            </div>
+        <v-card variant="text" class="d-flex align-center ga-2">
+          <div class="d-flex ga-2 mt-2 me-3">
+            <Icons name="add" />
+            <Icons
+              @click="compute({ page, itemsPerPage, sortBy })"
+              name="delete"
+            />
           </div>
-          <Icons name="filter" class="mt-1" />
         </v-card>
       </div>
 
       <v-card class="table mt-2">
         <v-data-table-server
-          style="height: 78vh"
+          style="height: 20vh"
           fixed-header
-          :items="goods"
+          :items="barcodes"
           :headers="headers"
           :loading="loading"
           items-per-page-text="Элементов на странице:"
           loading-text="Загрузка"
           no-data-text="Нет данных"
-          :search="search"
-          @update:options="getGoods"
+          @update:options="getBarcodes"
           v-model:items-per-page="pagination.per_page"
           :items-length="pagination.total || 0"
           :item-value="headers.title"
@@ -121,9 +124,6 @@ const getBarcodes = async () => {
           </template>
         </v-data-table-server>
       </v-card>
-      <div v-if="isCreate">
-        <createUpdate @toggleDialog="isCreate = false" />
-      </div>
     </v-col>
   </div>
 </template>

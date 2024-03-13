@@ -8,6 +8,6 @@ export default {
     return api.patch(`/counterparty/${id}`, data);
   },
   get() {
-    return api.get("/units");
+    return api.get("/unit");
   },
 };

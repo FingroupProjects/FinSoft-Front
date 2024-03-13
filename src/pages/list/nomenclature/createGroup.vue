@@ -5,7 +5,7 @@ import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import { addMessage } from "../../../composables/constant/buttons";
-import unitsApi from "../../../api/units";
+
 
 const emit = defineEmits();
 
@@ -35,15 +35,6 @@ const createGroup = async () => {
     console.log(e);
   } finally {
     isValid.value = false;
-  }
-};
-
-const getUnits = async () => {
-  try {
-    const res = await unitsApi.get();
-    console.log(res);
-  } catch (e) {
-    console.log(e);
   }
 };
 
