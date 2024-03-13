@@ -308,7 +308,7 @@ const openDialog = (item) => {
     emailRef.value = item.email
     addressRef.value = item.address
     employeeDialogTitle.value = nameRef.value
-    imagePreview.value = 'http://103.241.67.145:8410/' + item.image
+    imagePreview.value = 'http://localhost:8410/' + item.image
   }
 
 }
