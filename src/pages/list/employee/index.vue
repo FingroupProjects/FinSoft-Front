@@ -21,6 +21,9 @@ import counterpartyApi from "../../../api/counterparty.js";
 const router = useRouter()
 
 const loading = ref(true)
+const imagePreview = ref(null)
+const imageRef = ref(null)
+const fileInput = ref(null)
 const dialog = ref(false)
 const idEmployee = ref(null)
 const hoveredRowIndex = ref(null)
@@ -66,8 +69,19 @@ const getEmployee = async ({page, itemsPerPage, sortBy, search}) => {
 
 
 const selectAvatar = event => {
-  url.value = event.target.files[0];
+  const files = event.target.files
+  imageRef.value = files[0];
+  let filename = files[0].name
+  if (filename.lastIndexOf('.') <= 0) {
+    return showToast('Пожалуйста, добавьте заново!')
+  }
+  const fileReader = new FileReader()
+  fileReader.addEventListener('load', () => {
+    imagePreview.value = fileReader.result
+  })
+  fileReader.readAsDataURL(files[0])
 }
+
 
 const addEmployee = async ({page, itemsPerPage, sortBy}) => {
   const formData = new FormData();
@@ -82,6 +96,8 @@ const addEmployee = async ({page, itemsPerPage, sortBy}) => {
   appendIfNotNull('phone', phoneRef.value);
   appendIfNotNull('email', emailRef.value);
   appendIfNotNull('address', addressRef.value);
+  appendIfNotNull('address', addressRef.value);
+  appendIfNotNull('image', imageRef.value);
 
   try {
 
@@ -124,7 +140,7 @@ const addEmployee = async ({page, itemsPerPage, sortBy}) => {
         showToast("Заполните все поля!", "warning");
       }
     }
-    console.log(error);
+
   }
 
 }
@@ -134,7 +150,9 @@ const cleanForm = () => {
   addressRef.value = null
   phoneRef.value = null
   emailRef.value = null
-  url.value = null
+  imageRef.value = null
+  imagePreview.value = null
+  fileInput.value = null
 }
 
 const massDel = async ({page, itemsPerPage, sortBy, search}) => {
@@ -180,25 +198,75 @@ const massRestore = async ({page, itemsPerPage, sortBy, search}) => {
 
 
 const update = async ({page, itemsPerPage, sortBy}) => {
+  const formData = new FormData();
 
-  const body = {
-    name: nameRef.value,
-    currency_id: currencyAdd.value,
-    description: descriptionRef.value
+  function appendIfNotNull(key, value) {
+    if (value !== null) {
+      formData.append(key, value);
+    }
   }
+
+  console.log(nameRef.value)
+  console.log(phoneRef.value)
+  console.log(emailRef.value)
+  console.log(addressRef.value)
+  console.log(imageRef.value)
+
+  appendIfNotNull('name', nameRef.value);
+  appendIfNotNull('phone', phoneRef.value);
+  appendIfNotNull('email', emailRef.value);
+  appendIfNotNull('address', addressRef.value);
+  appendIfNotNull('image', imageRef.value);
+
 
   try {
-    const {status} = await employee.update(idEmployee.value, body)
-    if (status === 200) {
-      nameRef.value = null
 
-      dialog.value = null
+    const res = await employee.update(idEmployee.value, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+
+
+    if (res.status === 200) {
       await getEmployee({page, itemsPerPage, sortBy})
       showToast(editMessage)
+      idEmployee.value = res.data.result.id
+      dialog.value = false
+      cleanForm()
+      markedID.value = []
+      markedItem.value = []
     }
-  } catch (e) {
-    console.log(e)
+
+
+  } catch (error) {
+
+
+    if (error.response && error.response.status === 422) {
+
+      if (error.response.data.errors.name) {
+        showToast("Поле ФИО не может быть пустым", "warning")
+      }
+
+      else if (error.response.data.errors.phone) {
+        showToast("Поле тел. номер должно быть не короче 13 символов", "warning")
+      }
+
+      else if (error.response.data.errors.email) {
+        showToast(error.response.data.errors.email[0], "warning")
+      }
+      else if (error.response.data.errors.address) {
+        showToast("Поле Адрес не может быть пустым", "warning")
+      }
+
+      else {
+        showToast("Заполните все поля!", "warning");
+      }
+    }
+    console.log(error);
   }
+
 }
 
 const getOrganization = async () => {
@@ -221,7 +289,9 @@ const getOrganization = async () => {
 const handleCheckboxClick = (item) => {
   lineMarking(item)
 }
-
+const onPickFile = () => {
+  fileInput.value.click()
+}
 const openDialog = (item) => {
   dialog.value = true
 
@@ -238,6 +308,7 @@ const openDialog = (item) => {
     emailRef.value = item.email
     addressRef.value = item.address
     employeeDialogTitle.value = nameRef.value
+    imagePreview.value = 'http://localhost:8410/' + item.image
   }
 
 }
@@ -319,7 +390,6 @@ watch(dialog, newVal => {
               <Icons @click="addBasedOnEmployee" name="copy"/>
               <Icons @click="compute" name="delete"/>
             </div>
-
             <div class="w-100">
               <v-text-field
                   v-model="search"
@@ -354,6 +424,12 @@ watch(dialog, newVal => {
             :items-length="paginations.total || 0"
             :items="employees"
             :item-value="headers.title"
+            page-text =  '{0}-{1} от {2}'
+            :items-per-page-options="[
+                {value: 25, title: '25'},
+                {value: 50, title: '50'},
+                {value: 100, title: '100'},
+            ]"
             :search="search"
             @update:options="getEmployee"
             fixed-header
@@ -421,17 +497,19 @@ watch(dialog, newVal => {
                       clear-icon="close"
                       clearable
                   />
-                  <div class="d-flex">
-                    <div class="border me-4" style="width: 40%">
-                      <v-text-field
-                          @change="selectAvatar"
-                          color="green"
-                          type="file"
-                          rounded="md"
-                          class="w-auto text-sm-body-1 mt-10"
-                          density="compact"
-                      />
-                      <!--                      <img src="../../../assets/vue.svg" alt="">-->
+                  <div class="d-flex w-100 ga-4">
+                    <div class="border me-4  d-flex justify-center align-center" style="width: 40%">
+                      <div v-if="imagePreview === null">
+                        <v-btn  @click="onPickFile">Загрузить фото</v-btn>
+                        <input
+                            accept="image/*"
+                            type="file"
+                            @change="selectAvatar"
+                            style="display: none;"
+                            ref="fileInput"
+                        />
+                      </div>
+                      <img v-else :src="imagePreview" width="150" height="150" alt="">
                     </div>
 
                     <div class="d-flex flex-column" style="width: 60%">
@@ -477,8 +555,6 @@ watch(dialog, newVal => {
                     </div>
                   </div>
                 </v-col>
-
-
               </v-row>
             </v-form>
           </v-card>

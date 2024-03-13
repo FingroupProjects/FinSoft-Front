@@ -15,8 +15,6 @@ import Icons from "../../../composables/Icons/Icons.vue";
 import employee from "../../../api/employee";
 
 const addDialog = ref(false);
-const isCreate = ref(false);
-const isEdit = ref(false);
 const loading = ref(true);
 const markedID = ref([]);
 const markedItem = ref([]);
@@ -84,7 +82,7 @@ const getOrganizationData = async ({ page, itemsPerPage, sortBy, search }) => {
 
 
 const addBasedOnOrganization = () => {
-  if (markedID.value.length !== 1 && !isExistsOrganization.value) return showToast(selectOneItemMessage, 'warning')
+  if (markedID.value.length !== 1 && !isExistsOrganization.value) return showToast(selectOneItemMessage, 'warning ')
   console.log(markedID.value.length)
   addDialog.value = true
 
@@ -92,6 +90,17 @@ const addBasedOnOrganization = () => {
     if (markedID.value[0] === item.id) {
       idOrganizations.value = item.id
       nameRef.value = item.name
+      innRef.value = item.INN;
+      directorRef.value = {
+      "id": item.director.id,
+      "name": item.director.name
+    }
+    accountantRef.value = {
+      "id": item.chief_accountant.id,
+      "name": item.chief_accountant.name
+    }
+      addressRef.value = item.address;
+      descriptionRef.value = item.description;
     }
   })
 }
@@ -99,7 +108,7 @@ const addBasedOnOrganization = () => {
 const openDialog = (item) => {
   addDialog.value = true;
   if (item === 0) {
-    getEmployees({ page: 1, itemPerPage: 10000 });
+
     idOrganizations.value = 0;
     isExistsOrganization.value = false;
   } else {
@@ -107,8 +116,16 @@ const openDialog = (item) => {
     isExistsOrganization.value = true;
     nameRef.value = item.name;
     innRef.value = item.INN;
-    directorRef.value = item.director_id;
-    accountantRef.value = item.chief_accountant_id;
+
+    directorRef.value = {
+      "id": item.director.id,
+      "name": item.director.name
+    }
+    accountantRef.value = {
+      "id": item.chief_accountant.id,
+      "name": item.chief_accountant.name
+    }
+    
     addressRef.value = item.address;
     descriptionRef.value = item.description;
     organizationInDialogTitle.value = nameRef.value;
@@ -116,11 +133,15 @@ const openDialog = (item) => {
 };
 
 
+onMounted(async() => {
+  await getEmployees({ page: 1, itemsPerPage: 10000});
+})
+
 const addOrganization = async ({ page, itemsPerPage, sortBy, search }) => {
   const body = {
     name: nameRef.value,
     INN: innRef.value,
-    director_id: directorRef.value,
+    director_id: directorRef.value, 
     chief_accountant_id: accountantRef.value,
     address: addressRef.value,
     description: descriptionRef.value,
@@ -139,26 +160,27 @@ const addOrganization = async ({ page, itemsPerPage, sortBy, search }) => {
 };
 
 
-const update = async ({page, itemsPerPage, sortBy, search}) => {
-
-const body = {
-  name: nameRef.value,
+const update = async ({ page, itemsPerPage, sortBy, search }) => {
+  const body = {
+    name: nameRef.value,
     INN: innRef.value,
-    director_id: directorRef.value,
-    chief_accountant_id: accountantRef.value,
+    director_id: directorRef.value.id,
+    chief_accountant_id: accountantRef.value.id,
     address: addressRef.value,
     description: descriptionRef.value,
-}
-try {
-  const { status } = await organization.update(idOrganizations.value, body)
-  if (status === 200) {
-    await getOrganizationData({ page, itemsPerPage, sortBy, search });
-    showToast(editMessage)
   }
-} catch (e) {
-  console.log(e)
-}
-}
+  console.log(body);
+  try {
+    const { status } = await organization.update(idOrganizations.value, body);
+    if (status === 200) {
+      await getOrganizationData({ page, itemsPerPage, sortBy, search });
+      showToast(editMessage); 
+    }
+  } catch (e) {
+    console.log(e);
+  }
+};
+
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
   if (markedItem.value.deleted_at) {
     return massRestoreOrganization({ page, itemsPerPage, sortBy });
@@ -203,21 +225,14 @@ const handleCheckboxClick = function (item) {
   lineMarking(item);
 };
 
-const employesProps = (item) => {
-  return {
-    title: item.name,
-  };
-};
-
-const editItem = (item) => {
-  isCreate.value = true;
-  isEdit.value = true;
-  markedItem.value = item.id;
-};
-
 watch(addDialog, (newVal) => {
   if (!newVal) {
     nameRef.value = null;
+    innRef.value = null;
+    directorRef.value = null;
+    accountantRef.value = null;
+    addressRef.value = null;
+    descriptionRef.value = null;
     isExistsOrganization.value = false;
     organization.value = [];
   }
@@ -341,11 +356,7 @@ watch(addDialog, (newVal) => {
             <div class="d-flex align-center justify-space-between">
               <div class="d-flex ga-3 align-center mt-2 me-4">
                 <Icons @click="removeOrganization" name="delete" />
-                <Icons
-                  v-if="isExistsOrganization"
-                  @click="update"
-                  name="save"
-                />
+                <Icons v-if="isExistsOrganization" @click="update" name="save"/>
                 <Icons v-else @click="addOrganization" name="save" />
               </div>
               <v-btn
@@ -354,7 +365,7 @@ watch(addDialog, (newVal) => {
                 :size="32"
                 class="pt-2 pl-1"
               >
-                <Icons name="close" />
+                <Icons name="close"/>
               </v-btn>
             </div>
           </div>
@@ -389,20 +400,20 @@ watch(addDialog, (newVal) => {
                 <v-select
                   v-model="directorRef"
                   :items="employees"
-                  item-text="name"
+                  rounded="lg"
+                  item-title="name"
                   item-value="id"
                   label="Директор"
                   variant="outlined"
-                  :item-props="employesProps"
                 ></v-select>
                 <v-select
                   v-model="accountantRef"
                   :items="employees"
-                  item-text="name"
+                  rounded="lg"
+                  item-title="name"
                   item-value="id"
                   label="Гл. бухгалтер"
                   variant="outlined"
-                  :item-props="employesProps"
                 ></v-select>
                 <v-text-field
                   v-model="addressRef"
