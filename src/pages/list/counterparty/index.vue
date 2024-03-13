@@ -64,7 +64,6 @@ const lineMarking = (item) => {
       }
     }
   }
-
   const index = markedID.value.indexOf(item.id);
   if (index !== -1) {
     markedID.value.splice(index, 1);
@@ -161,7 +160,7 @@ const massRestoreCounterparty = async ({ page, itemsPerPage, sortBy }) => {
         </div>
         <v-card variant="text" min-width="500" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
+            <div class="d-flex ga-2 mt-2 me-3">
               <Icons @click="isCreate = true" name="add" />
               <Icons @click="createBase()" name="copy" />
               <Icons @click="compute({ page, itemsPerPage, sortBy, search })" name="delete" />
