@@ -63,7 +63,7 @@ const getPositionData = async ({ page, itemsPerPage, sortBy, search }) => {
 
 
 const addPosition = async ({ page, itemsPerPage, sortBy }) => {
-
+try{
   const body = {
     name: nameRef.value
   }
@@ -79,6 +79,21 @@ const addPosition = async ({ page, itemsPerPage, sortBy }) => {
     markedItem.value = []
   }
 }
+catch (error) {
+
+
+if (error.response && error.response.status === 422) {
+
+  if (error.response.data.errors.name) {
+    showToast("Поле Наименования не может быть пустым", "warning")
+  }
+  else {
+    showToast("Заполните все поля!", "warning");
+  }
+}
+ }
+}
+
 
 const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
   const body = {
