@@ -5,7 +5,7 @@ import {
   addMessage,
   editMessage,
   removeMessage,
-  warningMessage,
+  warningMessage, 
   restoreMessage,
   selectOneItemMessage,
 } from "../../../composables/constant/buttons.js";
@@ -82,7 +82,7 @@ const getOrganizationData = async ({ page, itemsPerPage, sortBy, search }) => {
 
 
 const addBasedOnOrganization = () => {
-  if (markedID.value.length !== 1 && !isExistsOrganization.value) return showToast(selectOneItemMessage, 'warning ')
+  if (markedID.value.length !== 1 && !isExistsOrganization.value) return showToast(selectOneItemMessage, 'warning')
   console.log(markedID.value.length)
   addDialog.value = true
 
@@ -138,6 +138,7 @@ onMounted(async() => {
 })
 
 const addOrganization = async ({ page, itemsPerPage, sortBy, search }) => {
+  try {
   const body = {
     name: nameRef.value,
     INN: innRef.value,
@@ -146,6 +147,8 @@ const addOrganization = async ({ page, itemsPerPage, sortBy, search }) => {
     address: addressRef.value,
     description: descriptionRef.value,
   };
+
+
   console.log(body);
   const res = await organization.add(body);
   if (res.status === 201) {
@@ -157,8 +160,43 @@ const addOrganization = async ({ page, itemsPerPage, sortBy, search }) => {
     markedID.value.push(res.data.result.id);
     isExistsOrganization.value = true;
   }
-};
+  addDialog.value = false;
+}
 
+ catch (error) {
+
+
+if (error.response && error.response.status === 422) {
+
+  if (error.response.data.errors.name) {
+    showToast("Поле Наименования не может быть пустым", "warning")
+  }
+
+  else if (error.response.data.errors.INN) {
+    showToast("Поле инн должно быть не короче 12 символов", "warning")
+  }
+
+  else if (error.response.data.errors.director_id) {
+    showToast("Поле директор не может быть пустым", "warning")
+  }
+
+  else if (error.response.data.errors.chief_accountant_id) {
+    showToast("Поле гл.Бухгалтер не может быть пустым", "warning")
+  }
+
+  else if (error.response.data.errors.address) {
+    showToast("Поле адрес не может быть пустым", "warning")
+  }
+
+  else if (error.response.data.errors.description) {
+    showToast("Поле описания не может быть пустым", "warning")
+  }
+  else {
+    showToast("Заполните все поля!", "warning");
+  }
+}
+ }
+};
 
 const update = async ({ page, itemsPerPage, sortBy, search }) => {
   const body = {
@@ -176,6 +214,7 @@ const update = async ({ page, itemsPerPage, sortBy, search }) => {
       await getOrganizationData({ page, itemsPerPage, sortBy, search });
       showToast(editMessage); 
     }
+    addDialog.value = false;
   } catch (e) {
     console.log(e);
   }
@@ -193,7 +232,8 @@ const massRestoreOrganization = async ({ page, itemsPerPage, sortBy }) => {
   try {
     const body = {
       ids: markedID.value,
-    };
+    }; 
+     
     const { status } = await organization.massRestore(body);
     if (status === 200) {
       showToast(restoreMessage, "green");
