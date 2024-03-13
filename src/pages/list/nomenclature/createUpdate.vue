@@ -3,6 +3,8 @@ import { onMounted, ref } from "vue";
 import goodsApi from "../../../api/goods";
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
+import unitsApi from "../../../api/units";
+import barcode from "./barcode.vue";
 
 const editGoodsDialog = ref(false);
 const isValid = ref(false);
@@ -13,13 +15,14 @@ const articul = ref("");
 const location = ref("");
 const description = ref("");
 
+const unit_id = ref(null);
 const group_id = ref(null);
 const imageRef = ref(null);
 const imagePreview = ref(null);
 const fileInput = ref(null);
 
 const url = ref([]);
-
+const units = ref([]);
 const groups = ref([]);
 
 const rules = {
@@ -46,9 +49,19 @@ const selectAvatar = (event) => {
   fileReader.readAsDataURL(files[0]);
 };
 
+const getUnits = async () => {
+  try {
+    const { data } = await unitsApi.get();
+    units.value = data.result;
+  } catch (e) {
+    console.log(e);
+  }
+};
+
 const getGroups = async () => {
   try {
     const { data } = await goodsApi.getGroup();
+    groups.value = data.result;
     console.log(data);
   } catch (e) {
     console.log(e);
@@ -59,13 +72,14 @@ const onPickFile = () => {
   fileInput.value.click();
 };
 
-// onMounted(() => {
-//   getGroups();
-// });
+onMounted(() => {
+  getUnits();
+  getGroups();
+});
 </script>
 
 <template>
-  <div>
+  <div class="modal">
     <v-col>
       <v-dialog v-model="dialog" class="mt-2 pa-2">
         <v-card
@@ -143,9 +157,9 @@ const onPickFile = () => {
                   hide-details
                 />
                 <v-select
-                  :item-props="itemsProps"
                   placeholder="Группа номенклатуры"
                   label="Группа номенклатуры"
+                  :item-props="itemsProps"
                   v-model="group_id"
                   variant="outlined"
                   item-title="name"
@@ -155,38 +169,45 @@ const onPickFile = () => {
                   hide-details
                 />
                 <v-select
-                  :item-props="itemsProps"
                   placeholder="Ед измерения"
+                  :item-props="itemsProps"
                   label="Ед измерения"
-                  v-model="group_id"
+                  v-model="unit_id"
                   variant="outlined"
                   item-title="name"
                   item-value="id"
-                  :items="groups"
+                  :items="units"
                   color="green"
                   hide-details
                 />
-                <div
-                  class="border d-flex justify-center align-center py-2"
-                  style="width: 35%; height: 160px"
-                >
-                  <div v-if="imagePreview === null">
-                    <v-btn @click="onPickFile">Загрузить фото</v-btn>
-                    <input
-                      accept="image/*"
-                      type="file"
-                      @change="selectAvatar"
-                      style="display: none"
-                      ref="fileInput"
+                <div class="d-flex justify-space-between">
+                  <div
+                    class="d-flex justify-center align-center py-2"
+                    style="
+                      width: 40%;
+                      height: 160px;
+                      border-radius: 12px;
+                      border: 1px solid #3ab700;
+                    "
+                  >
+                    <div v-if="imagePreview === null">
+                      <v-btn @click="onPickFile">Загрузить фото</v-btn>
+                      <input
+                        accept="image/*"
+                        type="file"
+                        @change="selectAvatar"
+                        style="display: none"
+                        ref="fileInput"
+                      />
+                    </div>
+                    <img
+                      v-else
+                      :src="imagePreview"
+                      width="150"
+                      height="150"
+                      alt=""
                     />
                   </div>
-                  <img
-                    v-else
-                    :src="imagePreview"
-                    width="150"
-                    height="150"
-                    alt=""
-                  />
                 </div>
                 <v-container class="pa-0 mt-3">
                   <v-textarea
@@ -195,6 +216,9 @@ const onPickFile = () => {
                     label="Описание"
                   />
                 </v-container>
+                <!-- <div style="border: 1px solid #3ab700; border-radius: 8px">
+                  <barcode />
+                </div> -->
               </v-col>
             </v-row>
           </v-form>
@@ -203,3 +227,9 @@ const onPickFile = () => {
     </v-col>
   </div>
 </template>
+<style>
+.modal {
+  /* overflow: scroll; */
+  padding: 20px 0px;
+}
+</style>

@@ -5,10 +5,10 @@ export default {
     return api.post("/good", data);
   },
   group(data) {
-    return api.post("/group", data);
+    return api.post("/good-group", data);
   },
   getGroup() {
-    return api.get("/group");
+    return api.get("/good-group");
   },
   update(id, data) {
     return api.patch(`/good/${id}`, data);
