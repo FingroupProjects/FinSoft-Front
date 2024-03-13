@@ -108,7 +108,7 @@ const addBasedOnOrganization = () => {
 const openDialog = (item) => {
   addDialog.value = true;
   if (item === 0) {
-    getEmployees({ page: 1, itemsPerPage: 10000});
+
     idOrganizations.value = 0;
     isExistsOrganization.value = false;
   } else {
@@ -132,6 +132,10 @@ const openDialog = (item) => {
   }
 };
 
+
+onMounted(async() => {
+  await getEmployees({ page: 1, itemsPerPage: 10000});
+})
 
 const addOrganization = async ({ page, itemsPerPage, sortBy, search }) => {
   const body = {
