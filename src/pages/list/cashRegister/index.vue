@@ -243,7 +243,7 @@ const getCurrencies = async () => {
 const getOrganizations = async () => {
 
   try {
-    const {data} = await organization.get(1, 10000)
+    const {data} = await organization.get({page: 1, itemsPerPage: 100000})
 
     organizations.value = data.result.data.map(item => {
       return {
@@ -270,9 +270,7 @@ const handleCheckboxClick = function (item) {
 }
 
 const openDialog = (item) => {
-  if(markedID.value.length > 0) {
-    return showToast(selectOneItemMessage, 'warning');
-  }
+
 
   dialog.value = true
 
