@@ -10,10 +10,58 @@ const dialog = ref(true);
 
 const name = ref("");
 const articul = ref("");
+const location = ref("");
+const description = ref("");
+
+const group_id = ref(null);
+const imageRef = ref(null);
+const imagePreview = ref(null);
+const fileInput = ref(null);
+
+const url = ref([]);
+
+const groups = ref([]);
 
 const rules = {
   required: (v) => !!v,
 };
+
+const itemsProps = (item) => {
+  return {
+    title: item.name,
+  };
+};
+
+const selectAvatar = (event) => {
+  const files = event.target.files;
+  imageRef.value = files[0];
+  let filename = files[0].name;
+  if (filename.lastIndexOf(".") <= 0) {
+    return showToast("Пожалуйста, добавьте заново!");
+  }
+  const fileReader = new FileReader();
+  fileReader.addEventListener("load", () => {
+    imagePreview.value = fileReader.result;
+  });
+  fileReader.readAsDataURL(files[0]);
+};
+
+const getGroups = async () => {
+  try {
+    const { data } = await goodsApi.getGroup();
+    console.log(data);
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+const onPickFile = () => {
+  fileInput.value.click();
+};
+
+// onMounted(() => {
+//   getGroups();
+// });
 </script>
 
 <template>
@@ -80,16 +128,6 @@ const rules = {
                   clearable
                   hide-details
                 />
-                <v-select
-                  variant="outlined"
-                  label="Организация"
-                  v-model="group_id"
-                  :items="groups"
-                  item-title="name"
-                  item-value="id"
-                  :item-props="itemsProps"
-                  hide-details
-                />
                 <v-text-field
                   v-model="location"
                   :rules="isValid ? [rules.required] : []"
@@ -98,12 +136,65 @@ const rules = {
                   variant="outlined"
                   class="w-auto text-sm-body-1"
                   density="compact"
-                  placeholder="Местоположение"
-                  label="Местоположение"
+                  placeholder="Место расположение"
+                  label="Место расположение"
                   clear-icon="close"
                   clearable
                   hide-details
                 />
+                <v-select
+                  :item-props="itemsProps"
+                  placeholder="Группа номенклатуры"
+                  label="Группа номенклатуры"
+                  v-model="group_id"
+                  variant="outlined"
+                  item-title="name"
+                  item-value="id"
+                  :items="groups"
+                  color="green"
+                  hide-details
+                />
+                <v-select
+                  :item-props="itemsProps"
+                  placeholder="Ед измерения"
+                  label="Ед измерения"
+                  v-model="group_id"
+                  variant="outlined"
+                  item-title="name"
+                  item-value="id"
+                  :items="groups"
+                  color="green"
+                  hide-details
+                />
+                <div
+                  class="border d-flex justify-center align-center py-2"
+                  style="width: 35%; height: 160px"
+                >
+                  <div v-if="imagePreview === null">
+                    <v-btn @click="onPickFile">Загрузить фото</v-btn>
+                    <input
+                      accept="image/*"
+                      type="file"
+                      @change="selectAvatar"
+                      style="display: none"
+                      ref="fileInput"
+                    />
+                  </div>
+                  <img
+                    v-else
+                    :src="imagePreview"
+                    width="150"
+                    height="150"
+                    alt=""
+                  />
+                </div>
+                <v-container class="pa-0 mt-3">
+                  <v-textarea
+                    v-model="description"
+                    variant="outlined"
+                    label="Описание"
+                  />
+                </v-container>
               </v-col>
             </v-row>
           </v-form>

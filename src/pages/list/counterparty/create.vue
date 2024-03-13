@@ -800,6 +800,7 @@ const currencyProps = (item) => {
                   hide-details
                 />
                 <v-select
+                  color="green"
                   class="w-75"
                   variant="outlined"
                   label="Валюта"
@@ -812,6 +813,7 @@ const currencyProps = (item) => {
                 />
               </div>
               <v-select
+                color="green"
                 variant="outlined"
                 label="Организация"
                 v-model="form.organization_id"
@@ -823,6 +825,7 @@ const currencyProps = (item) => {
               />
               <div class="d-flex ga-4 my-3">
                 <v-select
+                  color="green"
                   class="w-50"
                   variant="outlined"
                   label="Контрагент"
@@ -834,6 +837,7 @@ const currencyProps = (item) => {
                   :item-props="counterpartyProps"
                 />
                 <v-select
+                  color="green"
                   :item-props="price_typeProps"
                   v-model="form.price_type_id"
                   :items="priceTypes"

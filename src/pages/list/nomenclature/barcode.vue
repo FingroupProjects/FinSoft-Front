@@ -1,113 +1,12 @@
 <script setup>
 import { ref } from "vue";
-import goodsApi from "../../../api/goods";
-import showToast from "../../../composables/toast";
-import Icons from "../../../composables/Icons/Icons.vue";
-import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import createGroup from "./createGroup.vue";
-import createUpdate from "./createUpdate.vue";
-import {
-  ErrorSelectMessage,
-  removeMessage,
-  restoreMessage,
-  selectOneItemMessage,
-} from "../../../composables/constant/buttons.js";
 
-const loading = ref(true);
-const isCreate = ref(false);
-const isCreateGroup = ref(false);
+const barcodes = ref([]);
 
-const hoveredRowIndex = ref(null);
-
-const search = ref("");
-
-const markedID = ref([]);
-const markedItem = ref([]);
-const goods = ref([]);
-const pagination = ref([]);
-
-const headers = ref([
-  { title: "№", key: "id", align: "start" },
-  { title: "Наименование", key: "name" },
-]);
-
-const lineMarking = (item) => {
-  if (markedID.value.length > 0) {
-    const firstMarkedItem = goods.value.find(
-      (el) => el.id === markedID.value[0]
-    );
-    if (firstMarkedItem && firstMarkedItem.deleted_at) {
-      if (item.deleted_at === null) {
-        showToast(ErrorSelectMessage, "warning");
-        return;
-      }
-    }
-    if (firstMarkedItem && firstMarkedItem.deleted_at === null) {
-      if (item.deleted_at !== null) {
-        showToast(ErrorSelectMessage, "warning");
-        return;
-      }
-    }
-  }
-  const index = markedID.value.indexOf(item.id);
-  if (index !== -1) {
-    markedID.value.splice(index, 1);
-  } else {
-    markedID.value.push(item.id);
-  }
-  markedItem.value = item;
-};
-
-const getGoods = async ({ page, itemsPerPage, sortBy, search }) => {
-  try {
-    loading.value = true;
-    const { data } = await goodsApi.get({ page, itemsPerPage, sortBy }, search);
-    goods.value = data.result.data;
-    pagination.value = data.result.pagination;
-    loading.value = false;
-  } catch (e) {
-    console.log(e);
-  }
-};
-
-const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
-  const body = {
-    ids: markedID.value,
-  };
-  try {
-    const { status } = await goodsApi.massDeletion(body);
-    if (status === 200) {
-      showToast(removeMessage, "red");
-      markedID.value = [];
-      await getGoods({ page, itemsPerPage, sortBy }, search);
-    }
-  } catch (e) {
-    console.log(e);
-  }
-};
-
-const massRestore = async ({ page, itemsPerPage, sortBy }) => {
-  try {
-    const body = {
-      ids: markedID.value,
-    };
-    const { status } = await goodsApi.massRestore(body);
-    if (status === 200) {
-      showToast(restoreMessage, "green");
-      markedID.value = [];
-      await getGoods({ page, itemsPerPage, sortBy });
-    }
-  } catch (e) {
-    console.log(e);
-  }
-};
-
-const compute = ({ page, itemsPerPage, sortBy, search }) => {
-  if (markedItem.value.deleted_at) {
-    return massRestore({ page, itemsPerPage, sortBy });
-  } else {
-    return massDel({ page, itemsPerPage, sortBy, search });
-  }
+const getBarcodes = async () => {
+  // try{
+  //   const { data } = await
+  // }
 };
 </script>
 
@@ -130,7 +29,6 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
                   font-size: 12px;
                   border: 1px solid red;
                 "
-                @click="isCreateGroup = true"
               >
                 <span class="px-2 py-0">создать группу</span>
               </button>
@@ -225,9 +123,6 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
       </v-card>
       <div v-if="isCreate">
         <createUpdate @toggleDialog="isCreate = false" />
-      </div>
-      <div v-if="isCreateGroup">
-        <createGroup @toggleDialog="isCreateGroup = false" />
       </div>
     </v-col>
   </div>
