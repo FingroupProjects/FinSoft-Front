@@ -15,7 +15,7 @@ const lists = ref([
   {
     id: 1, title: 'Справочники', child: [
       { id: 1, title: 'Банковские счета', link: '/list/organizationBill' },
-      { id: 2, title: 'Номенклатура', link: '/list/nomenclature'},
+      { id: 2, title: 'Номенклатура', link: '/list/nomenclatureGroup'},
       { id: 3, title: 'Пользователи', link: '/list/user' },
       { id: 4, title: 'Контрагенты', link: '/list/counterparty',},
       { id: 5, title: 'Организации', link: '/list/organization',},

@@ -58,11 +58,10 @@ const getUnits = async () => {
   }
 };
 
-const getGroups = async () => {
+const getGroups = async ({ page, itemsPerPage, sortBy, search }) => {
   try {
-    const { data } = await goodsApi.getGroup();
+    const { data } = await goodsApi.getGroup({ page, itemsPerPage, sortBy }, search);
     groups.value = data.result;
-    console.log(data);
   } catch (e) {
     console.log(e);
   }
@@ -102,12 +101,12 @@ onMounted(() => {
                 />
               </div>
               <v-btn
-                @click="agreementDialog = false"
+              @click="$emit('toggleDialog')"
                 variant="text"
                 :size="32"
                 class="pt-2 pl-1"
               >
-                <Icons @click="$emit('toggleDialog')" name="close" />
+                <Icons  name="close" />
               </v-btn>
             </div>
           </div>
