@@ -1,5 +1,5 @@
 <script setup>
-import { ref, defineEmits } from "vue";
+import { ref, defineEmits, onMounted } from "vue";
 import goodsApi from "../../../api/goods";
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
@@ -58,8 +58,13 @@ const rules = {
                 <!-- <Icons name="delete" /> -->
                 <Icons @click="createGroup()" name="save" />
               </div>
-              <v-btn variant="text" :size="32" class="pt-2 pl-1">
-                <Icons @click="$emit('toggleDialog')" name="close" />
+              <v-btn
+                @click="$emit('toggleDialog')"
+                variant="text"
+                :size="32"
+                class="pt-2 pl-1"
+              >
+                <Icons name="close" />
               </v-btn>
             </div>
           </div>

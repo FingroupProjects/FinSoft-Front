@@ -121,7 +121,7 @@ const getStorageEmployeeData = async ({page, itemsPerPage, sortBy, search}) => {
 
 
 const addStorage = async ({page, itemsPerPage, sortBy}) => {
-
+try{
   const body = {
     name: nameRef.value,
     organization_id: organizationAdd.value,
@@ -145,32 +145,61 @@ const addStorage = async ({page, itemsPerPage, sortBy}) => {
     markedItem.value = []
 
   }
+}
+catch (error) {
+
+
+if (error.response && error.response.status === 422) {
+
+  if (error.response.data.errors.name) {
+    showToast("Поле Наименования не может быть пустым", "warning")
+  }
+
+  else if (error.response.data.errors.organization_id) {
+    showToast("Поле организации не может быть пустым", "warning")
+  }
+  else {
+    showToast("Заполните все поля!", "warning");
+  }
+}
+ }
 
 }
 
-
-
 const addGroup = async ({page, itemsPerPage, sortBy}) => {
-
-  const body = {
-    name: groupName.value
+  try{
+    const body = {
+      name: groupName.value
+    }
+  
+  
+    const res = await storage.group(body)
+  
+    if (res.status === 201) {
+      await getStorageData({page, itemsPerPage, sortBy})
+      showToast(addMessage)
+      groupName.value = null
+  
+      groupDialog.value = false
+  
+      markedID.value = []
+      markedItem.value = []
+  
+    }
   }
+  catch (error) {
 
 
-  const res = await storage.group(body)
+if (error.response && error.response.status === 422) {
 
-  if (res.status === 201) {
-    await getStorageData({page, itemsPerPage, sortBy})
-    showToast(addMessage)
-    groupName.value = null
-
-    groupDialog.value = false
-
-    markedID.value = []
-    markedItem.value = []
-
+  if (error.response.data.errors.name) {
+    showToast("Поле Наименования не может быть пустым", "warning")
   }
-
+  else {
+    showToast("Заполните все поля!", "warning");
+  }
+}
+ }
 }
 
 const addStorageEmployee = async ({page, itemsPerPage, sortBy}) => {
@@ -802,7 +831,7 @@ watch(dialog, newVal => {
                       v-model="startDateRef"
                       :rules="[rules.required]"
                       type="date"
-                      label="Дата"
+                      label="Дата начало"
                       rounded="lg"
                       color="green"
                       variant="outlined"
@@ -813,7 +842,7 @@ watch(dialog, newVal => {
                       v-model="endDateRef"
                       :rules="[rules.required]"
                       type="date"
-                      label="Дата"
+                      label="Дата конец"
                       rounded="lg"
                       color="green"
                       variant="outlined"

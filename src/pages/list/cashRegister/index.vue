@@ -86,7 +86,7 @@ const getcashRegisterData = async ({page, itemsPerPage, sortBy, search}) => {
 
 
 const addcashRegister = async ({page, itemsPerPage, sortBy}) => {
-
+try{
   const body = {
     name: nameRef.value,
     currency_id: currencyAdd.value,
@@ -110,7 +110,32 @@ const addcashRegister = async ({page, itemsPerPage, sortBy}) => {
     markedItem.value = []
 
   }
+}
+catch (error) {
 
+
+if (error.response && error.response.status === 422) {
+
+  if (error.response.data.errors.name) {
+    showToast("Поле названия не может быть пустым", "warning")
+  }
+
+  else if (error.response.data.errors.responsible_person_id) {
+    showToast("Поле сотрудника должно быть пустым", "warning")
+  }
+
+  else if (error.response.data.errors.currency_id) {
+    showToast("Поле валюты не может быть пустым", "warning")
+  }
+
+  else if (error.response.data.errors.organization_id) {
+    showToast("Поле организации не может быть пустым", "warning")
+  }
+  else {
+    showToast("Заполните все поля!", "warning");
+  }
+}
+ }
 }
 
 const massDel = async ({page, itemsPerPage, sortBy, search}) => {
@@ -243,7 +268,7 @@ const getCurrencies = async () => {
 const getOrganizations = async () => {
 
   try {
-    const {data} = await organization.get(1, 10000)
+    const {data} = await organization.get({page: 1, itemsPerPage: 100000})
 
     organizations.value = data.result.data.map(item => {
       return {
@@ -270,9 +295,7 @@ const handleCheckboxClick = function (item) {
 }
 
 const openDialog = (item) => {
-  if(markedID.value.length > 0) {
-    return showToast(selectOneItemMessage, 'warning');
-  }
+
 
   dialog.value = true
 

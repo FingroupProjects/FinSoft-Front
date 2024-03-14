@@ -72,19 +72,30 @@ const addPriceType = async ({page, itemsPerPage, sortBy}) => {
     description: descriptionRef.value
   }
 
-  const res = await priceType.add(body)
+  try {
+    const res = await priceType.add(body)
 
-  if (res.status === 201) {
-    await getPriceTypeData({page, itemsPerPage, sortBy})
-    showToast(addMessage)
-    currencyAdd.value = null
-    descriptionRef.value = null
-    idPriceType.value = res.data.result.id
-    dialog.value = false
+    if (res.status === 201) {
+      await getPriceTypeData({page, itemsPerPage, sortBy})
+      showToast(addMessage)
+      currencyAdd.value = null
+      descriptionRef.value = null
+      idPriceType.value = res.data.result.id
+      dialog.value = false
 
-    markedID.value = []
-    markedItem.value = []
+      markedID.value = []
+      markedItem.value = []
+    }
   }
+  catch (error) {
+
+  if (error.response && error.response.status === 422) {
+    if (error.response.data.errors.name) {
+      showToast("Поле Наименование не может быть пустым", "warning")
+    }
+  }
+  console.log(error);
+}
 
 }
 

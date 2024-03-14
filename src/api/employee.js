@@ -12,12 +12,13 @@ export default {
     return api.get(`/employee/${id}`)
   },
   update(id, body) {
-    return api.patch(`/employee/${id}`, body)
+    console.log(...body.entries())
+    return api.post(`/employee/${id}`, body)
   },
   massDeletion(data) {
-    return api.post('/employee/massDelete', data)
+    return api.post('/employees/massDelete', data)
   },
   massRestore(data) {
-    return api.post('/employee/massRestore', data)
+    return api.post('/employees/massRestore', data)
   }
 }
