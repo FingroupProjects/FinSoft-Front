@@ -12,12 +12,15 @@ export default {
     return api.get(`/user/${id}`)
   },
   update(id, body) {
-    return api.patch(`/user/${id}`, body)
+    return api.post(`/user/${id}`, body)
   },
   remove(ids) {
-    return api.post('/user/massRemove', ids)
+    return api.post('/users/massDelete', ids)
   },
   restore(ids) {
-    return api.post('/user/massRestore', ids)
+    return api.post('/users/massRestore', ids)
+  },
+  password(id, body) {
+    return api.post(`/users/change-password/${id}`, body)
   }
 }
