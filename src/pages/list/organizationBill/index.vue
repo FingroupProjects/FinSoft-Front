@@ -5,7 +5,9 @@ import showToast from '../../../composables/toast'
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import organizationBill from '../../../api/organizationBill.js';
-import organization from '../../../api/organizations.js';
+import currencyApi from '../../../api/currency.js';
+import organizationApi from '../../../api/organizations.js';
+
 import {
   addMessage,
   editMessage,
@@ -15,25 +17,26 @@ import {
   selectOneItemMessage,
   restoreMessage
 } from "../../../composables/constant/buttons.js";
+import organizations from "../../../api/organizations.js";
 
 const router = useRouter()
 
 const loading = ref(true)
 const loadingRate = ref(true)
 const dialog = ref(false)
-const idorganizationBill = ref(null)
+const idOrganizationBill = ref(null)
 const hoveredRowIndex = ref(null)
 
 const organizationAdd = ref([])
 const organizationUpdate = ref([])
 const currencies = ref([])
+const currency = ref(null)
 
-const isExistsorganizationBill = ref(false)
+const isExistsOrganizationBill = ref(false)
 const markedID = ref([]);
 const markedItem = ref([])
 const organizationBillInDialogTitle = ref(null)
 const search = ref('')
-const selected = ref([])
 const nameRef = ref(null)
 const descriptionRef = ref(null)
 const organizationBills = ref([])
@@ -42,7 +45,7 @@ const paginations = ref([])
 const headers = ref([
   {title: '№', key: 'id', align: 'start'},
   {title: 'Наименование', key: 'name'},
-  {title: 'Валюта', key: 'organization.name'},
+  {title: 'Валюта', key: 'currencies.name'},
   {title: 'Описание', key: 'description'},
 ])
 
@@ -51,7 +54,7 @@ const rules = {
 }
 
 
-const getorganizationBillData = async ({page, itemsPerPage, sortBy, search}) => {
+const getOrganizationBillData = async ({page, itemsPerPage, sortBy, search}) => {
   loading.value = true
   try {
     const { data } = await organizationBill.getAll({page, itemsPerPage, sortBy}, search)
@@ -64,7 +67,7 @@ const getorganizationBillData = async ({page, itemsPerPage, sortBy, search}) => 
 }
 
 
-const addorganizationBill = async ({page, itemsPerPage, sortBy}) => {
+const addOrganizationBill = async ({page, itemsPerPage, sortBy}) => {
 
   const body = {
     name: nameRef.value,
@@ -76,11 +79,11 @@ const addorganizationBill = async ({page, itemsPerPage, sortBy}) => {
     const res = await organizationBill.add(body)
 
     if (res.status === 201) {
-      await getorganizationBillData({page, itemsPerPage, sortBy})
+      await getOrganizationBillData({page, itemsPerPage, sortBy})
       showToast(addMessage)
       organizationAdd.value = null
       descriptionRef.value = null
-      idorganizationBill.value = res.data.result.id
+      idOrganizationBill.value = res.data.result.id
       dialog.value = false
 
       markedID.value = []
@@ -110,7 +113,7 @@ const massDel = async ({page, itemsPerPage, sortBy, search}) => {
     if (status === 200) {
 
       showToast(removeMessage, 'red')
-      await getorganizationBillData({page, itemsPerPage, sortBy}, search)
+      await getOrganizationBillData({page, itemsPerPage, sortBy}, search)
       markedID.value = []
       dialog.value = false
     }
@@ -131,7 +134,7 @@ const massRestore = async ({page, itemsPerPage, sortBy, search}) => {
 
     if (status === 200) {
       showToast(restoreMessage)
-      await getorganizationBillData({page, itemsPerPage, sortBy}, search)
+      await getOrganizationBillData({page, itemsPerPage, sortBy}, search)
       markedID.value = []
       dialog.value = false
     }
@@ -150,14 +153,14 @@ const update = async ({page, itemsPerPage, sortBy}) => {
   }
 
   try {
-    const {status} = await organizationBill.update(idorganizationBill.value, body)
+    const {status} = await organizationBill.update(idOrganizationBill.value, body)
     if (status === 200) {
       nameRef.value = null
       descriptionRef.value = null;
       organizationUpdate.value = null;
 
       dialog.value = null
-      await getorganizationBillData({page, itemsPerPage, sortBy})
+      await getOrganizationBillData({page, itemsPerPage, sortBy})
       showToast(editMessage)
     }
   } catch (e) {
@@ -168,7 +171,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
 
 const getCurrencies = async () => {
   try {
-    const {data} = await organization.get({page: 1, itemsPerPage: 100000})
+    const {data} = await currencyApi.get({page: 1, itemsPerPage: 100000})
 
     currencies.value = data.result.data.map(item => {
       return {
@@ -182,9 +185,6 @@ const getCurrencies = async () => {
   }
 }
 
-
-
-
 const handleCheckboxClick = (item) => {
   lineMarking(item)
 }
@@ -193,12 +193,12 @@ const openDialog = (item) => {
   dialog.value = true
 
   if (item === 0) {
-    idorganizationBill.value = 0
-    isExistsorganizationBill.value = false
+    idOrganizationBill.value = 0
+    isExistsOrganizationBill.value = false
   } else {
-    idorganizationBill.value = item.id
+    idOrganizationBill.value = item.id
     markedID.value.push(item.id);
-    isExistsorganizationBill.value = true
+    isExistsOrganizationBill.value = true
     nameRef.value = item.name
     descriptionRef.value = item.description
     organizationAdd.value = item.organization.id
@@ -301,7 +301,7 @@ onMounted(async () => {
                   density="compact"
                   label="Поиск..."
                   variant="outlined"
-                  color="info"
+                  color="green"
                   rounded="lg"
                   clear-icon="close"
                   hide-details
@@ -309,7 +309,6 @@ onMounted(async () => {
                   clearable
                   flat
               ></v-text-field>
-
             </div>
           </div>
           <Icons name="filter" class="mt-1"/>
@@ -329,7 +328,7 @@ onMounted(async () => {
             :items="organizationBills"
             :item-value="headers.title"
             :search="search"
-            @update:options="getorganizationBillData"
+            @update:options="getOrganizationBillData"
             page-text =  '{0}-{1} от {2}'
             :items-per-page-options="[
                 {value: 25, title: '25'},
@@ -367,15 +366,15 @@ onMounted(async () => {
       <!-- Modal -->
       <v-card>
         <v-dialog class="mt-2 pa-2" v-model="dialog">
-          <v-card style="border: 2px solid #3AB700" min-width="500"
+          <v-card style="border: 2px solid #3AB700" min-width="600"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
-              <span>{{ isExistsorganizationBill ? organizationBillInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
+              <span>{{ isExistsOrganizationBill ? organizationBillInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons v-if="isExistsorganizationBill"  @click="compute" name="delete"/>
-                  <Icons v-if="isExistsorganizationBill" @click="update" name="save"/>
-                  <Icons v-else @click="addorganizationBill" name="save"/>
+                  <Icons v-if="isExistsOrganizationBill"  @click="compute" name="delete"/>
+                  <Icons v-if="isExistsOrganizationBill" @click="update" name="save"/>
+                  <Icons v-else @click="addOrganizationBill" name="save"/>
                 </div>
                 <v-btn @click="dialog = false" variant="text" :size="32" class="pt-2 pl-1">
                   <Icons name="close"/>
@@ -385,7 +384,7 @@ onMounted(async () => {
             <v-form class="d-flex w-100">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100">
-                  <div class="d-flex justify-space-between ga-6">
+                  <div class="d-flex justify-space-between ga-6 mb-3">
                     <v-text-field
                         v-model="name"
                         :rules="isValid ? [rules.required] : []"
@@ -404,71 +403,66 @@ onMounted(async () => {
                     >2500,00</span
                     >
                   </div>
-                  <div
-                      :class="isEdit ? 'justify-space-between' : 'justify-end'"
-                      class="d-flex justify-space-between ga-5 align-center my-3"
-                  >
-                    <div
-                        v-if="isEdit"
-                        style="
-                    border: 1.5px solid #cbc8c8;
-                    border-radius: 4px;
-                    padding: 2px 12px;
-                  "
-                    >
-                  <span>
-                    {{ date }}
-                  </span>
-                    </div>
-                    <CustomCheckbox :checked="a" @change="handleCheckboxChange(0)"
-                    >Клиент</CustomCheckbox
-                    >
-                    <CustomCheckbox :checked="b" @change="handleCheckboxChange(1)"
-                    >Поставщик</CustomCheckbox
-                    >
-                    <CustomCheckbox :checked="c" @change="handleCheckboxChange(2)"
-                    >Прочее</CustomCheckbox
-                    >
-                  </div>
-                  <div class="d-flex ga-4 mb-3">
+                  <div class="d-flex ga-2 mb-3">
                     <v-text-field
                         variant="outlined"
                         :rules="isValid ? [rules.required, rules.phone] : []"
-                        label="Тел номер"
+                        label="Дата создание"
+                        type="date"
                         v-model.trim="phone"
                         density="compact"
                         v-mask="'+992#########'"
                         rounded="md"
-                        color="info"
+                        color="green"
+                        :append-inner-icon="phone ? 'close' : ''"
+                        @click:append-inner="phone = null"
                         hide-details
-                        :append-inner-icon="phone.length > 1 ? 'close' : ''"
-                        @click:append-inner="phone = ''"
                     />
                     <v-text-field
-                        variant="outlined"
-                        prepend-inner-icon="email"
-                        :rules="isValid ? [rules.required, rules.email] : []"
-                        label="Почта"
                         v-model="email"
+                        :rules="isValid ? [rules.required, rules.email] : []"
+                        variant="outlined"
+                        label="Номер счёта"
                         density="compact"
                         rounded="md"
-                        color="info"
+                        color="green"
+                        :append-inner-icon="email ? 'close' : ''"
+                        @click:append-inner="email = null"
                         hide-details
-                        :append-inner-icon="email.length > 1 ? 'close' : ''"
-                        @click:append-inner="email = ''"
+                    />
+                    <v-select
+                        v-model="currency"
+                        :items="currencies"
+                        item-title="name"
+                        item-value="id"
+                        :rules="[rules.required]"
+                        label="Валюта"
+                        variant="outlined"
+                        density="compact"
+                        hide-details
                     />
                   </div>
-                  <v-text-field
+                  <v-select
+                      v-model="currency"
+                      :items="currencies"
+                      item-title="name"
+                      item-value="id"
+                      :rules="[rules.required]"
+                      label="Организация"
+                      variant="outlined"
+                      density="compact"
+                  />
+                  <v-textarea
                       variant="outlined"
                       :rules="isValid ? [rules.required] : []"
-                      label="Адрес"
+                      label="Комментарий"
                       v-model="address"
                       density="compact"
                       rounded="md"
-                      color="info"
+                      color="green"
                       hide-details
-                      :append-inner-icon="address.length > 1 ? 'close' : ''"
-                      @click:append-inner="address = ''"
+                      :append-inner-icon="address ? 'close' : ''"
+                      @click:append-inner="address = null"
                   />
                 </v-col>
               </v-row>
