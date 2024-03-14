@@ -7,9 +7,6 @@ export default {
   group(data) {
     return api.post("/good-group", data);
   },
-  getGroup() {
-    return api.get("/good-group");
-  },
   update(id, data) {
     return api.patch(`/good/${id}`, data);
   },

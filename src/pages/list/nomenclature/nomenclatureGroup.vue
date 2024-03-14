@@ -1,7 +1,6 @@
 <script setup>
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import goodsApi from "../../../api/goods";
 import groupApi from "../../../api/group";
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
@@ -15,6 +14,7 @@ import {
   selectOneItemMessage,
 } from "../../../composables/constant/buttons.js";
 
+const router = useRouter();
 const route = useRoute();
 
 const loading = ref(true);
@@ -25,9 +25,9 @@ const hoveredRowIndex = ref(null);
 
 const search = ref("");
 
+const groups = ref([]);
 const markedID = ref([]);
 const markedItem = ref([]);
-const goods = ref([]);
 const pagination = ref([]);
 
 const headers = ref([
@@ -35,9 +35,25 @@ const headers = ref([
   { title: "Наименование", key: "name" },
 ]);
 
+watch(isCreateGroup, (newVal) => {
+  if (newVal === false) {
+    getGroups({ page: 1, itemsPerPage: 25 });
+  }
+});
+
+const detail = (id) => {
+  console.log(id);
+  router.push({
+    name: "nomenclature",
+    params: {
+      id: id,
+    },
+  });
+};
+
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
-    const firstMarkedItem = goods.value.find(
+    const firstMarkedItem = groups.value.find(
       (el) => el.id === markedID.value[0]
     );
     if (firstMarkedItem && firstMarkedItem.deleted_at) {
@@ -62,16 +78,11 @@ const lineMarking = (item) => {
   markedItem.value = item;
 };
 
-const getGoods = async ({ page, itemsPerPage, sortBy, search }) => {
+const getGroups = async ({ page, itemsPerPage, sortBy, search }) => {
   try {
     loading.value = true;
-    const { data } = await groupApi.getById(
-      route.params.id,
-      { page, itemsPerPage, sortBy },
-      search
-    );
-    console.log(data);
-    goods.value = data.result.data;
+    const { data } = await groupApi.get({ page, itemsPerPage, sortBy }, search);
+    groups.value = data.result.data;
     pagination.value = data.result.pagination;
     loading.value = false;
   } catch (e) {
@@ -84,11 +95,11 @@ const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
     ids: markedID.value,
   };
   try {
-    const { status } = await goodsApi.massDeletion(body);
+    const { status } = await groupApi.massDeletion(body);
     if (status === 200) {
       showToast(removeMessage, "red");
       markedID.value = [];
-      await getGoods({ page, itemsPerPage, sortBy }, search);
+      await getGroups({ page, itemsPerPage, sortBy }, search);
     }
   } catch (e) {
     console.log(e);
@@ -100,11 +111,11 @@ const massRestore = async ({ page, itemsPerPage, sortBy }) => {
     const body = {
       ids: markedID.value,
     };
-    const { status } = await goodsApi.massRestore(body);
+    const { status } = await groupApi.massRestore(body);
     if (status === 200) {
       showToast(restoreMessage, "green");
       markedID.value = [];
-      await getGoods({ page, itemsPerPage, sortBy });
+      await getGroups({ page, itemsPerPage, sortBy });
     }
   } catch (e) {
     console.log(e);
@@ -143,7 +154,7 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
               >
                 <span class="px-2 py-0">создать группу</span>
               </button>
-              <Icons @click="isCreate = true" name="add" />
+              <Icons name="add" />
               <Icons name="copy" />
               <Icons
                 @click="compute({ page, itemsPerPage, sortBy, search })"
@@ -175,14 +186,14 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
         <v-data-table-server
           style="height: 78vh"
           fixed-header
-          :items="goods"
+          :items="groups"
           :headers="headers"
           :loading="loading"
           items-per-page-text="Элементов на странице:"
           loading-text="Загрузка"
           no-data-text="Нет данных"
           :search="search"
-          @update:options="getGoods"
+          @update:options="getGroups"
           v-model:items-per-page="pagination.per_page"
           :items-length="pagination.total || 0"
           :item-value="headers.title"
@@ -200,7 +211,7 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
               @mouseenter="hoveredRowIndex = index"
               @mouseleave="hoveredRowIndex = null"
               @click="lineMarking(item)"
-              @dblclick="editItem(item.id)"
+              @dblclick="detail(item.id)"
               :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
               <td>

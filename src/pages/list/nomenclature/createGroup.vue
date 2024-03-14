@@ -6,7 +6,6 @@ import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import { addMessage } from "../../../composables/constant/buttons";
 
-
 const emit = defineEmits();
 
 const dialog = ref(true);
@@ -41,10 +40,6 @@ const createGroup = async () => {
 const rules = {
   required: (v) => !!v,
 };
-
-onMounted(async () => {
-  await getUnits();
-});
 </script>
 <template>
   <div>
