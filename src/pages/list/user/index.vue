@@ -4,6 +4,8 @@ import {useRouter} from "vue-router";
 import showToast from '../../../composables/toast'
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
+import CreateGroup from "./createGroup.vue"
+import ChangePassword from "./changePassword.vue";
 import {
   editMessage,
   removeMessage,
@@ -13,23 +15,24 @@ import {
   restoreMessage, addMessage
 } from "../../../composables/constant/buttons.js";
 import organizationApi from "../../../api/organizations.js";
-import priceType from "../../../api/priceType.js";
 import user from "../../../api/user.js";
-import {tr} from "vuetify/locale";
+
 
 const router = useRouter()
 
 const loading = ref(true)
 const dialog = ref(false)
+const isDialogPassword = ref(false)
 const idUser = ref(null)
 const hoveredRowIndex = ref(null)
+const isCreateGroup = ref(false)
 
 const isExistsUser = ref(false)
 const markedID = ref([])
 const markedItem = ref([])
 const userDialogTitle = ref(null)
 const search = ref('')
-const organization = ref([])
+const organization = ref(null)
 
 const fioRef = ref(null)
 const statusRef = ref(true)
@@ -47,7 +50,7 @@ const paginations = ref([])
 
 const headers = ref([
   {title: '№', key: 'id', align: 'start'},
-  {title: 'Наименование', key: 'name'},
+  {title: 'ФИО', key: 'name'},
 ])
 
 const rules = {
@@ -86,9 +89,35 @@ const selectAvatar = event => {
 }
 
 const addUser = async ({page, itemsPerPage, sortBy}) => {
+  if (!fioRef.value) {
+    return showToast("Поле ФИО не может быть пустым", "warning")
+  }
+  if (organization.value.length === 0) {
+    return showToast("Поле Организации не может быть пустым", "warning")
+  }
+  if (!loginRef.value) {
+    return showToast("Поле Логин не может быть пустым", "warning")
+  }
+  if (!passwordRef.value) {
+    return showToast("Поле Пароль не может быть пустым", "warning")
+  }
+  if (!phoneRef.value) {
+    return showToast("Поле Номер телефона не может быть пустым", "warning")
+  }
+  if (!emailRef.value) {
+    return showToast("Поле Номер телефона не может быть пустым", "warning")
+  }
+
+  let organizationValue;
+  if (typeof organization.value === 'object') {
+    organizationValue = organization.value.id
+  } else {
+    organizationValue = organization.value
+  }
+
   const formData = new FormData()
   formData.append('name', fioRef.value);
-  formData.append('organization_id', organization.value)
+  formData.append('organization_id', organizationValue)
   formData.append('login', loginRef.value);
   formData.append('password', passwordRef.value);
   formData.append('phone', phoneRef.value);
@@ -97,39 +126,48 @@ const addUser = async ({page, itemsPerPage, sortBy}) => {
   if (imageRef.value !== null) {
     formData.append('image', imageRef.value);
   }
-  console.log(formData)
-  const res = await user.add(formData)
 
-  if (res.status === 201) {
-    await getUser({page, itemsPerPage, sortBy})
-    showToast(addMessage)
-    idUser.value = res.data.result.id
-    dialog.value = false
+  try {
+    const res = await user.add(formData)
 
-    markedID.value = []
-    markedItem.value = []
+    if (res.status === 201) {
+      await getUser({page, itemsPerPage, sortBy})
+      showToast(addMessage)
+      idUser.value = res.data.result.id
+      dialog.value = false
+
+      markedID.value = []
+      markedItem.value = []
+    }
+  } catch (e) {
+    console.log(e)
   }
 
 }
 
 const update = async ({page, itemsPerPage, sortBy}) => {
+
+  let organizationValue
+  if (typeof organization.value === 'object') {
+    organizationValue = organization.value.id
+  } else {
+    organizationValue = organization.value
+  }
+
   const formData = new FormData()
   formData.append('name', fioRef.value)
-  formData.append('organization_id', organization.value.id)
+  formData.append('organization_id', organizationValue)
   formData.append('login', loginRef.value)
   formData.append('phone', phoneRef.value)
   formData.append('email', emailRef.value)
-  formData.append('status', statusRef.value === 1 || statusRef.value ? true : false)
+  formData.append('status', statusRef.value === 1 || statusRef.value ? 1 : 0)
 
   if (imageRef.value !== null) {
     formData.append('image', imageRef.value)
   }
 
-  for (const pair of formData.entries()) {
-    console.log(pair[0] + ': ' + pair[1]);
-  }
+  const { status } = await user.update(idUser.value, formData)
 
-  const {status} = await user.update(idUser.value, formData)
   if (status === 200) {
     dialog.value = null
     await getUser({page, itemsPerPage, sortBy})
@@ -137,39 +175,28 @@ const update = async ({page, itemsPerPage, sortBy}) => {
   }
 }
 
-const massDel = async ({page, itemsPerPage, sortBy, search}) => {
-  const body = {
-    ids: markedID.value
-  }
-
+const remove = async ({page, itemsPerPage, sortBy, search}) => {
   try {
-    const {status} = await priceType.massDeletion(body)
-
+    const { status } = await user.remove({ids: markedID.value})
     if (status === 200) {
-
       showToast(removeMessage, 'red')
       await getUser({page, itemsPerPage, sortBy}, search)
       markedID.value = []
       dialog.value = false
     }
-
   } catch (e) {
 
   }
 }
 
 
-const massRestore = async ({page, itemsPerPage, sortBy, search}) => {
-  const body = {
-    ids: markedID.value
-  }
-
+const restore = async ({page, itemsPerPage, sortBy, search}) => {
   try {
-    const {status} = await priceType.massRestore(body)
+    const {status} = await user.restore({ids: markedID.value})
 
     if (status === 200) {
       showToast(restoreMessage)
-      await getPriceTypeData({page, itemsPerPage, sortBy}, search)
+      await getUser({page, itemsPerPage, sortBy}, search)
       markedID.value = []
       dialog.value = false
     }
@@ -177,9 +204,6 @@ const massRestore = async ({page, itemsPerPage, sortBy, search}) => {
 
   }
 }
-
-
-
 
 const getOrganization = async () => {
   try {
@@ -192,7 +216,6 @@ const getOrganization = async () => {
 
   }
 }
-
 
 const handleCheckboxClick = item => {
   lineMarking(item)
@@ -233,7 +256,6 @@ const openDialog = item => {
 
 }
 
-
 const addBasedOnUser = () => {
   if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
   if (markedID.value.length > 1) return showToast(selectOneItemMessage, 'warning')
@@ -241,20 +263,31 @@ const addBasedOnUser = () => {
 
   users.value.forEach(item => {
     if (markedID.value[0] === item.id) {
+      console.log(item)
       fioRef.value = item.name
+      loginRef.value = item.login
+      phoneRef.value = item.phone
+      statusRef.value = item.status
+      emailRef.value = item.email
+
+      if (item.organization !== null) {
+        organization.value = {
+          "id": item.organization.id,
+          "name": item.organization.name
+        }
+      }
     }
   })
 
 }
-
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
-  if(markedID.value.length === 0) return showToast(warningMessage, 'warning')
+  if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
 
-  if(markedItem.value.deleted_at) {
-    return massRestore({ page, itemsPerPage, sortBy })
+  if (markedItem.value.deleted_at) {
+    return restore({ page, itemsPerPage, sortBy })
   }
   else{
-    return massDel({ page, itemsPerPage, sortBy, search })
+    return remove({ page, itemsPerPage, sortBy, search })
   }
 }
 
@@ -297,10 +330,11 @@ watch(dialog, newVal => {
   }
 })
 
-onMounted(async () => {
-  await getOrganization()
-})
+onMounted(async () =>  await getOrganization())
 
+watch(organization, (newVal) => {
+ console.log(organization.value)
+})
 
 </script>
 
@@ -311,30 +345,33 @@ onMounted(async () => {
         <div class="d-flex align-center ga-2 pe-2 ms-4">
           <span>Пользователи</span>
         </div>
-        <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
+        <v-card variant="text" min-width="420" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
+              <button
+                  class="group_create"
+                  @click="isCreateGroup = true"
+              >
+                <span class="px-2 py-0">создать группу</span>
+              </button>
               <Icons @click="openDialog(0)" name="add"/>
               <Icons @click="addBasedOnUser" name="copy"/>
               <Icons @click="compute" name="delete"/>
             </div>
-
-            <div class="w-100">
-              <v-text-field
-                  v-model="search"
-                  prepend-inner-icon="search"
-                  density="compact"
-                  label="Поиск..."
-                  variant="outlined"
-                  color="info"
-                  rounded="lg"
-                  clear-icon="close"
-                  hide-details
-                  single-line
-                  clearable
-                  flat
-              ></v-text-field>
-            </div>
+            <v-text-field
+                v-model="search"
+                prepend-inner-icon="search"
+                density="compact"
+                label="Поиск..."
+                variant="outlined"
+                color="info"
+                rounded="lg"
+                clear-icon="close"
+                hide-details
+                single-line
+                clearable
+                flat
+            ></v-text-field>
           </div>
           <Icons name="filter" class="mt-1"/>
         </v-card>
@@ -421,10 +458,11 @@ onMounted(async () => {
                         variant="outlined"
                         class="w-auto text-sm-body-1"
                         density="compact"
-                        placeholder="Хусрав"
-                        label="Название"
+                        placeholder="Иван Иванов Иванович"
+                        label="ФИО"
                         clear-icon="close"
-                        clearable
+                        :append-inner-icon="fioRef ? 'close' : ''"
+                        @click:append-inner="fioRef = null"
                     />
                     <div class="mt-2 ms-4" v-if="isExistsUser">
                       <CustomCheckbox @change="statusRef = !statusRef" :checked="statusRef">
@@ -463,10 +501,11 @@ onMounted(async () => {
                           variant="outlined"
                           class="w-auto text-sm-body-1"
                           density="compact"
-                          placeholder="Khusrav"
+                          placeholder="Ivan"
                           label="Логин"
                           clear-icon="close"
-                          clearable
+                          :append-inner-icon="loginRef ? 'close' : ''"
+                          @click:append-inner="loginRef = null"
                       />
                       <div class="d-flex">
                         <v-text-field
@@ -483,9 +522,8 @@ onMounted(async () => {
                             clear-icon="close"
                             :disabled="passwordRef === '#########'"
                             hide-details
-                            clearable
                         />
-                        <span class="mt-1 ms-2 text-blue-darken-4 cursor-pointer">Изменить пароль</span>
+                        <span class="mt-1 ms-2 text-blue-darken-4 cursor-pointer" @click="isDialogPassword = true">Изменить пароль</span>
                       </div>
                     </div>
                   </div>
@@ -501,8 +539,9 @@ onMounted(async () => {
                         placeholder="+992119111881"
                         label="Номер телефона"
                         clear-icon="close"
+                        :append-inner-icon="phoneRef ? 'close' : ''"
+                        @click:append-inner="phoneRef = null"
                         hide-details
-                        clearable
                     />
                     <v-text-field
                         v-model="emailRef"
@@ -512,11 +551,12 @@ onMounted(async () => {
                         variant="outlined"
                         class="w-auto text-sm-body-1"
                         density="compact"
-                        placeholder="khusrav@gmail.com"
+                        placeholder="ivan@gmail.com"
                         label="Почта"
                         clear-icon="close"
+                        :append-inner-icon="emailRef ? 'close' : ''"
+                        @click:append-inner="emailRef = null"
                         hide-details
-                        clearable
                     />
                   </div>
                 </v-col>
@@ -524,6 +564,12 @@ onMounted(async () => {
             </v-form>
           </v-card>
         </v-dialog>
+        <div v-if="isCreateGroup">
+          <create-group @toggleDialog="isCreateGroup = false" />
+        </div>
+        <div v-if="isDialogPassword">
+          <change-password @toggleDialogPassword="isDialogPassword = false" :id="idUser" />
+        </div>
       </v-card>
     </v-col>
   </div>
