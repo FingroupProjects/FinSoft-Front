@@ -128,7 +128,7 @@ try{
     storage_data: [],
   }
 
-
+  try {
   const res = await storage.add(body)
 
 
@@ -145,6 +145,24 @@ try{
     markedItem.value = []
 
   }
+  } catch (error) {
+
+    let showToastFlag = true;
+
+    if (error.response && error.response.status === 422) {
+      if (error.response.data.errors.name && showToastFlag) {
+        showToast(error.response.data.errors.name[0], "warning")
+        showToastFlag = false;
+      }
+
+      if (error.response.data.errors.organization_id && showToastFlag) {
+        showToast(error.response.data.errors.organization_id[0], "warning")
+        showToastFlag = false;
+      }
+    }
+
+  }
+
 }
 catch (error) {
 
@@ -211,6 +229,8 @@ const addStorageEmployee = async ({page, itemsPerPage, sortBy}) => {
   }
 
 
+  try{
+
   const res = await storage.addStorageEmployee(idStorage.value, body)
 
   if (res.status === 201) {
@@ -224,6 +244,27 @@ const addStorageEmployee = async ({page, itemsPerPage, sortBy}) => {
 
     markedID.value = []
     markedItem.value = []
+
+  }
+  } catch (error) {
+
+    let showToastFlag = true;
+
+    if (error.response && error.response.status === 422) {
+      if (error.response.data.errors.employee_id && showToastFlag) {
+        showToast(error.response.data.errors.employee_id[0], "warning")
+        showToastFlag = false;
+      }
+      if (error.response.data.errors.from && showToastFlag) {
+        showToast(error.response.data.errors.from[0], "warning")
+        showToastFlag = false;
+      }
+      if (error.response.data.errors.to && showToastFlag) {
+        showToast(error.response.data.errors.to[0], "warning")
+        showToastFlag = false;
+      }
+
+    }
 
   }
 
@@ -408,7 +449,7 @@ const restore = async ({page, itemsPerPage, sortBy}) => {
 
 const getEmployee = async () => {
   try {
-    const {data} = await employee.get(1, 100)
+    const {data} = await employee.get({page:1, itemsPerPage: 100})
     employees.value = data.result.data.map(item => {
       return {
         id: item.id,
@@ -424,7 +465,7 @@ const getEmployee = async () => {
 const getOrganizations = async () => {
 
   try {
-    const {data} = await organization.get(1, 10)
+    const {data} = await organization.get({page: 1, itemsPerPage: 1000})
 
     organizations.value = data.result.data.map(item => {
       return {
@@ -483,9 +524,11 @@ const addBasedOnStorage = () => {
   if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
   if (markedID.value.length > 1) return showToast(selectOneItemMessage, 'warning')
   dialog.value = true
+  isExistsStorage.value = false
 
   storages.value.forEach(item => {
-    if (markedID.value[0] === item.id) {
+    if (markedID.value[0] === markedID.value) {
+      console.log(markedID.value[0])
       nameRef.value = item.name
       organizationAdd.value = item.organization.id
       employeeAdd.value = item.responsiblePerson.id
@@ -532,12 +575,14 @@ const editDialogStorageData = (item) => {
     isExistsStorage.value = false
   } else {
 
-    console.log(item)
+
 
     idStorageEmployee.value = item.id
 
     employeeAdd.value = item.employee.id
+
     startDateRef.value = item.from.split('.').reverse().join('-')
+    console.log(startDateRef.value)
     endDateRef.value = item.to.split('.').reverse().join('-')
 
 
@@ -633,12 +678,28 @@ watch(dialog, newVal => {
         </div>
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <button @click="groupDialog = true" style="border-radius: 12px; white-space: nowrap; background-color: #4ECB71; border: green solid 1px; padding: 1px"><span>создать группу</span></button>
-              <Icons @click="openDialog(0)" name="add"/>
-              <Icons @click="addBasedOnStorage" name="copy"/>
-              <Icons @click="compute" name="delete"/>
+            <div class="d-flex ga-2 mt-2 me-3">
+              <button
+                  style="
+                  background-color: #4ecb71;
+                  border-radius: 12px;
+                  white-space: nowrap;
+                  height: 25px;
+                  font-size: 12px;
+                  border: 1px solid red;
+                "
+                  @click="groupDialog = true"
+              >
+                <span class="px-2 py-0">создать группу</span>
+              </button>
+              <Icons @click="openDialog(0)" name="add" />
+              <Icons name="copy" @click="addBasedOnStorage" />
+              <Icons
+                  @click="compute"
+                  name="delete"
+              />
             </div>
+
 
             <div class="w-100">
               <v-text-field

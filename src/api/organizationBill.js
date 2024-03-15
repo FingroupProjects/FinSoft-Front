@@ -1,8 +1,9 @@
-import { api } from './api.js'
+import {api, buildParams} from './api.js'
 
 export default {
-  getAll(){
-    return api.get('/organizationBill') 
+  getAll({page = 1, itemsPerPage = 25, sortBy}, search) {
+    const params = buildParams(page, itemsPerPage, sortBy, search);
+    return api.get('/organizationBill', { params })
   },
   getById(id) {
     return api.get(`/organizationBill/${id}`);
@@ -15,7 +16,13 @@ export default {
   },
   delete(id, data) {
     return  api.delete(`/organizationBill/${id}`, data)
-  }
+  },
+  massDeletion(data) {
+    return api.post(`/organizationBill/massDelete/`, data);
+  },
+  massRestore(data) {
+    return api.post('/organizationBill/massRestore/', data);
+  },
 
 
 }

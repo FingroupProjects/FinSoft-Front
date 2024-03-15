@@ -8,6 +8,8 @@ import organizationBill from '../../../api/organizationBill.js';
 import currencyApi from '../../../api/currency.js';
 import organizationApi from '../../../api/organizations.js';
 
+import showDate from "../../../composables/date/showDate.js";
+
 import {
   addMessage,
   editMessage,
@@ -26,11 +28,19 @@ const loadingRate = ref(true)
 const dialog = ref(false)
 const idOrganizationBill = ref(null)
 const hoveredRowIndex = ref(null)
-
-const organizationAdd = ref([])
+const name = ref(null)
+const dateRef = ref(null)
+const bill_number = ref(null)
+const isValid = ref(null)
+const comment = ref(null)
+const organizationAdd = ref(null)
 const organizationUpdate = ref([])
 const currencies = ref([])
 const currency = ref(null)
+
+const currencyAdd = ref(null)
+const organizations = ref(null)
+
 
 const isExistsOrganizationBill = ref(false)
 const markedID = ref([]);
@@ -45,8 +55,7 @@ const paginations = ref([])
 const headers = ref([
   {title: '№', key: 'id', align: 'start'},
   {title: 'Наименование', key: 'name'},
-  {title: 'Валюта', key: 'currencies.name'},
-  {title: 'Описание', key: 'description'},
+  {title: 'Баланс', key: 'name'},
 ])
 
 const rules = {
@@ -60,7 +69,10 @@ const getOrganizationBillData = async ({page, itemsPerPage, sortBy, search}) => 
     const { data } = await organizationBill.getAll({page, itemsPerPage, sortBy}, search)
 
     paginations.value = data.result.pagination
-    organizationBills.value = data.result.data
+    organizationBills.value = data.result.data.map(item => ({
+      ...item,
+      date: showDate(item.date)
+    })) || [];
     loading.value = false
   } catch (e) {
   }
@@ -72,34 +84,57 @@ const addOrganizationBill = async ({page, itemsPerPage, sortBy}) => {
   const body = {
     name: nameRef.value,
     organization_id: organizationAdd.value,
-    description: descriptionRef.value
+    currency_id: currencyAdd.value,
+    bill_number: bill_number.value,
+    date: dateRef.value,
+    comment: comment.value
   }
+  console.log(body)
 
   try {
-    const res = await organizationBill.add(body)
+    const res = await organizationBill.create(body)
 
     if (res.status === 201) {
       await getOrganizationBillData({page, itemsPerPage, sortBy})
       showToast(addMessage)
+
       organizationAdd.value = null
       descriptionRef.value = null
+
       idOrganizationBill.value = res.data.result.id
       dialog.value = false
 
       markedID.value = []
       markedItem.value = []
     }
-  }
-  catch (error) {
+  } catch (error) {
+
+    let showToastFlag = true;
 
     if (error.response && error.response.status === 422) {
-      if (error.response.data.errors.name) {
-        showToast("Поле Наименование не может быть пустым", "warning")
+      if (error.response.data.errors.name && showToastFlag) {
+        showToast(error.response.data.errors.name[1], "warning")
+        showToastFlag = false;
+      }
+      if (error.response.data.errors.bill_number && showToastFlag) {
+        showToast(error.response.data.errors.bill_number[1], "warning")
+        showToastFlag = false;
+      }
+      if (error.response.data.errors.currency_id && showToastFlag) {
+        showToast(error.response.data.errors.currency_id[1], "warning")
+        showToastFlag = false;
+      }
+      if (error.response.data.errors.date && showToastFlag) {
+        showToast(error.response.data.errors.currency_id[1], "warning")
+        showToastFlag = false;
+      }
+      if (error.response.data.errors.organization_id && showToastFlag) {
+        showToast(error.response.data.errors.organization_id[1], "warning")
+        showToastFlag = false;
       }
     }
-    console.log(error);
-  }
 
+  }
 }
 
 const massDel = async ({page, itemsPerPage, sortBy, search}) => {
@@ -149,15 +184,17 @@ const update = async ({page, itemsPerPage, sortBy}) => {
   const body = {
     name: nameRef.value,
     organization_id: organizationAdd.value,
-    description: descriptionRef.value
+    currency_id: currencyAdd.value,
+    bill_number: bill_number.value,
+    date: dateRef.value,
+    comment: comment.value
   }
 
   try {
     const {status} = await organizationBill.update(idOrganizationBill.value, body)
     if (status === 200) {
-      nameRef.value = null
-      descriptionRef.value = null;
-      organizationUpdate.value = null;
+
+      cleanForm()
 
       dialog.value = null
       await getOrganizationBillData({page, itemsPerPage, sortBy})
@@ -185,6 +222,26 @@ const getCurrencies = async () => {
   }
 }
 
+
+const getOrganizations = async () => {
+  try {
+    const {data} = await organizationApi.get({page: 1, itemsPerPage: 100000})
+
+    organizations.value = data.result.data.map(item => {
+      return {
+        id: item.id,
+        name: item.name
+      }
+    })
+
+
+
+  } catch (e) {
+
+  }
+}
+
+
 const handleCheckboxClick = (item) => {
   lineMarking(item)
 }
@@ -200,13 +257,26 @@ const openDialog = (item) => {
     markedID.value.push(item.id);
     isExistsOrganizationBill.value = true
     nameRef.value = item.name
-    descriptionRef.value = item.description
+    bill_number.value = item.bill_number
+    comment.value = item.comment
+    currencyAdd.value = item.currency.id
+    dateRef.value = item.date.split('.').reverse().join('-')
+
     organizationAdd.value = item.organization.id
-    organizationBillInDialogTitle.value = nameRef.value
+
+    organizationBillInDialogTitle.value = item.name
   }
 
 }
 
+const cleanForm =  () => {
+  nameRef.value = null
+  bill_number.value = null
+  dateRef.value = null
+  organizationAdd.value = null
+  currencyAdd.value = null
+  comment.value = null
+}
 
 const addBasedOnorganizationBill = () => {
   if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
@@ -217,7 +287,10 @@ const addBasedOnorganizationBill = () => {
     if (markedID.value[0] === item.id) {
       nameRef.value = item.name
       organizationAdd.value = item.organization.id
-      descriptionRef.value = item.description
+      currencyAdd.value = item.organization.id
+      comment.value = item.comment
+      dateRef.value = item.date.split('.').reverse().join('-')
+      bill_number.value = item.bill_number
     }
   })
 
@@ -263,10 +336,7 @@ const lineMarking = (item) => {
 
 watch(dialog, newVal => {
   if (!newVal) {
-    nameRef.value = null
-    organizationUpdate.value = null
-    organizationAdd.value = null
-    descriptionRef.value = null
+
 
     loadingRate.value = true
   }
@@ -274,6 +344,7 @@ watch(dialog, newVal => {
 
 onMounted(async () => {
   await getCurrencies()
+  await getOrganizations()
 })
 
 
@@ -284,7 +355,7 @@ onMounted(async () => {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Виды цен</span>
+          <span>Банковские счета организации</span>
         </div>
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
@@ -356,8 +427,9 @@ onMounted(async () => {
                 </template>
               </td>
               <td>{{ item.name }}</td>
+              <td>+2500</td>
               <td>{{ item.organization.name }}</td>
-              <td>{{ item.description }}</td>
+              <td>{{ item.comment }}</td>
             </tr>
           </template>
         </v-data-table-server>
@@ -386,7 +458,7 @@ onMounted(async () => {
                 <v-col class="d-flex flex-column w-100">
                   <div class="d-flex justify-space-between ga-6 mb-3">
                     <v-text-field
-                        v-model="name"
+                        v-model="nameRef"
                         :rules="isValid ? [rules.required] : []"
                         color="green"
                         rounded="md"
@@ -406,32 +478,32 @@ onMounted(async () => {
                   <div class="d-flex ga-2 mb-3">
                     <v-text-field
                         variant="outlined"
-                        :rules="isValid ? [rules.required, rules.phone] : []"
+                        :rules="isValid ? [rules.required] : []"
                         label="Дата создание"
                         type="date"
-                        v-model.trim="phone"
+                        v-model="dateRef"
+
                         density="compact"
-                        v-mask="'+992#########'"
                         rounded="md"
                         color="green"
-                        :append-inner-icon="phone ? 'close' : ''"
-                        @click:append-inner="phone = null"
+                        :append-inner-icon="dateRef ? 'close' : ''"
+                        @click:append-inner="dateRef = null"
                         hide-details
                     />
                     <v-text-field
-                        v-model="email"
-                        :rules="isValid ? [rules.required, rules.email] : []"
+                        v-model="bill_number"
+        :rules="isValid ? [rules.required, rules.email] : []"
                         variant="outlined"
                         label="Номер счёта"
                         density="compact"
                         rounded="md"
                         color="green"
-                        :append-inner-icon="email ? 'close' : ''"
-                        @click:append-inner="email = null"
+                        :append-inner-icon="bill_number ? 'close' : ''"
+                        @click:append-inner="bill_number = null"
                         hide-details
                     />
                     <v-select
-                        v-model="currency"
+                        v-model="currencyAdd"
                         :items="currencies"
                         item-title="name"
                         item-value="id"
@@ -443,8 +515,8 @@ onMounted(async () => {
                     />
                   </div>
                   <v-select
-                      v-model="currency"
-                      :items="currencies"
+                      v-model="organizationAdd"
+                      :items="organizations"
                       item-title="name"
                       item-value="id"
                       :rules="[rules.required]"
@@ -456,13 +528,16 @@ onMounted(async () => {
                       variant="outlined"
                       :rules="isValid ? [rules.required] : []"
                       label="Комментарий"
-                      v-model="address"
+
+                      v-model="comment"
+
                       density="compact"
                       rounded="md"
                       color="green"
                       hide-details
-                      :append-inner-icon="address ? 'close' : ''"
-                      @click:append-inner="address = null"
+                      :append-inner-icon="comment ? 'close' : ''"
+                      @click:append-inner="comment = null"
+
                   />
                 </v-col>
               </v-row>
