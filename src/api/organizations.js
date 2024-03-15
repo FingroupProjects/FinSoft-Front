@@ -17,10 +17,10 @@ export default {
   getById(id) {
     return api.get(`/organization/${id}`);
   },
-  massDeletion(data) {
+  remove(data) {
     return api.post(`/organization/massDelete/`, data);
   },
-  massRestore(data) {
+  restore(data) {
     return api.post(`/organization/massRestore/`, data);
   },
 }

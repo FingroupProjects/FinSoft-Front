@@ -16,6 +16,8 @@ import {
 } from "../../../composables/constant/buttons.js";
 import organizationApi from "../../../api/organizations.js";
 import user from "../../../api/user.js";
+import validate from "./validate.js";
+import groupApi from "../../../api/group.js";
 
 
 const router = useRouter()
@@ -33,6 +35,7 @@ const markedItem = ref([])
 const userDialogTitle = ref(null)
 const search = ref('')
 const organization = ref(null)
+const group = ref(null)
 
 const fioRef = ref(null)
 const statusRef = ref(true)
@@ -41,11 +44,13 @@ const passwordRef = ref(null)
 const phoneRef = ref(null)
 const emailRef = ref(null)
 const imageRef = ref(null)
+const groupIdRef = ref(null)
 const imagePreview = ref(null)
 const fileInput = ref(null)
 
 const users = ref([])
 const organizations = ref([])
+const groups = ref([])
 const paginations = ref([])
 
 const headers = ref([
@@ -89,30 +94,20 @@ const selectAvatar = event => {
 }
 
 const addUser = async ({page, itemsPerPage, sortBy}) => {
-  if (!fioRef.value) {
-    return showToast("Поле ФИО не может быть пустым", "warning")
-  }
-  if (organization.value.length === 0) {
-    return showToast("Поле Организации не может быть пустым", "warning")
-  }
-  if (!loginRef.value) {
-    return showToast("Поле Логин не может быть пустым", "warning")
-  }
-  if (!passwordRef.value) {
-    return showToast("Поле Пароль не может быть пустым", "warning")
-  }
-  if (!phoneRef.value) {
-    return showToast("Поле Номер телефона не может быть пустым", "warning")
-  }
-  if (!emailRef.value) {
-    return showToast("Поле Номер телефона не может быть пустым", "warning")
-  }
+  if (validate(fioRef, organization, loginRef, passwordRef, phoneRef, emailRef) !== true) return
 
   let organizationValue;
   if (typeof organization.value === 'object') {
     organizationValue = organization.value.id
   } else {
     organizationValue = organization.value
+  }
+
+  let groupValue;
+  if (typeof group.value === 'object') {
+    groupValue = group.value.id
+  } else {
+    groupValue = group.value
   }
 
   const formData = new FormData()
@@ -122,6 +117,7 @@ const addUser = async ({page, itemsPerPage, sortBy}) => {
   formData.append('password', passwordRef.value);
   formData.append('phone', phoneRef.value);
   formData.append('email', emailRef.value);
+  formData.append('group_id', groupValue);
 
   if (imageRef.value !== null) {
     formData.append('image', imageRef.value);
@@ -140,12 +136,26 @@ const addUser = async ({page, itemsPerPage, sortBy}) => {
       markedItem.value = []
     }
   } catch (e) {
-    console.log(e)
+    if (e.response.data.errors.email) {
+      showToast(e.response.data.errors.email[0], "warning")
+      return
+    }
+    if (e.response.data.errors.login) {
+      showToast(e.response.data.errors.login[0], "warning")
+      return
+    }
+    if (e.response.data.errors.phone) {
+      showToast(e.response.data.errors.phone[0], "warning")
+      return
+    }
+    if (e.response.data.errors.group_id) {
+      showToast(e.response.data.errors.group_id[0], "warning")
+    }
   }
-
 }
 
 const update = async ({page, itemsPerPage, sortBy}) => {
+  if (validate(fioRef, organization, loginRef, passwordRef, phoneRef, emailRef) !== true) return
 
   let organizationValue
   if (typeof organization.value === 'object') {
@@ -154,24 +164,36 @@ const update = async ({page, itemsPerPage, sortBy}) => {
     organizationValue = organization.value
   }
 
+  let groupValue;
+  if (typeof group.value === 'object') {
+    groupValue = group.value.id
+  } else {
+    groupValue = group.value
+  }
+
   const formData = new FormData()
   formData.append('name', fioRef.value)
   formData.append('organization_id', organizationValue)
   formData.append('login', loginRef.value)
   formData.append('phone', phoneRef.value)
   formData.append('email', emailRef.value)
+  formData.append('group_id', groupValue)
   formData.append('status', statusRef.value === 1 || statusRef.value ? 1 : 0)
 
   if (imageRef.value !== null) {
     formData.append('image', imageRef.value)
   }
 
-  const { status } = await user.update(idUser.value, formData)
+  try {
+    const response = await user.update(idUser.value, formData)
 
-  if (status === 200) {
-    dialog.value = null
-    await getUser({page, itemsPerPage, sortBy})
-    showToast(editMessage)
+    if (response.status === 200) {
+      dialog.value = null
+      await getUser({page, itemsPerPage, sortBy})
+      showToast(editMessage)
+    }
+  } catch (e) {
+
   }
 }
 
@@ -216,6 +238,17 @@ const getOrganization = async () => {
 
   }
 }
+const getGroup = async () => {
+  try {
+    const { data } = await groupApi.get({page: 1, itemsPerPage: 100000})
+    groups.value = data.result.data.map(item => ({
+      id: item.id,
+      name: item.name
+    }))
+  } catch (e) {
+
+  }
+}
 
 const handleCheckboxClick = item => {
   lineMarking(item)
@@ -223,7 +256,7 @@ const handleCheckboxClick = item => {
 
 const openDialog = item => {
   dialog.value = true
-
+  console.log(item)
   if (item === 0) {
     idUser.value = 0
     isExistsUser.value = false
@@ -236,6 +269,10 @@ const openDialog = item => {
     phoneRef.value = item.phone
     passwordRef.value = '#########'
     statusRef.value = item.status
+    group.value = {
+      "id": item.group.id,
+      "name": item.group.name
+    }
 
     if (item.organization !== null) {
       organization.value = {
@@ -330,7 +367,10 @@ watch(dialog, newVal => {
   }
 })
 
-onMounted(async () =>  await getOrganization())
+onMounted(async () =>  {
+  await getOrganization()
+  await getGroup()
+})
 
 watch(organization, (newVal) => {
  console.log(organization.value)
@@ -472,15 +512,15 @@ watch(organization, (newVal) => {
                   </div>
                   <div class="d-flex w-100 ga-4">
                     <div class="border d-flex justify-center align-center" style="width: 70%;">
+                      <input
+                          accept="image/*"
+                          type="file"
+                          @change="selectAvatar"
+                          style="display: none;"
+                          ref="fileInput"
+                      />
                      <div v-if="imagePreview === null">
                        <v-btn  @click="onPickFile">Загрузить фото</v-btn>
-                       <input
-                           accept="image/*"
-                           type="file"
-                           @change="selectAvatar"
-                           style="display: none;"
-                           ref="fileInput"
-                       />
                      </div>
                       <img v-else :src="imagePreview" width="150" height="150" alt="">
                     </div>
@@ -492,6 +532,7 @@ watch(organization, (newVal) => {
                           item-value="id"
                           :rules="[rules.required]"
                           variant="outlined"
+                          label="Организация"
                       />
                       <v-text-field
                           v-model="loginRef"
@@ -523,9 +564,27 @@ watch(organization, (newVal) => {
                             :disabled="passwordRef === '#########'"
                             hide-details
                         />
-                        <span class="mt-1 ms-2 text-blue-darken-4 cursor-pointer" @click="isDialogPassword = true">Изменить пароль</span>
+                        <span v-show="isExistsUser" class="mt-1 ms-2 text-blue-darken-4 cursor-pointer" @click="isDialogPassword = true">Изменить пароль</span>
                       </div>
                     </div>
+                  </div>
+                  <span
+                    v-show="isExistsUser"
+                    @click="onPickFile"
+                    class="text-sm-body-2 text-blue-darken-4 cursor-pointer"
+                  >Изменить
+                  </span>
+                  <div :class="isExistsUser ? 'mt-2' : 'mt-5'">
+                    <v-select
+                      v-model="group"
+                      :items="groups"
+                      item-title="name"
+                      item-value="id"
+                      :rules="[rules.required]"
+                      variant="outlined"
+                      label="Группа"
+                      hide-details
+                    />
                   </div>
                   <div class="d-flex ga-4 mt-5">
                     <v-text-field

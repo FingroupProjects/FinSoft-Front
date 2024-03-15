@@ -280,6 +280,8 @@ const openDialog = (item) => {
 }
 
 
+
+
 const addBasedOnEmployee = () => {
   if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
   if (markedID.value.length > 1) return showToast(selectOneItemMessage, 'warning')
@@ -463,65 +465,69 @@ watch(dialog, newVal => {
                       clearable
                   />
                   <div class="d-flex ga-4">
-                    <div class="border d-flex justify-center align-center " style="width: 50%;">
-                      <div v-if="imagePreview === null">
-                        <v-btn  @click="onPickFile">Загрузить фото</v-btn>
-                        <input
-                            accept="image/*"
-                            type="file"
-                            @change="selectAvatar"
-                            style="display: none;"
-                            ref="fileInput"
-                        />
+                      <div class="border d-flex justify-center align-center" style="width: 50%;">
+                           <input
+                               accept="image/*"
+                               type="file"
+                               @change="selectAvatar"
+                               style="display: none;"
+                               ref="fileInput"
+                           />  
+                          <div v-if="imagePreview === null">
+                              <v-btn @click="onPickFile">Загрузить фото</v-btn>
+                          </div>
+                          <img v-else :src="imagePreview" width="150" height="150" alt="">
                       </div>
-                      <img v-else :src="imagePreview" width="150" height="150" alt="">
-                    </div>
 
-                    <div class="d-flex flex-column" style="width: 60%">
-                      <v-text-field
-                          v-model="phoneRef"
-                          :rules="[rules.required]"
-                          color="green"
-                          rounded="md"
-                          variant="outlined"
-                          class="w-auto text-sm-body-1"
-                          density="compact"
-                          placeholder="номер телефона"
-                          label="Номер телефона"
-                          clear-icon="close"
-                          clearable
-                      />
-                      <v-text-field
-                          v-model="emailRef"
-                          :rules="[rules.required]"
-                          color="green"
-                          rounded="md"
-                          variant="outlined"
-                          class="w-auto text-sm-body-1"
-                          density="compact"
-                          placeholder="email"
-                          label="Электронная почта"
-                          clear-icon="close"
-                          clearable
-                      />
-                      <v-text-field
-                          v-model="addressRef"
-                          :rules="[rules.required]"
-                          color="green"
-                          rounded="md"
-                          variant="outlined"
-                          class="w-auto text-sm-body-1"
-                          density="compact"
-                          placeholder="Адрес"
-                          label="Адрес"
-                          clear-icon="close"
-                          clearable
-                      />
-                    </div>
+                      <div class="d-flex flex-column" style="width: 60%">
+                          <v-text-field
+                              v-model="phoneRef"
+                              :rules="[rules.required]"
+                              color="green"
+                              rounded="md"
+                              variant="outlined"
+                              class="w-auto text-sm-body-1"
+                              density="compact"
+                              placeholder="номер телефона"
+                              label="Номер телефона"
+                              clear-icon="close"
+                              clearable
+                          />
+                          <v-text-field
+                              v-model="emailRef"
+                              :rules="[rules.required]"
+                              color="green"
+                              rounded="md"
+                              variant="outlined"
+                              class="w-auto text-sm-body-1"
+                              density="compact"
+                              placeholder="email"
+                              label="Электронная почта"
+                              clear-icon="close"
+                              clearable
+                          />
+                          <v-text-field
+                              v-model="addressRef"
+                              :rules="[rules.required]"
+                              color="green"
+                              rounded="md"
+                              variant="outlined"
+                              class="w-auto text-sm-body-1"
+                              density="compact"
+                              placeholder="Адрес"
+                              label="Адрес"
+                              clear-icon="close"
+                              clearable
+                          />
+                          <span
+                              v-show="imagePreview !== null"
+                              @click="onPickFile"
+                              class="text-sm-body-2 text-blue-darken-4 cursor-pointer"
+                          >Изменить
+                          </span>
+                      </div>
                   </div>
                 </v-col>
-
-
               </v-row>
             </v-form>
           </v-card>
