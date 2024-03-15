@@ -5,7 +5,9 @@ import showToast from '../../../composables/toast'
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import organizationBill from '../../../api/organizationBill.js';
-import organization from '../../../api/organizations.js';
+import currencyApi from '../../../api/currency.js';
+import organizationApi from '../../../api/organizations.js';
+import showDate from "../../../composables/date/showDate.js";
 import {
   addMessage,
   editMessage,
@@ -21,19 +23,25 @@ const router = useRouter()
 const loading = ref(true)
 const loadingRate = ref(true)
 const dialog = ref(false)
-const idorganizationBill = ref(null)
+const idOrganizationBill = ref(null)
 const hoveredRowIndex = ref(null)
-
-const organizationAdd = ref([])
+const name = ref(null)
+const dateRef = ref(null)
+const bill_number = ref(null)
+const isValid = ref(null)
+const comment = ref(null)
+const organizationAdd = ref(null)
 const organizationUpdate = ref([])
 const currencies = ref([])
+const currency = ref(null)
+const currencyAdd = ref(null)
+const organizations = ref(null)
 
-const isExistsorganizationBill = ref(false)
+const isExistsOrganizationBill = ref(false)
 const markedID = ref([]);
 const markedItem = ref([])
 const organizationBillInDialogTitle = ref(null)
 const search = ref('')
-const selected = ref([])
 const nameRef = ref(null)
 const descriptionRef = ref(null)
 const organizationBills = ref([])
@@ -42,7 +50,8 @@ const paginations = ref([])
 const headers = ref([
   {title: '№', key: 'id', align: 'start'},
   {title: 'Наименование', key: 'name'},
-  {title: 'Валюта', key: 'organization.name'},
+  {title: 'Баланс', key: 'name'},
+  {title: 'Валюта', key: 'currencies.name'},
   {title: 'Описание', key: 'description'},
 ])
 
@@ -51,52 +60,75 @@ const rules = {
 }
 
 
-const getorganizationBillData = async ({page, itemsPerPage, sortBy, search}) => {
+const getOrganizationBillData = async ({page, itemsPerPage, sortBy, search}) => {
   loading.value = true
   try {
     const { data } = await organizationBill.getAll({page, itemsPerPage, sortBy}, search)
 
     paginations.value = data.result.pagination
-    organizationBills.value = data.result.data
+    organizationBills.value = data.result.data.map(item => ({
+      ...item,
+      date: showDate(item.date)
+    })) || [];
     loading.value = false
   } catch (e) {
   }
 }
 
 
-const addorganizationBill = async ({page, itemsPerPage, sortBy}) => {
+const addOrganizationBill = async ({page, itemsPerPage, sortBy}) => {
 
   const body = {
     name: nameRef.value,
     organization_id: organizationAdd.value,
-    description: descriptionRef.value
+    currency_id: currencyAdd.value,
+    bill_number: bill_number.value,
+    date: dateRef.value,
+    comment: comment.value
   }
+  console.log(body)
 
   try {
-    const res = await organizationBill.add(body)
+    const res = await organizationBill.create(body)
 
     if (res.status === 201) {
-      await getorganizationBillData({page, itemsPerPage, sortBy})
+      await getOrganizationBillData({page, itemsPerPage, sortBy})
       showToast(addMessage)
-      organizationAdd.value = null
-      descriptionRef.value = null
-      idorganizationBill.value = res.data.result.id
+
+      idOrganizationBill.value = res.data.result.id
       dialog.value = false
 
       markedID.value = []
       markedItem.value = []
     }
-  }
-  catch (error) {
+  } catch (error) {
+
+    let showToastFlag = true;
 
     if (error.response && error.response.status === 422) {
-      if (error.response.data.errors.name) {
-        showToast("Поле Наименование не может быть пустым", "warning")
+      if (error.response.data.errors.name && showToastFlag) {
+        showToast(error.response.data.errors.name[1], "warning")
+        showToastFlag = false;
+      }
+      if (error.response.data.errors.bill_number && showToastFlag) {
+        showToast(error.response.data.errors.bill_number[1], "warning")
+        showToastFlag = false;
+      }
+      if (error.response.data.errors.currency_id && showToastFlag) {
+        showToast(error.response.data.errors.currency_id[1], "warning")
+        showToastFlag = false;
+      }
+      if (error.response.data.errors.date && showToastFlag) {
+        showToast(error.response.data.errors.currency_id[1], "warning")
+        showToastFlag = false;
+      }
+      if (error.response.data.errors.organization_id && showToastFlag) {
+        showToast(error.response.data.errors.organization_id[1], "warning")
+        showToastFlag = false;
       }
     }
-    console.log(error);
-  }
 
+  }
 }
 
 const massDel = async ({page, itemsPerPage, sortBy, search}) => {
@@ -110,7 +142,7 @@ const massDel = async ({page, itemsPerPage, sortBy, search}) => {
     if (status === 200) {
 
       showToast(removeMessage, 'red')
-      await getorganizationBillData({page, itemsPerPage, sortBy}, search)
+      await getOrganizationBillData({page, itemsPerPage, sortBy}, search)
       markedID.value = []
       dialog.value = false
     }
@@ -131,7 +163,7 @@ const massRestore = async ({page, itemsPerPage, sortBy, search}) => {
 
     if (status === 200) {
       showToast(restoreMessage)
-      await getorganizationBillData({page, itemsPerPage, sortBy}, search)
+      await getOrganizationBillData({page, itemsPerPage, sortBy}, search)
       markedID.value = []
       dialog.value = false
     }
@@ -146,18 +178,20 @@ const update = async ({page, itemsPerPage, sortBy}) => {
   const body = {
     name: nameRef.value,
     organization_id: organizationAdd.value,
-    description: descriptionRef.value
+    currency_id: currencyAdd.value,
+    bill_number: bill_number.value,
+    date: dateRef.value,
+    comment: comment.value
   }
 
   try {
-    const {status} = await organizationBill.update(idorganizationBill.value, body)
+    const {status} = await organizationBill.update(idOrganizationBill.value, body)
     if (status === 200) {
-      nameRef.value = null
-      descriptionRef.value = null;
-      organizationUpdate.value = null;
+
+      cleanForm()
 
       dialog.value = null
-      await getorganizationBillData({page, itemsPerPage, sortBy})
+      await getOrganizationBillData({page, itemsPerPage, sortBy})
       showToast(editMessage)
     }
   } catch (e) {
@@ -168,7 +202,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
 
 const getCurrencies = async () => {
   try {
-    const {data} = await organization.get({page: 1, itemsPerPage: 100000})
+    const {data} = await currencyApi.get({page: 1, itemsPerPage: 100000})
 
     currencies.value = data.result.data.map(item => {
       return {
@@ -182,8 +216,23 @@ const getCurrencies = async () => {
   }
 }
 
+const getOrganizations = async () => {
+  try {
+    const {data} = await organizationApi.get({page: 1, itemsPerPage: 100000})
+
+    organizations.value = data.result.data.map(item => {
+      return {
+        id: item.id,
+        name: item.name
+      }
+    })
 
 
+
+  } catch (e) {
+
+  }
+}
 
 const handleCheckboxClick = (item) => {
   lineMarking(item)
@@ -193,20 +242,33 @@ const openDialog = (item) => {
   dialog.value = true
 
   if (item === 0) {
-    idorganizationBill.value = 0
-    isExistsorganizationBill.value = false
+    idOrganizationBill.value = 0
+    isExistsOrganizationBill.value = false
   } else {
-    idorganizationBill.value = item.id
+    idOrganizationBill.value = item.id
     markedID.value.push(item.id);
-    isExistsorganizationBill.value = true
+    isExistsOrganizationBill.value = true
     nameRef.value = item.name
-    descriptionRef.value = item.description
+    bill_number.value = item.bill_number
+    comment.value = item.comment
+    currencyAdd.value = item.currency.id
+    dateRef.value = item.date.split('.').reverse().join('-')
+
     organizationAdd.value = item.organization.id
-    organizationBillInDialogTitle.value = nameRef.value
+
+    organizationBillInDialogTitle.value = item.name
   }
 
 }
 
+const cleanForm =  () => {
+  nameRef.value = null
+  bill_number.value = null
+  dateRef.value = null
+  organizationAdd.value = null
+  currencyAdd.value = null
+  comment.value = null
+}
 
 const addBasedOnorganizationBill = () => {
   if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
@@ -217,7 +279,10 @@ const addBasedOnorganizationBill = () => {
     if (markedID.value[0] === item.id) {
       nameRef.value = item.name
       organizationAdd.value = item.organization.id
-      descriptionRef.value = item.description
+      currencyAdd.value = item.organization.id
+      comment.value = item.comment
+      dateRef.value = item.date.split('.').reverse().join('-')
+      bill_number.value = item.bill_number
     }
   })
 
@@ -263,10 +328,7 @@ const lineMarking = (item) => {
 
 watch(dialog, newVal => {
   if (!newVal) {
-    nameRef.value = null
-    organizationUpdate.value = null
-    organizationAdd.value = null
-    descriptionRef.value = null
+
 
     loadingRate.value = true
   }
@@ -274,6 +336,7 @@ watch(dialog, newVal => {
 
 onMounted(async () => {
   await getCurrencies()
+  await getOrganizations()
 })
 
 
@@ -284,7 +347,7 @@ onMounted(async () => {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Виды цен</span>
+          <span>Банковские счета организации</span>
         </div>
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
@@ -301,7 +364,7 @@ onMounted(async () => {
                   density="compact"
                   label="Поиск..."
                   variant="outlined"
-                  color="info"
+                  color="green"
                   rounded="lg"
                   clear-icon="close"
                   hide-details
@@ -309,7 +372,6 @@ onMounted(async () => {
                   clearable
                   flat
               ></v-text-field>
-
             </div>
           </div>
           <Icons name="filter" class="mt-1"/>
@@ -329,7 +391,7 @@ onMounted(async () => {
             :items="organizationBills"
             :item-value="headers.title"
             :search="search"
-            @update:options="getorganizationBillData"
+            @update:options="getOrganizationBillData"
             page-text =  '{0}-{1} от {2}'
             :items-per-page-options="[
                 {value: 25, title: '25'},
@@ -357,8 +419,9 @@ onMounted(async () => {
                 </template>
               </td>
               <td>{{ item.name }}</td>
+              <td>+2500</td>
               <td>{{ item.organization.name }}</td>
-              <td>{{ item.description }}</td>
+              <td>{{ item.comment }}</td>
             </tr>
           </template>
         </v-data-table-server>
@@ -367,15 +430,15 @@ onMounted(async () => {
       <!-- Modal -->
       <v-card>
         <v-dialog class="mt-2 pa-2" v-model="dialog">
-          <v-card style="border: 2px solid #3AB700" min-width="500"
+          <v-card style="border: 2px solid #3AB700" min-width="600"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
-              <span>{{ isExistsorganizationBill ? organizationBillInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
+              <span>{{ isExistsOrganizationBill ? organizationBillInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons v-if="isExistsorganizationBill"  @click="compute" name="delete"/>
-                  <Icons v-if="isExistsorganizationBill" @click="update" name="save"/>
-                  <Icons v-else @click="addorganizationBill" name="save"/>
+                  <Icons v-if="isExistsOrganizationBill"  @click="compute" name="delete"/>
+                  <Icons v-if="isExistsOrganizationBill" @click="update" name="save"/>
+                  <Icons v-else @click="addOrganizationBill" name="save"/>
                 </div>
                 <v-btn @click="dialog = false" variant="text" :size="32" class="pt-2 pl-1">
                   <Icons name="close"/>
@@ -385,9 +448,9 @@ onMounted(async () => {
             <v-form class="d-flex w-100">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100">
-                  <div class="d-flex justify-space-between ga-6">
+                  <div class="d-flex justify-space-between ga-6 mb-3">
                     <v-text-field
-                        v-model="name"
+                        v-model="nameRef"
                         :rules="isValid ? [rules.required] : []"
                         color="green"
                         rounded="md"
@@ -404,71 +467,65 @@ onMounted(async () => {
                     >2500,00</span
                     >
                   </div>
-                  <div
-                      :class="isEdit ? 'justify-space-between' : 'justify-end'"
-                      class="d-flex justify-space-between ga-5 align-center my-3"
-                  >
-                    <div
-                        v-if="isEdit"
-                        style="
-                    border: 1.5px solid #cbc8c8;
-                    border-radius: 4px;
-                    padding: 2px 12px;
-                  "
-                    >
-                  <span>
-                    {{ date }}
-                  </span>
-                    </div>
-                    <CustomCheckbox :checked="a" @change="handleCheckboxChange(0)"
-                    >Клиент</CustomCheckbox
-                    >
-                    <CustomCheckbox :checked="b" @change="handleCheckboxChange(1)"
-                    >Поставщик</CustomCheckbox
-                    >
-                    <CustomCheckbox :checked="c" @change="handleCheckboxChange(2)"
-                    >Прочее</CustomCheckbox
-                    >
-                  </div>
-                  <div class="d-flex ga-4 mb-3">
+                  <div class="d-flex ga-2 mb-3">
                     <v-text-field
                         variant="outlined"
-                        :rules="isValid ? [rules.required, rules.phone] : []"
-                        label="Тел номер"
-                        v-model.trim="phone"
+                        :rules="isValid ? [rules.required] : []"
+                        label="Дата создание"
+                        type="date"
+                        v-model="dateRef"
                         density="compact"
-                        v-mask="'+992#########'"
                         rounded="md"
-                        color="info"
+                        color="green"
+                        :append-inner-icon="dateRef ? 'close' : ''"
+                        @click:append-inner="dateRef = null"
                         hide-details
-                        :append-inner-icon="phone.length > 1 ? 'close' : ''"
-                        @click:append-inner="phone = ''"
                     />
                     <v-text-field
-                        variant="outlined"
-                        prepend-inner-icon="email"
+                        v-model="bill_number"
                         :rules="isValid ? [rules.required, rules.email] : []"
-                        label="Почта"
-                        v-model="email"
+                        variant="outlined"
+                        label="Номер счёта"
                         density="compact"
                         rounded="md"
-                        color="info"
+                        color="green"
+                        :append-inner-icon="bill_number ? 'close' : ''"
+                        @click:append-inner="bill_number = null"
                         hide-details
-                        :append-inner-icon="email.length > 1 ? 'close' : ''"
-                        @click:append-inner="email = ''"
+                    />
+                    <v-select
+                        v-model="currencyAdd"
+                        :items="currencies"
+                        item-title="name"
+                        item-value="id"
+                        :rules="[rules.required]"
+                        label="Валюта"
+                        variant="outlined"
+                        density="compact"
+                        hide-details
                     />
                   </div>
-                  <v-text-field
+                  <v-select
+                      v-model="organizationAdd"
+                      :items="organizations"
+                      item-title="name"
+                      item-value="id"
+                      :rules="[rules.required]"
+                      label="Организация"
+                      variant="outlined"
+                      density="compact"
+                  />
+                  <v-textarea
                       variant="outlined"
                       :rules="isValid ? [rules.required] : []"
-                      label="Адрес"
-                      v-model="address"
+                      label="Комментарий"
+                      v-model="comment"
                       density="compact"
                       rounded="md"
-                      color="info"
+                      color="green"
                       hide-details
-                      :append-inner-icon="address.length > 1 ? 'close' : ''"
-                      @click:append-inner="address = ''"
+                      :append-inner-icon="comment ? 'close' : ''"
+                      @click:append-inner="comment = null"
                   />
                 </v-col>
               </v-row>

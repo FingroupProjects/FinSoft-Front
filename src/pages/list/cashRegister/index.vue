@@ -61,9 +61,8 @@ const paginations = ref([])
 const headers = ref([
   {title: '№', key: 'id', align: 'start'},
   {title: 'Наименование', key: 'name'},
-  {title: 'Организация', key: 'organization.name'},
-  {title: 'Валюта', key: 'currency.name'},
-  {title: 'Ответственное лицо', key: 'responsiblePerson.name'}
+  {title: 'Баланс', key: 'name'},
+
 ])
 
 const rules = {
@@ -94,23 +93,48 @@ const addcashRegister = async ({page, itemsPerPage, sortBy}) => {
     responsible_person_id: employeeAdd.value
   }
 
-  const res = await cashRegister.add(body)
+  try {
+    const res = await cashRegister.add(body)
 
-  if (res.status === 201) {
-    await getcashRegisterData({page, itemsPerPage, sortBy})
-    showToast(addMessage)
-    valueRef.value = null
-    currencyAdd.value = null
-    organizationAdd.value = null
-    employeeAdd.value = null
-    idCashRegister.value = res.data.result.id
-    dialog.value = false
+    if (res.status === 201) {
+      await getcashRegisterData({page, itemsPerPage, sortBy})
+      showToast(addMessage)
+      valueRef.value = null
+      currencyAdd.value = null
+      organizationAdd.value = null
+      employeeAdd.value = null
+      idCashRegister.value = res.data.result.id
+      dialog.value = false
 
-    markedID.value = []
-    markedItem.value = []
+      markedID.value = []
+      markedItem.value = []
 
+    }
+  } catch (error) {
+
+  let showToastFlag = true;
+
+  if (error.response && error.response.status === 422) {
+    if (error.response.data.errors.name && showToastFlag) {
+      showToast(error.response.data.errors.name[0], "warning")
+      showToastFlag = false;
+    }
+
+    if (error.response.data.errors.currency_id && showToastFlag) {
+      showToast(error.response.data.errors.currency_id[0], "warning")
+      showToastFlag = false;
+    }
+    if (error.response.data.errors.currency && showToastFlag) {
+      showToast(error.response.data.errors.currency_id[0], "warning")
+      showToastFlag = false;
+    }
+    if (error.response.data.errors.organization_id && showToastFlag) {
+      showToast(error.response.data.errors.organization_id[0], "warning")
+      showToastFlag = false;
+    }
   }
 
+}
 }
 
 const massDel = async ({page, itemsPerPage, sortBy, search}) => {
@@ -419,6 +443,12 @@ watch(dialog, newVal => {
             :items="cashRegisters"
             :item-value="headers.title"
             :search="search"
+            page-text='{0}-{1} от {2}'
+            :items-per-page-options="[
+                {value: 25, title: '25'},
+                {value: 50, title: '50'},
+                {value: 100, title: '100'},
+            ]"
             @update:options="getcashRegisterData"
             fixed-header
             hover
@@ -439,9 +469,7 @@ watch(dialog, newVal => {
                 </template>
               </td>
               <td>{{ item.name }}</td>
-              <td>{{ item.organization.name }}</td>
-              <td>{{ item.currency.name }}</td>
-              <td>{{ item.responsiblePerson.name }}</td>
+              <td>+2500</td>
 
             </tr>
           </template>
@@ -482,22 +510,26 @@ watch(dialog, newVal => {
                       clear-icon="close"
                       clearable
                   />
-                  <v-select
-                      variant="outlined"
-                      label="Выберите сотрудника"
-                      v-model="employeeAdd"
-                      :items="employees"
-                      item-title="name"
-                      item-value="id"
-                  />
-                  <v-select
-                      variant="outlined"
-                      label="Выберите валюту"
-                      v-model="currencyAdd"
-                      :items="currencies"
-                      item-title="name"
-                      item-value="id"
-                  />
+                  <div class="d-flex ga-4 mb-3">
+                    <v-select
+                        variant="outlined"
+                        label="Выберите валюту"
+                        v-model="currencyAdd"
+                        :items="currencies"
+                        item-title="name"
+                        item-value="id"
+                    />
+                    <v-select
+                        variant="outlined"
+                        label="Выберите сотрудника"
+                        v-model="employeeAdd"
+                        :items="employees"
+                        item-title="name"
+                        item-value="id"
+                    />
+
+                  </div>
+
                   <v-select
                       variant="outlined"
                       label="Выберите организацию"

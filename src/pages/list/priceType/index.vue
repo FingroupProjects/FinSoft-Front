@@ -42,8 +42,7 @@ const paginations = ref([])
 const headers = ref([
   {title: '№', key: 'id', align: 'start'},
   {title: 'Наименование', key: 'name'},
-  {title: 'Валюта', key: 'currency.name'},
-  {title: 'Описание', key: 'description'},
+  {title: 'Валюта', key: 'currency.name'}
 ])
 
 const rules = {
@@ -358,7 +357,6 @@ onMounted(async () => {
               </td>
               <td>{{ item.name }}</td>
               <td>{{ item.currency.name }}</td>
-              <td>{{ item.description }}</td>
             </tr>
           </template>
         </v-data-table-server>
