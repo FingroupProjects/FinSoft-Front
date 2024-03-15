@@ -1,37 +1,30 @@
 <script setup>
-import { ref, defineEmits, onMounted } from "vue";
-import goodsApi from "../../../api/goods";
+import { ref, defineEmits } from "vue";
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
-import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import { addMessage } from "../../../composables/constant/buttons";
+import group from "../../../api/group.js";
 
 const emit = defineEmits();
 
 const dialog = ref(true);
 const isValid = ref(false);
-const is_good = ref(false);
-const is_service = ref(false);
 
 const name = ref("");
 
 const createGroup = async () => {
   try {
     isValid.value = true;
-    const body = {
-      name: name.value,
-      is_good: is_good.value,
-      is_service: is_service.value,
-    };
+
     if (name.value.length === 0) {
       showToast("Поле Наименование не может быть пустым", "warning");
-      return;
+      return
     }
-    await goodsApi.group(body);
-    showToast(addMessage, "green");
+    await group.add({name: name.value,});
+    showToast(addMessage);
     emit("toggleDialog");
   } catch (e) {
-    console.log(e);
+
   } finally {
     isValid.value = false;
   }
@@ -44,7 +37,7 @@ const rules = {
 <template>
   <div>
     <v-col>
-      <v-dialog v-model="dialog" class="mt-2 pa-2">
+      <v-dialog v-model="dialog" class="mt-2 pa-2" persistent>
         <v-card
           style="border: 2px solid #3ab700"
           min-width="350"
@@ -55,15 +48,9 @@ const rules = {
             <span>Создать группу</span>
             <div class="d-flex align-center justify-space-between">
               <div class="d-flex ga-3 align-center mt-2 me-4">
-                <!-- <Icons name="delete" /> -->
                 <Icons @click="createGroup()" name="save" />
               </div>
-              <v-btn
-                @click="$emit('toggleDialog')"
-                variant="text"
-                :size="32"
-                class="pt-2 pl-1"
-              >
+              <v-btn @click="$emit('toggleDialog')" variant="text" :size="32" class="pt-2 pl-1">
                 <Icons name="close" />
               </v-btn>
             </div>
@@ -86,20 +73,6 @@ const rules = {
                   @click:append-inner="name = ''"
                   hide-details
                 />
-                <div class="d-flex justify-space-around">
-                  <CustomCheckbox
-                    @change="is_good = !is_good"
-                    :checked="is_good"
-                  >
-                    Товар
-                  </CustomCheckbox>
-                  <CustomCheckbox
-                    @change="is_service = !is_service"
-                    :checked="is_service"
-                  >
-                    Услуги
-                  </CustomCheckbox>
-                </div>
               </v-col>
             </v-row>
           </v-form>

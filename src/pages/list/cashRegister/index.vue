@@ -85,7 +85,7 @@ const getcashRegisterData = async ({page, itemsPerPage, sortBy, search}) => {
 
 
 const addcashRegister = async ({page, itemsPerPage, sortBy}) => {
-
+try{
   const body = {
     name: nameRef.value,
     currency_id: currencyAdd.value,
@@ -133,7 +133,32 @@ const addcashRegister = async ({page, itemsPerPage, sortBy}) => {
       showToastFlag = false;
     }
   }
+}
+catch (error) {
 
+
+if (error.response && error.response.status === 422) {
+
+  if (error.response.data.errors.name) {
+    showToast("Поле названия не может быть пустым", "warning")
+  }
+
+  else if (error.response.data.errors.responsible_person_id) {
+    showToast("Поле сотрудника должно быть пустым", "warning")
+  }
+
+  else if (error.response.data.errors.currency_id) {
+    showToast("Поле валюты не может быть пустым", "warning")
+  }
+
+  else if (error.response.data.errors.organization_id) {
+    showToast("Поле организации не может быть пустым", "warning")
+  }
+  else {
+    showToast("Заполните все поля!", "warning");
+  }
+}
+ }
 }
 }
 

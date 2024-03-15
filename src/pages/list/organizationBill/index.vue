@@ -7,7 +7,9 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import organizationBill from '../../../api/organizationBill.js';
 import currencyApi from '../../../api/currency.js';
 import organizationApi from '../../../api/organizations.js';
+
 import showDate from "../../../composables/date/showDate.js";
+
 import {
   addMessage,
   editMessage,
@@ -17,6 +19,7 @@ import {
   selectOneItemMessage,
   restoreMessage
 } from "../../../composables/constant/buttons.js";
+import organizations from "../../../api/organizations.js";
 
 const router = useRouter()
 
@@ -34,8 +37,10 @@ const organizationAdd = ref(null)
 const organizationUpdate = ref([])
 const currencies = ref([])
 const currency = ref(null)
+
 const currencyAdd = ref(null)
 const organizations = ref(null)
+
 
 const isExistsOrganizationBill = ref(false)
 const markedID = ref([]);
@@ -51,8 +56,6 @@ const headers = ref([
   {title: '№', key: 'id', align: 'start'},
   {title: 'Наименование', key: 'name'},
   {title: 'Баланс', key: 'name'},
-  {title: 'Валюта', key: 'currencies.name'},
-  {title: 'Описание', key: 'description'},
 ])
 
 const rules = {
@@ -94,6 +97,9 @@ const addOrganizationBill = async ({page, itemsPerPage, sortBy}) => {
     if (res.status === 201) {
       await getOrganizationBillData({page, itemsPerPage, sortBy})
       showToast(addMessage)
+
+      organizationAdd.value = null
+      descriptionRef.value = null
 
       idOrganizationBill.value = res.data.result.id
       dialog.value = false
@@ -216,6 +222,7 @@ const getCurrencies = async () => {
   }
 }
 
+
 const getOrganizations = async () => {
   try {
     const {data} = await organizationApi.get({page: 1, itemsPerPage: 100000})
@@ -233,6 +240,7 @@ const getOrganizations = async () => {
 
   }
 }
+
 
 const handleCheckboxClick = (item) => {
   lineMarking(item)
@@ -474,6 +482,7 @@ onMounted(async () => {
                         label="Дата создание"
                         type="date"
                         v-model="dateRef"
+
                         density="compact"
                         rounded="md"
                         color="green"
@@ -483,7 +492,7 @@ onMounted(async () => {
                     />
                     <v-text-field
                         v-model="bill_number"
-                        :rules="isValid ? [rules.required, rules.email] : []"
+        :rules="isValid ? [rules.required, rules.email] : []"
                         variant="outlined"
                         label="Номер счёта"
                         density="compact"
@@ -519,13 +528,16 @@ onMounted(async () => {
                       variant="outlined"
                       :rules="isValid ? [rules.required] : []"
                       label="Комментарий"
+
                       v-model="comment"
+
                       density="compact"
                       rounded="md"
                       color="green"
                       hide-details
                       :append-inner-icon="comment ? 'close' : ''"
                       @click:append-inner="comment = null"
+
                   />
                 </v-col>
               </v-row>
