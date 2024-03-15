@@ -1,16 +1,36 @@
 <script setup>
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import Icons from "../../../composables/Icons/Icons.vue";
+import barcodeApi from "../../../api/barcode";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
+import { useRoute } from "vue-router";
+
+const route = useRoute();
 
 const pagination = ref([]);
 const barcodes = ref([]);
+
 const loading = ref(true);
 
-const getBarcodes = async () => {
-  // try{
-  //   const { data } = await
-  // }
+const id = ref(0);
+
+const getBarcodes = async ({ page, itemsPerPage, sortBy, search }) => {
+  if (id.value === 0) {
+    loading.value = false;
+    return;
+  }
+  try {
+    loading.value = true;
+    const { data } = await barcodeApi.getById(
+      1,
+      { page, itemsPerPage, sortBy },
+      search
+    );
+    loading.value = false;
+    console.log(data);
+  } catch (e) {
+    console.log(e);
+  }
 };
 
 const headers = ref([
@@ -44,6 +64,11 @@ const lineMarking = (item) => {
   }
   markedItem.value = item;
 };
+
+onMounted(() => {
+  id.value = route.params.id;
+  console.log(id.value);
+});
 </script>
 
 <template>
@@ -54,7 +79,7 @@ const lineMarking = (item) => {
           <span>Штрих - код</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
-          <div class="d-flex ga-2 mt-2 me-3">
+          <div v-if="barcodes.length > 0" class="d-flex ga-2 mt-2 me-3">
             <Icons name="add" />
             <Icons
               @click="compute({ page, itemsPerPage, sortBy })"

@@ -1,8 +1,8 @@
 <script setup>
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import goodsApi from "../../../api/goods";
-import groupApi from "../../../api/group";
+import groupApi from "../../../api/goodGroup";
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
@@ -16,6 +16,7 @@ import {
 } from "../../../composables/constant/buttons.js";
 
 const route = useRoute();
+const router = useRouter();
 
 const loading = ref(true);
 const isCreate = ref(false);
@@ -34,6 +35,19 @@ const headers = ref([
   { title: "№", key: "id", align: "start" },
   { title: "Наименование", key: "name" },
 ]);
+
+const editItem = (id) => {
+  router.push(`/list/createUpdateGood/${id}`);
+};
+
+const goToCreate = () => {
+  router.push({
+    name: "createUpdateGood",
+    params: {
+      id: 0,
+    },
+  });
+};
 
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
@@ -70,7 +84,6 @@ const getGoods = async ({ page, itemsPerPage, sortBy, search }) => {
       { page, itemsPerPage, sortBy },
       search
     );
-    console.log(data);
     goods.value = data.result.data;
     pagination.value = data.result.pagination;
     loading.value = false;
@@ -125,6 +138,13 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
+          <div
+            style="cursor: pointer"
+            @click="goToCreate()"
+            class="pa-1 bg-green rounded-circle d-inline-block"
+          >
+            <v-icon icon="keyboard_backspace" size="x-small" />
+          </div>
           <span>Номенклатура</span>
         </div>
         <v-card variant="text" min-width="500" class="d-flex align-center ga-2">
@@ -143,7 +163,10 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
               >
                 <span class="px-2 py-0">создать группу</span>
               </button>
-              <Icons @click="isCreate = true" name="add" />
+              <Icons
+                @click="$router.push('/list/createUpdateGood')"
+                name="add"
+              />
               <Icons name="copy" />
               <Icons
                 @click="compute({ page, itemsPerPage, sortBy, search })"
