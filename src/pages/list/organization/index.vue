@@ -5,7 +5,6 @@ import {
   addMessage,
   editMessage,
   removeMessage,
-  warningMessage, 
   restoreMessage,
   selectOneItemMessage,
 } from "../../../composables/constant/buttons.js";
@@ -45,33 +44,12 @@ const headers = ref([
   { title: "Наименование", key: "name" },
 ]);
 
-const lineMarking = (item) => {
-  const index = markedID.value.indexOf(item.id);
-  if (index !== -1) {
-    markedID.value.splice(index, 1);
-  } else {
-    markedID.value.push(item.id);
-  }
-  markedItem.value = item;
-};
-
-const getEmployees = async ({ page, itemsPerPage, sortBy, search }) => {
-  try {
-    const { data } = await employee.get({ page, itemsPerPage, sortBy }, search);
-
-    employees.value = data.result.data;
-    console.log(employees.value);
-  } catch (error) {
-    console.error(error);
-  }
-};
-
 const getOrganizationData = async ({ page, itemsPerPage, sortBy, search }) => {
   loading.value = true;
   try {
     const { data } = await organization.get({ page, itemsPerPage, sortBy, search });
     organizations.value = data.result.data.map((item) => ({
-      ...item,
+      ...item
     }));
     paginations.value = data.result.pagination;
     loading.value = false;
@@ -81,29 +59,142 @@ const getOrganizationData = async ({ page, itemsPerPage, sortBy, search }) => {
 };
 
 
+const addOrganization = async ({ page, itemsPerPage, sortBy, search }) => {
+  try {
+
+    let director;
+    if (typeof directorRef.value === 'object') {
+      director = directorRef.value.id
+    } else {
+      director = directorRef.value
+    }
+
+    let accountant;
+    if (typeof accountantRef.value === 'object') {
+      accountant = accountantRef.value.id
+    } else {
+      accountant = accountantRef.value
+    }
+
+    const body = {
+      name: nameRef.value,
+      INN: innRef.value,
+      director_id: director,
+      chief_accountant_id: accountant,
+      address: addressRef.value,
+      description: descriptionRef.value,
+    };
+
+    console.log(body);
+    const res = await organization.add(body);
+    if (res.status === 201) {
+      await getOrganizationData({ page, itemsPerPage, sortBy, search });
+      showToast(addMessage);
+      valueRef.value = null;
+      idOrganizations.value = res.data.result.id;
+      organizationInDialogTitle.value = res.data.result.name;
+      markedID.value.push(res.data.result.id);
+      isExistsOrganization.value = true;
+    }
+    addDialog.value = false;
+  }
+
+  catch (error) {
+
+
+    if (error.response && error.response.status === 422) {
+
+      if (error.response.data.errors.name) {
+        showToast("Поле Наименования не может быть пустым", "warning")
+      }
+
+      else if (error.response.data.errors.INN) {
+        showToast("Поле инн должно быть не короче 12 символов", "warning")
+      }
+
+      else if (error.response.data.errors.director_id) {
+        showToast("Поле директор не может быть пустым", "warning")
+      }
+
+      else if (error.response.data.errors.chief_accountant_id) {
+        showToast("Поле гл.Бухгалтер не может быть пустым", "warning")
+      }
+
+      else if (error.response.data.errors.address) {
+        showToast("Поле адрес не может быть пустым", "warning")
+      }
+
+      else if (error.response.data.errors.description) {
+        showToast("Поле описания не может быть пустым", "warning")
+      }
+      else {
+        showToast("Заполните все поля!", "warning");
+      }
+    }
+  }
+};
+
 const addBasedOnOrganization = () => {
   if (markedID.value.length !== 1 && !isExistsOrganization.value) return showToast(selectOneItemMessage, 'warning')
   console.log(markedID.value.length)
   addDialog.value = true
-
+ 
   organizations.value.forEach(item => {
     if (markedID.value[0] === item.id) {
       idOrganizations.value = item.id
       nameRef.value = item.name
       innRef.value = item.INN;
       directorRef.value = {
-      "id": item.director.id,
-      "name": item.director.name
-    }
-    accountantRef.value = {
-      "id": item.chief_accountant.id,
-      "name": item.chief_accountant.name
-    }
+        "id": item.director.id,
+        "name": item.director.name
+      }
+      accountantRef.value = {
+        "id": item.chief_accountant.id,
+        "name": item.chief_accountant.name
+      }
       addressRef.value = item.address;
       descriptionRef.value = item.description;
     }
   })
 }
+
+const update = async ({ page, itemsPerPage, sortBy, search }) => {
+
+  let director;
+    if (typeof directorRef.value === 'object') {
+      director = directorRef.value.id
+    } else {
+      director = directorRef.value
+    }
+
+    let accountant;
+    if (typeof accountantRef.value === 'object') {
+      accountant = accountantRef.value.id
+    } else {
+      accountant = accountantRef.value
+    }
+
+  const body = {
+    name: nameRef.value,
+    INN: innRef.value,
+    director_id: director,
+    chief_accountant_id: accountant,
+    address: addressRef.value,
+    description: descriptionRef.value,
+  }
+
+  console.log(body);
+  try {
+    const { status } = await organization.update(idOrganizations.value, body);
+    if (status === 200) {
+      await getOrganizationData({ page, itemsPerPage, sortBy, search });
+      showToast(editMessage);
+    }
+    addDialog.value = false;
+  } catch (e) {
+    console.log(e);
+  }
+};
 
 const openDialog = (item) => {
   addDialog.value = true;
@@ -125,116 +216,48 @@ const openDialog = (item) => {
       "id": item.chief_accountant.id,
       "name": item.chief_accountant.name
     }
-    
+
     addressRef.value = item.address;
     descriptionRef.value = item.description;
     organizationInDialogTitle.value = nameRef.value;
   }
 };
 
-
-onMounted(async() => {
-  await getEmployees({ page: 1, itemsPerPage: 10000});
-})
-
-const addOrganization = async ({ page, itemsPerPage, sortBy, search }) => {
+const getEmployees = async ({ page, itemsPerPage, sortBy, search }) => {
   try {
-  const body = {
-    name: nameRef.value,
-    INN: innRef.value,
-    director_id: directorRef.value, 
-    chief_accountant_id: accountantRef.value,
-    address: addressRef.value,
-    description: descriptionRef.value,
-  };
-
-
-  console.log(body);
-  const res = await organization.add(body);
-  if (res.status === 201) {
-    await getOrganizationData({ page, itemsPerPage, sortBy, search });
-    showToast(addMessage);
-    valueRef.value = null;
-    idOrganizations.value = res.data.result.id;
-    organizationInDialogTitle.value = res.data.result.name;
-    markedID.value.push(res.data.result.id);
-    isExistsOrganization.value = true;
+    const { data } = await employee.get({ page, itemsPerPage, sortBy }, search);
+    employees.value = data.result.data.map(item => ({
+      id: item.id,
+      name: item.name
+    }));
+    console.log(employees.value);
+  } catch (error) {
+    console.error(error);
   }
-  addDialog.value = false;
-}
-
- catch (error) {
-
-
-if (error.response && error.response.status === 422) {
-
-  if (error.response.data.errors.name) {
-    showToast("Поле Наименования не может быть пустым", "warning")
-  }
-
-  else if (error.response.data.errors.INN) {
-    showToast("Поле инн должно быть не короче 12 символов", "warning")
-  }
-
-  else if (error.response.data.errors.director_id) {
-    showToast("Поле директор не может быть пустым", "warning")
-  }
-
-  else if (error.response.data.errors.chief_accountant_id) {
-    showToast("Поле гл.Бухгалтер не может быть пустым", "warning")
-  }
-
-  else if (error.response.data.errors.address) {
-    showToast("Поле адрес не может быть пустым", "warning")
-  }
-
-  else if (error.response.data.errors.description) {
-    showToast("Поле описания не может быть пустым", "warning")
-  }
-  else {
-    showToast("Заполните все поля!", "warning");
-  }
-}
- }
 };
 
-const update = async ({ page, itemsPerPage, sortBy, search }) => {
-  const body = {
-    name: nameRef.value,
-    INN: innRef.value,
-    director_id: directorRef.value.id,
-    chief_accountant_id: accountantRef.value.id,
-    address: addressRef.value,
-    description: descriptionRef.value,
+
+const lineMarking = (item) => {
+  const index = markedID.value.indexOf(item.id);
+  if (index !== -1) {
+    markedID.value.splice(index, 1);
+  } else {
+    markedID.value.push(item.id);
   }
-  console.log(body);
-  try {
-    const { status } = await organization.update(idOrganizations.value, body);
-    if (status === 200) {
-      await getOrganizationData({ page, itemsPerPage, sortBy, search });
-      showToast(editMessage); 
-    }
-    addDialog.value = false;
-  } catch (e) {
-    console.log(e);
-  }
+  markedItem.value = item;
 };
 
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
   if (markedItem.value.deleted_at) {
-    return massRestoreOrganization({ page, itemsPerPage, sortBy });
+    return restore({ page, itemsPerPage, sortBy });
   } else {
-    return massDel({ page, itemsPerPage, sortBy, search });
+    return remove({ page, itemsPerPage, sortBy, search });
   }
 };
 
-const massRestoreOrganization = async ({ page, itemsPerPage, sortBy }) => {
+const restore = async ({ page, itemsPerPage, sortBy }) => {
   try {
-    const body = {
-      ids: markedID.value,
-    }; 
-     
-    const { status } = await organization.massRestore(body);
+    const { status } = await organization.restore({ ids: markedID.value});
     if (status === 200) {
       showToast(restoreMessage, "green");
       await getOrganizationData({ page, itemsPerPage, sortBy });
@@ -243,14 +266,12 @@ const massRestoreOrganization = async ({ page, itemsPerPage, sortBy }) => {
   } catch (e) {
     console.log(e);
   }
-}; 
+};
 
-const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
-  const body = {
-    ids: markedID.value,
-  };
+const remove = async ({ page, itemsPerPage, sortBy, search }) => {
+
   try {
-    const { status } = await organization.massDeletion(body);
+    const { status } = await organization.remove({ ids: markedID.value});
     if (status === 200) {
       showToast(removeMessage, "red");
       await getOrganizationData({ page, itemsPerPage, sortBy }, search);
@@ -277,6 +298,10 @@ watch(addDialog, (newVal) => {
     organization.value = [];
   }
 });
+
+onMounted(async () => {
+  await getEmployees({ page: 1, itemsPerPage: 10000 });
+})
 </script>
 
 <template>
@@ -330,7 +355,7 @@ watch(addDialog, (newVal) => {
           :items-length="paginations.total || 0"
           :items="organizations"
           :item-value="headers.title"
-          @update:options="({ page, itemsPerPage, sortBy }) => getOrganizationData({ page, itemsPerPage, sortBy, search })"
+          @update:options="getOrganizationData"
           page-text =  '{0}-{1} от {2}'
           :items-per-page-options="[
                 {value: 25, title: '25'},
