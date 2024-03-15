@@ -17,7 +17,8 @@ import {
 import organizationApi from "../../../api/organizations.js";
 import user from "../../../api/user.js";
 import validate from "./validate.js";
-import groupApi from "../../../api/group.js";
+import groupApi from "../../../api/userGroup.js";
+import {USER_GROUP} from "../../../composables/constant/paramsApi.js";
 
 
 const router = useRouter()
@@ -55,7 +56,7 @@ const paginations = ref([])
 
 const headers = ref([
   {title: '№', key: 'id', align: 'start'},
-  {title: 'ФИО', key: 'name'},
+  {title: 'ФИО', key: 'name', align: 'start'},
 ])
 
 const rules = {
@@ -240,11 +241,12 @@ const getOrganization = async () => {
 }
 const getGroup = async () => {
   try {
-    const { data } = await groupApi.get({page: 1, itemsPerPage: 100000})
+    const { data } = await groupApi.get({page: 1, itemsPerPage: 100000}, search.value, USER_GROUP)
     groups.value = data.result.data.map(item => ({
       id: item.id,
       name: item.name
     }))
+    console.log(groups.value)
   } catch (e) {
 
   }
@@ -440,6 +442,9 @@ watch(organization, (newVal) => {
             fixed-header
             hover
         >
+          <template v-slot:loading>
+            <v-skeleton-loader type="table-row@9"></v-skeleton-loader>
+          </template>
           <template v-slot:item="{ item, index }">
             <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)" @dblclick="openDialog(item)"
                 :class="{'bg-grey-lighten-2': markedID.includes(item.id) }">
