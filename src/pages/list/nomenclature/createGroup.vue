@@ -1,6 +1,6 @@
 <script setup>
 import { ref, defineEmits, onMounted } from "vue";
-import goodsApi from "../../../api/goods";
+import groupApi from "../../../api/goodGroup";
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
@@ -27,7 +27,7 @@ const createGroup = async () => {
       showToast("Поле Наименование не может быть пустым", "warning");
       return;
     }
-    await goodsApi.group(body);
+    await groupApi.create(body);
     showToast(addMessage, "green");
     emit("toggleDialog");
   } catch (e) {

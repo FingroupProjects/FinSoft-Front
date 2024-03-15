@@ -110,6 +110,11 @@ const routes = [
     component: () => import("../pages/list/nomenclature/nomenclatureGroup.vue"),
   },
   {
+    path: "/list/createUpdateGood/:id",
+    name: "createUpdateGood",
+    component: () => import("../pages/list/nomenclature/createUpdate.vue"),
+  },
+  {
     path: "/login",
     name: "login",
     component: () => import("../pages/authentication/authentication.vue"),

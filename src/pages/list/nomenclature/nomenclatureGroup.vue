@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import groupApi from "../../../api/group";
+import groupApi from "../../../api/goodGroup";
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
@@ -42,7 +42,6 @@ watch(isCreateGroup, (newVal) => {
 });
 
 const detail = (id) => {
-  console.log(id);
   router.push({
     name: "nomenclature",
     params: {
@@ -50,6 +49,15 @@ const detail = (id) => {
     },
   });
 };
+
+const goToCreate = () => {
+  router.push({
+    name: 'createUpdateGood',
+    params: {
+      id: 0
+    }
+  })
+}
 
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
@@ -154,7 +162,10 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
               >
                 <span class="px-2 py-0">создать группу</span>
               </button>
-              <Icons name="add" />
+              <Icons
+                @click="goToCreate()"
+                name="add"
+              />
               <Icons name="copy" />
               <Icons
                 @click="compute({ page, itemsPerPage, sortBy, search })"
