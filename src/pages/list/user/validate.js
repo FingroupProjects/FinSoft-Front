@@ -6,7 +6,8 @@ export default function validate(
   loginRef,
   passwordRef,
   phoneRef,
-  emailRef
+  emailRef,
+  group
 ) {
   if (!fioRef.value) {
     return showToast("Поле ФИО не может быть пустым", "warning")
@@ -25,6 +26,9 @@ export default function validate(
   }
   if (!emailRef.value) {
     return showToast("Поле Номер телефона не может быть пустым", "warning")
+  }
+  if (group.value.length === 0) {
+    return showToast("Поле Группа не может быть пустым", "warning")
   }
 
   return true

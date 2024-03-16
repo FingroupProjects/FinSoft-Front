@@ -20,7 +20,6 @@ import validate from "./validate.js";
 import groupApi from "../../../api/userGroup.js";
 import {USER_GROUP} from "../../../composables/constant/paramsApi.js";
 
-
 const router = useRouter()
 
 const loading = ref(true)
@@ -37,6 +36,7 @@ const userDialogTitle = ref(null)
 const search = ref('')
 const organization = ref(null)
 const group = ref(null)
+const groupIdRef = ref(0)
 
 const fioRef = ref(null)
 const statusRef = ref(true)
@@ -45,7 +45,6 @@ const passwordRef = ref(null)
 const phoneRef = ref(null)
 const emailRef = ref(null)
 const imageRef = ref(null)
-const groupIdRef = ref(null)
 const imagePreview = ref(null)
 const fileInput = ref(null)
 
@@ -59,18 +58,47 @@ const headers = ref([
   {title: 'ФИО', key: 'name', align: 'start'},
 ])
 
+const headersGroup = ref([
+  {title: '№', key: 'id', align: 'start'},
+  {title: 'Название группы', key: 'name', align: 'start'},
+])
+
+
 const rules = {
   required: v => !!v,
 }
 
-
-const getUser = async ({page, itemsPerPage, sortBy, search}) => {
+const getGroup = async ({page, itemsPerPage, sortBy, search}) => {
   loading.value = true
   try {
-    const { data } = await user.get({page, itemsPerPage, sortBy}, search)
+    const { data } = await groupApi.get({page, itemsPerPage, sortBy}, search, USER_GROUP)
     paginations.value = data.result.pagination
-    users.value = data.result.data
+    groups.value = data.result.data.map(item => ({
+      id: item.id,
+      name: item.name
+    }))
+    // data.result.data.map(item => {
+    //   users.value = item.users.map(el => ({
+    //     id: el.id,
+    //     name: el.name,
+    //     group_id: el.group_id
+    //   }))
+    // })
+  } catch (e) {
+    console.log(e)
+  } finally {
     loading.value = false
+
+  }
+}
+
+const getOrganization = async () => {
+  try {
+    const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000})
+    organizations.value = data.result.data.map(item => ({
+      id: item.id,
+      name: item.name
+    }))
   } catch (e) {
 
   }
@@ -95,7 +123,7 @@ const selectAvatar = event => {
 }
 
 const addUser = async ({page, itemsPerPage, sortBy}) => {
-  if (validate(fioRef, organization, loginRef, passwordRef, phoneRef, emailRef) !== true) return
+  if (validate(fioRef, organization, loginRef, passwordRef, phoneRef, emailRef, group) !== true) return
 
   let organizationValue;
   if (typeof organization.value === 'object') {
@@ -212,7 +240,6 @@ const remove = async ({page, itemsPerPage, sortBy, search}) => {
   }
 }
 
-
 const restore = async ({page, itemsPerPage, sortBy, search}) => {
   try {
     const {status} = await user.restore({ids: markedID.value})
@@ -228,29 +255,7 @@ const restore = async ({page, itemsPerPage, sortBy, search}) => {
   }
 }
 
-const getOrganization = async () => {
-  try {
-    const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000})
-    organizations.value = data.result.data.map(item => ({
-      id: item.id,
-      name: item.name
-    }))
-  } catch (e) {
 
-  }
-}
-const getGroup = async () => {
-  try {
-    const { data } = await groupApi.get({page: 1, itemsPerPage: 100000}, search.value, USER_GROUP)
-    groups.value = data.result.data.map(item => ({
-      id: item.id,
-      name: item.name
-    }))
-    console.log(groups.value)
-  } catch (e) {
-
-  }
-}
 
 const handleCheckboxClick = item => {
   lineMarking(item)
@@ -258,7 +263,7 @@ const handleCheckboxClick = item => {
 
 const openDialog = item => {
   dialog.value = true
-  console.log(item)
+
   if (item === 0) {
     idUser.value = 0
     isExistsUser.value = false
@@ -302,7 +307,6 @@ const addBasedOnUser = () => {
 
   users.value.forEach(item => {
     if (markedID.value[0] === item.id) {
-      console.log(item)
       fioRef.value = item.name
       loginRef.value = item.login
       phoneRef.value = item.phone
@@ -324,23 +328,23 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
 
   if (markedItem.value.deleted_at) {
     return restore({ page, itemsPerPage, sortBy })
-  }
-  else{
+  } else {
     return remove({ page, itemsPerPage, sortBy, search })
   }
 }
 
 const lineMarking = item => {
   if (markedID.value.length > 0) {
-    const firstMarkedItem = users.value.find(el => el.id === markedID.value[0]);
+    const firstMarkedItem = users.value.find(el => el.id === markedID.value[0])
+
     if (firstMarkedItem && firstMarkedItem.deleted_at) {
-      if(item.deleted_at === null) {
+      if (item.deleted_at === null) {
         showToast(ErrorSelectMessage, 'warning')
         return
       }
     }
     if (firstMarkedItem && firstMarkedItem.deleted_at === null) {
-      if(item.deleted_at !== null) {
+      if (item.deleted_at !== null) {
         showToast(ErrorSelectMessage, 'warning')
         return
       }
@@ -354,6 +358,23 @@ const lineMarking = item => {
     markedID.value.push(item.id);
   }
   markedItem.value = item;
+}
+
+const lineMarkingGroup = ({page, itemsPerPage, sortBy, search}, group_id) => {
+  groupIdRef.value = group_id
+  console.log(groupIdRef.value)
+  getUser({page, itemsPerPage, sortBy, search})
+}
+
+const getUser = async ({page, itemsPerPage, sortBy, search}) => {
+  try {
+    const { data } = await groupApi.get({page, itemsPerPage, sortBy}, search, USER_GROUP)
+    paginations.value = data.result.pagination
+    users.value = data.result.data.find(item => item.id === groupIdRef.value).users
+    console.log(users.value)
+  } catch (e) {
+
+  }
 }
 
 
@@ -371,11 +392,6 @@ watch(dialog, newVal => {
 
 onMounted(async () =>  {
   await getOrganization()
-  await getGroup()
-})
-
-watch(organization, (newVal) => {
- console.log(organization.value)
 })
 
 </script>
@@ -418,58 +434,96 @@ watch(organization, (newVal) => {
           <Icons name="filter" class="mt-1"/>
         </v-card>
       </div>
-
-      <v-card class="mt-2 table">
-        <v-data-table-server
-            style="height: 78vh"
-            items-per-page-text="Элементов на странице:"
-            loading-text="Загрузка"
-            no-data-text="Нет данных"
-            v-model:items-per-page="paginations.per_page"
-            :loading="loading"
-            :headers="headers"
-            :items-length="paginations.total || 0"
-            :items="users"
-            :item-value="headers.title"
-            :search="search"
-            @update:options="getUser"
-            page-text =  '{0}-{1} от {2}'
-            :items-per-page-options="[
+      <div class="d-flex ga-4">
+        <v-card class="mt-2 table">
+          <v-data-table-server
+              style="height: 78vh;"
+              items-per-page-text="Элементов на странице:"
+              loading-text="Загрузка"
+              no-data-text="Нет данных"
+              v-model:items-per-page="paginations.per_page"
+              :loading="loading"
+              :headers="headersGroup"
+              :items-length="paginations.total || 0"
+              :items="groups"
+              :item-value="headers.title"
+              :search="search"
+              @update:options="getGroup"
+              page-text='{0}-{1} от {2}'
+              :items-per-page-options="[
                 {value: 25, title: '25'},
                 {value: 50, title: '50'},
                 {value: 100, title: '100'},
             ]"
-            fixed-header
-            hover
-        >
-          <template v-slot:loading>
-            <v-skeleton-loader type="table-row@9"></v-skeleton-loader>
-          </template>
-          <template v-slot:item="{ item, index }">
-            <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)" @dblclick="openDialog(item)"
-                :class="{'bg-grey-lighten-2': markedID.includes(item.id) }">
-              <td>
-                <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
-                  <CustomCheckbox
-                      v-model="markedID"
-                      :checked="markedID.includes(item.id)"
-                      @change="handleCheckboxClick(item)"
-                  >
-                    <span>{{ item.id }}</span>
-                  </CustomCheckbox>
-                </template>
-                <template v-else>
-                  <div  class="d-flex">
-                    <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
-                    <span>{{ item.id }}</span>
-                  </div>
-                </template>
-              </td>
-              <td>{{ item.name }}</td>
-            </tr>
-          </template>
-        </v-data-table-server>
-      </v-card>
+              fixed-header
+              hover
+          >
+            <template v-slot:item="{ item, index }">
+              <tr @mouseenter="hoveredRowIndex = index + 100000" @mouseleave="hoveredRowIndex = null" @click="lineMarkingGroup({}, item.id)" >
+                <td>
+                 <div class="d-flex">
+                   <span>{{ item.id }}</span>
+                 </div>
+                </td>
+                <td>{{ item.name }}</td>
+              </tr>
+            </template>
+          </v-data-table-server>
+        </v-card>
+        <v-card class="mt-2 table">
+          <v-data-table-server
+              style="height: 78vh"
+              items-per-page-text="Элементов на странице:"
+              loading-text="Загрузка"
+              no-data-text="Нет данных"
+              v-model:items-per-page="paginations.per_page"
+              :loading="loading"
+              :headers="headers"
+              :items-length="paginations.total || 0"
+              :items="users"
+              :item-value="headers.title"
+              :search="search"
+              @update:options="getUser"
+              page-text =  '{0}-{1} от {2}'
+              :items-per-page-options="[
+                {value: 25, title: '25'},
+                {value: 50, title: '50'},
+                {value: 100, title: '100'},
+            ]"
+              fixed-header
+              hover
+          >
+            <template v-slot:loading>
+              <v-skeleton-loader type="table-row@9"></v-skeleton-loader>
+            </template>
+            <template v-slot:item="{ item, index }">
+              <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)" @dblclick="openDialog(item)"
+                  :class="{'bg-grey-lighten-2': markedID.includes(item.id) }">
+                <td>
+                  <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
+                    <CustomCheckbox
+                        v-model="markedID"
+                        :checked="markedID.includes(item.id)"
+                        @change="handleCheckboxClick(item)"
+                    >
+                      <span>{{ item.id }}</span>
+                    </CustomCheckbox>
+                  </template>
+                  <template v-else>
+                    <div  class="d-flex">
+                      <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
+                      <span>{{ item.id }}</span>
+                    </div>
+                  </template>
+                </td>
+                <td>{{ item.name }}</td>
+              </tr>
+            </template>
+          </v-data-table-server>
+        </v-card>
+      </div>
+
+
 
       <!-- Modal -->
       <v-card>
