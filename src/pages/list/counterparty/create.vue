@@ -14,6 +14,7 @@ import currencyApi from "../../../api/currency.js";
 import organizationApi from "@/api/organizations.js";
 import counterpartyApi from "../../../api/counterparty.js";
 import priceTypeApi from "@/api/priceType.js";
+import validate from "./validate.js";
 
 const props = defineProps(["isOpen", "isEdit", "item", "createOnBase"]);
 const emits = defineEmits();
@@ -283,6 +284,8 @@ const getId = async () => {
 };
 
 const CreateCounterparty = async () => {
+  if (validate(name,phone,address,email) !== true) return
+
   try {
     isValid.value = true;
     const body = {
@@ -297,25 +300,6 @@ const CreateCounterparty = async () => {
     emits("toggleIsOpen");
     clearForm();
   } catch (error) {
-    isValid.value = true;
-    if (error.response && error.response.status === 422) {
-      if (error.response.data.errors.name) {
-        let message = "Поле Наименование не должно быть не длинее 25 символов";
-        if (name.value.length === 0) {
-          message = "Поле Наименование не может быть пустым";
-        }
-        showToast(`${message}`, "warning");
-      } else if (roles.value.length === 0) {
-        showToast("Выберите хотя бы одну роль!", "warning");
-        return;
-      } else if (error.response.data.errors.phone) {
-        showToast("Поле тел. номер должно состоять из 13 символов", "warning");
-      } else if (error.response.data.errors.email) {
-        showToast(error.response.data.errors.email[0], "warning");
-      } else {
-        showToast("Заполните все поля!", "warning");
-      }
-    }
     console.log(error);
   }
 };
@@ -385,12 +369,13 @@ const restore = async ({ page, itemsPerPage, sortBy }) => {
 };
 
 const updateCounterparty = async () => {
+  if (validate(name,phone,address,email,roles) !== true) return
   try {
     isValid.value = true;
     const body = {
       name: name.value,
-      address: address.value,
       phone: phone.value,
+      address: address.value,
       email: email.value,
       roles: roles.value,
     };
@@ -402,25 +387,6 @@ const updateCounterparty = async () => {
     showToast("Успешно изменено", "#");
     emits("toggleIsOpen");
   } catch (error) {
-    isValid.value = true;
-    if (error.response && error.response.status === 422) {
-      if (error.response.data.errors.name) {
-        let message = "Поле Наименование не должно быть не длинее 25 символов";
-        if (name.value.length === 0) {
-          message = "Поле Наименование не может быть пустым";
-        }
-        showToast(`${message}`, "warning");
-      } else if (roles.value.length === 0) {
-        showToast("Выберите хотя бы одну роль!", "warning");
-        return;
-      } else if (error.response.data.errors.phone) {
-        showToast("Поле тел. номер должно состоять из 13 символов", "warning");
-      } else if (error.response.data.errors.email) {
-        showToast(error.response.data.errors.email[0], "warning");
-      } else {
-        showToast("Заполните все поля!", "warning");
-      }
-    }
     console.log(error);
   }
 };

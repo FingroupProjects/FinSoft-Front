@@ -13,6 +13,7 @@ import {
 } from "../../../composables/constant/buttons.js";
 import Icons from "../../../composables/Icons/Icons.vue";
 import binarySearch from "../../../composables/binarySearch/binarySearch.js";
+import validate from "./validate.js";
 
 import {restoreMessage} from "../../../composables/constant/buttons.js";
 
@@ -63,6 +64,7 @@ const getPositionData = async ({ page, itemsPerPage, sortBy, search }) => {
 
 
 const addPosition = async ({ page, itemsPerPage, sortBy }) => {
+  if (validate(nameRef) !== true) return 
 try{
   const body = {
     name: nameRef.value
@@ -80,17 +82,7 @@ try{
   }
 }
 catch (error) {
-
-
-if (error.response && error.response.status === 422) {
-
-  if (error.response.data.errors.name) {
-    showToast("Поле Наименования не может быть пустым", "warning")
-  }
-  else {
-    showToast("Заполните все поля!", "warning");
-  }
-}
+  console.log(error);
  }
 }
 
@@ -136,7 +128,7 @@ const massRestore = async ({ page, itemsPerPage, sortBy, search }) => {
 
 
 const update = async ({page, itemsPerPage, sortBy}) => {
-
+  if (validate(nameRef) !== true) return 
   const body = {
     name: nameRef.value
   }
