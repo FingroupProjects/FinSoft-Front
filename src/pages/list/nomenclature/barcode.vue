@@ -67,7 +67,6 @@ const lineMarking = (item) => {
 
 onMounted(() => {
   id.value = route.params.id;
-  console.log(id.value);
 });
 </script>
 

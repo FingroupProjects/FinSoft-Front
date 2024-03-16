@@ -71,7 +71,9 @@ const getUnits = async () => {
 };
 
 const getGoodByid = async () => {
-  if(id.value === 0) return
+  if (id.value !== 0) {
+    return;
+  }
   try {
     const { data } = await goodsApi.getById(id.value);
     const good = data.result;
@@ -185,11 +187,14 @@ onMounted(async () => {
           >
             <v-icon icon="keyboard_backspace" size="x-small" />
           </div>
-          <span>{{ id ? "Изменение" : "Добавление" }}</span>
+          <span>{{ id === 0 ? "Изменение" : "Добавление" }}</span>
         </div>
         <div class="d-flex align-center justify-space-between">
           <div class="d-flex ga-3 align-center mt-2 me-4">
-            <Icons @click="id ? updateGood() : createGood()" name="save" />
+            <Icons
+              @click="id !== 0 ? updateGood() : createGood()"
+              name="save"
+            />
           </div>
         </div>
       </div>
