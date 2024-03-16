@@ -7,9 +7,8 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import organizationBill from '../../../api/organizationBill.js';
 import currencyApi from '../../../api/currency.js';
 import organizationApi from '../../../api/organizations.js';
-
 import showDate from "../../../composables/date/showDate.js";
-
+import validate from "./validate.js"
 import {
   addMessage,
   editMessage,
@@ -19,7 +18,6 @@ import {
   selectOneItemMessage,
   restoreMessage
 } from "../../../composables/constant/buttons.js";
-import organizations from "../../../api/organizations.js";
 
 const router = useRouter()
 
@@ -37,10 +35,8 @@ const organizationAdd = ref(null)
 const organizationUpdate = ref([])
 const currencies = ref([])
 const currency = ref(null)
-
 const currencyAdd = ref(null)
 const organizations = ref(null)
-
 
 const isExistsOrganizationBill = ref(false)
 const markedID = ref([]);
@@ -89,17 +85,15 @@ const addOrganizationBill = async ({page, itemsPerPage, sortBy}) => {
     date: dateRef.value,
     comment: comment.value
   }
-  console.log(body)
 
-  try {
+  if (validate(nameRef, bill_number, dateRef, organizationAdd, currencyAdd ) !== true) return
+
+
     const res = await organizationBill.create(body)
 
     if (res.status === 201) {
       await getOrganizationBillData({page, itemsPerPage, sortBy})
       showToast(addMessage)
-
-      organizationAdd.value = null
-      descriptionRef.value = null
 
       idOrganizationBill.value = res.data.result.id
       dialog.value = false
@@ -107,43 +101,14 @@ const addOrganizationBill = async ({page, itemsPerPage, sortBy}) => {
       markedID.value = []
       markedItem.value = []
     }
-  } catch (error) {
 
-    let showToastFlag = true;
-
-    if (error.response && error.response.status === 422) {
-      if (error.response.data.errors.name && showToastFlag) {
-        showToast(error.response.data.errors.name[1], "warning")
-        showToastFlag = false;
-      }
-      if (error.response.data.errors.bill_number && showToastFlag) {
-        showToast(error.response.data.errors.bill_number[1], "warning")
-        showToastFlag = false;
-      }
-      if (error.response.data.errors.currency_id && showToastFlag) {
-        showToast(error.response.data.errors.currency_id[1], "warning")
-        showToastFlag = false;
-      }
-      if (error.response.data.errors.date && showToastFlag) {
-        showToast(error.response.data.errors.currency_id[1], "warning")
-        showToastFlag = false;
-      }
-      if (error.response.data.errors.organization_id && showToastFlag) {
-        showToast(error.response.data.errors.organization_id[1], "warning")
-        showToastFlag = false;
-      }
-    }
-
-  }
 }
 
-const massDel = async ({page, itemsPerPage, sortBy, search}) => {
-  const body = {
-    ids: markedID.value
-  }
+const remove = async ({page, itemsPerPage, sortBy, search}) => {
+ 
 
   try {
-    const {status} = await organizationBill.massDeletion(body)
+    const {status} = await organizationBill.remove({ids: markedID.value})
 
     if (status === 200) {
 
@@ -159,13 +124,13 @@ const massDel = async ({page, itemsPerPage, sortBy, search}) => {
 }
 
 
-const massRestore = async ({page, itemsPerPage, sortBy, search}) => {
+const restore = async ({page, itemsPerPage, sortBy, search}) => {
   const body = {
     ids: markedID.value
   }
 
   try {
-    const {status} = await organizationBill.massRestore(body)
+    const {status} = await organizationBill.restore(body)
 
     if (status === 200) {
       showToast(restoreMessage)
@@ -196,7 +161,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
 
       cleanForm()
 
-      dialog.value = null
+      dialog.value = false
       await getOrganizationBillData({page, itemsPerPage, sortBy})
       showToast(editMessage)
     }
@@ -222,7 +187,6 @@ const getCurrencies = async () => {
   }
 }
 
-
 const getOrganizations = async () => {
   try {
     const {data} = await organizationApi.get({page: 1, itemsPerPage: 100000})
@@ -240,7 +204,6 @@ const getOrganizations = async () => {
 
   }
 }
-
 
 const handleCheckboxClick = (item) => {
   lineMarking(item)
@@ -300,10 +263,10 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
   if(markedID.value.length === 0) return showToast(warningMessage, 'warning')
 
   if(markedItem.value.deleted_at) {
-    return massRestore({ page, itemsPerPage, sortBy })
+    return restore({ page, itemsPerPage, sortBy })
   }
   else{
-    return massDel({ page, itemsPerPage, sortBy, search })
+    return remove({ page, itemsPerPage, sortBy, search })
   }
 }
 
@@ -428,8 +391,7 @@ onMounted(async () => {
               </td>
               <td>{{ item.name }}</td>
               <td>+2500</td>
-              <td>{{ item.organization.name }}</td>
-              <td>{{ item.comment }}</td>
+        
             </tr>
           </template>
         </v-data-table-server>
@@ -459,7 +421,7 @@ onMounted(async () => {
                   <div class="d-flex justify-space-between ga-6 mb-3">
                     <v-text-field
                         v-model="nameRef"
-                        :rules="isValid ? [rules.required] : []"
+                        :rules="[rules.required]"
                         color="green"
                         rounded="md"
                         variant="outlined"
@@ -478,11 +440,10 @@ onMounted(async () => {
                   <div class="d-flex ga-2 mb-3">
                     <v-text-field
                         variant="outlined"
-                        :rules="isValid ? [rules.required] : []"
+                        :rules="[rules.required]"
                         label="Дата создание"
                         type="date"
                         v-model="dateRef"
-
                         density="compact"
                         rounded="md"
                         color="green"
@@ -492,7 +453,7 @@ onMounted(async () => {
                     />
                     <v-text-field
                         v-model="bill_number"
-        :rules="isValid ? [rules.required, rules.email] : []"
+                        :rules="[rules.required]"
                         variant="outlined"
                         label="Номер счёта"
                         density="compact"
@@ -526,18 +487,15 @@ onMounted(async () => {
                   />
                   <v-textarea
                       variant="outlined"
-                      :rules="isValid ? [rules.required] : []"
+                      :rules="[rules.required]"
                       label="Комментарий"
-
                       v-model="comment"
-
                       density="compact"
                       rounded="md"
                       color="green"
                       hide-details
                       :append-inner-icon="comment ? 'close' : ''"
                       @click:append-inner="comment = null"
-
                   />
                 </v-col>
               </v-row>

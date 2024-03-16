@@ -17,10 +17,10 @@ export default {
   delete(id, data) {
     return  api.delete(`/organizationBill/${id}`, data)
   },
-  massDeletion(data) {
+  remove(data) {
     return api.post(`/organizationBill/massDelete/`, data);
   },
-  massRestore(data) {
+  restore(data) {
     return api.post('/organizationBill/massRestore/', data);
   },
 
