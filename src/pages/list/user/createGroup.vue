@@ -3,7 +3,8 @@ import { ref, defineEmits } from "vue";
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
 import { addMessage } from "../../../composables/constant/buttons";
-import group from "../../../api/group.js";
+import userGroup from "../../../api/userGroup.js";
+import {USER_GROUP} from "../../../composables/constant/paramsApi.js";
 
 const emit = defineEmits();
 
@@ -20,11 +21,11 @@ const createGroup = async () => {
       showToast("Поле Наименование не может быть пустым", "warning");
       return
     }
-    await group.add({name: name.value,});
+    await userGroup.add({name: name.value, type: USER_GROUP});
     showToast(addMessage);
     emit("toggleDialog");
   } catch (e) {
-
+    console.log(e)
   } finally {
     isValid.value = false;
   }
@@ -32,7 +33,8 @@ const createGroup = async () => {
 
 const rules = {
   required: (v) => !!v,
-};
+}
+
 </script>
 <template>
   <div>
