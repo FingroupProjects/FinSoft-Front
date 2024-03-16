@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import groupApi from "../../../api/goodGroup";
 import goodsApi from "../../../api/goods";
 import showToast from "../../../composables/toast";
@@ -13,24 +13,26 @@ import { addMessage } from "../../../composables/constant/buttons";
 const route = useRoute();
 const router = useRouter();
 
-const editGoodsDialog = ref(false);
 const isValid = ref(false);
-const dialog = ref(true);
+const isEdit = ref(false);
 
 const name = ref("");
 const vendor_code = ref("");
 const description = ref("");
 const main_image = ref("");
 
-const id = ref(null);
+const id = ref(0);
 const storage_id = ref(null);
 const category_id = ref(null);
 const unit_id = ref(null);
 const good_group_id = ref(null);
-const imageRef = ref(null);
-const imagePreview = ref(null);
+const firstImage = ref(null);
+const secondImage = ref(null);
+const thirdImage = ref(null);
+const fourthImage = ref(null);
 const fileInput = ref(null);
 
+const imageRef = ref([]);
 const add_images = ref([]);
 const url = ref([]);
 const storages = ref([]);
@@ -47,16 +49,27 @@ const itemsProps = (item) => {
   };
 };
 
+const setImageByIndex = (index) => {
+  if (imageRef.value[index]) {
+    const fileReader = new FileReader();
+    fileReader.addEventListener("load", () => {
+      firstImage.value = fileReader.result;
+    });
+    fileReader.readAsDataURL(imageRef.value[index]);
+  }
+};
+
 const selectAvatar = (event) => {
   const files = event.target.files;
-  imageRef.value = files[0];
+  imageRef.value = files;
   let filename = files[0].name;
   if (filename.lastIndexOf(".") <= 0) {
     return showToast("Пожалуйста, добавьте заново!");
   }
   const fileReader = new FileReader();
+  console.log(fileReader);
   fileReader.addEventListener("load", () => {
-    imagePreview.value = fileReader.result;
+    firstImage.value = fileReader.result;
   });
   fileReader.readAsDataURL(files[0]);
 };
@@ -71,7 +84,9 @@ const getUnits = async () => {
 };
 
 const getGoodByid = async () => {
-  if(id.value === 0) return
+  if (id.value == 0) {
+    return;
+  }
   try {
     const { data } = await goodsApi.getById(id.value);
     const good = data.result;
@@ -111,7 +126,11 @@ const getGroups = async ({ page, itemsPerPage, sortBy, search }) => {
 };
 
 const updateGood = async () => {
+  if (id.value == 0) {
+    return;
+  }
   try {
+    isValid.value = true;
     const formData = new FormData();
 
     function appendIfNotNull(key, value) {
@@ -135,11 +154,14 @@ const updateGood = async () => {
     console.log(res);
   } catch (e) {
     console.log(e);
+  } finally {
+    isValid.value = false;
   }
 };
 
 const createGood = async () => {
   try {
+    isValid.value = true;
     const body = {
       name: name.value,
       vendor_code: vendor_code.value,
@@ -147,7 +169,7 @@ const createGood = async () => {
       category_id: 1,
       unit_id: unit_id.value,
       storage_id: storage_id.value,
-      main_image: (main_image.value = imagePreview.value), // main_image.value,
+      main_image: firstImage.value,
       add_images: add_images.value,
       good_group_id: good_group_id.value,
     };
@@ -156,18 +178,33 @@ const createGood = async () => {
     showToast(addMessage);
   } catch (e) {
     console.log(e);
+  } finally {
+    isValid.value = false;
   }
 };
+
 const onPickFile = () => {
   fileInput.value.click();
 };
 
-onMounted(async () => {
+const setImage = (item) => {
+  console.log(item);
+  firstImage.value = item.name;
+};
+
+const isEditGood = async () => {
   id.value = route.params.id;
-  getGoodByid();
-  getUnits();
-  getStorage({ page: 1, itemsPerPage: 1000 });
-  getGroups({ page: 1, itemsPerPage: 1000 });
+  isEdit.value = id.value != 0;
+};
+
+onMounted(async () => {
+  await isEditGood();
+  await Promise.all([
+    getGoodByid(),
+    getUnits(),
+    getStorage({ page: 1, itemsPerPage: 1000 }),
+    getGroups({ page: 1, itemsPerPage: 1000 }),
+  ]);
 });
 </script>
 
@@ -185,11 +222,11 @@ onMounted(async () => {
           >
             <v-icon icon="keyboard_backspace" size="x-small" />
           </div>
-          <span>{{ id ? "Изменение" : "Добавление" }}</span>
+          <span>{{ isEdit ? "Изменение" : "Добавление" }}</span>
         </div>
         <div class="d-flex align-center justify-space-between">
           <div class="d-flex ga-3 align-center mt-2 me-4">
-            <Icons @click="id ? updateGood() : createGood()" name="save" />
+            <Icons @click="isEdit ? updateGood() : createGood()" name="save" />
           </div>
         </div>
       </div>
@@ -239,7 +276,7 @@ onMounted(async () => {
                       border: 1px solid #3ab700;
                     "
                   >
-                    <div v-if="imagePreview === null">
+                    <div v-if="firstImage === null">
                       <v-btn @click="onPickFile">Загрузить фото</v-btn>
                       <input
                         accept="image/*"
@@ -247,24 +284,31 @@ onMounted(async () => {
                         @change="selectAvatar"
                         style="display: none"
                         ref="fileInput"
+                        multiple
                       />
                     </div>
                     <img
                       v-else
-                      :src="imagePreview"
+                      :src="firstImage"
                       width="150"
                       height="150"
                       alt=""
                     />
                   </div>
                   <div class="d-flex justify-center ga-4">
-                    <span>Фото 1</span>
-                    <span>Фото 2</span>
-                    <span>Фото 3</span>
+                    <span
+                      class="photo_el"
+                      v-for="(img, index) in imageRef"
+                      :key="img.id"
+                      @click="setImageByIndex(index)"
+                    >
+                      Фото {{ index + 1 }}
+                    </span>
                   </div>
                 </div>
                 <div class="d-flex flex-column w-75 ga-3">
                   <v-select
+                    :rules="isValid ? [rules.required] : []"
                     placeholder="Местоположения"
                     label="Местоположения"
                     :item-props="itemsProps"
@@ -277,6 +321,7 @@ onMounted(async () => {
                     hide-details
                   />
                   <v-select
+                    :rules="isValid ? [rules.required] : []"
                     placeholder="Ед измерения"
                     :item-props="itemsProps"
                     label="Ед измерения"
@@ -289,6 +334,7 @@ onMounted(async () => {
                     hide-details
                   />
                   <v-select
+                    :rules="isValid ? [rules.required] : []"
                     placeholder="Группа номенклатуры"
                     label="Группа номенклатуры"
                     :item-props="itemsProps"
@@ -321,5 +367,9 @@ onMounted(async () => {
 <style>
 .modal {
   padding: 20px 0px;
+}
+.photo_el:hover {
+  color: green;
+  cursor: pointer;
 }
 </style>

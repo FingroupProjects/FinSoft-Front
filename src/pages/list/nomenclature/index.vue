@@ -37,7 +37,12 @@ const headers = ref([
 ]);
 
 const editItem = (id) => {
-  router.push(`/list/createUpdateGood/${id}`);
+  router.push({
+    name: "createUpdateGood",
+    params: {
+      id: id,
+    },
+  });
 };
 
 const goToCreate = () => {
@@ -163,10 +168,7 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
               >
                 <span class="px-2 py-0">создать группу</span>
               </button>
-              <Icons
-                @click="$router.push('/list/createUpdateGood')"
-                name="add"
-              />
+              <Icons @click="goToCreate()" name="add" />
               <Icons name="copy" />
               <Icons
                 @click="compute({ page, itemsPerPage, sortBy, search })"
