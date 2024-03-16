@@ -6,6 +6,7 @@ import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import priceType from '../../../api/priceType.js';
 import currency from '../../../api/currency.js';
+import validate from "./validate.js";
 import {
   addMessage,
   editMessage,
@@ -15,6 +16,7 @@ import {
   selectOneItemMessage,
   restoreMessage
 } from "../../../composables/constant/buttons.js";
+import { tr } from "vuetify/lib/locale/index.mjs";
 
 const router = useRouter()
 
@@ -64,7 +66,7 @@ const getPriceTypeData = async ({page, itemsPerPage, sortBy, search}) => {
 
 
 const addPriceType = async ({page, itemsPerPage, sortBy}) => {
-
+  if (validate(nameRef,currencyAdd,descriptionRef) !== true) return
   const body = {
     name: nameRef.value,
     currency_id: currencyAdd.value,
@@ -87,12 +89,6 @@ const addPriceType = async ({page, itemsPerPage, sortBy}) => {
     }
   }
   catch (error) {
-
-  if (error.response && error.response.status === 422) {
-    if (error.response.data.errors.name) {
-      showToast("Поле Наименование не может быть пустым", "warning")
-    }
-  }
   console.log(error);
 }
 
@@ -141,6 +137,7 @@ const massRestore = async ({page, itemsPerPage, sortBy, search}) => {
 
 
 const update = async ({page, itemsPerPage, sortBy}) => {
+  if (validate(nameRef,currencyAdd,descriptionRef) !== true) return
 
   const body = {
     name: nameRef.value,

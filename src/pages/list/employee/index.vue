@@ -18,6 +18,7 @@ import {
 import organization from "../../../api/organizations.js";
 import employee from "../../../api/employee.js";
 import counterpartyApi from "../../../api/counterparty.js";
+import validate from "./validate.js";
 
 const router = useRouter()
 
@@ -102,7 +103,7 @@ const addEmployee = async ({page, itemsPerPage, sortBy}) => {
 
 
   console.log(...formData.entries())
-
+  if (validate(nameRef,phoneRef,emailRef,addressRef) !== true) return
 
   try {
 
@@ -122,29 +123,6 @@ const addEmployee = async ({page, itemsPerPage, sortBy}) => {
 
 
   } catch (error) {
-
-
-    if (error.response && error.response.status === 422) {
-
-      if (error.response.data.errors.name) {
-        showToast("Поле ФИО не может быть пустым", "warning")
-      }
-
-      else if (error.response.data.errors.phone) {
-        showToast("Поле тел. номер должно быть не короче 13 символов", "warning")
-      }
-
-      else if (error.response.data.errors.email) {
-        showToast(error.response.data.errors.email[0], "warning")
-      }
-      else if (error.response.data.errors.address) {
-        showToast("Поле Адрес не может быть пустым", "warning")
-      }
-
-      else {
-        showToast("Заполните все поля!", "warning");
-      }
-    }
     console.log(error);
   }
 
@@ -216,6 +194,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
   appendIfNotNull('address', addressRef.value);
   appendIfNotNull('image', imageRef.value);
 
+  if (validate(nameRef,phoneRef,emailRef,addressRef) !== true) return 
   try {
     const {status} = await employee.update(idEmployee.value, formData)
     if (status === 200) {
