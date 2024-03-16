@@ -12,6 +12,7 @@ import {
 import Icons from "../../../composables/Icons/Icons.vue";
 import showDate from "../../../composables/date/showDate.js";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
+import validate from "./validate.js";
 import {tr} from "vuetify/locale";
 
 const router = useRouter()
@@ -107,6 +108,7 @@ const getCurrencyRateData = async ({page, itemsPerPage, sortBy, search}, idCurre
 }
 
 const addCurrency = async ({page, itemsPerPage, sortBy}) => {
+  if (validate(nameRef,digitalRef,symbolRef) !== true) return
 
   const body = {
     name: nameRef.value,
@@ -127,24 +129,12 @@ const addCurrency = async ({page, itemsPerPage, sortBy}) => {
       isExistsCurrency.value = true
     }
   } catch (error) {
-
-    if (error.response && error.response.status === 422) {
-      if (error.response.data.errors.name) {
-        showToast("Поле Наименование не может быть пустым", "warning")
-      } else if (error.response.data.errors.symbol_code) {
-        showToast("Поле символьный код не должно быть пустым", "warning")
-      } else if (error.response.data.errors.digital_code) {
-        showToast("Поле Цифровой код не может быть пустым", "warning")
-      } else {
-        showToast("Заполните все поля!", "warning");
-      }
-    }
     console.log(error);
   }
 }
 
 const update = async ({page, itemsPerPage, sortBy, search}) => {
-
+  if (validate(nameRef,symbolRef,digitalRef,) !== true) return
   const body = {
     name: nameRef.value,
     symbol_code: symbolRef.value,

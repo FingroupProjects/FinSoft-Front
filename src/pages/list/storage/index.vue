@@ -7,6 +7,7 @@ import storage from '../../../api/storage.js';
 import employee from '../../../api/employee.js';
 import organization from '../../../api/organizations.js';
 import showDate from "../../../composables/date/showDate.js";
+import validate from "./validate.js";
 import {
   addMessage,
   editMessage,
@@ -121,6 +122,7 @@ const getStorageEmployeeData = async ({page, itemsPerPage, sortBy, search}) => {
 
 
 const addStorage = async ({page, itemsPerPage, sortBy}) => {
+  if (validate(nameRef,organizationAdd) !== true) return
 try{
   const body = {
     name: nameRef.value,
@@ -165,26 +167,13 @@ try{
 
 }
 catch (error) {
-
-
-if (error.response && error.response.status === 422) {
-
-  if (error.response.data.errors.name) {
-    showToast("Поле Наименования не может быть пустым", "warning")
-  }
-
-  else if (error.response.data.errors.organization_id) {
-    showToast("Поле организации не может быть пустым", "warning")
-  }
-  else {
-    showToast("Заполните все поля!", "warning");
-  }
-}
+console.log(error);
  }
 
 }
 
 const addGroup = async ({page, itemsPerPage, sortBy}) => {
+  if(validate(groupName) !== true) return
   try{
     const body = {
       name: groupName.value
@@ -206,17 +195,7 @@ const addGroup = async ({page, itemsPerPage, sortBy}) => {
     }
   }
   catch (error) {
-
-
-if (error.response && error.response.status === 422) {
-
-  if (error.response.data.errors.name) {
-    showToast("Поле Наименования не может быть пустым", "warning")
-  }
-  else {
-    showToast("Заполните все поля!", "warning");
-  }
-}
+console.log(error);
  }
 }
 
@@ -364,6 +343,7 @@ const massRestoreEmployee = async ({page, itemsPerPage, sortBy, search}) => {
 
 
 const update = async ({page, itemsPerPage, sortBy}) => {
+  if (validate(nameRef,organizationAdd) !== true) return
 
   const body = {
     name: nameRef.value,

@@ -7,11 +7,13 @@ import {
   removeMessage,
   restoreMessage,
   selectOneItemMessage,
+  ErrorSelectMessage
 } from "../../../composables/constant/buttons.js";
 import showToast from "../../../composables/toast";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import Icons from "../../../composables/Icons/Icons.vue";
 import employee from "../../../api/employee";
+import validate from "./validate.js";
 
 const addDialog = ref(false);
 const loading = ref(true);
@@ -33,7 +35,7 @@ const directorRef = ref(null);
 const accountantRef = ref(null);
 const addressRef = ref(null);
 const descriptionRef = ref(null);
-const search = ref("");
+const search = ref(null);
 
 const rules = {
   required: (value) => !!value || "Поле обязательно для заполнения",
@@ -47,7 +49,7 @@ const headers = ref([
 const getOrganizationData = async ({ page, itemsPerPage, sortBy, search }) => {
   loading.value = true;
   try {
-    const { data } = await organization.get({ page, itemsPerPage, sortBy, search });
+    const { data } = await organization.get({ page, itemsPerPage, sortBy }, search);
     organizations.value = data.result.data.map((item) => ({
       ...item
     }));
@@ -59,9 +61,11 @@ const getOrganizationData = async ({ page, itemsPerPage, sortBy, search }) => {
 };
 
 
-const addOrganization = async ({ page, itemsPerPage, sortBy, search }) => {
-  try {
 
+const addOrganization = async ({ page, itemsPerPage, sortBy, search }) => {
+  if (validate(nameRef,innRef,directorRef,accountantRef,addressRef,descriptionRef) !== true) return
+
+  try {
     let director;
     if (typeof directorRef.value === 'object') {
       director = directorRef.value.id
@@ -97,43 +101,10 @@ const addOrganization = async ({ page, itemsPerPage, sortBy, search }) => {
       isExistsOrganization.value = true;
     }
     addDialog.value = false;
-  }
-
-  catch (error) {
-
-
-    if (error.response && error.response.status === 422) {
-
-      if (error.response.data.errors.name) {
-        showToast("Поле Наименования не может быть пустым", "warning")
-      }
-
-      else if (error.response.data.errors.INN) {
-        showToast("Поле инн должно быть не короче 12 символов", "warning")
-      }
-
-      else if (error.response.data.errors.director_id) {
-        showToast("Поле директор не может быть пустым", "warning")
-      }
-
-      else if (error.response.data.errors.chief_accountant_id) {
-        showToast("Поле гл.Бухгалтер не может быть пустым", "warning")
-      }
-
-      else if (error.response.data.errors.address) {
-        showToast("Поле адрес не может быть пустым", "warning")
-      }
-
-      else if (error.response.data.errors.description) {
-        showToast("Поле описания не может быть пустым", "warning")
-      }
-      else {
-        showToast("Заполните все поля!", "warning");
-      }
-    }
+  } catch (error) {
+    console.log(error);
   }
 };
-
 const addBasedOnOrganization = () => {
   if (markedID.value.length !== 1 && !isExistsOrganization.value) return showToast(selectOneItemMessage, 'warning')
   console.log(markedID.value.length)
@@ -159,6 +130,7 @@ const addBasedOnOrganization = () => {
 }
 
 const update = async ({ page, itemsPerPage, sortBy, search }) => {
+  if (validate(nameRef,innRef,directorRef,accountantRef,addressRef,descriptionRef) !== true) return
 
   let director;
     if (typeof directorRef.value === 'object') {
@@ -236,8 +208,22 @@ const getEmployees = async ({ page, itemsPerPage, sortBy, search }) => {
   }
 };
 
-
 const lineMarking = (item) => {
+  if (markedID.value.length > 0) {
+    const firstMarkedItem = organizations.value.find(el => el.id === markedID.value[0]);
+    if (firstMarkedItem && firstMarkedItem.deleted_at) {
+      if (item.deleted_at === null) {
+        showToast(ErrorSelectMessage, 'warning')
+        return;
+      }
+    }
+    if (firstMarkedItem && firstMarkedItem.deleted_at === null) {
+      if (item.deleted_at !== null) {
+        showToast(ErrorSelectMessage, 'warning')
+        return;
+      }
+    }
+  }
   const index = markedID.value.indexOf(item.id);
   if (index !== -1) {
     markedID.value.splice(index, 1);
