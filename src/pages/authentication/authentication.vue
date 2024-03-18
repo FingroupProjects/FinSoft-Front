@@ -13,6 +13,7 @@ const passwordError = ref(null)
 
 
 const authentication = async () => {
+  console.log(1)
   const body = {
     login: loginRef.value,
     password: passwordRef.value,
@@ -24,10 +25,12 @@ const authentication = async () => {
     if (res.status === 200) {
       setToken(res.data.token)
       setUser(res.data.user)
-      await router.push('/')
-
+      router.push('/')
+      location.reload()
     }
   } catch (e) {
+    console.log(e)
+
     if (e.response.data.errors.login) {
       loginError.value = 'Неверный логин!'
     }
