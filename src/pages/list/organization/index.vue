@@ -23,6 +23,7 @@ const valueRef = ref(null);
 const hoveredRowIndex = ref(null);
 const isExistsOrganization = ref(false);
 const organizationInDialogTitle = ref(null);
+const isDataSaved = ref(true);
 
 const organizations = ref([]);
 const paginations = ref([]);
@@ -36,6 +37,8 @@ const accountantRef = ref(null);
 const addressRef = ref(null);
 const descriptionRef = ref(null);
 const search = ref(null);
+const showConfirmDialog = ref(false);
+
 
 const rules = {
   required: (value) => !!value || "Поле обязательно для заполнения",
@@ -45,6 +48,20 @@ const headers = ref([
   { title: "№", key: "id" },
   { title: "Наименование", key: "name" },
 ]);
+
+
+const checkAndClose = () => {
+  if (nameRef.value || innRef.value || directorRef.value || accountantRef.value || addressRef.value || descriptionRef.value) {
+    showConfirmDialog.value = true;
+  } else {
+    addDialog.value = false;
+  }
+};
+
+const closeDialogWithoutSaving = () => {
+  addDialog.value = false;
+  showConfirmDialog.value = false;
+};
 
 const getOrganizationData = async ({ page, itemsPerPage, sortBy, search }) => {
   loading.value = true;
@@ -60,10 +77,30 @@ const getOrganizationData = async ({ page, itemsPerPage, sortBy, search }) => {
   }
 };
 
+const isDataChanged = () => {
+  
+  const item = organizations.value.find(item => item.id === idOrganizations.value)
+
+  const isChanged =
+    nameRef.value !== item.name ||
+    innRef.value !== item.INN ||
+    directorRef.value.id !== item.director.id ||
+    accountantRef.value.id !== item.chief_accountant.id ||
+    addressRef.value !== item.address ||
+    descriptionRef.value !== item.description;
+
+  return isChanged;
+};
+
+
 
 
 const addOrganization = async ({ page, itemsPerPage, sortBy, search }) => {
-  if (validate(nameRef,innRef,directorRef,accountantRef,addressRef,descriptionRef) !== true) return
+  if (!isDataChanged()) {
+    addDialog.value = false;
+    return;
+  }
+  if (validate(nameRef, innRef, directorRef, accountantRef, addressRef, descriptionRef) !== true) return
 
   try {
     let director;
@@ -89,7 +126,6 @@ const addOrganization = async ({ page, itemsPerPage, sortBy, search }) => {
       description: descriptionRef.value,
     };
 
-    console.log(body);
     const res = await organization.add(body);
     if (res.status === 201) {
       await getOrganizationData({ page, itemsPerPage, sortBy, search });
@@ -99,15 +135,16 @@ const addOrganization = async ({ page, itemsPerPage, sortBy, search }) => {
       organizationInDialogTitle.value = res.data.result.name;
       markedID.value.push(res.data.result.id);
       isExistsOrganization.value = true;
+      
+      isDataSaved.value = true;
     }
     addDialog.value = false;
   } catch (error) {
-    console.log(error);
   }
 };
+
 const addBasedOnOrganization = () => {
   if (markedID.value.length !== 1 && !isExistsOrganization.value) return showToast(selectOneItemMessage, 'warning')
-  console.log(markedID.value.length)
   addDialog.value = true
  
   organizations.value.forEach(item => {
@@ -130,6 +167,11 @@ const addBasedOnOrganization = () => {
 }
 
 const update = async ({ page, itemsPerPage, sortBy, search }) => {
+  console.log(isDataChanged());
+  if(isDataChanged() === true){
+      showConfirmDialog.value = true
+      return
+  }
   if (validate(nameRef,innRef,directorRef,accountantRef,addressRef,descriptionRef) !== true) return
 
   let director;
@@ -155,7 +197,6 @@ const update = async ({ page, itemsPerPage, sortBy, search }) => {
     description: descriptionRef.value,
   }
 
-  console.log(body);
   try {
     const { status } = await organization.update(idOrganizations.value, body);
     if (status === 200) {
@@ -164,14 +205,12 @@ const update = async ({ page, itemsPerPage, sortBy, search }) => {
     }
     addDialog.value = false;
   } catch (e) {
-    console.log(e);
   }
 };
 
 const openDialog = (item) => {
   addDialog.value = true;
   if (item === 0) {
-
     idOrganizations.value = 0;
     isExistsOrganization.value = false;
   } else {
@@ -193,6 +232,8 @@ const openDialog = (item) => {
     descriptionRef.value = item.description;
     organizationInDialogTitle.value = nameRef.value;
   }
+
+  isDataSaved.value = true;
 };
 
 const getEmployees = async ({ page, itemsPerPage, sortBy, search }) => {
@@ -202,7 +243,6 @@ const getEmployees = async ({ page, itemsPerPage, sortBy, search }) => {
       id: item.id,
       name: item.name
     }));
-    console.log(employees.value);
   } catch (error) {
     console.error(error);
   }
@@ -250,7 +290,6 @@ const restore = async ({ page, itemsPerPage, sortBy }) => {
       markedID.value = [];
     }
   } catch (e) {
-    console.log(e);
   }
 };
 
@@ -264,7 +303,6 @@ const remove = async ({ page, itemsPerPage, sortBy, search }) => {
       markedID.value = [];
     }
   } catch (e) {
-    console.log(e);
   }
 };
 
@@ -300,11 +338,12 @@ onMounted(async () => {
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons @click="openDialog(0)" name="add" />
-              <Icons name="copy" @click="addBasedOnOrganization"/>
+              <Icons @click="openDialog(0)" name="add" title="Создать"/>
+              <Icons name="copy" @click="addBasedOnOrganization" title="Скопировать"/>
               <Icons
                 @click="compute"
                 name="delete"
+                title="Удалить"
               />
             </div>
 
@@ -411,7 +450,7 @@ onMounted(async () => {
                 <Icons v-else @click="addOrganization" name="save" />
               </div>
               <v-btn
-                @click="addDialog = false"
+                @click="isExistsOrganization ? update({ page, itemsPerPage, sortBy, search }) : checkAndClose({ page, itemsPerPage, sortBy, search }) "
                 variant="text"
                 :size="32"
                 class="pt-2 pl-1"
@@ -438,6 +477,7 @@ onMounted(async () => {
                 />
                 <v-text-field
                   v-model="innRef"
+                  :rules="[rules.required]"
                   color="green"
                   rounded="lg"
                   variant="outlined"
@@ -450,6 +490,7 @@ onMounted(async () => {
                 />
                 <v-select
                   v-model="directorRef"
+                  :rules="[rules.required]"
                   :items="employees"
                   rounded="lg"
                   item-title="name"
@@ -459,6 +500,7 @@ onMounted(async () => {
                 ></v-select>
                 <v-select
                   v-model="accountantRef"
+                  :rules="[rules.required]" 
                   :items="employees"
                   rounded="lg"
                   item-title="name"
@@ -468,6 +510,7 @@ onMounted(async () => {
                 ></v-select>
                 <v-text-field
                   v-model="addressRef"
+                  :rules="[rules.required]"
                   color="green"
                   rounded="lg"
                   variant="outlined"
@@ -496,7 +539,26 @@ onMounted(async () => {
           </v-form>
         </v-card>
       </v-dialog>
-    </v-card>
+      <v-dialog style="min-width: 300px;"  v-model="showConfirmDialog" persistent>
+  <v-card style="max-width: 400px;" class="mx-auto flex flex-col">
+    <v-card-title class="text-h6"
+    >Подтверждение</v-card-title>
+    <v-card-text class="text-subtitle-1">Вы точно хотите закрыть? Если да, то введенные данные не будут сохранены.</v-card-text>
+    <v-card-actions>
+      <v-btn @click="showConfirmDialog = false"
+        class="text-none mb-4 w-[200px] h-[20px]"
+        color="red"
+        variant="flat"
+      >Нет</v-btn>
+      <v-btn @click="closeDialogWithoutSaving"
+        class="text-none mb-4 w-[200px] h-[20px]"
+        color="green"
+        variant="flat"
+      >Да</v-btn>
+    </v-card-actions>
+  </v-card>
+</v-dialog>
+    </v-card> 
   </div>
 </template>
 
