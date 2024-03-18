@@ -23,6 +23,7 @@ const router = useRouter()
 const loading = ref(true)
 const loadingRate = ref(true)
 const dialog = ref(false)
+const filterModal = ref(false)
 const idPriceType = ref(null)
 const hoveredRowIndex = ref(null)
 
@@ -60,6 +61,25 @@ const getPriceTypeData = async ({page, itemsPerPage, sortBy, search}) => {
     paginations.value = data.result.pagination
     priceTypes.value = data.result.data
     loading.value = false
+  } catch (e) {
+  }
+}
+
+
+const filter = async ({page, itemsPerPage, sortBy, search}) => {
+  const body = {
+    currency_id: currencyAdd.value
+  }
+
+
+  try {
+    const { res } = await priceType.filter(body)
+    console.log(res)
+    if (res.status === 200) {
+      getPriceTypeData({page, itemsPerPage, sortBy, search})
+    }
+
+    filterModal.value = false
   } catch (e) {
   }
 }
@@ -308,7 +328,7 @@ onMounted(async () => {
 
             </div>
           </div>
-          <Icons name="filter" class="mt-1"/>
+          <Icons name="filter" @click="filterModal = true" class="mt-1"/>
         </v-card>
       </div>
 
@@ -418,6 +438,49 @@ onMounted(async () => {
           </v-card>
         </v-dialog>
       </v-card>
+<v-card>
+        <v-dialog class="mt-2 pa-2" v-model="filterModal">
+          <v-card style="border: 2px solid #3AB700" min-width="450"
+                  class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
+            <div class="d-flex justify-space-between align-center mb-2">
+              <span>Фильтр</span>
+              <div class="d-flex align-center justify-space-between">
+                <div class="d-flex ga-3 align-center mt-2 me-4">
+                  <Icons @click="filter" name="save"/>
+                </div>
+                <v-btn @click="filterModal = false" variant="text" :size="32" class="pt-2 pl-1">
+                  <Icons name="close"/>
+                </v-btn>
+              </div>
+            </div>
+            <v-form class="d-flex w-100">
+              <v-row class="w-100">
+                <v-col class="d-flex flex-column w-100">
+                
+                  <div class="d-flex ga-2 mb-3">
+                  
+                    <v-select
+                        v-model="currencyAdd"
+                        :items="currencies"
+                        item-title="name"
+                        item-value="id"
+                        :rules="[rules.required]"
+                        label="Валюта"
+                        variant="outlined"
+                        density="compact"
+                        hide-details
+                    />
+                  </div>
+                                
+                </v-col>
+              </v-row>
+            </v-form>
+          </v-card>
+        </v-dialog>
+      </v-card>
+
+
+
     </v-col>
   </div>
 

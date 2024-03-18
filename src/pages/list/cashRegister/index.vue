@@ -7,6 +7,7 @@ import cashRegister from '../../../api/cashRegister.js';
 import currency from '../../../api/currency.js';
 import organization from '../../../api/organizations.js';
 import employee from '../../../api/employee.js';
+import validate from "./validate.js"
 import {
   addMessage,
   editMessage,
@@ -30,14 +31,14 @@ const digitalRef = ref(null)
 const idCashRegister = ref(null)
 const hoveredRowIndex = ref(null)
 
-const employeeAdd = ref([])
-const employeeUpdate = ref([])
+const employeeAdd = ref(null)
+const employeeUpdate = ref(null)
 
-const organizationAdd = ref([])
-const organizationUpdate = ref([])
+const organizationAdd = ref(null)
+const organizationUpdate = ref(null)
 
-const currencyAdd = ref([])
-const currencyUpdate = ref([])
+const currencyAdd = ref(null)
+const currencyUpdate = ref(null)
 
 const employees = ref([])
 const currencies = ref([])
@@ -92,6 +93,10 @@ const addcashRegister = async ({page, itemsPerPage, sortBy}) => {
     organization_id: organizationAdd.value,
     responsible_person_id: employeeAdd.value
   }
+  console.log(employeeAdd.value)
+
+  if (validate(nameRef, organizationAdd, currencyAdd, employeeAdd ) !== true) return
+
 
     const res = await cashRegister.add(body)
 
