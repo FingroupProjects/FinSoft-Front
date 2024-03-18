@@ -122,6 +122,11 @@ const routes = [
       hideSideBarAndHeader: true,
     },
   },
+  {
+    path: '/:catchAll(.*)',
+    name: '404',
+    component: () => import("../pages/homepage/index.vue")
+  }
 ];
 
 routes.forEach((route) => {

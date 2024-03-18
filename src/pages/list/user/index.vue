@@ -77,13 +77,6 @@ const getGroup = async ({page, itemsPerPage, sortBy, search}) => {
       id: item.id,
       name: item.name
     }))
-    // data.result.data.map(item => {
-    //   users.value = item.users.map(el => ({
-    //     id: el.id,
-    //     name: el.name,
-    //     group_id: el.group_id
-    //   }))
-    // })
   } catch (e) {
     console.log(e)
   } finally {
@@ -337,17 +330,13 @@ const lineMarking = item => {
   if (markedID.value.length > 0) {
     const firstMarkedItem = users.value.find(el => el.id === markedID.value[0])
 
-    if (firstMarkedItem && firstMarkedItem.deleted_at) {
-      if (item.deleted_at === null) {
-        showToast(ErrorSelectMessage, 'warning')
-        return
-      }
+    if (firstMarkedItem && firstMarkedItem.deleted_at && item.deleted_at === null) {
+      showToast(ErrorSelectMessage, 'warning')
+      return
     }
-    if (firstMarkedItem && firstMarkedItem.deleted_at === null) {
-      if (item.deleted_at !== null) {
-        showToast(ErrorSelectMessage, 'warning')
-        return
-      }
+    if (firstMarkedItem && firstMarkedItem.deleted_at === null && item.deleted_at !== null) {
+      showToast(ErrorSelectMessage, 'warning')
+      return
     }
   }
 
