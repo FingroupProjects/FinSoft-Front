@@ -1,8 +1,11 @@
 import {api, buildParams} from './api.js'
 
 export default {
-  getAll({page = 1, itemsPerPage = 25, sortBy}, search) {
-    const params = buildParams(page, itemsPerPage, sortBy, search);
+  getAll({page = 1, itemsPerPage = 25, sortBy}, search, filterData) {
+    
+    const params = buildParams(page, itemsPerPage, sortBy, search, filterData);
+    
+  
     return api.get('/organizationBill', { params })
   },
   getById(id) {
@@ -23,6 +26,10 @@ export default {
   restore(data) {
     return api.post('/organizationBill/massRestore/', data);
   },
+  filter(body) 
+  {
+    return api.get('/organizationBill/filter', body)
+  }
 
 
 }
