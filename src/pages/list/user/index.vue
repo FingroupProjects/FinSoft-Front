@@ -340,9 +340,9 @@ const lineMarking = item => {
     }
   }
 
-  const index = markedID.value.indexOf(item.id);
+  const index = markedID.value.indexOf(item.id)
   if (index !== -1) {
-    markedID.value.splice(index, 1);
+    markedID.value.splice(index, 1)
   } else {
     markedID.value.push(item.id);
   }
@@ -423,7 +423,7 @@ onMounted(async () =>  {
           <Icons name="filter" class="mt-1"/>
         </v-card>
       </div>
-      <div class="d-flex ga-4">
+      <div class="d-flex ga-4 w-100">
         <v-card class="mt-2 table">
           <v-data-table-server
               style="height: 78vh;"
@@ -459,7 +459,7 @@ onMounted(async () =>  {
             </template>
           </v-data-table-server>
         </v-card>
-        <v-card class="mt-2 table">
+        <v-card class="mt-2 table w-100">
           <v-data-table-server
               style="height: 78vh"
               items-per-page-text="Элементов на странице:"

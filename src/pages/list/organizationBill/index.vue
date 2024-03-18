@@ -380,8 +380,7 @@ onMounted(async () => {
               ></v-text-field>
             </div>
           </div>
-          <Icons name="filter"   @click="filterModal = true" class="mt-1"/>
-          <span  style="color: red;">1</span>
+          <Icons name="filter" @click="filterModal = true" class="mt-1"/>
         </v-card>
       </div>
 
