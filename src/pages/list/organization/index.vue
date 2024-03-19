@@ -539,7 +539,7 @@ onMounted(async () => {
           </v-form>
         </v-card>
       </v-dialog>
-      <v-dialog style="min-width: 300px;"  v-model="showConfirmDialog" persistent>
+ <v-dialog style="min-width: 300px;"  v-model="showConfirmDialog" persistent>
   <v-card style="max-width: 400px;" class="mx-auto flex flex-col">
     <v-card-title class="text-h6"
     >Подтверждение</v-card-title>
