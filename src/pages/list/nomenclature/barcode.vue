@@ -1,42 +1,91 @@
 <script setup>
 import { onMounted, ref } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import Icons from "../../../composables/Icons/Icons.vue";
 import barcodeApi from "../../../api/barcode";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
+import showToast from "../../../composables/toast";
 import {
   ErrorSelectMessage,
   removeMessage,
   restoreMessage,
   selectOneItemMessage,
+  addMessage,
+  editMessage,
 } from "../../../composables/constant/buttons.js";
 
+const router = useRouter();
 const route = useRoute();
+const props = defineProps(["isCreated"]);
 
 const pagination = ref([]);
 const barcodes = ref([]);
 const markedID = ref([]);
 const markedItem = ref([]);
 
+const isEdit = ref(false);
 const addBarcode = ref(false);
 const loading = ref(true);
 
 const hoveredRowIndex = ref(null);
 
 const id = ref(null);
+const barcodeId = ref(null);
 
-const name = ref("");
+const barcode = ref("");
 
 const rules = {
   required: (v) => !!v,
 };
 
+const editItem = (id) => {
+  isEdit.value = true;
+  barcodeId.value = id;
+  getBarcodeById(id, { page: 1, itemsPerPage: 100 });
+};
+
+const getBarcodeById = async (id, { page, itemsPerPage, sortBy, search }) => {
+  try {
+    const { data } = await barcodeApi.getBarcodeById(
+      id,
+      { page, itemsPerPage, sortBy },
+      search
+    );
+    barcode.value = data.result.barcode;
+    isEdit.value = true;
+    addBarcode.value = true;
+  } catch (e) {
+    console.log(e);
+  }
+};
+
 const createBarcode = async () => {
   try {
+    const body = {
+      good_id: id.value,
+      barcode: barcode.value,
+    };
     loading.value = true;
-    const { data } = await barcodeApi.create(name.value);
+    await barcodeApi.create(body);
+    showToast(addMessage);
+    addBarcode.value = false;
     loading.value = false;
-    console.log(data);
+    await getBarcodes({ page: 1, itemsPerPage: 100 });
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+const updateBarcode = async () => {
+  try {
+    const body = {
+      good_id: id.value,
+      barcode: barcode.value,
+    };
+    const res = await barcodeApi.update(barcodeId.value, body);
+    showToast(editMessage, "green");
+    addBarcode.value = false;
+    await getBarcodes({ page: 1, itemsPerPage: 100 });
   } catch (e) {
     console.log(e);
   }
@@ -49,13 +98,12 @@ const getBarcodes = async ({ page, itemsPerPage, sortBy, search }) => {
   try {
     loading.value = true;
     const { data } = await barcodeApi.getById(
-      1,
+      route.params.id,
       { page, itemsPerPage, sortBy },
       search
     );
     loading.value = false;
-    barcodes.value = data.result;
-    console.log(data);
+    barcodes.value = data.result.data;
   } catch (e) {
     console.log(e);
   }
@@ -127,9 +175,9 @@ const restore = async ({ page, itemsPerPage, sortBy }) => {
 
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
   if (markedItem.value.deleted_at) {
-    return massRestoreCounterparty({ page, itemsPerPage, sortBy });
+    return restore({ page, itemsPerPage, sortBy });
   } else {
-    return massDel({ page, itemsPerPage, sortBy, search });
+    return del({ page, itemsPerPage, sortBy, search });
   }
 };
 
@@ -146,7 +194,7 @@ onMounted(async () => {
           <span>Штрих - код</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
-          <div v-if="barcodes.length >= 0" class="d-flex ga-2 mt-2 me-3">
+          <div class="d-flex ga-2 mt-2 me-3">
             <Icons @click="addBarcode = true" name="add" />
             <Icons
               @click="compute({ page, itemsPerPage, sortBy })"
@@ -158,7 +206,7 @@ onMounted(async () => {
 
       <v-card class="table mt-2">
         <v-data-table-server
-          style="height: 20vh"
+          style="height: 30vh"
           fixed-header
           :items="barcodes"
           :headers="headers"
@@ -227,10 +275,13 @@ onMounted(async () => {
         rounded="xl"
       >
         <div class="d-flex justify-space-between align-center mb-2">
-          <span>Добавление</span>
+          <span>{{ isEdit ? "Изменение" : "Добавление" }}</span>
           <div class="d-flex align-center justify-space-between">
             <div class="d-flex align-center mt-2 me-4">
-              <Icons name="save" />
+              <Icons
+                @click="isEdit ? updateBarcode() : createBarcode()"
+                name="save"
+              />
             </div>
             <v-btn
               @click="dialog = false"
@@ -246,7 +297,7 @@ onMounted(async () => {
           <v-row class="w-100">
             <v-col class="d-flex flex-column w-100"
               ><v-text-field
-                v-model="name"
+                v-model="barcode"
                 :rules="[rules.required]"
                 color="green"
                 rounded="md"

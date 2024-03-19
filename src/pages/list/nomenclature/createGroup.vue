@@ -1,5 +1,5 @@
 <script setup>
-import { ref, defineEmits, onMounted } from "vue";
+import { ref, defineEmits, onMounted, watch } from "vue";
 import groupApi from "../../../api/goodGroup";
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
@@ -27,6 +27,10 @@ const createGroup = async () => {
       showToast("Поле Наименование не может быть пустым", "warning");
       return;
     }
+    if (is_good.value === false && is_service.value === false) {
+      showToast("Выберите тип группы", "warning");
+      return;
+    }
     await groupApi.create(body);
     showToast(addMessage, "green");
     emit("toggleDialog");
@@ -36,6 +40,15 @@ const createGroup = async () => {
     isValid.value = false;
   }
 };
+
+watch(
+  () => dialog.value,
+  (newValue) => {
+    if (newValue === false) {
+      emit("toggleDialog");
+    }
+  }
+);
 
 const rules = {
   required: (v) => !!v,
