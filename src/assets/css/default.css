@@ -37,6 +37,10 @@ label {
   font-size: 14px !important;
 }
 
+input {
+  border-color: #00acc1 !important;
+}
+
 .group_create {
   background-color: #4ecb71;
   border-radius: 12px;

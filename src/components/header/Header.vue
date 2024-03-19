@@ -38,7 +38,7 @@ const listProfile = async (item) => {
 }
 
 onMounted(() => {
-  getOrganizationName()
+  // getOrganizationName()
   window.addEventListener('keydown', handleKeyDown);
 })
 

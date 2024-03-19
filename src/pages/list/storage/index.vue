@@ -7,7 +7,7 @@ import storage from '../../../api/storage.js';
 import employee from '../../../api/employee.js';
 import organization from '../../../api/organizations.js';
 import showDate from "../../../composables/date/showDate.js";
-import validate from "./validate.js";
+
 import {
   addMessage,
   editMessage,
@@ -19,6 +19,8 @@ import {
 import Icons from "@/composables/Icons/Icons.vue";
 
 import {restoreMessage} from "../../../composables/constant/buttons.js";
+import storageGroup from "../../../api/storageGroup.js";
+import {STORAGE_GROUP} from "../../../composables/constant/paramsApi.js";
 
 const router = useRouter()
 const groupDialog = ref(false)
@@ -122,81 +124,72 @@ const getStorageEmployeeData = async ({page, itemsPerPage, sortBy, search}) => {
 
 
 const addStorage = async ({page, itemsPerPage, sortBy}) => {
-  if (validate(nameRef,organizationAdd) !== true) return
-try{
-  const body = {
-    name: nameRef.value,
-    organization_id: organizationAdd.value,
-    storage_data: [],
+  if (!groupName.value) {
+    return showToast("Поле наименования не может быть пустым", "warning")
   }
-
+  if (!nameRef.value) {
+    return showToast("Поле Название не может быть пустым", "warning")
+  }
   try {
-  const res = await storage.add(body)
-
-
-  if (res.status === 201) {
-    await getStorageData({page, itemsPerPage, sortBy})
-    showToast(addMessage)
-    valueRef.value = null
-    organizationAdd.value = null
-    employeeAdd.value = null
-    idStorage.value = res.data.result.id
-    dialog.value = false
-
-    markedID.value = []
-    markedItem.value = []
-
-  }
-  } catch (error) {
-
-    let showToastFlag = true;
-
-    if (error.response && error.response.status === 422) {
-      if (error.response.data.errors.name && showToastFlag) {
-        showToast(error.response.data.errors.name[0], "warning")
-        showToastFlag = false;
-      }
-
-      if (error.response.data.errors.organization_id && showToastFlag) {
-        showToast(error.response.data.errors.organization_id[0], "warning")
-        showToastFlag = false;
-      }
-    }
-
-  }
-
-}
-catch (error) {
-console.log(error);
- }
-
-}
-
-const addGroup = async ({page, itemsPerPage, sortBy}) => {
-  if(validate(groupName) !== true) return
-  try{
     const body = {
-      name: groupName.value
+      name: nameRef.value,
+      organization_id: organizationAdd.value,
+      storage_data: [],
     }
-  
-  
-    const res = await storage.group(body)
-  
+
+    try {
+      const res = await storage.add(body)
+      if (res.status === 201) {
+        await getStorageData({page, itemsPerPage, sortBy})
+        showToast(addMessage)
+        valueRef.value = null
+        organizationAdd.value = null
+        employeeAdd.value = null
+        idStorage.value = res.data.result.id
+        dialog.value = false
+
+        markedID.value = []
+        markedItem.value = []
+
+      }
+    } catch (error) {
+
+      let showToastFlag = true;
+
+      if (error.response && error.response.status === 422) {
+        if (error.response.data.errors.name && showToastFlag) {
+          showToast(error.response.data.errors.name[0], "warning")
+          showToastFlag = false;
+        }
+
+        if (error.response.data.errors.organization_id && showToastFlag) {
+          showToast(error.response.data.errors.organization_id[0], "warning")
+          showToastFlag = false;
+        }
+      }
+
+    }
+
+  } catch (error) {
+    console.log(error);
+  }
+
+}
+
+const addGroup = async () => {
+  if (!groupName.value) {
+    return showToast("Поле наименования не может быть пустым", "warning")
+  }
+  try {
+    const res = await storageGroup.add({name: groupName.value, type: STORAGE_GROUP},)
     if (res.status === 201) {
-      await getStorageData({page, itemsPerPage, sortBy})
       showToast(addMessage)
       groupName.value = null
-  
       groupDialog.value = false
-  
-      markedID.value = []
-      markedItem.value = []
-  
     }
+  } catch (error) {
+    console.log(error);
   }
-  catch (error) {
-console.log(error);
- }
 }
 
 const addStorageEmployee = async ({page, itemsPerPage, sortBy}) => {
@@ -208,23 +201,23 @@ const addStorageEmployee = async ({page, itemsPerPage, sortBy}) => {
   }
 
 
-  try{
+  try {
 
-  const res = await storage.addStorageEmployee(idStorage.value, body)
+    const res = await storage.addStorageEmployee(idStorage.value, body)
 
-  if (res.status === 201) {
-    await getStorageEmployeeData({page, itemsPerPage, sortBy})
-    showToast(addMessage)
-    employeeAdd.value = null;
-    startDateRef.value = null;
-    endDateRef.value = null;
-    idStorage.value = res.data.result.id
-    dataDialog.value = false
+    if (res.status === 201) {
+      await getStorageEmployeeData({page, itemsPerPage, sortBy})
+      showToast(addMessage)
+      employeeAdd.value = null;
+      startDateRef.value = null;
+      endDateRef.value = null;
+      idStorage.value = res.data.result.id
+      dataDialog.value = false
 
-    markedID.value = []
-    markedItem.value = []
+      markedID.value = []
+      markedItem.value = []
 
-  }
+    }
   } catch (error) {
 
     let showToastFlag = true;
@@ -292,9 +285,6 @@ const massRestore = async ({page, itemsPerPage, sortBy, search}) => {
 }
 
 
-
-
-
 const massDelEmployee = async ({page, itemsPerPage, sortBy, search}) => {
   const body = {
     ids: markedEmployeeID.value
@@ -337,13 +327,13 @@ const massRestoreEmployee = async ({page, itemsPerPage, sortBy, search}) => {
 }
 
 
-
-
-
-
-
 const update = async ({page, itemsPerPage, sortBy}) => {
-  if (validate(nameRef,organizationAdd) !== true) return
+  if (!groupName.value) {
+    return showToast("Поле наименования не может быть пустым", "warning")
+  }
+  if (!nameRef.value) {
+    return showToast("Поле Название не может быть пустым", "warning")
+  }
 
   const body = {
     name: nameRef.value,
@@ -374,7 +364,7 @@ const updateEmployee = async ({page, itemsPerPage, sortBy}) => {
   const body = {
     employee_id: employeeAdd.value,
     from: startDateRef.value,
-    to:  endDateRef.value
+    to: endDateRef.value
   }
 
   try {
@@ -429,7 +419,7 @@ const restore = async ({page, itemsPerPage, sortBy}) => {
 
 const getEmployee = async () => {
   try {
-    const {data} = await employee.get({page:1, itemsPerPage: 100})
+    const {data} = await employee.get({page: 1, itemsPerPage: 100})
     employees.value = data.result.data.map(item => {
       return {
         id: item.id,
@@ -479,7 +469,6 @@ const openDialog = (item) => {
   if (markedID.value.length > 1) {
     return showToast(selectOneItemMessage, 'warning');
   }
-
 
 
   dialog.value = true
@@ -556,7 +545,6 @@ const editDialogStorageData = (item) => {
   } else {
 
 
-
     idStorageEmployee.value = item.id
 
     employeeAdd.value = item.employee.id
@@ -628,11 +616,8 @@ const employeeLineMarking = (item) => {
   } else {
     markedEmployeeID.value.push(item.id);
   }
-  markedItem.value = item;
-
-
+  markedItem.value = item
 }
-
 
 watch(dialog, newVal => {
   if (!newVal) {
@@ -672,8 +657,8 @@ watch(dialog, newVal => {
               >
                 <span class="px-2 py-0">создать группу</span>
               </button>
-              <Icons @click="openDialog(0)" name="add" />
-              <Icons name="copy" @click="addBasedOnStorage" />
+              <Icons @click="openDialog(0)" name="add"/>
+              <Icons name="copy" @click="addBasedOnStorage"/>
               <Icons
                   @click="compute"
                   name="delete"
@@ -703,6 +688,45 @@ watch(dialog, newVal => {
         </v-card>
       </div>
 
+      <v-card class="mt-2 table">
+        <v-data-table-server
+            style="height: 78vh"
+            items-per-page-text="Элементов на странице:"
+            loading-text="Загрузка"
+            no-data-text="Нет данных"
+            v-model:items-per-page="paginations.per_page"
+            :loading="loading"
+            :headers="headers"
+            :items-length="paginations.total || 0"
+            :items="storages"
+            :item-value="headers.title"
+            :search="search"
+            @update:options="getStorageData"
+            fixed-header
+            hover
+        >
+          <template v-slot:item="{ item, index }">
+            <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)"
+                @dblclick="openDialog(item)"
+                :class="{'bg-grey-lighten-2': markedID.includes(item.id) }">
+              <td class="">
+                <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
+                  <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)"
+                                  @change="handleCheckboxClick(item)">
+                    <span>{{ index + 1 }}</span>
+                  </CustomCheckbox>
+                </template>
+                <template v-else>
+                  <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
+                  <span>{{ index + 1 }}</span>
+                </template>
+              </td>
+              <td>{{ item.name }}</td>
+
+            </tr>
+          </template>
+        </v-data-table-server>
+      </v-card>
       <v-card class="mt-2 table">
         <v-data-table-server
             style="height: 78vh"
@@ -897,8 +921,9 @@ watch(dialog, newVal => {
         </v-dialog>
       </v-card>
       <v-card>
-        <v-dialog class="mt-2 pa-2"  v-model="groupDialog">
-          <v-card style="border: 2px solid #3AB700" min-width="300" class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
+        <v-dialog class="mt-2 pa-2" v-model="groupDialog">
+          <v-card style="border: 2px solid #3AB700" min-width="300"
+                  class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
               <span>Добавление</span>
               <div class="d-flex align-center justify-space-between">
@@ -907,8 +932,8 @@ watch(dialog, newVal => {
                   <Icons v-if="isExistsGroup" @click="update" name="save"/>
                   <Icons v-else @click="addGroup" name="save"/>
                 </div>
-                <v-btn @click="groupDialog = false"  variant="text" :size="32" class="pt-2 pl-1">
-                  <Icons name="close" />
+                <v-btn @click="groupDialog = false" variant="text" :size="32" class="pt-2 pl-1">
+                  <Icons name="close"/>
                 </v-btn>
               </div>
             </div>

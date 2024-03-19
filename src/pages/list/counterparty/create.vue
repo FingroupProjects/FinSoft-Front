@@ -318,16 +318,6 @@ const getDocuments = async ({ page, itemsPerPage, sortBy, search }) => {
         date: showDate(item.date),
       }));
       pagination.value = data.result.pagination;
-    } else {
-      const { data } = await counterpartyAgreement.get(
-        { page, itemsPerPage, sortBy },
-        search
-      );
-      result.value = data.result.data.map((item) => ({
-        ...item,
-        date: showDate(item.date),
-      }));
-      pagination.value = data.result.pagination;
     }
 
     loading.value = false;
