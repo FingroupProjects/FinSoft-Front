@@ -10,8 +10,9 @@ export default {
   update(id, body) {
     return api.patch(`/currency/${id}`, body)
   },
-  get({page = 1, itemsPerPage = 10, sortBy}, search = '') {
-    const params = buildParams(page, itemsPerPage, sortBy, search);
+  get({page = 1, itemsPerPage = 10, sortBy}, search = '', filter) {
+    const params = buildParams(page, itemsPerPage, sortBy, search, filter);
+    console.log(params);
     return api.get('/currency', { params });
   },
   remove(ids) {
