@@ -24,10 +24,11 @@ const authentication = async () => {
     if (res.status === 200) {
       setToken(res.data.token)
       setUser(res.data.user)
-      await router.push('/')
-
+      router.push('/')
     }
   } catch (e) {
+    console.log(e)
+
     if (e.response.data.errors.login) {
       loginError.value = 'Неверный логин!'
     }

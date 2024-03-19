@@ -28,15 +28,17 @@ const listProfile = async (item) => {
   }
 
   if (item === 'logout') {
-    await router.push('/login')
-    await auth.logout()
-    deleteUser()
-    deleteToken()
+    const res = await auth.logout()
+    if (res.status === 200) {
+      deleteUser()
+      deleteToken()
+      router.push('/login')
+    }
   }
 }
 
 onMounted(() => {
-  getOrganizationName()
+  // getOrganizationName()
   window.addEventListener('keydown', handleKeyDown);
 })
 

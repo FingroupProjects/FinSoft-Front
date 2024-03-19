@@ -8,6 +8,9 @@ export default {
     const params = buildParams(page, itemsPerPage, sortBy, search);
     return api.get('/priceType', { params });
   },
+  filter(body) {
+    return api.get('/priceType/filter', body);
+  },
   update(id, body) {
     return api.patch(`/priceType/${id}`, body)
   },

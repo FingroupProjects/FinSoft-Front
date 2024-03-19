@@ -38,19 +38,11 @@ export default {
   massRestoreEmployee(data) {
     return api.post('/storage/massRestoreEmployee', data)
   },
-
-
-
   showEmployee(id) {
     return api.get(`/storage/${id}`)
   },
 
-
   delete(id) {
     return api.delete(`/storage/${id}`)
   },
-
-  group(data) {
-    return api.post('/group', data)
-  }
 }

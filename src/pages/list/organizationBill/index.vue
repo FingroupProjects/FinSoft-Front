@@ -27,6 +27,7 @@ const dialog = ref(false)
 const idOrganizationBill = ref(null)
 const hoveredRowIndex = ref(null)
 const name = ref(null)
+const filterModal = ref(false);
 const dateRef = ref(null)
 const bill_number = ref(null)
 const isValid = ref(null)
@@ -47,22 +48,37 @@ const nameRef = ref(null)
 const descriptionRef = ref(null)
 const organizationBills = ref([])
 const paginations = ref([])
+const showConfirmDialog = ref(false)
+
+//filter
+const nameFilter = ref(null)
+const currencyFilter = ref(null)
+const dateFilter = ref(null)
+const bill_numberFilter = ref(null)
+const organizationFilter = ref(null)
+const commentFilter = ref(null)
+
 
 const headers = ref([
   {title: '№', key: 'id', align: 'start'},
   {title: 'Наименование', key: 'name'},
-  {title: 'Баланс', key: 'name'},
+  {title: 'Баланс', key: 'name', sortable: false},
+  {title: 'Организация', key: 'organization.name'},
+  {title: 'Валюта', key: 'currency.name'},
+  
 ])
 
 const rules = {
   required: v => !!v,
-}
+} 
 
 
-const getOrganizationBillData = async ({page, itemsPerPage, sortBy, search}) => {
+const getOrganizationBillData = async ({page, itemsPerPage, sortBy, search, filterData}) => {
+  console.log(filterData)
   loading.value = true
   try {
-    const { data } = await organizationBill.getAll({page, itemsPerPage, sortBy}, search)
+    
+    const { data } = await organizationBill.getAll({page, itemsPerPage, sortBy}, search, filterData )
 
     paginations.value = data.result.pagination
     organizationBills.value = data.result.data.map(item => ({
@@ -74,6 +90,25 @@ const getOrganizationBillData = async ({page, itemsPerPage, sortBy, search}) => 
   }
 }
 
+
+const filter = async ({page, itemsPerPage, sortBy, search}) => {
+  loading.value = true
+  const filterData = {
+    name: nameFilter.value,
+    organization_id: organizationFilter.value,
+    currency_id: currencyFilter.value,
+    bill_number: bill_numberFilter.value,
+    date: dateFilter.value,
+    comment: commentFilter.value
+  }
+
+  try {
+    await getOrganizationBillData({page, itemsPerPage, sortBy, search, filterData})
+    filterModal.value = false
+  } catch (e) {
+    
+  }
+}
 
 const addOrganizationBill = async ({page, itemsPerPage, sortBy}) => {
 
@@ -142,9 +177,27 @@ const restore = async ({page, itemsPerPage, sortBy, search}) => {
 
   }
 }
+const isDataChanged = () => {
+  
+  const item = organizationBills.value.find(item => item.id === idOrganizationBill.value)
+
+  const isChanged =
+    nameRef.value !== item.name ||
+    bill_number.value !== item.bill_number ||
+    currencyAdd.value !== item.currency.id ||
+    organizationAdd.value !== item.organization.id ||
+    comment.value !== item.comment ||
+    showDate(dateRef.value) !== item.date;
+
+
+
+  return isChanged;
+};
+
 
 
 const update = async ({page, itemsPerPage, sortBy}) => {
+
 
   const body = {
     name: nameRef.value,
@@ -270,6 +323,14 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
   }
 }
 
+
+
+const  closeFilterModal = async ({page, itemsPerPage, sortBy, search, filterData}) => {
+  filterModal.value = false
+  await getOrganizationBillData({page, itemsPerPage, sortBy, search, filterData})
+  
+}
+
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
     const firstMarkedItem = organizationBills.value.find(el => el.id === markedID.value[0]);
@@ -296,14 +357,36 @@ const lineMarking = (item) => {
   markedItem.value = item;
 }
 
+const closeDialogWithoutSaving = () => {
+  dialog.value = false;
+  showConfirmDialog.value = false;
+};
 
-watch(dialog, newVal => {
-  if (!newVal) {
+const checkUpdate = () => {
+    if(isDataChanged() === true){
+      showConfirmDialog.value = true
+    }
+    else {
+      dialog.value = false
+    }
+}
 
 
-    loadingRate.value = true
+const checkAndClose = () => {
+  if (nameRef.value || organizationBill.value || currencyAdd.value || organizationAdd.value || dateRef.value || descriptionRef.value) {
+    showConfirmDialog.value = true;
+  } else {
+    console.log(1);
+    dialog.value = false;
   }
-})
+};
+
+watch(dialog, (newVal) => {
+  if (!newVal) {
+    cleanForm()
+  }
+});
+
 
 onMounted(async () => {
   await getCurrencies()
@@ -323,9 +406,9 @@ onMounted(async () => {
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons @click="openDialog(0)" name="add"/>
-              <Icons @click="addBasedOnorganizationBill" name="copy"/>
-              <Icons @click="compute" name="delete"/>
+              <Icons @click="openDialog(0)" name="add"  title="Создать"/>
+              <Icons @click="addBasedOnorganizationBill"  title="Скопировать" name="copy"/>
+              <Icons @click="compute"  title="Удалить" name="delete"/>
             </div>
 
             <div class="w-100">
@@ -345,7 +428,7 @@ onMounted(async () => {
               ></v-text-field>
             </div>
           </div>
-          <Icons name="filter" class="mt-1"/>
+          <Icons name="filter"  title="фильтр" @click="filterModal = true" class="mt-1"/>
         </v-card>
       </div>
 
@@ -391,6 +474,8 @@ onMounted(async () => {
               </td>
               <td>{{ item.name }}</td>
               <td>+2500</td>
+              <td>{{item.organization.name}}</td>
+              <td>{{item.currency.name}}</td>
         
             </tr>
           </template>
@@ -406,12 +491,13 @@ onMounted(async () => {
               <span>{{ isExistsOrganizationBill ? organizationBillInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons v-if="isExistsOrganizationBill"  @click="compute" name="delete"/>
-                  <Icons v-if="isExistsOrganizationBill" @click="update" name="save"/>
-                  <Icons v-else @click="addOrganizationBill" name="save"/>
+                  <Icons v-if="isExistsOrganizationBill"  title="Удалить"  @click="compute" name="delete"/>
+                  <Icons v-if="isExistsOrganizationBill"  title="Сохранить" @click="update" name="save"/>
+                  <Icons v-else @click="addOrganizationBill"  title="Сохранить" name="save"/>
                 </div>
-                <v-btn @click="dialog = false" variant="text" :size="32" class="pt-2 pl-1">
-                  <Icons name="close"/>
+                <v-btn @click="isExistsOrganizationBill ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData }) "
+                  variant="text" :size="32" class="pt-2 pl-1">
+                  <Icons name="close"   title="Закрыть"/>
                 </v-btn>
               </div>
             </div>
@@ -427,14 +513,14 @@ onMounted(async () => {
                         variant="outlined"
                         class="w-auto text-sm-body-1"
                         density="compact"
-                        placeholder="Контрагент"
+                        placeholder="Наименование"
                         label="Наименование"
                         clear-icon="close"
                         clearable
                         hide-details
                     />
                     <span style="color: red; font-weight: bolder" class="mr-4 mt-1"
-                    >2500,00</span
+                    >{{ isExistsOrganizationBill ? organizationBillInDialogTitle + ' 2500' : '' }}</span
                     >
                   </div>
                   <div class="d-flex ga-2 mb-3">
@@ -503,6 +589,130 @@ onMounted(async () => {
           </v-card>
         </v-dialog>
       </v-card>
+
+
+    <v-card>
+        <v-dialog class="mt-2 pa-2" v-model="filterModal">
+          <v-card style="border: 2px solid #3AB700" min-width="600"
+                  class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
+            <div class="d-flex justify-space-between align-center mb-2">
+              <span>Фильтр</span>
+              <div class="d-flex align-center justify-space-between">
+                <div class="d-flex ga-3 align-center mt-2 me-4">
+                  <Icons @click="filter" name="save"/>
+                </div>
+                <v-btn @click="closeFilterModal" variant="text" :size="32" class="pt-2 pl-1">
+                  <Icons name="close"/>
+                </v-btn>
+              </div>
+            </div>
+            <v-form class="d-flex w-100">
+              <v-row class="w-100">
+                <v-col class="d-flex flex-column w-100">
+                  <div class="d-flex justify-space-between ga-6 mb-3">
+                    <v-text-field
+                        v-model="nameFilter"
+                        :rules="[rules.required]"
+                        color="green"
+                        rounded="md"
+                        variant="outlined"
+                        class="w-auto text-sm-body-1"
+                        density="compact"
+                        placeholder="Контрагент"
+                        label="Наименование"
+                        clear-icon="close"
+                        clearable
+                        hide-details
+                    />
+                    
+                  </div>
+                  <div class="d-flex ga-2 mb-3">
+                    <v-text-field
+                        variant="outlined"
+                        :rules="[rules.required]"
+                        label="Дата создание"
+                        type="date"
+                        v-model="dateFilter"
+                        density="compact"
+                        rounded="md"
+                        color="green"
+                        :append-inner-icon="dateRef ? 'close' : ''"
+                        @click:append-inner="dateRef = null"
+                        hide-details
+                    />
+                    <v-text-field
+                        v-model="bill_numberFilter"
+                        :rules="[rules.required]"
+                        variant="outlined"
+                        label="Номер счёта"
+                        density="compact"
+                        rounded="md"
+                        color="green"
+                        :append-inner-icon="bill_number ? 'close' : ''"
+                        @click:append-inner="bill_number = null"
+                        hide-details
+                    />
+                    <v-select
+                        v-model="currencyFilter"
+                        :items="currencies"
+                        item-title="name"
+                        item-value="id"
+                        :rules="[rules.required]"
+                        label="Валюта"
+                        variant="outlined"
+                        density="compact"
+                        hide-details
+                    />
+                  </div>
+                  <v-select
+                      v-model="organizationFilter"
+                      :items="organizations"
+                      item-title="name"
+                      item-value="id"
+                      :rules="[rules.required]"
+                      label="Организация"
+                      variant="outlined"
+                      density="compact"
+                  />
+                  <v-textarea
+                      variant="outlined"
+                      :rules="[rules.required]"
+                      label="Комментарий"
+                      v-model="commentFilter"
+                      density="compact"
+                      rounded="md"
+                      color="green"
+                      hide-details
+                      :append-inner-icon="comment ? 'close' : ''"
+                      @click:append-inner="comment = null"
+                  />
+                </v-col>
+              </v-row>
+            </v-form>
+          </v-card>
+        </v-dialog>
+      </v-card>
+
+       <v-dialog style="min-width: 300px;"  v-model="showConfirmDialog" persistent>
+  <v-card style="max-width: 400px;" class="mx-auto flex flex-col">
+    <v-card-title class="text-h6"
+    >Подтверждение</v-card-title>
+    <v-card-text class="text-subtitle-1">Точно хотите закрыть? Введенные данные не будут сохранены.</v-card-text>
+    <v-card-actions>
+      <v-btn @click="showConfirmDialog = false"
+        class="text-none mb-4 w-[200px] h-[20px]"
+        color="red"
+        variant="flat"
+      >Нет</v-btn>
+      <v-btn @click="closeDialogWithoutSaving"
+        class="text-none mb-4 w-[200px] h-[20px]"
+        color="green"
+        variant="flat"
+      >Да</v-btn>
+    </v-card-actions>
+  </v-card>
+</v-dialog>
+
     </v-col>
   </div>
 
