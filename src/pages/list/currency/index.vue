@@ -28,6 +28,7 @@ const isExistsCurrencyRate = ref(false)
 const idCurrency = ref(null)
 const currencyInDialogTitle = ref(null)
 const search = ref('')
+const filterModal = ref(null)
 
 const hoveredRowIndex = ref(null)
 const markedItem = ref(null)
@@ -68,10 +69,18 @@ const rules = {
   date: v => (v && /^\d{2}-\d{2}-\d{4}$/.test(v)) || 'Формат даты должен быть DD-MM-YYYY',
 }
 
-const getCurrencyData = async ({page, itemsPerPage, sortBy, search}) => {
+
+
+//filter
+const nameFilter = ref(null)
+const symbolFilter = ref(null)
+const digitalFilter = ref(null)
+
+const getCurrencyData = async ({page, itemsPerPage, sortBy, search, filterData}) => {
+  console.log(filterData)
   loading.value = true;
   try {
-    const {data} = await currency.get({page, itemsPerPage, sortBy}, search);
+    const {data} = await currency.get({page, itemsPerPage, sortBy}, search, filterData);
     paginations.value = data.result.pagination;
     currencies.value = data.result.data;
     markedID.value = []
@@ -81,6 +90,26 @@ const getCurrencyData = async ({page, itemsPerPage, sortBy, search}) => {
     loading.value = false;
   }
 };
+
+
+
+const filter = async ({page, itemsPerPage, sortBy, search}) => {
+  loading.value = true
+  const filterData = {
+    name: nameFilter.value,
+    digital_code: digitalFilter.value,
+    symbol_code: symbolFilter.value
+  }
+
+    console.log(filterData);
+  try {
+    await getCurrencyData({page, itemsPerPage, sortBy, search, filterData})
+    filterModal.value = false
+  } catch (e) {
+    
+  }
+}
+
 
 const getCurrencyRateData = async ({page, itemsPerPage, sortBy, search}, idCurrency) => {
   if (idCurrency === 0) {
@@ -107,6 +136,18 @@ const getCurrencyRateData = async ({page, itemsPerPage, sortBy, search}, idCurre
   }
 }
 
+const  closeFilterModal = async ({page, itemsPerPage, sortBy, search, filterData}) => {
+  filterModal.value = false
+  await getCurrencyData({page, itemsPerPage, sortBy, search, filterData})
+  cleanFilterForm()
+
+}
+
+const cleanFilterForm =  () => {
+  nameFilter.value = null
+  digitalFilter.value = null
+  symbolRef.value = null
+}
 const addCurrency = async ({page, itemsPerPage, sortBy}) => {
   if (validate(nameRef,digitalRef,symbolRef) !== true) return
 
@@ -406,9 +447,9 @@ watch(rateDialog, newVal => {
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons @click="openDialog(0)" name="add"/>
-              <Icons @click="addBasedOnCurrency" name="copy"/>
-              <Icons @click="compute" name="delete"/>
+              <Icons title="Добавить"  @click="openDialog(0)" name="add"/>
+              <Icons title="Копировать"  @click="addBasedOnCurrency" name="copy"/>
+              <Icons title="Удалить"  @click="compute" name="delete"/>
             </div>
 
             <div class="w-100">
@@ -428,7 +469,7 @@ watch(rateDialog, newVal => {
               ></v-text-field>
             </div>
           </div>
-          <Icons name="filter" class="mt-1"/>
+          <Icons name="filter" title="Фильтр" @click="filterModal = true" class="mt-1"/>
         </v-card>
       </div>
 
@@ -490,12 +531,12 @@ watch(rateDialog, newVal => {
               <span>{{ isExistsCurrency ? currencyInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons v-show="isExistsCurrency" @click="compute" name="delete"/>
-                  <Icons v-if="isExistsCurrency" @click="update" name="save"/>
-                  <Icons v-else @click="addCurrency" name="save"/>
+                  <Icons title="Удалить"  v-show="isExistsCurrency" @click="compute" name="delete"/>
+                  <Icons title="Сохранить"  v-if="isExistsCurrency" @click="update" name="save"/>
+                  <Icons title="Сохранить"  v-else @click="addCurrency" name="save"/>
                 </div>
                 <v-btn @click="dialog = false" variant="text" :size="32" class="pt-2 pl-1">
-                  <Icons name="close"/>
+                  <Icons title="Закрыть"  name="close"/>
                 </v-btn>
               </div>
             </div>
@@ -549,8 +590,8 @@ watch(rateDialog, newVal => {
               <div v-if="isExistsCurrency" class="d-flex w-100 rounded-t-lg mb-1 align-center "
                    style="border-bottom: 1px solid #3AB700">
                 <div class="d-flex justify-end w-100 ga-2 pt-1 me-2" style="padding-top: 4px !important;">
-                  <Icons @click="computeRate" name="delete"/>
-                  <Icons @click="addDialogRate" name="add"/>
+                  <Icons title="Удалить"  @click="computeRate" name="delete"/>
+                  <Icons title="Добавить"  @click="addDialogRate" name="add"/>
                 </div>
               </div>
               <v-data-table-server
@@ -610,12 +651,12 @@ watch(rateDialog, newVal => {
               <span class="pl-5">{{ isExistsCurrencyRate ? 'Изменить' : 'Добавить' }} курс</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons v-show="isExistsCurrencyRate" @click="removeCurrencyRate" name="delete"/>
-                  <Icons v-if="isExistsCurrencyRate" @click="updateRate" name="save"/>
-                  <Icons v-else @click="addRate" name="save"/>
+                  <Icons title="Удалить"  v-show="isExistsCurrencyRate" @click="removeCurrencyRate" name="delete"/>
+                  <Icons title="Сохранить"  v-if="isExistsCurrencyRate" @click="updateRate" name="save"/>
+                  <Icons  title="Сохранить" v-else @click="addRate" name="save"/>
                 </div>
                 <v-btn @click="rateDialog = false" variant="text" :size="32" class="pt-2 pl-1">
-                  <Icons name="close"/>
+                  <Icons  title="Закрыть" name="close"/>
                 </v-btn>
               </div>
             </div>
@@ -653,6 +694,78 @@ watch(rateDialog, newVal => {
           </v-card>
         </v-dialog>
       </v-card>
+
+
+      <v-card>
+        <v-dialog class="mt-2 pa-2" v-model="filterModal">
+          <v-card style="border: 2px solid #3AB700" min-width="600"
+                  class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
+            <div class="d-flex justify-space-between align-center mb-2">
+              <span>Фильтр</span>
+              <div class="d-flex align-center justify-space-between">
+                <div class="d-flex ga-3 align-center mt-2 me-4">
+                  <Icons  title="Сохранить" @click="filter" name="save"/>
+                </div>
+                <v-btn @click="closeFilterModal" variant="text" :size="32" class="pt-2 pl-1">
+                  <Icons  title="Закрыть" name="close"/>
+                </v-btn>
+              </div>
+            </div>
+            <v-form class="d-flex w-100">
+              <v-row class="w-100">
+                <v-col class="d-flex flex-column w-100">
+                  <div class="d-flex justify-space-between ga-6 mb-3">
+                    <v-text-field
+                        v-model="nameFilter"
+                        color="green"
+                        rounded="md"
+                        variant="outlined"
+                        class="w-auto text-sm-body-1"
+                        density="compact"
+                        placeholder="Наименование"
+                        label="Наименование"
+                        clear-icon="close"
+                        clearable
+                        hide-details
+                    />
+                  </div>
+                  <div class="d-flex justify-space-between ga-6 mb-3">
+                     <v-text-field
+                        v-model="symbolFilter"
+                        color="green"
+                        rounded="md"
+                        variant="outlined"
+                        class="w-auto text-sm-body-1"
+                        density="compact"
+                        placeholder="Символьный код"
+                        label="Символьный код"
+                        clear-icon="close"
+                        clearable
+                        hide-details
+                    />
+                  </div>
+                  <div class="d-flex justify-space-between ga-6 mb-3">
+                     <v-text-field
+                        v-model="digitalFilter"
+                        color="green"
+                        rounded="md"
+                        variant="outlined"
+                        class="w-auto text-sm-body-1"
+                        density="compact"
+                        placeholder="Цифровой код"
+                        label="Цифровой код"
+                        clear-icon="close"
+                        clearable
+                        hide-details
+                    />
+                  </div>
+                  </v-col>
+              </v-row>
+            </v-form>
+          </v-card>
+        </v-dialog>
+      </v-card>
+
     </v-col>
   </div>
 

@@ -294,6 +294,16 @@ const cleanForm =  () => {
   comment.value = null
 }
 
+
+const cleanFilterForm =  () => {
+  nameFilter.value = null
+  bill_numberFilter.value = null
+  dateFilter.value = null
+  organizationFilter.value = null
+  currencyFilter.value = null
+  commentFilter.value = null
+}
+
 const addBasedOnorganizationBill = () => {
   if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
   if (markedID.value.length > 1) return showToast(selectOneItemMessage, 'warning')
@@ -328,7 +338,8 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
 const  closeFilterModal = async ({page, itemsPerPage, sortBy, search, filterData}) => {
   filterModal.value = false
   await getOrganizationBillData({page, itemsPerPage, sortBy, search, filterData})
-  
+  cleanFilterForm()
+
 }
 
 const lineMarking = (item) => {
@@ -386,6 +397,7 @@ watch(dialog, (newVal) => {
     cleanForm()
   }
 });
+
 
 
 onMounted(async () => {
@@ -462,13 +474,13 @@ onMounted(async () => {
                 <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
                   <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)"
                                   @change="handleCheckboxClick(item)">
-                    <span>{{ index + 1 }}</span>
+                    <span>{{ item.id }}</span>
                   </CustomCheckbox>
                 </template>
                 <template v-else>
                   <div  class="d-flex">
                     <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
-                    <span>{{ index + 1 }}</span>
+                    <span>{{ item.id }}</span>
                   </div>
                 </template>
               </td>
@@ -476,7 +488,6 @@ onMounted(async () => {
               <td>+2500</td>
               <td>{{item.organization.name}}</td>
               <td>{{item.currency.name}}</td>
-        
             </tr>
           </template>
         </v-data-table-server>
@@ -519,15 +530,17 @@ onMounted(async () => {
                         clearable
                         hide-details
                     />
-                    <span style="color: red; font-weight: bolder" class="mr-4 mt-1"
-                    >{{ isExistsOrganizationBill ? organizationBillInDialogTitle + ' 2500' : '' }}</span
+
+                    <span v-if="isExistsOrganizationBill" style="color: red; font-weight: bolder" class="mr-4 mt-1"
+                    >2500,00</span
                     >
                   </div>
                   <div class="d-flex ga-2 mb-3">
-                    <v-text-field
+                    <v-text-field style="max-width: 30%"
                         variant="outlined"
+                        
                         :rules="[rules.required]"
-                        label="Дата создание"
+                        label="Дата создания"
                         type="date"
                         v-model="dateRef"
                         density="compact"
@@ -538,6 +551,7 @@ onMounted(async () => {
                         hide-details
                     />
                     <v-text-field
+                   
                         v-model="bill_number"
                         :rules="[rules.required]"
                         variant="outlined"
@@ -550,6 +564,7 @@ onMounted(async () => {
                         hide-details
                     />
                     <v-select
+                     style="max-width: 40%; min-width: 40%"
                         v-model="currencyAdd"
                         :items="currencies"
                         item-title="name"
@@ -612,13 +627,12 @@ onMounted(async () => {
                   <div class="d-flex justify-space-between ga-6 mb-3">
                     <v-text-field
                         v-model="nameFilter"
-                        :rules="[rules.required]"
                         color="green"
                         rounded="md"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
                         density="compact"
-                        placeholder="Контрагент"
+                        placeholder="Наименование"
                         label="Наименование"
                         clear-icon="close"
                         clearable
@@ -629,35 +643,34 @@ onMounted(async () => {
                   <div class="d-flex ga-2 mb-3">
                     <v-text-field
                         variant="outlined"
-                        :rules="[rules.required]"
-                        label="Дата создание"
+                        label="Дата создания"
                         type="date"
+                        style="max-width: 30%"
                         v-model="dateFilter"
                         density="compact"
                         rounded="md"
                         color="green"
-                        :append-inner-icon="dateRef ? 'close' : ''"
-                        @click:append-inner="dateRef = null"
+                        :append-inner-icon="dateFilter ? 'close' : ''"
+                        @click:append-inner="dateFilter = null"
                         hide-details
                     />
                     <v-text-field
                         v-model="bill_numberFilter"
-                        :rules="[rules.required]"
                         variant="outlined"
                         label="Номер счёта"
                         density="compact"
                         rounded="md"
                         color="green"
-                        :append-inner-icon="bill_number ? 'close' : ''"
-                        @click:append-inner="bill_number = null"
+                        :append-inner-icon="bill_numberFilter ? 'close' : ''"
+                        @click:append-inner="bill_numberFilter = null"
                         hide-details
                     />
                     <v-select
+                      style="max-width: 40%; min-width: 40%"
                         v-model="currencyFilter"
                         :items="currencies"
                         item-title="name"
                         item-value="id"
-                        :rules="[rules.required]"
                         label="Валюта"
                         variant="outlined"
                         density="compact"
@@ -669,22 +682,20 @@ onMounted(async () => {
                       :items="organizations"
                       item-title="name"
                       item-value="id"
-                      :rules="[rules.required]"
                       label="Организация"
                       variant="outlined"
                       density="compact"
                   />
                   <v-textarea
                       variant="outlined"
-                      :rules="[rules.required]"
                       label="Комментарий"
                       v-model="commentFilter"
                       density="compact"
                       rounded="md"
                       color="green"
                       hide-details
-                      :append-inner-icon="comment ? 'close' : ''"
-                      @click:append-inner="comment = null"
+                      :append-inner-icon="commentFilter ? 'close' : ''"
+                      @click:append-inner="commentFilter = null"
                   />
                 </v-col>
               </v-row>
