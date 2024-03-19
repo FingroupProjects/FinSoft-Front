@@ -13,7 +13,6 @@ const passwordError = ref(null)
 
 
 const authentication = async () => {
-  console.log(1)
   const body = {
     login: loginRef.value,
     password: passwordRef.value,
@@ -26,7 +25,6 @@ const authentication = async () => {
       setToken(res.data.token)
       setUser(res.data.user)
       router.push('/')
-      location.reload()
     }
   } catch (e) {
     console.log(e)
