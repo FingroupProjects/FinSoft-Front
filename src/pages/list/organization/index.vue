@@ -85,7 +85,7 @@ const isDataChanged = () => {
     nameRef.value !== item.name ||
     innRef.value !== item.INN ||
     directorRef.value.id !== item.director.id ||
-    accountantRef.value.id !== item.chief_accountant.id ||
+    accountantRef.value.id  !== item.chief_accountant.id ||
     addressRef.value !== item.address ||
     descriptionRef.value !== item.description;
 
