@@ -55,6 +55,10 @@ const goToCreate = () => {
   });
 };
 
+const goToBack = () => {
+  router.go(-1);
+};
+
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
     const firstMarkedItem = goods.value.find(
@@ -146,7 +150,7 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
         <div class="d-flex align-center ga-2 pe-2 ms-4">
           <div
             style="cursor: pointer"
-            @click="goToCreate()"
+            @click="goToBack()"
             class="pa-1 bg-green rounded-circle d-inline-block"
           >
             <v-icon icon="keyboard_backspace" size="x-small" />

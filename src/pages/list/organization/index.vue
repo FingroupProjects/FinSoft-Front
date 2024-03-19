@@ -24,6 +24,7 @@ const hoveredRowIndex = ref(null);
 const isExistsOrganization = ref(false);
 const organizationInDialogTitle = ref(null);
 const isDataSaved = ref(true);
+const filterModal = ref(false);
 
 const organizations = ref([]);
 const paginations = ref([]);
@@ -39,6 +40,12 @@ const descriptionRef = ref(null);
 const search = ref(null);
 const showConfirmDialog = ref(false);
 
+const nameFilter = ref(null);
+const innFilter = ref(null);
+const directorFilter = ref(null);
+const accountantFilter = ref(null);
+const addressFilter = ref(null);
+const descriptionFilter = ref(null);
 
 const rules = {
   required: (value) => !!value || "Поле обязательно для заполнения",
@@ -49,24 +56,11 @@ const headers = ref([
   { title: "Наименование", key: "name" },
 ]);
 
-
-const checkAndClose = () => {
-  if (nameRef.value || innRef.value || directorRef.value || accountantRef.value || addressRef.value || descriptionRef.value) {
-    showConfirmDialog.value = true;
-  } else {
-    addDialog.value = false;
-  }
-};
-
-const closeDialogWithoutSaving = () => {
-  addDialog.value = false;
-  showConfirmDialog.value = false;
-};
-
-const getOrganizationData = async ({ page, itemsPerPage, sortBy, search }) => {
+const getOrganizationData = async ({ page, itemsPerPage, sortBy, search, filterData}) => {
+  console.log(filterData)
   loading.value = true;
   try {
-    const { data } = await organization.get({ page, itemsPerPage, sortBy }, search);
+    const { data } = await organization.get({ page, itemsPerPage, sortBy }, search, filterData);
     organizations.value = data.result.data.map((item) => ({
       ...item
     }));
@@ -77,29 +71,8 @@ const getOrganizationData = async ({ page, itemsPerPage, sortBy, search }) => {
   }
 };
 
-const isDataChanged = () => {
-  
-  const item = organizations.value.find(item => item.id === idOrganizations.value)
-
-  const isChanged =
-    nameRef.value !== item.name ||
-    innRef.value !== item.INN ||
-    directorRef.value.id !== item.director.id ||
-    accountantRef.value.id !== item.chief_accountant.id ||
-    addressRef.value !== item.address ||
-    descriptionRef.value !== item.description;
-
-  return isChanged;
-};
-
-
-
 
 const addOrganization = async ({ page, itemsPerPage, sortBy, search }) => {
-  if (!isDataChanged()) {
-    addDialog.value = false;
-    return;
-  }
   if (validate(nameRef, innRef, directorRef, accountantRef, addressRef, descriptionRef) !== true) return
 
   try {
@@ -167,11 +140,6 @@ const addBasedOnOrganization = () => {
 }
 
 const update = async ({ page, itemsPerPage, sortBy, search }) => {
-  console.log(isDataChanged());
-  if(isDataChanged() === true){
-      showConfirmDialog.value = true
-      return
-  }
   if (validate(nameRef,innRef,directorRef,accountantRef,addressRef,descriptionRef) !== true) return
 
   let director;
@@ -203,6 +171,9 @@ const update = async ({ page, itemsPerPage, sortBy, search }) => {
       await getOrganizationData({ page, itemsPerPage, sortBy, search });
       showToast(editMessage);
     }
+
+    cleanForm()
+
     addDialog.value = false;
   } catch (e) {
   }
@@ -310,6 +281,89 @@ const handleCheckboxClick = function (item) {
   lineMarking(item);
 };
 
+const cleanForm =  () => {
+  nameRef.value = null
+  innRef.value = null
+  directorRef.value = null
+  accountantRef.value = null
+  addressRef.value = null
+  descriptionRef.value = null
+}
+
+const filter = async ({page, itemsPerPage, sortBy, search}) => {
+  loading.value = true
+  const filterData = {
+    name: nameFilter.value,
+    INN: innFilter.value,
+    director_id: directorFilter.value,
+    chief_accountant_id: accountantFilter.value,
+    address: addressFilter.value,
+    description: descriptionFilter.value
+  } 
+  console.log(filterData)
+
+  try {
+    await getOrganizationData({page, itemsPerPage, sortBy, search, filterData})
+    filterModal.value = false
+    nameFilter.value = null;
+    innFilter.value = null;
+    directorFilter.value = null;
+    accountantFilter.value = null;
+    addressFilter.value = null;
+    descriptionFilter.value = null;
+  } catch (e) {
+    
+  }
+}
+
+const  closeFilterModal = async ({page, itemsPerPage, sortBy, search, filterData}) => {
+  filterModal.value = false
+  await getOrganizationData({page, itemsPerPage, sortBy, search, filterData})
+  nameFilter.value = null;
+  innFilter.value = null;
+  directorFilter.value = null;
+  accountantFilter.value = null;
+  addressFilter.value = null;
+  descriptionFilter.value = null;
+}
+
+
+const isDataChanged = () => {
+  
+  const item = organizations.value.find(item => item.id === idOrganizations.value)
+
+  const isChanged = 
+    nameRef.value !== item.name ||
+    innRef.value !== item.INN ||
+    directorRef.value.id !== item.director.id ||
+    accountantRef.value.id  !== item.chief_accountant.id ||
+    addressRef.value !== item.address ||
+    descriptionRef.value !== item.description;
+
+  return isChanged;
+};
+
+const checkAndClose = () => {
+  if (nameRef.value || innRef.value || directorRef.value || accountantRef.value || addressRef.value || descriptionRef.value) {
+    showConfirmDialog.value = true;
+  } else {
+    addDialog.value = false;
+  }
+};
+
+const closeDialogWithoutSaving = () => {
+  addDialog.value = false;
+  showConfirmDialog.value = false;
+};
+
+const checkUpdate = () => {
+  if (isDataChanged()) {
+    showConfirmDialog.value = true;
+  } else {
+    addDialog.value = false;
+  }
+};
+
 watch(addDialog, (newVal) => {
   if (!newVal) {
     nameRef.value = null;
@@ -320,6 +374,13 @@ watch(addDialog, (newVal) => {
     descriptionRef.value = null;
     isExistsOrganization.value = false;
     organization.value = [];
+  }
+});
+
+
+watch(addDialog, (newVal) => {
+  if (!newVal) {
+    cleanForm()
   }
 });
 
@@ -346,7 +407,6 @@ onMounted(async () => {
                 title="Удалить"
               />
             </div>
-
             <div class="w-100">
               <v-text-field
                 v-model="search"
@@ -364,7 +424,7 @@ onMounted(async () => {
               ></v-text-field>
             </div>
           </div>
-          <Icons name="filter" class="mt-1" />
+          <Icons name="filter" title="фильтр" @click="filterModal = true" class="mt-1" />
         </v-card>
       </div>
 
@@ -449,14 +509,10 @@ onMounted(async () => {
                 <Icons v-if="isExistsOrganization" @click="update" name="save"/>
                 <Icons v-else @click="addOrganization" name="save" />
               </div>
-              <v-btn
-                @click="isExistsOrganization ? update({ page, itemsPerPage, sortBy, search }) : checkAndClose({ page, itemsPerPage, sortBy, search }) "
-                variant="text"
-                :size="32"
-                class="pt-2 pl-1"
-              >
-                <Icons name="close"/>
-              </v-btn>
+              <v-btn @click="isExistsOrganization ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData }) "
+                  variant="text" :size="32" class="pt-2 pl-1">
+                  <Icons name="close"   title="Закрыть"/>
+                </v-btn>
             </div>
           </div>
           <v-form class="d-flex w-100" @submit.prevent="addOrganization">
@@ -539,11 +595,113 @@ onMounted(async () => {
           </v-form>
         </v-card>
       </v-dialog>
- <v-dialog style="min-width: 300px;"  v-model="showConfirmDialog" persistent>
+
+
+      <v-card>
+        <v-dialog class="mt-2 pa-2" v-model="filterModal">
+          <v-card style="border: 2px solid #3AB700" min-width="600"
+                  class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
+            <div class="d-flex justify-space-between align-center mb-2">
+              <span>Фильтр</span>
+              <div class="d-flex align-center justify-space-between">
+                <div class="d-flex ga-3 align-center mt-2 me-4">
+                  <Icons @click="filter" name="save"/>
+                </div>
+                <v-btn @click="closeFilterModal" variant="text" :size="32" class="pt-2 pl-1">
+                  <Icons name="close"/>
+                </v-btn>
+              </div>
+            </div>
+            <v-form class="d-flex w-100">
+              <v-row class="w-100">
+                <v-col class="d-flex flex-column w-100">
+                  <v-text-field
+                  v-model="nameFilter"
+                  :rules="[rules.required]"
+                  color="green"
+                  rounded="lg"
+                  variant="outlined"
+                  class="w-auto text-sm-body-1"
+                  density="compact"
+                  placeholder="Организация"
+                  label="Наименования"
+                  clear-icon="close"
+                  clearable
+                />
+                <v-text-field
+                  v-model="innFilter"
+                  :rules="[rules.required]"
+                  color="green"
+                  rounded="lg"
+                  variant="outlined"
+                  class="w-auto text-sm-body-1"
+                  density="compact"
+                  placeholder="ИНН"
+                  label="ИНН"
+                  clear-icon="close"
+                  clearable
+                />
+                <v-select
+                  v-model="directorFilter"
+                  :rules="[rules.required]"
+                  :items="employees"
+                  rounded="lg"
+                  item-title="name"
+                  item-value="id"
+                  label="Директор"
+                  variant="outlined"
+                ></v-select>
+                <v-select
+                  v-model="accountantFilter"
+                  :rules="[rules.required]" 
+                  :items="employees"
+                  rounded="lg"
+                  item-title="name"
+                  item-value="id"
+                  label="Гл. бухгалтер"
+                  variant="outlined"
+                ></v-select>
+                <v-text-field
+                  v-model="addressFilter"
+                  :rules="[rules.required]"
+                  color="green"
+                  rounded="lg"
+                  variant="outlined"
+                  class="w-auto text-sm-body-1"
+                  density="compact"
+                  placeholder="Адрес"
+                  label="Адрес"
+                  clear-icon="close"
+                  clearable
+                />
+                <v-text-field
+                  v-model="descriptionFilter"
+                  color="green"
+                  rounded="lg"
+                  variant="outlined"
+                  class="w-auto text-sm-body-1"
+                  density="compact"
+                  placeholder="Описание"
+                  label="Описание"
+                  clear-icon="close"
+                  style="height: 120px; margin-bottom: -20px"
+                  clearable
+                />
+                </v-col>
+              </v-row>
+            </v-form>
+          </v-card>
+        </v-dialog>
+      </v-card>
+
+
+
+
+      <v-dialog style="min-width: 300px;"  v-model="showConfirmDialog" persistent>
   <v-card style="max-width: 400px;" class="mx-auto flex flex-col">
     <v-card-title class="text-h6"
     >Подтверждение</v-card-title>
-    <v-card-text class="text-subtitle-1">Вы точно хотите закрыть? Если да, то введенные данные не будут сохранены.</v-card-text>
+    <v-card-text class="text-subtitle-1">Точно хотите закрыть? Введенные данные не будут сохранены.</v-card-text>
     <v-card-actions>
       <v-btn @click="showConfirmDialog = false"
         class="text-none mb-4 w-[200px] h-[20px]"
