@@ -48,7 +48,6 @@ const nameRef = ref(null)
 const descriptionRef = ref(null)
 const organizationBills = ref([])
 const paginations = ref([])
-const showConfirmDialog = ref(false)
 
 //filter
 const nameFilter = ref(null)
@@ -177,27 +176,9 @@ const restore = async ({page, itemsPerPage, sortBy, search}) => {
 
   }
 }
-const isDataChanged = () => {
-  
-  const item = organizationBills.value.find(item => item.id === idOrganizationBill.value)
-
-  const isChanged =
-    nameRef.value !== item.name ||
-    bill_number.value !== item.bill_number ||
-    currencyAdd.value !== item.currency.id ||
-    organizationAdd.value !== item.organization.id ||
-    comment.value !== item.comment ||
-    showDate(dateRef.value) !== item.date;
-
-
-
-  return isChanged;
-};
-
 
 
 const update = async ({page, itemsPerPage, sortBy}) => {
-
 
   const body = {
     name: nameRef.value,
@@ -357,35 +338,6 @@ const lineMarking = (item) => {
   markedItem.value = item;
 }
 
-const closeDialogWithoutSaving = () => {
-  dialog.value = false;
-  showConfirmDialog.value = false;
-};
-
-const checkUpdate = () => {
-    if(isDataChanged() === true){
-      showConfirmDialog.value = true
-    }
-    else {
-      dialog.value = false
-    }
-}
-
-
-const checkAndClose = () => {
-  if (nameRef.value || organizationBill.value || currencyAdd.value || organizationAdd.value || dateRef.value || descriptionRef.value) {
-    showConfirmDialog.value = true;
-  } else {
-    console.log(1);
-    dialog.value = false;
-  }
-};
-
-watch(dialog, (newVal) => {
-  if (!newVal) {
-    cleanForm()
-  }
-});
 
 
 onMounted(async () => {
@@ -406,9 +358,9 @@ onMounted(async () => {
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons @click="openDialog(0)" name="add"  title="Создать"/>
-              <Icons @click="addBasedOnorganizationBill"  title="Скопировать" name="copy"/>
-              <Icons @click="compute"  title="Удалить" name="delete"/>
+              <Icons @click="openDialog(0)" name="add"/>
+              <Icons @click="addBasedOnorganizationBill" name="copy"/>
+              <Icons @click="compute" name="delete"/>
             </div>
 
             <div class="w-100">
@@ -428,7 +380,7 @@ onMounted(async () => {
               ></v-text-field>
             </div>
           </div>
-          <Icons name="filter"  title="фильтр" @click="filterModal = true" class="mt-1"/>
+          <Icons name="filter" @click="filterModal = true" class="mt-1"/>
         </v-card>
       </div>
 
@@ -491,13 +443,12 @@ onMounted(async () => {
               <span>{{ isExistsOrganizationBill ? organizationBillInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons v-if="isExistsOrganizationBill"  title="Удалить"  @click="compute" name="delete"/>
-                  <Icons v-if="isExistsOrganizationBill"  title="Сохранить" @click="update" name="save"/>
-                  <Icons v-else @click="addOrganizationBill"  title="Сохранить" name="save"/>
+                  <Icons v-if="isExistsOrganizationBill"  @click="compute" name="delete"/>
+                  <Icons v-if="isExistsOrganizationBill" @click="update" name="save"/>
+                  <Icons v-else @click="addOrganizationBill" name="save"/>
                 </div>
-                <v-btn @click="isExistsOrganizationBill ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData }) "
-                  variant="text" :size="32" class="pt-2 pl-1">
-                  <Icons name="close"   title="Закрыть"/>
+                <v-btn @click="dialog = false" variant="text" :size="32" class="pt-2 pl-1">
+                  <Icons name="close"/>
                 </v-btn>
               </div>
             </div>
@@ -513,14 +464,14 @@ onMounted(async () => {
                         variant="outlined"
                         class="w-auto text-sm-body-1"
                         density="compact"
-                        placeholder="Наименование"
+                        placeholder="Контрагент"
                         label="Наименование"
                         clear-icon="close"
                         clearable
                         hide-details
                     />
                     <span style="color: red; font-weight: bolder" class="mr-4 mt-1"
-                    >{{ isExistsOrganizationBill ? organizationBillInDialogTitle + ' 2500' : '' }}</span
+                    >2500,00</span
                     >
                   </div>
                   <div class="d-flex ga-2 mb-3">
@@ -692,26 +643,6 @@ onMounted(async () => {
           </v-card>
         </v-dialog>
       </v-card>
-
-       <v-dialog style="min-width: 300px;"  v-model="showConfirmDialog" persistent>
-  <v-card style="max-width: 400px;" class="mx-auto flex flex-col">
-    <v-card-title class="text-h6"
-    >Подтверждение</v-card-title>
-    <v-card-text class="text-subtitle-1">Точно хотите закрыть? Введенные данные не будут сохранены.</v-card-text>
-    <v-card-actions>
-      <v-btn @click="showConfirmDialog = false"
-        class="text-none mb-4 w-[200px] h-[20px]"
-        color="red"
-        variant="flat"
-      >Нет</v-btn>
-      <v-btn @click="closeDialogWithoutSaving"
-        class="text-none mb-4 w-[200px] h-[20px]"
-        color="green"
-        variant="flat"
-      >Да</v-btn>
-    </v-card-actions>
-  </v-card>
-</v-dialog>
 
     </v-col>
   </div>
