@@ -20,11 +20,13 @@ import Icons from "@/composables/Icons/Icons.vue";
 
 import {restoreMessage} from "../../../composables/constant/buttons.js";
 import storageGroup from "../../../api/storageGroup.js";
-import {STORAGE_GROUP} from "../../../composables/constant/paramsApi.js";
+import { STORAGE_GROUP } from "../../../composables/constant/paramsApi.js";
+import groupApi from "../../../api/userGroup.js";
 
 const router = useRouter()
 const groupDialog = ref(false)
 const loading = ref(true)
+const loadingGroup = ref(true)
 
 const loadingStorageData = ref(true)
 const dialog = ref(false)
@@ -40,7 +42,7 @@ const employeeUpdate = ref([])
 const groupName = ref(null)
 const isExistsStorageData = ref(false);
 const isExistsGroup = ref(false);
-
+const groupIdRef = ref(0)
 
 const organizationAdd = ref([])
 const organizationUpdate = ref([])
@@ -57,7 +59,7 @@ const markedEmployeeID = ref([]);
 const markedItem = ref([])
 const storageInDialogTitle = ref(null)
 const search = ref('')
-const selected = ref([])
+const group = ref(null)
 
 const nameRef = ref(null)
 const startDateRef = ref(null)
@@ -66,7 +68,9 @@ const endDateRef = ref(null)
 const valueRef = ref(null)
 
 const storages = ref([])
+const groups = ref([])
 const paginations = ref([])
+const paginationsGroup = ref([])
 const paginationsStorageData = ref([])
 
 
@@ -75,6 +79,10 @@ const headers = ref([
   {title: 'Наименование', key: 'name'},
 ])
 
+const headersGroup = ref([
+  {title: '№', key: 'id', align: 'start'},
+  {title: 'Название группы', key: 'name'},
+])
 
 const headersStorageEmployee = ref([
   {title: '№', key: 'id'},
@@ -82,11 +90,29 @@ const headersStorageEmployee = ref([
   {title: 'Дата начало', key: 'from'},
   {title: 'Дата конец', key: 'to'},
 ])
+
 const rules = {
   required: v => !!v,
   date: v => (v && /^\d{2}-\d{2}-\d{4}$/.test(v)) || 'Формат даты должен быть DD-MM-YYYY',
 }
 
+const getGroup = async ({page, itemsPerPage, sortBy, search}) => {
+  loadingGroup.value = true
+  try {
+
+    const { data } = await groupApi.get({page, itemsPerPage, sortBy}, search, STORAGE_GROUP)
+    paginationsGroup.value = data.result.pagination
+    groups.value = data.result.data.map(item => ({
+      id: item.id,
+      name: item.name
+    }))
+  } catch (e) {
+    console.log(e)
+  } finally {
+    loadingGroup.value = false
+
+  }
+}
 
 const getStorageData = async ({page, itemsPerPage, sortBy, search}) => {
   loading.value = true
@@ -97,6 +123,7 @@ const getStorageData = async ({page, itemsPerPage, sortBy, search}) => {
     storages.value = data.result.data
     loading.value = false
   } catch (e) {
+
   }
 }
 
@@ -109,7 +136,7 @@ const getStorageEmployeeData = async ({page, itemsPerPage, sortBy, search}) => {
 
   loadingStorageData.value = true
   try {
-    const {data} = await storage.getStorageEmployee({page, itemsPerPage, sortBy}, search, idStorage.value)
+    const { data } = await storage.getStorageEmployee({page, itemsPerPage, sortBy}, search, idStorage.value)
 
     paginationsStorageData.value = data.result.pagination
     storageData.value = data.result.data.map(item => ({
@@ -124,23 +151,32 @@ const getStorageEmployeeData = async ({page, itemsPerPage, sortBy, search}) => {
 
 
 const addStorage = async ({page, itemsPerPage, sortBy}) => {
-  if (!groupName.value) {
-    return showToast("Поле наименования не может быть пустым", "warning")
-  }
   if (!nameRef.value) {
     return showToast("Поле Название не может быть пустым", "warning")
   }
+  if (!group.value) {
+    return showToast("Поле Группа не может быть пустым", "warning")
+  }
+
+  let groupValue;
+  if (typeof group.value === 'object') {
+    groupValue = group.value.id
+  } else {
+    groupValue = group.value
+  }
+
   try {
     const body = {
       name: nameRef.value,
       organization_id: organizationAdd.value,
       storage_data: [],
+      group_id: groupValue
     }
 
     try {
       const res = await storage.add(body)
       if (res.status === 201) {
-        await getStorageData({page, itemsPerPage, sortBy})
+        await getStorage({page, itemsPerPage, sortBy})
         showToast(addMessage)
         valueRef.value = null
         organizationAdd.value = null
@@ -244,12 +280,9 @@ const addStorageEmployee = async ({page, itemsPerPage, sortBy}) => {
 
 
 const massDel = async ({page, itemsPerPage, sortBy, search}) => {
-  const body = {
-    ids: markedID.value
-  }
 
   try {
-    const {status} = await storage.massDeletion(body)
+    const {status} = await storage.massDeletion({ ids: markedID.value})
 
     if (status === 200) {
 
@@ -266,12 +299,8 @@ const massDel = async ({page, itemsPerPage, sortBy, search}) => {
 
 
 const massRestore = async ({page, itemsPerPage, sortBy, search}) => {
-  const body = {
-    ids: markedID.value
-  }
-
   try {
-    const {status} = await storage.massRestoreEmployee(body)
+    const {status} = await storage.massRestoreEmployee({ ids: markedID.value})
 
     if (status === 200) {
       showToast(restoreMessage, 'red')
@@ -286,12 +315,8 @@ const massRestore = async ({page, itemsPerPage, sortBy, search}) => {
 
 
 const massDelEmployee = async ({page, itemsPerPage, sortBy, search}) => {
-  const body = {
-    ids: markedEmployeeID.value
-  }
-
   try {
-    const {status} = await storage.massDeletionEmployee(body)
+    const {status} = await storage.massDeletionEmployee({ ids: markedEmployeeID.value})
 
     if (status === 200) {
 
@@ -308,12 +333,9 @@ const massDelEmployee = async ({page, itemsPerPage, sortBy, search}) => {
 
 
 const massRestoreEmployee = async ({page, itemsPerPage, sortBy, search}) => {
-  const body = {
-    ids: markedEmployeeID.value
-  }
 
   try {
-    const {status} = await storage.massRestoreEmployee(body)
+    const {status} = await storage.massRestoreEmployee({ids: markedEmployeeID.value})
 
     if (status === 200) {
       showToast(restoreMessage, 'red')
@@ -389,34 +411,6 @@ const updateEmployee = async ({page, itemsPerPage, sortBy}) => {
 }
 
 
-const destroy = async ({page, itemsPerPage, sortBy}) => {
-  if (markedID.value === null) return showToast(warningMessage, 'warning')
-  try {
-    const {status} = await storage.delete(markedID.value)
-    if (status === 200) {
-      showToast(removeMessage, 'red')
-      await getStorageData({page, itemsPerPage, sortBy})
-      dialog.value = false
-      markedID.value = []
-    }
-  } catch (e) {
-
-  }
-}
-
-const restore = async ({page, itemsPerPage, sortBy}) => {
-  try {
-    const {status} = await storage.restore(markedID.value)
-    if (status === 200) {
-      showToast(restoreMessage, 'green')
-      await getStorageData({page, itemsPerPage, sortBy})
-      markedID.value = []
-    }
-  } catch (e) {
-
-  }
-}
-
 const getEmployee = async () => {
   try {
     const {data} = await employee.get({page: 1, itemsPerPage: 100})
@@ -433,7 +427,6 @@ const getEmployee = async () => {
 
 
 const getOrganizations = async () => {
-
   try {
     const {data} = await organization.get({page: 1, itemsPerPage: 1000})
 
@@ -444,17 +437,10 @@ const getOrganizations = async () => {
       }
     })
 
-
   } catch (e) {
 
   }
 }
-
-onMounted(async () => {
-  await getEmployee()
-  await getOrganizations()
-})
-
 
 const handleCheckboxClick = function (item) {
 
@@ -465,12 +451,9 @@ const handleEmployeeCheckboxClick = function (item) {
 }
 
 const openDialog = (item) => {
-
   if (markedID.value.length > 1) {
     return showToast(selectOneItemMessage, 'warning');
   }
-
-
   dialog.value = true
 
   if (item === 0) {
@@ -478,10 +461,14 @@ const openDialog = (item) => {
     isExistsStorage.value = false
   } else {
     idStorage.value = item.id
-
     markedID.value.push(item.id);
     isExistsStorage.value = true
     nameRef.value = item.name
+    const groupValue = groups.value.find(item => item.id === groupIdRef.value)
+    group.value = {
+      id: groupValue.id,
+      name: groupValue.name
+    }
     organizationAdd.value = item.organization.id
     storageInDialogTitle.value = nameRef.value
   }
@@ -494,16 +481,18 @@ const addBasedOnStorage = () => {
   if (markedID.value.length > 1) return showToast(selectOneItemMessage, 'warning')
   dialog.value = true
   isExistsStorage.value = false
-
+  const groupValue = groups.value.find(item => item.id === groupIdRef.value)
   storages.value.forEach(item => {
-    if (markedID.value[0] === markedID.value) {
-      console.log(markedID.value[0])
+    if (markedID.value[0] === item.id) {
+      idStorage.value = item.id
       nameRef.value = item.name
+      group.value = {
+        id: groupValue.id,
+        name: groupValue.name
+      }
       organizationAdd.value = item.organization.id
-      employeeAdd.value = item.responsiblePerson.id
     }
   })
-
 }
 
 const compute = ({page, itemsPerPage, sortBy, search}) => {
@@ -525,7 +514,6 @@ const removeStorageEmployee = ({page, itemsPerPage, sortBy, search}) => {
   if (markedItem.value.deleted_at) {
     return massRestoreEmployee({page, itemsPerPage, sortBy})
   } else {
-
     return massDelEmployee({page, itemsPerPage, sortBy, search})
   }
 }
@@ -535,30 +523,21 @@ const editDialogStorageData = (item) => {
   if (markedEmployeeID.value.length > 1) {
     return showToast(selectOneItemMessage, 'warning');
   }
-
-
   dataDialog.value = true
 
   if (item === 0) {
     idStorage.value = 0
     isExistsStorage.value = false
   } else {
-
-
     idStorageEmployee.value = item.id
 
     employeeAdd.value = item.employee.id
 
     startDateRef.value = item.from.split('.').reverse().join('-')
-    console.log(startDateRef.value)
     endDateRef.value = item.to.split('.').reverse().join('-')
 
-
     markedEmployeeID.value.push(item.id);
-
-
     isExistsStorageData.value = true
-
     storageInDialogTitle.value = nameRef.value
 
   }
@@ -619,6 +598,24 @@ const employeeLineMarking = (item) => {
   markedItem.value = item
 }
 
+const lineMarkingGroup =  (group_id) => {
+  groupIdRef.value = group_id
+  getStorage({})
+}
+
+const getStorage = async ({page, itemsPerPage, sortBy, search}) => {
+  try {
+    loading.value = true
+    const { data } = await groupApi.get({page, itemsPerPage, sortBy}, search, STORAGE_GROUP)
+    paginations.value = data.result.pagination
+    storages.value = data.result.data.find(item => item.id === groupIdRef.value).storages
+  } catch (e) {
+
+  } finally {
+    loading.value = false
+  }
+}
+
 watch(dialog, newVal => {
   if (!newVal) {
     nameRef.value = null
@@ -628,8 +625,12 @@ watch(dialog, newVal => {
     employeeUpdate.value = null;
     startDateRef.value = null;
     endDateRef.value = null;
-
   }
+})
+
+onMounted(async () => {
+  await getEmployee()
+  await getOrganizations()
 })
 
 </script>
@@ -664,8 +665,6 @@ watch(dialog, newVal => {
                   name="delete"
               />
             </div>
-
-
             <div class="w-100">
               <v-text-field
                   v-model="search"
@@ -681,91 +680,82 @@ watch(dialog, newVal => {
                   clearable
                   flat
               ></v-text-field>
-
             </div>
           </div>
           <Icons name="filter" class="mt-1"/>
         </v-card>
       </div>
 
-      <v-card class="mt-2 table">
-        <v-data-table-server
-            style="height: 78vh"
-            items-per-page-text="Элементов на странице:"
-            loading-text="Загрузка"
-            no-data-text="Нет данных"
-            v-model:items-per-page="paginations.per_page"
-            :loading="loading"
-            :headers="headers"
-            :items-length="paginations.total || 0"
-            :items="storages"
-            :item-value="headers.title"
-            :search="search"
-            @update:options="getStorageData"
-            fixed-header
-            hover
-        >
-          <template v-slot:item="{ item, index }">
-            <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)"
-                @dblclick="openDialog(item)"
-                :class="{'bg-grey-lighten-2': markedID.includes(item.id) }">
-              <td class="">
-                <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
-                  <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)"
-                                  @change="handleCheckboxClick(item)">
+      <div class="d-flex ga-4 w-100">
+        <v-card class="mt-2 table">
+          <v-data-table-server
+              style="height: 78vh"
+              items-per-page-text="Элементов на странице:"
+              loading-text="Загрузка"
+              no-data-text="Нет данных"
+              v-model:items-per-page="paginationsGroup.per_page"
+              :loading="loadingGroup"
+              :headers="headersGroup"
+              :items-length="paginationsGroup.total || 0"
+              :items="groups"
+              :item-value="headers.title"
+              :search="search"
+              @update:options="getGroup"
+              fixed-header
+              hover
+          >
+            <template v-slot:item="{ item, index }">
+              <tr :class="{'bg-grey-lighten-2': item.id === groupIdRef }" @mouseenter="hoveredRowIndex = index + 100000" @mouseleave="hoveredRowIndex = null" @click="lineMarkingGroup(item.id)" >
+                <td>
+                  <div class="d-flex">
+                    <span>{{ item.id }}</span>
+                  </div>
+                </td>
+                <td>{{ item.name }}</td>
+              </tr>
+            </template>
+          </v-data-table-server>
+        </v-card>
+        <v-card class="mt-2 table">
+          <v-data-table-server
+              style="height: 78vh"
+              items-per-page-text="Элементов на странице:"
+              loading-text="Загрузка"
+              no-data-text="Нет данных"
+              v-model:items-per-page="paginations.per_page"
+              :loading="loading"
+              :headers="headers"
+              :items-length="paginations.total || 0"
+              :items="storages"
+              :item-value="headers.title"
+              :search="search"
+              @update:options="getStorage"
+              fixed-header
+              hover
+          >
+            <template v-slot:item="{ item, index }">
+              <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)"
+                  @dblclick="openDialog(item)"
+                  :class="{'bg-grey-lighten-2': markedID.includes(item.id) }">
+                <td class="">
+                  <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
+                    <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)"
+                                    @change="handleCheckboxClick(item)">
+                      <span>{{ index + 1 }}</span>
+                    </CustomCheckbox>
+                  </template>
+                  <template v-else>
+                    <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
                     <span>{{ index + 1 }}</span>
-                  </CustomCheckbox>
-                </template>
-                <template v-else>
-                  <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
-                  <span>{{ index + 1 }}</span>
-                </template>
-              </td>
-              <td>{{ item.name }}</td>
+                  </template>
+                </td>
+                <td>{{ item.name }}</td>
 
-            </tr>
-          </template>
-        </v-data-table-server>
-      </v-card>
-      <v-card class="mt-2 table">
-        <v-data-table-server
-            style="height: 78vh"
-            items-per-page-text="Элементов на странице:"
-            loading-text="Загрузка"
-            no-data-text="Нет данных"
-            v-model:items-per-page="paginations.per_page"
-            :loading="loading"
-            :headers="headers"
-            :items-length="paginations.total || 0"
-            :items="storages"
-            :item-value="headers.title"
-            :search="search"
-            @update:options="getStorageData"
-            fixed-header
-            hover
-        >
-          <template v-slot:item="{ item, index }">
-            <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)"
-                @dblclick="openDialog(item)"
-                :class="{'bg-grey-lighten-2': markedID.includes(item.id) }">
-              <td class="">
-                <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
-                  <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)"
-                                  @change="handleCheckboxClick(item)">
-                    <span>{{ index + 1 }}</span>
-                  </CustomCheckbox>
-                </template>
-                <template v-else>
-                  <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
-                  <span>{{ index + 1 }}</span>
-                </template>
-              </td>
-              <td>{{ item.name }}</td>
-
-            </tr>
-          </template>
-        </v-data-table-server>
-      </v-card>
+              </tr>
+            </template>
+          </v-data-table-server>
+        </v-card>
+      </div>
 
       <v-card>
         <v-dialog class="mt-2 pa-2" v-model="dialog">
@@ -800,8 +790,6 @@ watch(dialog, newVal => {
                       clear-icon="close"
                       clearable
                   />
-
-
                   <v-select
                       variant="outlined"
                       label="Выберите организацию"
@@ -809,6 +797,15 @@ watch(dialog, newVal => {
                       :items="organizations"
                       item-title="name"
                       item-value="id"
+                  />
+                  <v-select
+                      v-model="group"
+                      :items="groups"
+                      item-title="name"
+                      item-value="id"
+                      :rules="[rules.required]"
+                      variant="outlined"
+                      label="Группа"
                   />
                 </v-col>
               </v-row>
