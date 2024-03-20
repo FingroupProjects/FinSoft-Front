@@ -60,6 +60,10 @@ const getBarcodeById = async (id, { page, itemsPerPage, sortBy, search }) => {
 };
 
 const createBarcode = async () => {
+  if (!barcode.value) {
+    showToast("Поле Наименование не может быть пустым", "warning");
+    return;
+  }
   try {
     const body = {
       good_id: id.value,
@@ -104,6 +108,7 @@ const getBarcodes = async ({ page, itemsPerPage, sortBy, search }) => {
     );
     loading.value = false;
     barcodes.value = data.result.data;
+    pagination.value = data.result.pagination;
   } catch (e) {
     console.log(e);
   }
@@ -227,6 +232,9 @@ onMounted(async () => {
             { value: 100, title: '100' },
           ]"
         >
+          <template v-slot:loading>
+            <v-skeleton-loader type="table-row@9"></v-skeleton-loader>
+          </template>
           <template v-slot:item="{ item, index }">
             <tr
               @mouseenter="hoveredRowIndex = index"

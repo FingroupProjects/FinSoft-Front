@@ -52,11 +52,16 @@ const detail = (id) => {
 
 const goToCreate = () => {
   router.push({
-    name: 'createUpdateGood',
+    name: "createUpdateGood",
     params: {
-      id: 0
-    }
-  })
+      id: 0,
+    },
+  });
+};
+
+const createOnBase = () => {
+  isCreate.value = true;
+  isCreateGroup.value = true;
 }
 
 const lineMarking = (item) => {
@@ -162,11 +167,8 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
               >
                 <span class="px-2 py-0">создать группу</span>
               </button>
-              <Icons
-                @click="goToCreate()"
-                name="add"
-              />
-              <Icons name="copy" />
+              <Icons @click="goToCreate()" name="add" />
+              <Icons @click="createOnBase()" name="copy" />
               <Icons
                 @click="compute({ page, itemsPerPage, sortBy, search })"
                 name="delete"
@@ -217,6 +219,9 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
             { value: 100, title: '100' },
           ]"
         >
+          <template v-slot:loading>
+            <v-skeleton-loader type="table-row@9"></v-skeleton-loader>
+          </template>
           <template v-slot:item="{ item, index }">
             <tr
               @mouseenter="hoveredRowIndex = index"
