@@ -192,7 +192,6 @@ const createGood = async () => {
         formData.append(key, value);
       }
     }
-    const add_images_array = [...add_images.value];
 
     appendIfNotNull("name", name.value);
     appendIfNotNull("vendor_code", vendor_code.value);
@@ -200,7 +199,9 @@ const createGood = async () => {
     appendIfNotNull("unit_id", unit_id.value);
     appendIfNotNull("storage_id", storage_id.value);
     appendIfNotNull("main_image", imageRef.value);
-    appendIfNotNull("add_images[]", add_images_array);
+    for (const file of add_images.value) {
+      appendIfNotNull("add_images[]", file);
+    }
     appendIfNotNull("good_group_id", good_group_id.value);
 
     await goodsApi.create(formData);
