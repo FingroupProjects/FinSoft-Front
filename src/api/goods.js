@@ -5,7 +5,7 @@ export default {
     return api.post("/good", data);
   },
   update(id, data) {
-    return api.patch(`/good/${id}`, data);
+    return api.post(`/good/${id}`, data);
   },
   get({ page = 1, itemsPerPage = 10, sortBy }, search = "") {
     const params = buildParams(page, itemsPerPage, sortBy, search);
@@ -15,9 +15,9 @@ export default {
     return api.get(`/good/${id}`);
   },
   massDeletion(data) {
-    return api.post(`/good/massDelete/`, data);
+    return api.post(`/goods/massDelete/`, data);
   },
   massRestore(data) {
-    return api.post(`/good/massRestore/`, data);
+    return api.post(`/goods/massRestore/`, data);
   },
 };

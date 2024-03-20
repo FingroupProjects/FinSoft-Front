@@ -1,31 +1,30 @@
 import showToast from "../../../composables/toast/index.js";
 
 export default function validate(
-  fioRef,
-  organization,
-  loginRef,
-  passwordRef,
-  phoneRef,
-  emailRef
+  nameRef,
+  vendor_codeRef,
+  storageRef,
+  unitRef,
+  groupRef
 ) {
-  if (!fioRef.value) {
-    return showToast("Поле ФИО не может быть пустым", "warning")
+  if (!nameRef.value) {
+    return showToast("Поле Наименование не может быть пустым", "warning");
   }
-  if (organization.value.length === 0) {
-    return showToast("Поле Организации не может быть пустым", "warning")
+  if (vendor_codeRef.value.length != 8) {
+    return showToast("Поле Артикуль должно состоять из 8 символов", "warning");
   }
-  if (!loginRef.value) {
-    return showToast("Поле Логин не может быть пустым", "warning")
+  if (!storageRef.value) {
+    return showToast("Поле Место расположения не может быть пустым", "warning");
   }
-  if (!passwordRef.value) {
-    return showToast("Поле Пароль не может быть пустым", "warning")
+  if (!unitRef.value) {
+    return showToast("Поле Ед измерения не может быть пустым", "warning");
   }
-  if (!phoneRef.value) {
-    return showToast("Поле Номер телефона не может быть пустым", "warning")
-  }
-  if (!emailRef.value) {
-    return showToast("Поле Номер телефона не может быть пустым", "warning")
+  if (!groupRef.value) {
+    return showToast(
+      "Поле Группа номенклатуры не может быть пустым",
+      "warning"
+    );
   }
 
-  return true
+  return true;
 }
