@@ -47,6 +47,14 @@ const emailRef = ref(null)
 const imageRef = ref(null)
 const imagePreview = ref(null)
 const fileInput = ref(null)
+const filterModal = ref(false);
+
+const fioFilter = ref(null)
+const loginFilter = ref(null)
+const phoneFilter = ref(null)
+const emailFilter = ref(null)
+const organizationFilter = ref(null)
+const groupFilter = ref(null)
 
 const users = ref([])
 const organizations = ref([])
@@ -149,7 +157,7 @@ const addUser = async ({page, itemsPerPage, sortBy}) => {
     const res = await user.add(formData)
 
     if (res.status === 201) {
-      await getUser({page, itemsPerPage, sortBy})
+      await getUser({page, itemsPerPage, sortBy,})
       showToast(addMessage)
       idUser.value = res.data.result.id
       dialog.value = false
@@ -208,7 +216,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
 
   try {
     const response = await user.update(idUser.value, formData)
-
+    cleanForm()
     if (response.status === 200) {
       dialog.value = null
       await getUser({page, itemsPerPage, sortBy})
@@ -218,6 +226,17 @@ const update = async ({page, itemsPerPage, sortBy}) => {
 
   }
 }
+
+
+
+const cleanForm = () => {
+  fioRef.value = null;
+  organization.value = null;
+  loginRef.value = null;
+  phoneRef.value = null;
+  emailRef.value = null;
+  group.value = null;
+};
 
 const remove = async ({page, itemsPerPage, sortBy, search}) => {
   try {
@@ -247,6 +266,55 @@ const restore = async ({page, itemsPerPage, sortBy, search}) => {
 
   }
 }
+
+
+const filter = async ({ page, itemsPerPage, sortBy, search }) => {
+  loading.value = true;
+  const filterData = {
+    name: fioFilter.value,
+    organization_id: organizationFilter.value,
+    login: loginFilter.value,
+    phone: phoneFilter.value,
+    email: emailFilter.value,
+    group_id: groupFilter.value,
+  };
+  console.log(filterData);
+
+  try {
+    await getUser({
+      page,
+      itemsPerPage,
+      sortBy,
+      search,
+      filterData,
+    });
+    filterModal.value = false;
+    fioFilter.value = null;
+    organizationFilter.value = null;
+    loginFilter.value = null;
+    phoneFilter.value = null;
+    emailFilter.value = null;
+    groupFilter.value = null;
+  } catch (e) {}
+};
+
+const closeFilterModal = async ({
+  page,
+  itemsPerPage,
+  sortBy,
+  search,
+  filterData,
+}) => {
+  filterModal.value = false;
+  await getUser({ page, itemsPerPage, sortBy, search, filterData });
+  fioFilter.value = null;
+    organizationFilter.value = null;
+    loginFilter.value = null;
+    phoneFilter.value = null;
+    emailFilter.value = null;
+    groupFilter.value = null;
+};
+
 
 
 
@@ -355,9 +423,9 @@ const lineMarkingGroup = ({page, itemsPerPage, sortBy, search}, group_id) => {
   getUser({page, itemsPerPage, sortBy, search})
 }
 
-const getUser = async ({page, itemsPerPage, sortBy, search}) => {
+const getUser = async ({page, itemsPerPage, sortBy, search, filterData}) => {
   try {
-    const { data } = await groupApi.get({page, itemsPerPage, sortBy}, search, USER_GROUP)
+    const { data } = await groupApi.get({page, itemsPerPage, sortBy}, search, USER_GROUP, filterData)
     paginations.value = data.result.pagination
     users.value = data.result.data.find(item => item.id === groupIdRef.value).users
     console.log(users.value)
@@ -420,7 +488,7 @@ onMounted(async () =>  {
                 flat
             ></v-text-field>
           </div>
-          <Icons name="filter" class="mt-1"/>
+          <Icons name="filter"  @click="filterModal = true" title="фильтр" class="mt-1"/>
         </v-card>
       </div>
       <div class="d-flex ga-4 w-100">
@@ -529,9 +597,16 @@ onMounted(async () =>  {
                   </div>
                   <Icons v-else @click="addUser" name="save"/>
                 </div>
-                <v-btn @click="dialog = false" variant="text" :size="32" class="pt-2 pl-1">
-                  <Icons name="close"/>
-                </v-btn>
+                <v-btn
+                @click="
+                  dialog = false                  
+                "
+                variant="text"
+                :size="32"
+                class="pt-2 pl-1"
+              >
+                <Icons name="close" title="Закрыть" />
+              </v-btn>
               </div>
             </div>
             <v-form class="d-flex w-100" @submit.prevent="addUser">
@@ -677,6 +752,154 @@ onMounted(async () =>  {
         <div v-if="isDialogPassword">
           <change-password @toggleDialogPassword="isDialogPassword = false" :id="idUser" />
         </div>
+
+        <!-- filtermodal -->
+        <v-card>
+        <v-dialog class="mt-2 pa-2" v-model="filterModal">
+          <v-card
+            style="border: 2px solid #3ab700"
+            min-width="600"
+            class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
+            rounded="xl"
+          >
+            <div class="d-flex justify-space-between align-center mb-2">
+              <span>Фильтр</span>
+              <div class="d-flex align-center justify-space-between">
+                <div class="d-flex ga-3 align-center mt-2 me-4">
+                  <Icons @click="filter" name="save" />
+                </div>
+                <v-btn
+                  @click="closeFilterModal"
+                  variant="text"
+                  :size="32"
+                  class="pt-2 pl-1"
+                >
+                  <Icons name="close" />
+                </v-btn>
+              </div>
+            </div>
+            <v-form class="d-flex w-100">
+              <v-row class="w-100">
+                <v-col class="d-flex flex-column w-100">
+                  <div class="d-flex" :style="isExistsUser ?? { width: '98%' }">
+                    <v-text-field
+                        v-model="fioFilter"
+                        :rules="[rules.required]"
+                        color="green"
+                        rounded="md"
+                        variant="outlined"
+                        class="w-auto text-sm-body-1"
+                        density="compact"
+                        placeholder="Иван Иванов Иванович"
+                        label="ФИО"
+                        clear-icon="close"
+                        :append-inner-icon="fioRef ? 'close' : ''"
+                        @click:append-inner="fioRef = null"
+                    />
+                  </div>
+                  <div class="d-flex w-100 ga-4">
+                    <div class="border d-flex justify-center align-center" style="width: 70%;">
+                    </div>
+                    <div class="w-100">
+                      <v-select
+                          v-model="organizationFilter"
+                          :items="organizations"
+                          item-title="name"
+                          item-value="id"
+                          :rules="[rules.required]"
+                          variant="outlined"
+                          label="Организация"
+                      />
+                      <v-text-field
+                          v-model="loginFilter"
+                          :rules="[rules.required]"
+                          color="green"
+                          rounded="md"
+                          variant="outlined"
+                          class="w-auto text-sm-body-1"
+                          density="compact"
+                          placeholder="Ivan"
+                          label="Логин"
+                          clear-icon="close"
+                          :append-inner-icon="loginRef ? 'close' : ''"
+                          @click:append-inner="loginRef = null"
+                      />
+                      <div class="d-flex">
+                        <v-text-field
+                            v-model="passwordRef"
+                            :rules="[rules.required]"
+                            color="green"
+                            rounded="md"
+                            type="password"
+                            variant="outlined"
+                            class="w-auto text-sm-body-1"
+                            density="compact"
+                            placeholder="********"
+                            label="Пароль"
+                            clear-icon="close"
+                            :disabled="passwordRef === '#########'"
+                            hide-details
+                        />
+                        <span v-show="isExistsUser" class="mt-1 ms-2 text-blue-darken-4 cursor-pointer" @click="isDialogPassword = true">Изменить пароль</span>
+                      </div>
+                    </div>
+                  </div>
+                  <span
+                    v-show="isExistsUser"
+                    @click="onPickFile"
+                    class="text-sm-body-2 text-blue-darken-4 cursor-pointer"
+                  >Изменить
+                  </span>
+                  <div :class="isExistsUser ? 'mt-2' : 'mt-5'">
+                    <v-select
+                      v-model="groupFilter"
+                      :items="groups"
+                      item-title="name"
+                      item-value="id"
+                      :rules="[rules.required]"
+                      variant="outlined"
+                      label="Группа"
+                      hide-details
+                    />
+                  </div>
+                  <div class="d-flex ga-4 mt-5">
+                    <v-text-field
+                        v-model="phoneFilter"
+                        :rules="[rules.required]"
+                        color="green"
+                        rounded="md"
+                        variant="outlined"
+                        class="w-auto text-sm-body-1"
+                        density="compact"
+                        placeholder="+992119111881"
+                        label="Номер телефона"
+                        clear-icon="close"
+                        :append-inner-icon="phoneRef ? 'close' : ''"
+                        @click:append-inner="phoneRef = null"
+                        hide-details
+                    />
+                    <v-text-field
+                        v-model="emailFilter"
+                        :rules="[rules.required]"
+                        color="green"
+                        rounded="md"
+                        variant="outlined"
+                        class="w-auto text-sm-body-1"
+                        density="compact"
+                        placeholder="ivan@gmail.com"
+                        label="Почта"
+                        clear-icon="close"
+                        :append-inner-icon="emailRef ? 'close' : ''"
+                        @click:append-inner="emailRef = null"
+                        hide-details
+                    />
+                  </div>
+                </v-col>
+              </v-row>
+            </v-form>
+          </v-card>
+        </v-dialog>
+      </v-card>
       </v-card>
     </v-col>
   </div>
