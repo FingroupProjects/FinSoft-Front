@@ -111,7 +111,7 @@ const onPickFile = () => {
 
 const selectAvatar = event => {
   const files = event.target.files
-  imageRef.value = files[0];
+  imageRef.value = files[0]
   let filename = files[0].name
   if (filename.lastIndexOf('.') <= 0) {
     return showToast('Пожалуйста, добавьте заново!')

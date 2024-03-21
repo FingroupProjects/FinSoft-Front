@@ -225,6 +225,9 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
             { value: 100, title: '100' },
           ]"
         >
+          <template v-slot:loading>
+            <v-skeleton-loader type="table-row@9"></v-skeleton-loader>
+          </template>
           <template v-slot:item="{ item, index }">
             <tr
               @mouseenter="hoveredRowIndex = index"
