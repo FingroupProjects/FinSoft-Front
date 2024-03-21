@@ -1,0 +1,1 @@
+export const FIELD_COLOR = '#118f1c';
