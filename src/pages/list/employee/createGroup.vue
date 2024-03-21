@@ -7,23 +7,24 @@ import userGroup from "../../../api/userGroup.js";
 import {USER_GROUP} from "../../../composables/constant/paramsApi.js";
 import {FIELD_COLOR} from "../../../composables/constant/colors.js";
 import {getUser} from "../../../composables/auth/index.js";
+import employeeGroup from "../../../api/employeeGroup.js";
 
 const emit = defineEmits();
 
 const dialog = ref(true);
 const isValid = ref(false);
 
-const name = ref("");
+const name = ref(null);
 
 const createGroup = async () => {
   try {
     isValid.value = true;
 
-    if (name.value.length === 0) {
+    if (!name.value) {
       showToast("Поле Наименование не может быть пустым", "warning");
       return
     }
-    const response = await userGroup.add({name: name.value, type: 1});
+    const response = await employeeGroup.add({name: name.value, type: 2});
     if (response.status === 201) {
       showToast(addMessage);
     }
@@ -75,8 +76,8 @@ const rules = {
                   placeholder="Наименование"
                   label="Наименование"
                   clear-icon="close"
-                  :append-inner-icon="name.length > 1 ? 'close' : ''"
-                  @click:append-inner="name = ''"
+                  :append-inner-icon="name ? 'close' : ''"
+                  @click:append-inner="name = null"
                   hide-details
                 />
               </v-col>
