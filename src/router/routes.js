@@ -59,10 +59,10 @@ const routes = [
     name: "organizationBill",
     component: () => import("../pages/list/organizationBill/index.vue"),
   },
-  { 
-    path: "/list/organization", 
-    name: "indexOrganization", 
-    component: () => import("../pages/list/organization/index.vue"), 
+  {
+    path: "/list/organization",
+    name: "indexOrganization",
+    component: () => import("../pages/list/organization/index.vue"),
   },
   {
     path: "/list/priceType",
@@ -112,7 +112,7 @@ const routes = [
   {
     path: "/list/createUpdateGood/:id",
     name: "createUpdateGood",
-    component: () => import("../pages/list/nomenclature/createUpdate.vue"),
+    component: () => import("../pages/list/nomenclature/createUpdateGood.vue"),
   },
   {
     path: "/login",
@@ -123,10 +123,10 @@ const routes = [
     },
   },
   {
-    path: '/:catchAll(.*)',
-    name: '404',
-    component: () => import("../pages/homepage/index.vue")
-  }
+    path: "/:catchAll(.*)",
+    name: "404",
+    component: () => import("../pages/homepage/index.vue"),
+  },
 ];
 
 routes.forEach((route) => {
