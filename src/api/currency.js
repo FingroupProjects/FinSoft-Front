@@ -12,7 +12,7 @@ export default {
   },
   get({page = 1, itemsPerPage = 10, sortBy}, search = '', filter) {
     const params = buildParams(page, itemsPerPage, sortBy, search, filter);
-    console.log(params);
+
     return api.get('/currency', { params });
   },
   remove(ids) {
