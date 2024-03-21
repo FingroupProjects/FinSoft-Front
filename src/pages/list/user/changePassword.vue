@@ -3,6 +3,7 @@ import {ref, defineEmits} from "vue";
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
 import user from "../../../api/user.js";
+import {FIELD_COLOR} from "../../../composables/constant/colors.js";
 
 const emit = defineEmits();
 
@@ -75,7 +76,7 @@ const rules = {
                   v-model="password"
                   :rules="isValid ? [rules.required] : []"
                   color="green"
-                  rounded="md"
+                  :base-color="FIELD_COLOR"
                   variant="outlined"
                   class="w-auto text-sm-body-1"
                   density="compact"
@@ -90,7 +91,7 @@ const rules = {
                   v-model="confirmPassword"
                   :rules="isValid ? [rules.required] : []"
                   color="green"
-                  rounded="md"
+                  :base-color="FIELD_COLOR"
                   variant="outlined"
                   class="w-auto text-sm-body-1"
                   density="compact"

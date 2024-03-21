@@ -5,6 +5,7 @@ import Icons from "../../../composables/Icons/Icons.vue";
 import { addMessage } from "../../../composables/constant/buttons";
 import userGroup from "../../../api/userGroup.js";
 import {USER_GROUP} from "../../../composables/constant/paramsApi.js";
+import {FIELD_COLOR} from "../../../composables/constant/colors.js";
 
 const emit = defineEmits();
 
@@ -64,7 +65,7 @@ const rules = {
                   v-model="name"
                   :rules="isValid ? [rules.required] : []"
                   color="green"
-                  rounded="md"
+                  :base-color="FIELD_COLOR"
                   variant="outlined"
                   class="w-auto text-sm-body-1"
                   density="compact"
