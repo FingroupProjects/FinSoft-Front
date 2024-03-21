@@ -27,7 +27,7 @@ export default function validate(
   if (!emailRef.value) {
     return showToast("Поле Номер телефона не может быть пустым", "warning")
   }
-  if (group.value.length === 0) {
+  if (!group) {
     return showToast("Поле Группа не может быть пустым", "warning")
   }
 

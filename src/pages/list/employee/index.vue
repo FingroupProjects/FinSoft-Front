@@ -4,7 +4,6 @@ import {useRouter} from "vue-router";
 import showToast from '../../../composables/toast'
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import axios from "axios";
 import {
   addMessage,
   editMessage,
@@ -14,19 +13,19 @@ import {
   selectOneItemMessage,
   restoreMessage
 } from "../../../composables/constant/buttons.js";
-
 import organization from "../../../api/organizations.js";
 import employee from "../../../api/employee.js";
-import counterpartyApi from "../../../api/counterparty.js";
 import validate from "./validate.js";
+import {FIELD_COLOR} from "../../../composables/constant/colors.js";
+import CreateGroup from "./createGroup.vue";
 
 const router = useRouter()
 
 const loading = ref(true)
 const dialog = ref(false)
+const isCreateGroup = ref(false)
 const idEmployee = ref(null)
 const hoveredRowIndex = ref(null)
-const url = ref(null)
 
 const isExistsEmployee = ref(false)
 const markedID = ref([]);
@@ -315,6 +314,10 @@ const lineMarking = (item) => {
   markedItem.value = item;
 }
 
+const toggleGroup = async () => {
+  isCreateGroup.value = false
+}
+
 
 watch(dialog, newVal => {
   if (!newVal) {
@@ -331,9 +334,15 @@ watch(dialog, newVal => {
         <div class="d-flex align-center ga-2 pe-2 ms-4">
           <span>Сотрудники</span>
         </div>
-        <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
+        <v-card variant="text" min-width="420" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
+              <button
+                  class="group_create"
+                  @click="isCreateGroup = true"
+              >
+                <span class="px-2 py-0">создать группу</span>
+              </button>
               <Icons @click="openDialog(0)" name="add"/>
               <Icons @click="addBasedOnEmployee" name="copy"/>
               <Icons @click="compute" name="delete"/>
@@ -346,7 +355,8 @@ watch(dialog, newVal => {
                   density="compact"
                   label="Поиск..."
                   variant="outlined"
-                  color="info"
+                  color="green"
+                  :base-color="FIELD_COLOR"
                   rounded="lg"
                   clear-icon="close"
                   hide-details
@@ -434,7 +444,7 @@ watch(dialog, newVal => {
                       v-model="nameRef"
                       :rules="[rules.required]"
                       color="green"
-                      rounded="md"
+                      :base-color="FIELD_COLOR"
                       variant="outlined"
                       class="w-auto text-sm-body-1"
                       density="compact"
@@ -463,7 +473,7 @@ watch(dialog, newVal => {
                               v-model="phoneRef"
                               :rules="[rules.required]"
                               color="green"
-                              rounded="md"
+                              :base-color="FIELD_COLOR"
                               variant="outlined"
                               class="w-auto text-sm-body-1"
                               density="compact"
@@ -476,7 +486,7 @@ watch(dialog, newVal => {
                               v-model="emailRef"
                               :rules="[rules.required]"
                               color="green"
-                              rounded="md"
+                              :base-color="FIELD_COLOR"
                               variant="outlined"
                               class="w-auto text-sm-body-1"
                               density="compact"
@@ -489,7 +499,7 @@ watch(dialog, newVal => {
                               v-model="addressRef"
                               :rules="[rules.required]"
                               color="green"
-                              rounded="md"
+                              :base-color="FIELD_COLOR"
                               variant="outlined"
                               class="w-auto text-sm-body-1"
                               density="compact"
@@ -511,6 +521,9 @@ watch(dialog, newVal => {
             </v-form>
           </v-card>
         </v-dialog>
+        <div v-if="isCreateGroup">
+          <create-group @toggleDialog="toggleGroup" />
+        </div>
       </v-card>
     </v-col>
   </div>

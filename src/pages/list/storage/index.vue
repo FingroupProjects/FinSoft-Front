@@ -20,8 +20,6 @@ import Icons from "@/composables/Icons/Icons.vue";
 
 import {restoreMessage} from "../../../composables/constant/buttons.js";
 import storageGroup from "../../../api/storageGroup.js";
-import { STORAGE_GROUP } from "../../../composables/constant/paramsApi.js";
-import groupApi from "../../../api/userGroup.js";
 import {FIELD_COLOR} from "../../../composables/constant/colors.js";
 
 const router = useRouter()
@@ -97,11 +95,10 @@ const rules = {
   date: v => (v && /^\d{2}-\d{2}-\d{4}$/.test(v)) || 'Формат даты должен быть DD-MM-YYYY',
 }
 
-const getGroup = async ({page, itemsPerPage, sortBy, search}) => {
+const getGroup = async ({page, itemsPerPage, sortBy}) => {
   loadingGroup.value = true
   try {
-
-    const { data } = await groupApi.get({page, itemsPerPage, sortBy}, search, STORAGE_GROUP)
+    const { data } = await storageGroup.get({page, itemsPerPage, sortBy})
     paginationsGroup.value = data.result.pagination
     groups.value = data.result.data.map(item => ({
       id: item.id,
@@ -119,7 +116,6 @@ const getStorageData = async ({page, itemsPerPage, sortBy, search}) => {
   loading.value = true
   try {
     const {data} = await storage.get({page, itemsPerPage, sortBy}, search)
-
     paginations.value = data.result.pagination
     storages.value = data.result.data
     loading.value = false
@@ -213,13 +209,14 @@ const addStorage = async ({page, itemsPerPage, sortBy}) => {
 
 }
 
-const addGroup = async () => {
+const addGroup = async (page, itemsPerPage, sortBy) => {
   if (!groupName.value) {
     return showToast("Поле наименования не может быть пустым", "warning")
   }
   try {
-    const res = await storageGroup.add({name: groupName.value, type: STORAGE_GROUP},)
+    const res = await storageGroup.add({name: groupName.value, type: 0})
     if (res.status === 201) {
+      await getGroup({page, itemsPerPage, sortBy})
       showToast(addMessage)
       groupName.value = null
       groupDialog.value = false
@@ -236,7 +233,6 @@ const addStorageEmployee = async ({page, itemsPerPage, sortBy}) => {
     from: startDateRef.value,
     to: endDateRef.value,
   }
-
 
   try {
 
@@ -443,7 +439,6 @@ const getOrganizations = async () => {
 }
 
 const handleCheckboxClick = function (item) {
-
   lineMarking(item)
 }
 const handleEmployeeCheckboxClick = function (item) {
@@ -606,7 +601,7 @@ const lineMarkingGroup = group_id => {
 const getStorage = async ({page, itemsPerPage, sortBy, search}) => {
   try {
     loading.value = true
-    const { data } = await groupApi.getStorages({page, itemsPerPage, sortBy}, search, groupIdRef.value)
+    const { data } = await storageGroup.getStorages({page, itemsPerPage, sortBy}, search, groupIdRef.value)
     paginations.value = data.result.pagination
     storages.value = data.result.data
   } catch (e) {
@@ -700,7 +695,6 @@ onMounted(async () => {
               :items-length="paginationsGroup.total || 0"
               :items="groups"
               :item-value="headers.title"
-              :search="search"
               @update:options="getGroup"
               page-text='{0}-{1} от {2}'
               :items-per-page-options="[
