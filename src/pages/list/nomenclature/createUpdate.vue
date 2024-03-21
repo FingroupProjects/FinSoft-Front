@@ -11,12 +11,13 @@ import { useRoute, useRouter } from "vue-router";
 import { addMessage, editMessage } from "../../../composables/constant/buttons";
 import validate from "./validate";
 
-const route = useRoute();
+const { query, params: routeParams } = useRoute();
 const router = useRouter();
 
 const isValid = ref(false);
 const isEdit = ref(false);
 const isCreated = ref(false);
+const isCreateOnBase = ref(false);
 
 const name = ref("");
 const vendor_code = ref("");
@@ -98,7 +99,6 @@ const getGoodByid = async () => {
   }
   try {
     const { data } = await goodsApi.getById(id.value);
-    console.log(data);
     const good = data.result;
     name.value = good.name;
     (vendor_code.value = good.vendor_code),
@@ -143,6 +143,7 @@ const getGroups = async ({ page, itemsPerPage, sortBy, search }) => {
 };
 
 const updateGood = async () => {
+  console.log("post");
   if (id.value == 0) {
     return;
   } else if (
@@ -161,7 +162,7 @@ const updateGood = async () => {
     appendIfNotNull("vendor_code", vendor_code.value);
     appendIfNotNull("description", description.value);
     appendIfNotNull("main_image", imageRef.value);
-    appendIfNotNull("image_ids[]", images_id.value);
+    // appendIfNotNull("image_ids[]", images_id.value);
     appendIfNotNull("add_images", []);
     appendIfNotNull("storage_id", storage_id.value);
     appendIfNotNull("good_group_id", good_group_id.value);
@@ -180,6 +181,7 @@ const updateGood = async () => {
 };
 
 const createGood = async () => {
+  console.log("post");
   if (validate(name, vendor_code, storage_id, unit_id, good_group_id) !== true)
     return;
   try {
@@ -203,13 +205,14 @@ const createGood = async () => {
       appendIfNotNull("add_images[]", file);
     }
     appendIfNotNull("good_group_id", good_group_id.value);
-
     await goodsApi.create(formData);
     router.push("/list/nomenclatureGroup");
     showToast(addMessage);
     isCreated.value = true;
   } catch (e) {
     console.log(e);
+    showToast(e.response.data.message, "warning");
+    // response.data.message
   } finally {
     isValid.value = false;
   }
@@ -224,12 +227,21 @@ const setImage = (item) => {
 };
 
 const isEditGood = async () => {
-  id.value = route.params.id;
+  id.value = routeParams.id;
   isEdit.value = id.value != 0;
 };
 
+const check = async () => {
+  if (query.createOnBase == "1") {
+    isCreateOnBase.value = true;
+    id.value = routeParams.id;
+  } else {
+    isEditGood();
+  }
+};
+
 onMounted(async () => {
-  await isEditGood();
+  await check();
   await Promise.all([
     getGoodByid(),
     getUnits(),
@@ -253,11 +265,16 @@ onMounted(async () => {
           >
             <v-icon icon="keyboard_backspace" size="x-small" />
           </div>
-          <span>{{ isEdit ? "Изменение" : "Добавление" }}</span>
+          <span>{{
+            isEdit && !isCreateOnBase ? "Изменение" : "Добавление"
+          }}</span>
         </div>
         <div class="d-flex align-center justify-space-between">
           <div class="d-flex ga-3 align-center mt-2 me-4">
-            <Icons @click="isEdit ? updateGood() : createGood()" name="save" />
+            <Icons
+              @click="isEdit && !isCreateOnBase ? updateGood() : createGood()"
+              name="save"
+            />
           </div>
         </div>
       </div>

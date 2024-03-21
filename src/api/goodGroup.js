@@ -12,6 +12,10 @@ export default {
     const params = buildParams(page, itemsPerPage, sortBy, search);
     return api.get(`/good-group/get-goods/${id}`, { params });
   },
+  getGroupById(id, { page = 1, itemsPerPage = 10, sortBy }, search = "") {
+    const params = buildParams(page, itemsPerPage, sortBy, search);
+    return api.get(`/good-group/${id}`, { params });
+  },
   massDeletion(data) {
     return api.post(`/good-group/massDelete/`, data);
   },

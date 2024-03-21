@@ -7,6 +7,7 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import { addMessage } from "../../../composables/constant/buttons";
 
 const emit = defineEmits();
+const props = defineProps(["createGroupOnBase", "groupData"]);
 
 const dialog = ref(true);
 const isValid = ref(false);
@@ -49,6 +50,14 @@ watch(
     }
   }
 );
+
+onMounted(() => {
+  if (props.createGroupOnBase) {
+    name.value = props.groupData.name;
+    is_good.value = props.groupData.is_good;
+    is_service.value = props.groupData.is_service;
+  }
+});
 
 const rules = {
   required: (v) => !!v,

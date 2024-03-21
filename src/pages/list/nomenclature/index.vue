@@ -13,6 +13,7 @@ import {
   removeMessage,
   restoreMessage,
   selectOneItemMessage,
+  warningMessage,
 } from "../../../composables/constant/buttons.js";
 
 const route = useRoute();
@@ -21,7 +22,6 @@ const router = useRouter();
 const loading = ref(true);
 const isCreate = ref(false);
 const isCreateGroup = ref(false);
-
 
 const hoveredRowIndex = ref(null);
 
@@ -37,13 +37,23 @@ const headers = ref([
   { title: "Наименование", key: "name" },
 ]);
 
-const editItem = (id) => {
+const editItem = (id, createOnBaseParam) => {
   router.push({
     name: "createUpdateGood",
-    params: {
-      id: id,
-    },
+    params: { id: id },
+    query: { createOnBase: createOnBaseParam },
   });
+};
+
+const createOnBase = () => {
+  if (markedID.value.length > 1) {
+    showToast(selectOneItemMessage, "warning");
+    return;
+  } else if (markedID.value.length === 0) {
+    showToast(warningMessage, "warning");
+    return;
+  }
+  editItem(markedItem.value.id, 1);
 };
 
 const goToCreate = () => {
@@ -141,6 +151,10 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
     return massDel({ page, itemsPerPage, sortBy, search });
   }
 };
+
+onMounted(() => {
+  markedID.value = [];
+});
 </script>
 
 <template>
@@ -174,7 +188,7 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
                 <span class="px-2 py-0">создать группу</span>
               </button>
               <Icons @click="goToCreate()" name="add" />
-              <Icons name="copy" />
+              <Icons @click="createOnBase()" name="copy" />
               <Icons
                 @click="compute({ page, itemsPerPage, sortBy, search })"
                 name="delete"

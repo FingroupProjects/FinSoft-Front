@@ -41,7 +41,7 @@ const rules = {
 const editItem = (id) => {
   isEdit.value = true;
   barcodeId.value = id;
-  getBarcodeById(id, { page: 1, itemsPerPage: 100 });
+  getBarcodeById(id);
 };
 
 const getBarcodeById = async (id, { page, itemsPerPage, sortBy, search }) => {

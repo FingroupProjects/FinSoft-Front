@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import groupApi from "../../../api/goodGroup";
 import showToast from "../../../composables/toast";
@@ -12,6 +12,7 @@ import {
   removeMessage,
   restoreMessage,
   selectOneItemMessage,
+  warningMessage,
 } from "../../../composables/constant/buttons.js";
 
 const router = useRouter();
@@ -20,6 +21,7 @@ const route = useRoute();
 const loading = ref(true);
 const isCreate = ref(false);
 const isCreateGroup = ref(false);
+const createGroupOnBase = ref(false);
 
 const hoveredRowIndex = ref(null);
 
@@ -29,7 +31,7 @@ const groups = ref([]);
 const markedID = ref([]);
 const markedItem = ref([]);
 const pagination = ref([]);
-
+const groupData = ref([]);
 const headers = ref([
   { title: "№", key: "id", align: "start" },
   { title: "Наименование", key: "name" },
@@ -59,10 +61,18 @@ const goToCreate = () => {
   });
 };
 
-const createOnBase = () => {
-  isCreate.value = true;
+const createOnBase = async () => {
+  if (markedID.value.length > 1) {
+    showToast(selectOneItemMessage, "warning");
+    return;
+  } else if (markedID.value.length === 0) {
+    showToast(warningMessage, "warning");
+    return;
+  }
+  await getGroupById({ page: 1, itemsPerPage: 1 });
+  createGroupOnBase.value = true;
   isCreateGroup.value = true;
-}
+};
 
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
@@ -91,6 +101,18 @@ const lineMarking = (item) => {
   markedItem.value = item;
 };
 
+const getGroupById = async ({ page, itemsPerPage, sortBy, search }) => {
+  try {
+    const { data } = await groupApi.getGroupById(
+      markedItem.value.id,
+      { page, itemsPerPage, sortBy },
+      search
+    );
+    groupData.value = data.result;
+  } catch (e) {
+    console.log(e);
+  }
+};
 const getGroups = async ({ page, itemsPerPage, sortBy, search }) => {
   try {
     loading.value = true;
@@ -142,6 +164,10 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
     return massDel({ page, itemsPerPage, sortBy, search });
   }
 };
+
+onMounted(() => {
+  markedID.value = [];
+});
 </script>
 
 <template>
@@ -263,7 +289,11 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
         <createUpdate @toggleDialog="isCreate = false" />
       </div>
       <div v-if="isCreateGroup">
-        <createGroup @toggleDialog="isCreateGroup = false" />
+        <createGroup
+          @toggleDialog="isCreateGroup = false"
+          :createGroupOnBase="createGroupOnBase"
+          :groupData="groupData"
+        />
       </div>
     </v-col>
   </div>
