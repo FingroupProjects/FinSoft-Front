@@ -4,13 +4,13 @@ export default {
   add(data) {
     return  api.post('/group', data)
   },
-  get({page = 1, itemsPerPage = 10, sortBy}, search, type) {
+  get({page = 1, itemsPerPage = 10, sortBy}, search = '') {
     const params = buildParams(page, itemsPerPage, sortBy, search);
-    return api.get(`/group/${type}`, { params });
+    return api.get(`/group/users-group`, { params });
   },
-  getStorages({page = 1, itemsPerPage = 10, sortBy}, search, id) {
+  getUsers({page = 1, itemsPerPage = 10, sortBy}, search, id) {
     const params = buildParams(page, itemsPerPage, sortBy, search);
-    return api.get(`/group/get-storages/${id}`, { params });
+    return api.get(`/group/get-users/${id}`, { params });
   },
   update(id, body) {
     return api.patch(`/group/${id}`, body)
