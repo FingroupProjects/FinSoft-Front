@@ -38,21 +38,10 @@ label {
   font-size: 14px !important;
 }
 
-input {
-  border-color: #00acc1 !important;
+.v-select__menu-icon {
+  color: green;
+  font-size: 36px !important;
 }
-.theme--light.v-text-field--filled > .v-input__control > .v-input__slot {
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.38);
-  border-bottom-left-radius: 4px;
-  border-bottom-right-radius: 4px;
-
-  &:before {
-      display: none;
-  }
-}
-
-
 
 .group_create {
   background-color: #4ecb71;

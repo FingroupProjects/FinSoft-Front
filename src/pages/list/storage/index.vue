@@ -20,8 +20,7 @@ import Icons from "@/composables/Icons/Icons.vue";
 
 import {restoreMessage} from "../../../composables/constant/buttons.js";
 import storageGroup from "../../../api/storageGroup.js";
-import { STORAGE_GROUP } from "../../../composables/constant/paramsApi.js";
-import groupApi from "../../../api/userGroup.js";
+import {FIELD_COLOR} from "../../../composables/constant/colors.js";
 
 const router = useRouter()
 const groupDialog = ref(false)
@@ -96,11 +95,10 @@ const rules = {
   date: v => (v && /^\d{2}-\d{2}-\d{4}$/.test(v)) || 'Формат даты должен быть DD-MM-YYYY',
 }
 
-const getGroup = async ({page, itemsPerPage, sortBy, search}) => {
+const getGroup = async ({page, itemsPerPage, sortBy}) => {
   loadingGroup.value = true
   try {
-
-    const { data } = await groupApi.get({page, itemsPerPage, sortBy}, search, STORAGE_GROUP)
+    const { data } = await storageGroup.get({page, itemsPerPage, sortBy})
     paginationsGroup.value = data.result.pagination
     groups.value = data.result.data.map(item => ({
       id: item.id,
@@ -118,7 +116,6 @@ const getStorageData = async ({page, itemsPerPage, sortBy, search}) => {
   loading.value = true
   try {
     const {data} = await storage.get({page, itemsPerPage, sortBy}, search)
-
     paginations.value = data.result.pagination
     storages.value = data.result.data
     loading.value = false
@@ -212,13 +209,14 @@ const addStorage = async ({page, itemsPerPage, sortBy}) => {
 
 }
 
-const addGroup = async () => {
+const addGroup = async (page, itemsPerPage, sortBy) => {
   if (!groupName.value) {
     return showToast("Поле наименования не может быть пустым", "warning")
   }
   try {
-    const res = await storageGroup.add({name: groupName.value, type: STORAGE_GROUP},)
+    const res = await storageGroup.add({name: groupName.value, type: 0})
     if (res.status === 201) {
+      await getGroup({page, itemsPerPage, sortBy})
       showToast(addMessage)
       groupName.value = null
       groupDialog.value = false
@@ -235,7 +233,6 @@ const addStorageEmployee = async ({page, itemsPerPage, sortBy}) => {
     from: startDateRef.value,
     to: endDateRef.value,
   }
-
 
   try {
 
@@ -285,9 +282,8 @@ const massDel = async ({page, itemsPerPage, sortBy, search}) => {
     const {status} = await storage.massDeletion({ ids: markedID.value})
 
     if (status === 200) {
-
       showToast(removeMessage, 'red')
-      await getStorageData({page, itemsPerPage, sortBy}, search)
+      await getStorage({page, itemsPerPage, sortBy, search})
       markedID.value = []
       dialog.value = false
     }
@@ -300,11 +296,11 @@ const massDel = async ({page, itemsPerPage, sortBy, search}) => {
 
 const massRestore = async ({page, itemsPerPage, sortBy, search}) => {
   try {
-    const {status} = await storage.massRestoreEmployee({ ids: markedID.value})
+    const {status} = await storage.massRestore({ ids: markedID.value})
 
     if (status === 200) {
-      showToast(restoreMessage, 'red')
-      await getStorageEmployeeData({page, itemsPerPage, sortBy}, search)
+      showToast(restoreMessage)
+      await getStorage({page, itemsPerPage, sortBy, search})
       markedID.value = []
       dialog.value = false
     }
@@ -443,7 +439,6 @@ const getOrganizations = async () => {
 }
 
 const handleCheckboxClick = function (item) {
-
   lineMarking(item)
 }
 const handleEmployeeCheckboxClick = function (item) {
@@ -495,14 +490,14 @@ const addBasedOnStorage = () => {
   })
 }
 
-const compute = ({page, itemsPerPage, sortBy, search}) => {
+const compute = ({page, itemsPerPage, sortBy}) => {
 
   if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
 
   if (markedItem.value.deleted_at) {
     return massRestore({page, itemsPerPage, sortBy})
   } else {
-    return massDel({page, itemsPerPage, sortBy, search})
+    return massDel({page, itemsPerPage, sortBy})
   }
 }
 
@@ -598,7 +593,7 @@ const employeeLineMarking = (item) => {
   markedItem.value = item
 }
 
-const lineMarkingGroup =  (group_id) => {
+const lineMarkingGroup = group_id => {
   groupIdRef.value = group_id
   getStorage({})
 }
@@ -606,9 +601,9 @@ const lineMarkingGroup =  (group_id) => {
 const getStorage = async ({page, itemsPerPage, sortBy, search}) => {
   try {
     loading.value = true
-    const { data } = await groupApi.get({page, itemsPerPage, sortBy}, search, STORAGE_GROUP)
+    const { data } = await storageGroup.getStorages({page, itemsPerPage, sortBy}, search, groupIdRef.value)
     paginations.value = data.result.pagination
-    storages.value = data.result.data.find(item => item.id === groupIdRef.value).storages
+    storages.value = data.result.data
   } catch (e) {
 
   } finally {
@@ -642,7 +637,7 @@ onMounted(async () => {
         <div class="d-flex align-center ga-2 pe-2 ms-4">
           <span>Склады</span>
         </div>
-        <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
+        <v-card variant="text" min-width="400" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-2 me-3">
               <button
@@ -669,10 +664,11 @@ onMounted(async () => {
               <v-text-field
                   v-model="search"
                   prepend-inner-icon="search"
-                  density="compact"
-                  label="Поиск..."
+                  density="default"
+                  placeholder="Поиск..."
                   variant="outlined"
-                  color="info"
+                  color="green"
+                  :base-color="FIELD_COLOR"
                   rounded="lg"
                   clear-icon="close"
                   hide-details
@@ -699,8 +695,13 @@ onMounted(async () => {
               :items-length="paginationsGroup.total || 0"
               :items="groups"
               :item-value="headers.title"
-              :search="search"
               @update:options="getGroup"
+              page-text='{0}-{1} от {2}'
+              :items-per-page-options="[
+                {value: 25, title: '25'},
+                {value: 50, title: '50'},
+                {value: 100, title: '100'},
+               ]"
               fixed-header
               hover
           >
@@ -730,6 +731,12 @@ onMounted(async () => {
               :item-value="headers.title"
               :search="search"
               @update:options="getStorage"
+              page-text='{0}-{1} от {2}'
+              :items-per-page-options="[
+                {value: 25, title: '25'},
+                {value: 50, title: '50'},
+                {value: 100, title: '100'},
+               ]"
               fixed-header
               hover
           >
@@ -781,7 +788,7 @@ onMounted(async () => {
                       v-model="nameRef"
                       :rules="[rules.required]"
                       color="green"
-                      rounded="lg"
+                      :base-color="FIELD_COLOR"
                       variant="outlined"
                       class="w-auto text-sm-body-1"
                       density="compact"
@@ -793,6 +800,9 @@ onMounted(async () => {
                   <v-select
                       variant="outlined"
                       label="Выберите организацию"
+                      :base-color="FIELD_COLOR"
+                      color="green"
+                      item-color="green"
                       v-model="organizationAdd"
                       :items="organizations"
                       item-title="name"
@@ -803,6 +813,9 @@ onMounted(async () => {
                       :items="groups"
                       item-title="name"
                       item-value="id"
+                      :base-color="FIELD_COLOR"
+                      color="green"
+                      item-color="green"
                       :rules="[rules.required]"
                       variant="outlined"
                       label="Группа"
@@ -831,6 +844,12 @@ onMounted(async () => {
                   :item-value="headersStorageEmployee.title"
                   :search="search"
                   @update:options="getStorageEmployeeData"
+                  page-text='{0}-{1} от {2}'
+                  :items-per-page-options="[
+                    {value: 25, title: '25'},
+                    {value: 50, title: '50'},
+                    {value: 100, title: '100'},
+                   ]"
                   fixed-footer
                   hover
               >
@@ -884,6 +903,8 @@ onMounted(async () => {
                   <v-select
                       variant="outlined"
                       label="Выберите сотрудника"
+                      color="green"
+                      :base-color="FIELD_COLOR"
                       v-model="employeeAdd"
                       :items="employees"
                       item-title="name"
@@ -894,8 +915,8 @@ onMounted(async () => {
                       :rules="[rules.required]"
                       type="date"
                       label="Дата начало"
-                      rounded="lg"
                       color="green"
+                      :base-color="FIELD_COLOR"
                       variant="outlined"
                       density="compact"
                       clear-icon="close"
@@ -905,8 +926,8 @@ onMounted(async () => {
                       :rules="[rules.required]"
                       type="date"
                       label="Дата конец"
-                      rounded="lg"
                       color="green"
+                      :base-color="FIELD_COLOR"
                       variant="outlined"
                       density="compact"
                       clear-icon="close"
@@ -941,7 +962,7 @@ onMounted(async () => {
                       v-model="groupName"
                       :rules="[rules.required]"
                       color="green"
-                      rounded="lg"
+                      :base-color="FIELD_COLOR"
                       variant="outlined"
                       class="w-auto text-sm-body-1"
                       density="compact"

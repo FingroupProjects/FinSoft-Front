@@ -18,11 +18,12 @@ import organizationApi from "../../../api/organizations.js";
 import user from "../../../api/user.js";
 import validate from "./validate.js";
 import groupApi from "../../../api/userGroup.js";
-import {USER_GROUP} from "../../../composables/constant/paramsApi.js";
+import {FIELD_COLOR} from "../../../composables/constant/colors.js";
 
 const router = useRouter()
 
 const loading = ref(true)
+const loadingGroup = ref(true)
 const dialog = ref(false)
 const isDialogPassword = ref(false)
 const idUser = ref(null)
@@ -68,10 +69,10 @@ const rules = {
   required: v => !!v,
 }
 
-const getGroup = async ({page, itemsPerPage, sortBy, search}) => {
-  loading.value = true
+const getGroup = async ({page, itemsPerPage, sortBy}) => {
+  loadingGroup.value = true
   try {
-    const { data } = await groupApi.get({page, itemsPerPage, sortBy}, search, USER_GROUP)
+    const { data } = await groupApi.get({page, itemsPerPage, sortBy})
     paginations.value = data.result.pagination
     groups.value = data.result.data.map(item => ({
       id: item.id,
@@ -80,8 +81,7 @@ const getGroup = async ({page, itemsPerPage, sortBy, search}) => {
   } catch (e) {
     console.log(e)
   } finally {
-    loading.value = false
-
+    loadingGroup.value = false
   }
 }
 
@@ -132,6 +132,8 @@ const addUser = async ({page, itemsPerPage, sortBy}) => {
     groupValue = group.value
   }
 
+  console.log(groupValue)
+
   const formData = new FormData()
   formData.append('name', fioRef.value);
   formData.append('organization_id', organizationValue)
@@ -154,7 +156,6 @@ const addUser = async ({page, itemsPerPage, sortBy}) => {
       idUser.value = res.data.result.id
       dialog.value = false
 
-      markedID.value = []
       markedItem.value = []
     }
   } catch (e) {
@@ -177,7 +178,7 @@ const addUser = async ({page, itemsPerPage, sortBy}) => {
 }
 
 const update = async ({page, itemsPerPage, sortBy}) => {
-  if (validate(fioRef, organization, loginRef, passwordRef, phoneRef, emailRef) !== true) return
+  if (validate(fioRef, organization, loginRef, passwordRef, phoneRef, emailRef, group) !== true) return
 
   let organizationValue
   if (typeof organization.value === 'object') {
@@ -219,12 +220,12 @@ const update = async ({page, itemsPerPage, sortBy}) => {
   }
 }
 
-const remove = async ({page, itemsPerPage, sortBy, search}) => {
+const remove = async ({page, itemsPerPage, sortBy}) => {
   try {
     const { status } = await user.remove({ids: markedID.value})
     if (status === 200) {
       showToast(removeMessage, 'red')
-      await getUser({page, itemsPerPage, sortBy}, search)
+      await getUser({page, itemsPerPage, sortBy})
       markedID.value = []
       dialog.value = false
     }
@@ -269,9 +270,10 @@ const openDialog = item => {
     phoneRef.value = item.phone
     passwordRef.value = '#########'
     statusRef.value = item.status
+    const groupValue = groups.value.find(item => item.id === groupIdRef.value)
     group.value = {
-      "id": item.group.id,
-      "name": item.group.name
+      id: groupValue.id,
+      name: groupValue.name
     }
 
     if (item.organization !== null) {
@@ -288,7 +290,8 @@ const openDialog = item => {
     }
 
     emailRef.value = item.email
-    userDialogTitle.value = fioRef.value
+    userDialogTitle.value = item.name
+    console.log(userDialogTitle.value)
   }
 
 }
@@ -305,6 +308,12 @@ const addBasedOnUser = () => {
       phoneRef.value = item.phone
       statusRef.value = item.status
       emailRef.value = item.email
+
+      const groupValue = groups.value.find(item => item.id === groupIdRef.value)
+      group.value = {
+        id: groupValue.id,
+        name: groupValue.name
+      }
 
       if (item.organization !== null) {
         organization.value = {
@@ -349,28 +358,35 @@ const lineMarking = item => {
   markedItem.value = item;
 }
 
-const lineMarkingGroup = ({page, itemsPerPage, sortBy, search}, group_id) => {
+const lineMarkingGroup = (group_id) => {
   groupIdRef.value = group_id
-  console.log(groupIdRef.value)
-  getUser({page, itemsPerPage, sortBy, search})
+  getUser({})
 }
 
 const getUser = async ({page, itemsPerPage, sortBy, search}) => {
+  loading.value = true
+  if (groupIdRef.value === 0) return loading.value = false
   try {
-    const { data } = await groupApi.get({page, itemsPerPage, sortBy}, search, USER_GROUP)
+    const { data } = await groupApi.getUsers({page, itemsPerPage, sortBy}, search, groupIdRef.value)
     paginations.value = data.result.pagination
-    users.value = data.result.data.find(item => item.id === groupIdRef.value).users
-    console.log(users.value)
+    users.value = data.result.data
   } catch (e) {
-
+    users.value = []
+  } finally {
+    loading.value = false
   }
+}
+
+const toggleGroup = async () => {
+  isCreateGroup.value = false
+  await getGroup({})
 }
 
 
 watch(dialog, newVal => {
   if (!newVal) {
     fioRef.value = null
-    organization.value = []
+    organization.value = null
     passwordRef.value = null
     imagePreview.value = null
     loginRef.value = null
@@ -411,7 +427,8 @@ onMounted(async () =>  {
                 density="compact"
                 label="Поиск..."
                 variant="outlined"
-                color="info"
+                color="green"
+                :base-color="FIELD_COLOR"
                 rounded="lg"
                 clear-icon="close"
                 hide-details
@@ -431,24 +448,23 @@ onMounted(async () =>  {
               loading-text="Загрузка"
               no-data-text="Нет данных"
               v-model:items-per-page="paginations.per_page"
-              :loading="loading"
+              :loading="loadingGroup"
               :headers="headersGroup"
               :items-length="paginations.total || 0"
               :items="groups"
               :item-value="headers.title"
-              :search="search"
               @update:options="getGroup"
               page-text='{0}-{1} от {2}'
               :items-per-page-options="[
                 {value: 25, title: '25'},
                 {value: 50, title: '50'},
                 {value: 100, title: '100'},
-            ]"
+               ]"
               fixed-header
               hover
           >
             <template v-slot:item="{ item, index }">
-              <tr @mouseenter="hoveredRowIndex = index + 100000" @mouseleave="hoveredRowIndex = null" @click="lineMarkingGroup({}, item.id)" >
+              <tr :class="{'bg-grey-lighten-2': item.id === groupIdRef }" @mouseenter="hoveredRowIndex = index + 100000" @mouseleave="hoveredRowIndex = null" @click="lineMarkingGroup(item.id)" >
                 <td>
                  <div class="d-flex">
                    <span>{{ item.id }}</span>
@@ -542,7 +558,7 @@ onMounted(async () =>  {
                         v-model="fioRef"
                         :rules="[rules.required]"
                         color="green"
-                        rounded="md"
+                        :base-color="FIELD_COLOR"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
                         density="compact"
@@ -576,6 +592,8 @@ onMounted(async () =>  {
                       <v-select
                           v-model="organization"
                           :items="organizations"
+                          color="green"
+                          :base-color="FIELD_COLOR"
                           item-title="name"
                           item-value="id"
                           :rules="[rules.required]"
@@ -586,7 +604,7 @@ onMounted(async () =>  {
                           v-model="loginRef"
                           :rules="[rules.required]"
                           color="green"
-                          rounded="md"
+                          :base-color="FIELD_COLOR"
                           variant="outlined"
                           class="w-auto text-sm-body-1"
                           density="compact"
@@ -601,7 +619,7 @@ onMounted(async () =>  {
                             v-model="passwordRef"
                             :rules="[rules.required]"
                             color="green"
-                            rounded="md"
+                            :base-color="FIELD_COLOR"
                             type="password"
                             variant="outlined"
                             class="w-auto text-sm-body-1"
@@ -626,6 +644,8 @@ onMounted(async () =>  {
                     <v-select
                       v-model="group"
                       :items="groups"
+                      color="green"
+                      :base-color="FIELD_COLOR"
                       item-title="name"
                       item-value="id"
                       :rules="[rules.required]"
@@ -639,7 +659,7 @@ onMounted(async () =>  {
                         v-model="phoneRef"
                         :rules="[rules.required]"
                         color="green"
-                        rounded="md"
+                        :base-color="FIELD_COLOR"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
                         density="compact"
@@ -654,7 +674,7 @@ onMounted(async () =>  {
                         v-model="emailRef"
                         :rules="[rules.required]"
                         color="green"
-                        rounded="md"
+                        :base-color="FIELD_COLOR"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
                         density="compact"
@@ -672,7 +692,7 @@ onMounted(async () =>  {
           </v-card>
         </v-dialog>
         <div v-if="isCreateGroup">
-          <create-group @toggleDialog="isCreateGroup = false" />
+          <create-group @toggleDialog="toggleGroup" />
         </div>
         <div v-if="isDialogPassword">
           <change-password @toggleDialogPassword="isDialogPassword = false" :id="idUser" />
