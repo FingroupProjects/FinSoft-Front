@@ -61,11 +61,15 @@ const paginations = ref([])
 const showConfirmDialog = ref(false)
 
 
-//filter
-const nameFilter = ref(null)
-const employeeFilter = ref(null)
-const organizationFilter = ref(null)
-const currencyFilter = ref(null)
+
+const filterForm = ref({
+    name: null,
+    currency_id: null,
+    employee_id: null,
+    organization_id: null,
+
+})
+
 const showFilterModal = ref(false)
 
 const headers = ref([
@@ -116,8 +120,11 @@ const rules = {
 }
 
 
-const getcashRegisterData = async ({page, itemsPerPage, sortBy, search, filterData}) => {
+const getcashRegisterData = async ({page, itemsPerPage, sortBy, search}) => {
   loading.value = true
+  const filterData = filterForm.value
+  showFilterModal.value = false
+
   try {
     const {data} = await cashRegister.get({page, itemsPerPage, sortBy}, search, filterData)
 
@@ -401,36 +408,16 @@ const lineMarking = (item) => {
 }
 
 
-const filter = async ({page, itemsPerPage, sortBy, search}) => {
-
-  loading.value = true
-  const filterData = {
-    name: nameFilter.value,
-    organization_id: organizationFilter.value,
-    currency_id: currencyFilter.value,
-    responsiblePerson_id: employeeFilter.value,
-  }
-  console.log(filterData)
-
-  try {
-    await getcashRegisterData({page, itemsPerPage, sortBy, search, filterData})
-    showFilterModal.value = false
-  } catch (e) {
-    
-  }
-}
 
 const cleanFilterForm = () => {
-  nameFilter.value = null
-  organizationFilter.value = null
-  currencyFilter.value = null
-  employeeFilter.value = null
+  filterForm.value = {}
 }
 
-const  closeFilterModal = async ({page, itemsPerPage, sortBy, search, filterData}) => {
+const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
   showFilterModal.value = false
-  await getcashRegisterData({page, itemsPerPage, sortBy, search, filterData})
   cleanFilterForm()
+  await getcashRegisterData({page, itemsPerPage, sortBy, search})
+  
 
 }
 
@@ -548,7 +535,7 @@ watch(dialog, newVal => {
                   <Icons title="Сохранить" v-if="isExistsCashRegister" @click="update" name="save"/>
                   <Icons title="Сохранить" v-else @click="addcashRegister" name="save"/>
                 </div>
-                <v-btn @click="isExistsCashRegister ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData }) "
+                <v-btn @click="isExistsCashRegister ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search }) "
                   variant="text" :size="32" class="pt-2 pl-1">
                   <Icons name="close"   title="Закрыть"/>
                 </v-btn>
@@ -620,7 +607,7 @@ watch(dialog, newVal => {
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
             
-                <Icons @click="filter" title="Фильтр" name="save"/>
+                <Icons @click="getcashRegisterData" title="Фильтр" name="save"/>
                 </div>
                 <v-btn @click="closeFilterModal" variant="text" :size="32" class="pt-2 pl-1">
                   <Icons title="Закрыть" name="close"/>
@@ -631,7 +618,7 @@ watch(dialog, newVal => {
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100">
                   <v-text-field
-                      v-model="nameFilter"
+                      v-model="filterForm.name"
                       color="green"
                       rounded="md"
                       variant="outlined"
@@ -647,7 +634,7 @@ watch(dialog, newVal => {
                         style="max-width: 50%; min-width: 50%;"
                         variant="outlined"
                         label="Валюта"
-                        v-model="currencyFilter"
+                        v-model="filterForm.currency_id"
                         :items="currencies"
                         item-title="name"
                         item-value="id"
@@ -656,7 +643,7 @@ watch(dialog, newVal => {
                       style="max-width: 47%; min-width: 46%;"
                         variant="outlined"
                         label="Ответственное лицо"
-                        v-model="employeeFilter"
+                        v-model="filterForm.employee_id"
                         :items="employees"
                         item-title="name"
                         item-value="id"
@@ -666,7 +653,7 @@ watch(dialog, newVal => {
                   <v-select
                       variant="outlined"
                       label="Организация"
-                      v-model="organizationFilter"
+                      v-model="filterForm.organization_id"
                       :items="organizations"
                       item-title="name"
                       item-value="id"

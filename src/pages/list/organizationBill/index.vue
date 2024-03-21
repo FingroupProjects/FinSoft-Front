@@ -50,12 +50,17 @@ const organizationBills = ref([])
 const paginations = ref([])
 
 //filter
-const nameFilter = ref(null)
-const currencyFilter = ref(null)
-const dateFilter = ref(null)
-const bill_numberFilter = ref(null)
-const organizationFilter = ref(null)
-const commentFilter = ref(null)
+
+const filterForm = ref({
+    name: null,
+    currency_id: null,
+    date: null,
+    bill_number: null,
+    organization_id: null,
+    comment: null,
+})
+
+
 const showConfirmDialog = ref(false)
 
 
@@ -65,7 +70,6 @@ const headers = ref([
   {title: 'Баланс', key: 'name', sortable: false},
   {title: 'Организация', key: 'organization.name'},
   {title: 'Валюта', key: 'currency.name'},
-  
 ])
 
 const closeDialogWithoutSaving = () => {
@@ -112,8 +116,10 @@ const rules = {
 } 
 
 
-const getOrganizationBillData = async ({page, itemsPerPage, sortBy, search, filterData}) => {
-  console.log(filterData)
+const getOrganizationBillData = async ({page, itemsPerPage, sortBy, search}) => {
+  const filterData = filterForm.value
+  filterModal.value = false
+
   loading.value = true
   try {
     
@@ -130,24 +136,7 @@ const getOrganizationBillData = async ({page, itemsPerPage, sortBy, search, filt
 }
 
 
-const filter = async ({page, itemsPerPage, sortBy, search}) => {
-  loading.value = true
-  const filterData = {
-    name: nameFilter.value,
-    organization_id: organizationFilter.value,
-    currency_id: currencyFilter.value,
-    bill_number: bill_numberFilter.value,
-    date: dateFilter.value,
-    comment: commentFilter.value
-  }
 
-  try {
-    await getOrganizationBillData({page, itemsPerPage, sortBy, search, filterData})
-    filterModal.value = false
-  } catch (e) {
-    
-  }
-}
 
 const addOrganizationBill = async ({page, itemsPerPage, sortBy}) => {
 
@@ -161,7 +150,9 @@ const addOrganizationBill = async ({page, itemsPerPage, sortBy}) => {
   }
 
   if (validate(nameRef, bill_number, dateRef, organizationAdd, currencyAdd ) !== true) return
+  console.log(filterForm.value);
 
+   
 
     const res = await organizationBill.create(body)
 
@@ -317,12 +308,8 @@ const cleanForm =  () => {
 
 
 const cleanFilterForm =  () => {
-  nameFilter.value = null
-  bill_numberFilter.value = null
-  dateFilter.value = null
-  organizationFilter.value = null
-  currencyFilter.value = null
-  commentFilter.value = null
+  console.log(filterForm.value);
+  filterForm.value = {}
 }
 
 const addBasedOnorganizationBill = () => {
@@ -356,10 +343,11 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
 
 
 
-const  closeFilterModal = async ({page, itemsPerPage, sortBy, search, filterData}) => {
+const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
   filterModal.value = false
-  await getOrganizationBillData({page, itemsPerPage, sortBy, search, filterData})
   cleanFilterForm()
+  await getOrganizationBillData({page, itemsPerPage, sortBy, search})
+
 
 }
 
@@ -498,7 +486,7 @@ onMounted(async () => {
                   <Icons v-if="isExistsOrganizationBill"  title="Сохранить" @click="update" name="save"/>
                   <Icons v-else @click="addOrganizationBill"  title="Сохранить" name="save"/>
                 </div>
-                <v-btn @click="isExistsOrganizationBill ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData }) "
+                <v-btn @click="isExistsOrganizationBill ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search }) "
                   variant="text" :size="32" class="pt-2 pl-1">
                   <Icons name="close"   title="Закрыть"/>
                   </v-btn>
@@ -625,7 +613,7 @@ onMounted(async () => {
               <span>Фильтр</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons @click="filter" name="save"/>
+                  <Icons @click="getOrganizationBillData" name="save"/>
                 </div>
                 <v-btn @click="closeFilterModal" variant="text" :size="32" class="pt-2 pl-1">
                   <Icons name="close"/>
@@ -637,7 +625,7 @@ onMounted(async () => {
                 <v-col class="d-flex flex-column w-100">
                   <div class="d-flex justify-space-between ga-6 mb-3">
                     <v-text-field
-                        v-model="nameFilter"
+                        v-model="filterForm.name"
                         color="green"
                         rounded="md"
                         variant="outlined"
@@ -657,28 +645,28 @@ onMounted(async () => {
                         label="Дата создания"
                         type="date"
                         style="max-width: 30%"
-                        v-model="dateFilter"
+                        v-model="filterForm.date"
                         density="compact"
                         rounded="md"
                         color="green"
-                        :append-inner-icon="dateFilter ? 'close' : ''"
-                        @click:append-inner="dateFilter = null"
+                        :append-inner-icon="filterForm.date ? 'close' : ''"
+                        @click:append-inner="filterForm.date = null"
                         hide-details
                     />
                     <v-text-field
-                        v-model="bill_numberFilter"
+                        v-model="filterForm.bill_number"
                         variant="outlined"
                         label="Номер счёта"
                         density="compact"
                         rounded="md"
                         color="green"
-                        :append-inner-icon="bill_numberFilter ? 'close' : ''"
-                        @click:append-inner="bill_numberFilter = null"
+                        :append-inner-icon="filterForm.bill_number ? 'close' : ''"
+                        @click:append-inner="filterForm.bill_number = null"
                         hide-details
                     />
                     <v-select
                       style="max-width: 40%; min-width: 40%"
-                        v-model="currencyFilter"
+                        v-model="filterForm.currency_id"
                         :items="currencies"
                         item-title="name"
                         item-value="id"
@@ -689,7 +677,7 @@ onMounted(async () => {
                     />
                   </div>
                   <v-select
-                      v-model="organizationFilter"
+                      v-model="filterForm.organization_id"
                       :items="organizations"
                       item-title="name"
                       item-value="id"
@@ -700,13 +688,13 @@ onMounted(async () => {
                   <v-textarea
                       variant="outlined"
                       label="Комментарий"
-                      v-model="commentFilter"
+                      v-model="filterForm.comment"
                       density="compact"
                       rounded="md"
                       color="green"
                       hide-details
-                      :append-inner-icon="commentFilter ? 'close' : ''"
-                      @click:append-inner="commentFilter = null"
+                      :append-inner-icon="filterForm.comment ? 'close' : ''"
+                      @click:append-inner="filterForm.comment = null"
                   />
                 </v-col>
               </v-row>

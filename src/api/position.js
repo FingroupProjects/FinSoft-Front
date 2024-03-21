@@ -4,8 +4,8 @@ export default {
   add(data) {
     return  api.post('/position', data)
   },
-  get({page = 1, itemsPerPage = 25, sortBy}, search) {
-    const params = buildParams(page, itemsPerPage, sortBy, search);
+  get({page = 1, itemsPerPage = 25, sortBy}, search, filterData) {
+    const params = buildParams(page, itemsPerPage, sortBy, search, filterData);
     return api.get('/position', { params });
   },
   update(id, body) {

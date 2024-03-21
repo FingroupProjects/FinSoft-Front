@@ -7,6 +7,7 @@
   outline: none;
 }
 
+
 .custom_input::placeholder {
   color: #757575;
 }
@@ -41,6 +42,7 @@ label {
   color: green;
   font-size: 36px !important;
 }
+
 .group_create {
   background-color: #4ecb71;
   border-radius: 12px;
