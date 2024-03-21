@@ -44,9 +44,9 @@ const priceTypes = ref([])
 const paginations = ref([])
 
 const filterForm = ref({
-    nameFilter: null,
-    descriptionFilter: null,
-    currencyFilter: null
+    name: null,
+    description: null,
+    currency_id: null
 })
 
 
@@ -61,8 +61,9 @@ const rules = {
 }
 
 
-const getPriceTypeData = async ({page, itemsPerPage, sortBy, search, filterData}) => {
-
+const getPriceTypeData = async ({page, itemsPerPage, sortBy, search}) => {
+  const filterData = filterForm.value
+  filterModal.value = false
   loading.value = true
   try {
     
@@ -109,21 +110,6 @@ const checkAndClose = () => {
 
 
 
-const filter = async ({page, itemsPerPage, sortBy, search}) => {
-  const filterData = {
-    name: filterForm.value.nameFilter, 
-    description: filterForm.value.descriptionFilter, 
-    currency_id: filterForm.value.currencyFilter
-  }
-
-
-  try {
-    await getPriceTypeData({page, itemsPerPage, sortBy, filterData})
-    
-    filterModal.value = false
-  } catch (e) {
-  }
-}
 
 
 const addPriceType = async ({page, itemsPerPage, sortBy}) => {
@@ -319,17 +305,14 @@ const lineMarking = (item) => {
 
 const  closeFilterModal = async ({page, itemsPerPage, sortBy, search, filterData}) => {
   filterModal.value = false
-  await getPriceTypeData({page, itemsPerPage, sortBy, search, filterData})
   cleanFilterForm()
+  await getPriceTypeData({page, itemsPerPage, sortBy, search})
+  
 
 }
 
 const cleanFilterForm = () => {
-  filterForm.value = {
-    name: null,
-    description: null,
-    currency_id: null
-  }
+  filterForm.value = {}
 }
 
 
@@ -504,7 +487,7 @@ onMounted(async () => {
               <span>Фильтр</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons @click="filter" title="Сохранить" name="save"/>
+                  <Icons @click="getPriceTypeData" title="Сохранить" name="save"/>
                 </div>
                 <v-btn @click="filterModal = false" variant="text" :size="32" class="pt-2 pl-1">
                   <Icons title="Закрыть" @click="closeFilterModal" name="close"/>
@@ -515,7 +498,7 @@ onMounted(async () => {
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100">
                   <v-text-field
-                      v-model="filterForm.nameFilter"
+                      v-model="filterForm.name"
                       color="green"
                       rounded="md"
                       variant="outlined"
@@ -529,13 +512,13 @@ onMounted(async () => {
                   <v-select
                       variant="outlined"
                       label="Валюта"
-                      v-model="filterForm.currencyFilter"
+                      v-model="filterForm.currency_id"
                       :items="currencies"
                       item-title="name"
                       item-value="id"
                   />
                   <v-textarea
-                      v-model="filterForm.descriptionRef"
+                      v-model="filterForm.description"
                       color="green"
                       rounded="md"
                       variant="outlined"
