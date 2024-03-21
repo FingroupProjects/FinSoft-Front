@@ -19,6 +19,7 @@ import user from "../../../api/user.js";
 import validate from "./validate.js";
 import groupApi from "../../../api/userGroup.js";
 import {USER_GROUP} from "../../../composables/constant/paramsApi.js";
+import {FIELD_COLOR} from "../../../composables/constant/colors.js";
 
 const router = useRouter()
 
@@ -411,7 +412,8 @@ onMounted(async () =>  {
                 density="compact"
                 label="Поиск..."
                 variant="outlined"
-                color="info"
+                color="green"
+                :base-color="FIELD_COLOR"
                 rounded="lg"
                 clear-icon="close"
                 hide-details
@@ -443,7 +445,7 @@ onMounted(async () =>  {
                 {value: 25, title: '25'},
                 {value: 50, title: '50'},
                 {value: 100, title: '100'},
-            ]"
+               ]"
               fixed-header
               hover
           >
@@ -542,7 +544,7 @@ onMounted(async () =>  {
                         v-model="fioRef"
                         :rules="[rules.required]"
                         color="green"
-                        rounded="md"
+                        :base-color="FIELD_COLOR"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
                         density="compact"
@@ -576,6 +578,8 @@ onMounted(async () =>  {
                       <v-select
                           v-model="organization"
                           :items="organizations"
+                          color="green"
+                          :base-color="FIELD_COLOR"
                           item-title="name"
                           item-value="id"
                           :rules="[rules.required]"
@@ -586,7 +590,7 @@ onMounted(async () =>  {
                           v-model="loginRef"
                           :rules="[rules.required]"
                           color="green"
-                          rounded="md"
+                          :base-color="FIELD_COLOR"
                           variant="outlined"
                           class="w-auto text-sm-body-1"
                           density="compact"
@@ -601,7 +605,7 @@ onMounted(async () =>  {
                             v-model="passwordRef"
                             :rules="[rules.required]"
                             color="green"
-                            rounded="md"
+                            :base-color="FIELD_COLOR"
                             type="password"
                             variant="outlined"
                             class="w-auto text-sm-body-1"
@@ -626,6 +630,8 @@ onMounted(async () =>  {
                     <v-select
                       v-model="group"
                       :items="groups"
+                      color="green"
+                      :base-color="FIELD_COLOR"
                       item-title="name"
                       item-value="id"
                       :rules="[rules.required]"
@@ -639,7 +645,7 @@ onMounted(async () =>  {
                         v-model="phoneRef"
                         :rules="[rules.required]"
                         color="green"
-                        rounded="md"
+                        :base-color="FIELD_COLOR"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
                         density="compact"
@@ -654,7 +660,7 @@ onMounted(async () =>  {
                         v-model="emailRef"
                         :rules="[rules.required]"
                         color="green"
-                        rounded="md"
+                        :base-color="FIELD_COLOR"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
                         density="compact"
