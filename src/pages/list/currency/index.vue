@@ -13,6 +13,10 @@ import Icons from "../../../composables/Icons/Icons.vue";
 import showDate from "../../../composables/date/showDate.js";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import validate from "./validate.js";
+
+import {tr} from "vuetify/locale";
+
+
 const router = useRouter()
 
 const loading = ref(false);
@@ -27,6 +31,7 @@ const idCurrency = ref(null)
 const currencyInDialogTitle = ref(null)
 const search = ref('')
 const filterModal = ref(null)
+const showConfirmDialog = ref(false)
 
 const hoveredRowIndex = ref(null)
 const markedItem = ref(null)
@@ -73,6 +78,7 @@ const rules = {
 }
 
 const getCurrencyData = async ({page, itemsPerPage, sortBy, search, filterData}) => {
+
   loading.value = true;
   try {
     const {data} = await currency.get({page, itemsPerPage, sortBy}, search, filterData);
@@ -96,7 +102,6 @@ const filter = async ({page, itemsPerPage, sortBy, search}) => {
     symbol_code: symbolFilter.value
   }
 
-    console.log(filterData);
   try {
     await getCurrencyData({page, itemsPerPage, sortBy, search, filterData})
     filterModal.value = false
@@ -104,6 +109,76 @@ const filter = async ({page, itemsPerPage, sortBy, search}) => {
     
   }
 }
+
+const isDataChanged = () => {
+  
+  const item = currencies.value.find(item => item.id === idCurrency.value)
+
+  const isChanged =
+    nameRef.value !== item.name ||
+    digitalRef.value != item.digital_code ||
+    symbolRef.value !== item.symbol_code
+  return isChanged;
+};
+const isRateChanged = () => {
+
+  const item = rates.value.find(item => item.id === idCurrencyRate.value)
+  console.log(item)
+  const isChanged =
+    valueRef.value !== item.name ||
+    showDate(dateRef.value) != item.date
+  return isChanged;
+}
+
+const closeDialogWithoutSaving = () => {
+  
+  if(rateDialog.value) {
+    rateDialog.value = false
+  }
+  else {
+    dialog.value = false;
+  }
+  showConfirmDialog.value = false;
+};
+const checkUpdate = () => {
+
+    if(isDataChanged() === true){
+      showConfirmDialog.value = true
+    }
+    else {
+      dialog.value = false
+    }
+
+}
+const checkRateUpdate = () => {
+   
+    if(isRateChanged() === true){
+      showConfirmDialog.value = true
+    }
+    else {
+      rateDialog.value = false
+    }
+}
+const checkAndClose = () => {
+
+  if (nameRef.value || digitalRef.value || symbolRef.value) {
+    showConfirmDialog.value = true;
+  } else {
+    dialog.value = false;
+  }
+  
+};
+
+const checkRateAndClose = () => {
+  
+  if (valueRef.value) {
+    showConfirmDialog.value = true;
+  } else {
+    rateDialog.value = false;
+  }
+}
+
+
 
 
 const getCurrencyRateData = async ({page, itemsPerPage, sortBy, search}, idCurrency) => {
@@ -289,7 +364,7 @@ const addDialogRate = () => {
 
 const removeCurrencyRate = async ({page, itemsPerPage, sortBy}) => {
   try {
-    console.log(markedIDRate.value)
+   
     const {status} = await currency.removeRate({ids: markedIDRate.value})
     if (status === 200) {
       showToast(removeMessage, 'red')
@@ -317,7 +392,7 @@ const restoreCurrencyRate = async ({page, itemsPerPage, sortBy}) => {
 
 const addBasedOnCurrency = () => {
   if (markedID.value.length !== 1 && !isExistsCurrency.value) return showToast(selectOneItemMessage, 'warning')
-  console.log(markedID.value.length)
+ 
   dialog.value = true
 
   currencies.value.forEach(item => {
@@ -530,8 +605,9 @@ watch(rateDialog, newVal => {
                   <Icons title="Сохранить"  v-if="isExistsCurrency" @click="update" name="save"/>
                   <Icons title="Сохранить"  v-else @click="addCurrency" name="save"/>
                 </div>
-                <v-btn @click="dialog = false" variant="text" :size="32" class="pt-2 pl-1">
-                  <Icons title="Закрыть"  name="close"/>
+                <v-btn @click="isExistsCurrency ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData }) "
+                  variant="text" :size="32" class="pt-2 pl-1">
+                  <Icons name="close"   title="Закрыть"/>
                 </v-btn>
               </div>
             </div>
@@ -647,12 +723,13 @@ watch(rateDialog, newVal => {
               <span class="pl-5">{{ isExistsCurrencyRate ? 'Изменить' : 'Добавить' }} курс</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons title="Удалить"  v-show="isExistsCurrencyRate" @click="removeCurrencyRate" name="delete"/>
+                  <Icons title="Удалить "  v-show="isExistsCurrencyRate" @click="removeCurrencyRate" name="delete"/>
                   <Icons title="Сохранить"  v-if="isExistsCurrencyRate" @click="updateRate" name="save"/>
                   <Icons  title="Сохранить" v-else @click="addRate" name="save"/>
                 </div>
-                <v-btn @click="rateDialog = false" variant="text" :size="32" class="pt-2 pl-1">
-                  <Icons  title="Закрыть" name="close"/>
+                <v-btn @click="isExistsCurrencyRate ? checkRateUpdate() : checkRateAndClose({ page, itemsPerPage, sortBy, search, filterData }) "
+                  variant="text" :size="32" class="pt-2 pl-1">
+                  <Icons name="close"   title="Закрыть"/>
                 </v-btn>
               </div>
             </div>
@@ -761,6 +838,26 @@ watch(rateDialog, newVal => {
           </v-card>
         </v-dialog>
       </v-card>
+      
+      <v-dialog style="min-width: 300px;"  v-model="showConfirmDialog" persistent>
+  <v-card style="max-width: 400px;" class="mx-auto flex flex-col">
+    <v-card-title class="text-h6"
+    >Подтверждение</v-card-title>
+    <v-card-text class="text-subtitle-1">Точно хотите закрыть? Введенные данные не будут сохранены.</v-card-text>
+    <v-card-actions>
+      <v-btn @click="showConfirmDialog = false"
+        class="text-none mb-4 w-[200px] h-[20px]"
+        color="red"
+        variant="flat"
+      >Нет</v-btn>
+      <v-btn @click="closeDialogWithoutSaving"
+        class="text-none mb-4 w-[200px] h-[20px]"
+        color="green"
+        variant="flat"
+      >Да</v-btn>
+    </v-card-actions>
+  </v-card>
+</v-dialog>
 
     </v-col>
   </div>
