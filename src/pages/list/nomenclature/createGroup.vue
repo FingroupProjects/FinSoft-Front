@@ -7,7 +7,7 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import { addMessage } from "../../../composables/constant/buttons";
 
 const emit = defineEmits();
-const props = defineProps(["createGroupOnBase", "groupData"]);
+const props = defineProps(["createGroupOnBase", "groupData", "isFilter"]);
 
 const dialog = ref(true);
 const isValid = ref(false);
@@ -39,6 +39,20 @@ const createGroup = async () => {
     console.log(e);
   } finally {
     isValid.value = false;
+  }
+};
+
+const filter = async () => {
+  try {
+    const filterData = {
+      name: name.value,
+      is_good: is_good.value,
+      is_service: is_service.value,
+    };
+    emit("toggleDialog");
+    emit("filter", filterData);
+  } catch (e) {
+    console.log(e);
   }
 };
 
@@ -74,11 +88,14 @@ const rules = {
           rounded="xl"
         >
           <div class="d-flex justify-space-between align-center mb-2">
-            <span>Создать группу</span>
+            <span>{{ isFilter ? "Фильтр" : "Создать группу" }}</span>
             <div class="d-flex align-center justify-space-between">
               <div class="d-flex ga-3 align-center mt-2 me-4">
                 <!-- <Icons name="delete" /> -->
-                <Icons @click="createGroup()" name="save" />
+                <Icons
+                  @click="isFilter ? filter() : createGroup()"
+                  name="save"
+                />
               </div>
               <v-btn
                 @click="$emit('toggleDialog')"

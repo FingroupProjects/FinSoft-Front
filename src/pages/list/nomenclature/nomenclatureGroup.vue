@@ -6,7 +6,7 @@ import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import createGroup from "./createGroup.vue";
-import createUpdate from "./createUpdate.vue";
+import createUpdate from "./createUpdateGood.vue";
 import {
   ErrorSelectMessage,
   removeMessage,
@@ -20,6 +20,7 @@ const route = useRoute();
 
 const loading = ref(true);
 const isCreate = ref(false);
+const isFilter = ref(false);
 const isCreateGroup = ref(false);
 const createGroupOnBase = ref(false);
 
@@ -59,6 +60,11 @@ const goToCreate = () => {
       id: 0,
     },
   });
+};
+
+const openFilter = () => {
+  isFilter.value = true;
+  isCreateGroup.value = true;
 };
 
 const createOnBase = async () => {
@@ -113,10 +119,10 @@ const getGroupById = async ({ page, itemsPerPage, sortBy, search }) => {
     console.log(e);
   }
 };
-const getGroups = async ({ page, itemsPerPage, sortBy, search }) => {
+const getGroups = async ({ page, itemsPerPage, sortBy, search, filterData }) => {
   try {
     loading.value = true;
-    const { data } = await groupApi.get({ page, itemsPerPage, sortBy }, search);
+    const { data } = await groupApi.get({ page, itemsPerPage, sortBy }, search, filterData);
     groups.value = data.result.data;
     pagination.value = data.result.pagination;
     loading.value = false;
@@ -162,6 +168,15 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
     return massRestore({ page, itemsPerPage, sortBy });
   } else {
     return massDel({ page, itemsPerPage, sortBy, search });
+  }
+};
+
+const filterGroup = async (filterData) => {
+  try {
+    // await getGroups({ page, itemsPerPage, sortBy, filterData });
+    console.log(filterData);
+  } catch (e) {
+    console.log(e);
   }
 };
 
@@ -217,7 +232,7 @@ onMounted(() => {
               ></v-text-field>
             </div>
           </div>
-          <Icons name="filter" class="mt-1" />
+          <Icons @click="openFilter()" name="filter" class="mt-1" />
         </v-card>
       </div>
 
@@ -291,8 +306,10 @@ onMounted(() => {
       <div v-if="isCreateGroup">
         <createGroup
           @toggleDialog="isCreateGroup = false"
+          @filter="filterGroup"
           :createGroupOnBase="createGroupOnBase"
           :groupData="groupData"
+          :isFilter="isFilter"
         />
       </div>
     </v-col>

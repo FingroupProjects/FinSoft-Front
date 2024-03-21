@@ -7,7 +7,7 @@ import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import createGroup from "./createGroup.vue";
-import createUpdate from "./createUpdate.vue";
+import createUpdate from "./createUpdateGood.vue";
 import {
   ErrorSelectMessage,
   removeMessage,
