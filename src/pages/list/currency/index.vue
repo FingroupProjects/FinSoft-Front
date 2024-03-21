@@ -6,15 +6,15 @@ import currentDate from "../../../composables/date/currentDate.js";
 import currency from '../../../api/currency.js'
 import {
   addMessage,
-  editMessage, ErrorSelectMessage, firstRestoreRecordMessage,
+  editMessage, ErrorSelectMessage,
   removeMessage, restoreMessage, selectOneItemMessage,
 } from "../../../composables/constant/buttons.js";
 import Icons from "../../../composables/Icons/Icons.vue";
 import showDate from "../../../composables/date/showDate.js";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import validate from "./validate.js";
-import {tr} from "vuetify/locale";
 
+import {tr} from "vuetify/locale";
 
 
 const router = useRouter()
@@ -48,6 +48,11 @@ const digitalRef = ref(null)
 const dateRef = ref(null)
 const valueRef = ref(null)
 
+
+const nameFilter = ref(null)
+const symbolFilter = ref(null)
+const digitalFilter = ref(null)
+
 const rates = ref([])
 const currencies = ref([]);
 const paginationsRate = ref([])
@@ -72,15 +77,8 @@ const rules = {
   date: v => (v && /^\d{2}-\d{2}-\d{4}$/.test(v)) || 'Формат даты должен быть DD-MM-YYYY',
 }
 
-
-
-//filter
-const nameFilter = ref(null)
-const symbolFilter = ref(null)
-const digitalFilter = ref(null)
-
 const getCurrencyData = async ({page, itemsPerPage, sortBy, search, filterData}) => {
- 
+
   loading.value = true;
   try {
     const {data} = await currency.get({page, itemsPerPage, sortBy}, search, filterData);
@@ -92,7 +90,7 @@ const getCurrencyData = async ({page, itemsPerPage, sortBy, search, filterData})
   } finally {
     loading.value = false;
   }
-};
+}
 
 
 
@@ -191,7 +189,7 @@ const getCurrencyRateData = async ({page, itemsPerPage, sortBy, search}, idCurre
 
   try {
     const response = await currency.show(idCurrency)
-    const {data} = await currency.showRate(idCurrency, {page, itemsPerPage, sortBy}, search)
+    const { data } = await currency.showRate(idCurrency, {page, itemsPerPage, sortBy}, search)
     rates.value = data.result.data.map(item => ({
       ...item,
       date: showDate(item.date),
@@ -659,7 +657,7 @@ watch(rateDialog, newVal => {
               </v-row>
             </v-form>
 
-            <v-card class="table" style="border: 1px solid #3AB700">
+            <v-card class="table" style="border: 1px solid #3AB700; overflow: auto;">
               <div v-if="isExistsCurrency" class="d-flex w-100 rounded-t-lg mb-1 align-center "
                    style="border-bottom: 1px solid #3AB700">
                 <div class="d-flex justify-end w-100 ga-2 pt-1 me-2" style="padding-top: 4px !important;">
@@ -682,11 +680,12 @@ watch(rateDialog, newVal => {
                   @update:options="getCurrencyRateData({}, idCurrency)"
                   page-text='{0}-{1} от {2}'
                   :items-per-page-options="[
-                {value: 25, title: '25'},
-                {value: 50, title: '50'},
-                {value: 100, title: '100'},
-            ]"
+                      {value: 25, title: '25'},
+                      {value: 50, title: '50'},
+                      {value: 100, title: '100'},
+                  ]"
                   fixed-footer
+                  fixed-header
                   hover
               >
                 <template v-slot:item="{ item, index }">
