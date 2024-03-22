@@ -17,7 +17,7 @@ import {
 } from "../../../composables/constant/buttons.js";
 
 const router = useRouter();
-const route = useRoute();
+const { query, params: routeParams } = useRoute();
 
 const loading = ref(true);
 const isCreate = ref(false);
@@ -35,6 +35,12 @@ const markedID = ref([]);
 const markedItem = ref([]);
 const pagination = ref([]);
 const groupData = ref([]);
+const filterForm = ref({
+  name: null,
+  is_good: null,
+  is_service: null,
+});
+
 const headers = ref([
   { title: "№", key: "id", align: "start" },
   { title: "Наименование", key: "name" },
@@ -42,15 +48,18 @@ const headers = ref([
 
 watch(isCreateGroup, (newVal) => {
   if (newVal === false) {
-    getGroups({ page: 1, itemsPerPage: 25 });
+    getGroups({ page: 1, itemsPerPage: 100 });
   }
 });
 
-const detail = (id) => {
+const detail = (item) => {
   router.push({
     name: "nomenclature",
     params: {
-      id: id,
+      id: item.id,
+    },
+    query: {
+      group: item.name,
     },
   });
 };
@@ -121,14 +130,13 @@ const getGroupById = async ({ page, itemsPerPage, sortBy, search }) => {
     console.log(e);
   }
 };
-const getGroups = async ({
-  page,
-  itemsPerPage,
-  sortBy,
-  search,
-  filterData,
-}) => {
+const getGroups = async ({ page, itemsPerPage, sortBy, search }) => {
   try {
+    const filterData = {
+      name: filterForm.value.name,
+      is_good: filterForm.value.is_good ? 1 : 0,
+      is_service: filterForm.value.is_service ? 1 : 0,
+    };
     loading.value = true;
     const { data } = await groupApi.get(
       { page, itemsPerPage, sortBy },
@@ -185,8 +193,8 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
 
 const filterGroup = async (filterData) => {
   try {
-    // await getGroups({ page, itemsPerPage, sortBy, filterData });
-    console.log(filterData);
+    // await getGroups({ page: 1, itemsPerPage: 100 });
+    filterForm.value = filterData;
   } catch (e) {
     console.log(e);
   }
@@ -281,7 +289,7 @@ onMounted(() => {
               @mouseenter="hoveredRowIndex = index"
               @mouseleave="hoveredRowIndex = null"
               @click="lineMarking(item)"
-              @dblclick="detail(item.id)"
+              @dblclick="detail(item)"
               :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
               <td>
@@ -321,6 +329,7 @@ onMounted(() => {
           @toggleDialog="
             isCreateGroup = false;
             createGroupOnBase = false;
+            isFilter = false;
           "
           @filter="filterGroup"
           :createGroupOnBase="createGroupOnBase"
