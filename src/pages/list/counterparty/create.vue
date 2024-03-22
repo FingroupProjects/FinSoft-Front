@@ -285,7 +285,7 @@ const getId = async () => {
 };
 
 const CreateCounterparty = async () => {
-  if (validate(name, phone, address, email) !== true) return;
+  if (validate(name, phone, address, email, roles) !== true) return;
 
   try {
     isValid.value = true;
