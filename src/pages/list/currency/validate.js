@@ -5,14 +5,14 @@ export default function validate(
   digitalRef,
   symbolRef,
 ) {
-  if (!nameRef.value) {
-    return showToast("Поле название не может быть пустым", "warning")
+  if (!nameRef.value || nameRef.value.length < 3) {
+    return showToast("Поле Название не должно быть менее 3 символов", "warning")
   }
-  if (!digitalRef.value) {
-    return showToast("Поле Символный код не может быть пустым", "warning")
+  if (!symbolRef.value || symbolRef.value.length < 3) {
+    return showToast("Поле Символный код не должен быть менее 3 символов", "warning")
   }
-  if (!symbolRef.value) {
-    return showToast("Поле Цифровой код не может быть пустым", "warning")
+  if (!digitalRef.value || digitalRef.value.length < 3) {
+    return showToast("Поле Цифровой код не должен быть менее 3 символов", "warning")
   }
   return true
 }

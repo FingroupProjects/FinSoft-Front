@@ -4,6 +4,7 @@ import {useRouter} from "vue-router";
 import showToast from '../../../composables/toast'
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
+import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import {
   addMessage,
   editMessage,
@@ -43,6 +44,11 @@ const imagePreview = ref(null)
 const fileInput = ref(null)
 
 const paginations = ref([])
+const showModal = ref(false);
+
+const toggleModal = () => {
+  showModal.value = !showModal.value;
+};
 
 const headers = ref([
   {title: '№', key: 'id', align: 'start'},
@@ -319,6 +325,52 @@ const toggleGroup = async () => {
 }
 
 
+const isDataChanged = () => {
+  const item = employee.value.find(
+    (item) => item.id === idEmployee.value
+  );
+
+  const isChanged =
+    nameRef.value !== item.name ||
+    phoneRef.value !== item.phone ||
+    emailRef.value.id !== item.email ||
+    addressRef.value.id !== item.address 
+
+  return isChanged;
+};
+
+const checkAndClose = () => {
+  console.log(1);
+  if (
+    nameRef.value ||
+    phoneRef.value ||
+    emailRef.value ||
+    addressRef.value 
+  ) {
+    showConfirmDialog.value = true;
+  } else {
+    dialog.value = false;
+    showModal.value = false;
+  }
+};
+
+const closeDialogWithoutSaving = () => {
+  dialog.value = false;
+  showModal.value = false
+  showConfirmDialog.value = false;
+  cleanForm();
+};
+
+const checkUpdate = () => {
+  if (isDataChanged()) {
+    showConfirmDialog.value = true;
+  } else {
+    dialog.value = false;
+  }
+
+};
+
+
 watch(dialog, newVal => {
   if (!newVal) {
     cleanForm()
@@ -431,9 +483,15 @@ watch(dialog, newVal => {
                   <Icons v-if="isExistsEmployee" @click="update" name="save"/>
                   <Icons v-else @click="addEmployee" name="save"/>
                 </div>
-                <v-btn @click="dialog = false" variant="text" :size="32" class="pt-2 pl-1">
-                  <Icons name="close"/>
-                </v-btn>
+                <v-btn
+                @click="toggleModal() ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
+                
+                variant="text"
+                :size="32"
+                class="pt-2 pl-1"
+              >
+                <Icons name="close" title="Закрыть" />
+              </v-btn>
               </div>
             </div>
             <v-form class="d-flex w-100" @submit.prevent="addEmployee">
@@ -524,6 +582,9 @@ watch(dialog, newVal => {
         <div v-if="isCreateGroup">
           <create-group @toggleDialog="toggleGroup" />
         </div>
+        <div v-if="showModal">
+        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" />
+      </div>
       </v-card>
     </v-col>
   </div>
