@@ -368,6 +368,7 @@ const checkAndClose = () => {
     showConfirmDialog.value = true;
   } else {
     addDialog.value = false;
+    showModal.value = false;
   }
 };
 
@@ -384,6 +385,7 @@ const checkUpdate = () => {
   } else {
     addDialog.value = false;
   }
+
 };
 
 watch(addDialog, (newVal) => {
