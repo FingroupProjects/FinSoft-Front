@@ -32,6 +32,7 @@ const currencyInDialogTitle = ref(null)
 const search = ref('')
 const filterModal = ref(null)
 const showConfirmDialog = ref(false)
+const count = ref(0)
 
 const hoveredRowIndex = ref(null)
 const markedItem = ref(null)
@@ -49,9 +50,11 @@ const dateRef = ref(null)
 const valueRef = ref(null)
 
 
-const nameFilter = ref(null)
-const symbolFilter = ref(null)
-const digitalFilter = ref(null)
+const filterForm = ref({
+  name: null,
+  symbol_code: null,
+  digital_code: null
+})
 
 const rates = ref([])
 const currencies = ref([]);
@@ -77,7 +80,27 @@ const rules = {
   date: v => (v && /^\d{2}-\d{2}-\d{4}$/.test(v)) || 'Формат даты должен быть DD-MM-YYYY',
 }
 
-const getCurrencyData = async ({page, itemsPerPage, sortBy, search, filterData}) => {
+
+function countFilter() {
+   
+   for (const key in filterForm.value) {
+       if (filterForm.value[key] !== null) {
+           count.value++;
+       }
+   }
+   
+   return count;
+}
+
+
+
+const getCurrencyData = async ({page, itemsPerPage, sortBy, search}) => {
+
+  filterModal.value = false
+  const filterData = filterForm.value
+  count.value = 0
+  console.log(count)
+  countFilter()
 
   loading.value = true;
   try {
@@ -94,21 +117,9 @@ const getCurrencyData = async ({page, itemsPerPage, sortBy, search, filterData})
 
 
 
-const filter = async ({page, itemsPerPage, sortBy, search}) => {
-  loading.value = true
-  const filterData = {
-    name: nameFilter.value,
-    digital_code: digitalFilter.value,
-    symbol_code: symbolFilter.value
-  }
 
-  try {
-    await getCurrencyData({page, itemsPerPage, sortBy, search, filterData})
-    filterModal.value = false
-  } catch (e) {
-    
-  }
-}
+
+
 
 const isDataChanged = () => {
   
@@ -206,18 +217,15 @@ const getCurrencyRateData = async ({page, itemsPerPage, sortBy, search}, idCurre
   }
 }
 
-const  closeFilterModal = async ({page, itemsPerPage, sortBy, search, filterData}) => {
+const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
   filterModal.value = false
-  await getCurrencyData({page, itemsPerPage, sortBy, search, filterData})
-  cleanFilterForm()
-
+  filterForm.value = {}
+  await getCurrencyData({page, itemsPerPage, sortBy, search})
 }
 
-const cleanFilterForm =  () => {
-  nameFilter.value = null
-  digitalFilter.value = null
-  symbolRef.value = null
-}
+
+
+
 const addCurrency = async ({page, itemsPerPage, sortBy}) => {
   if (validate(nameRef,digitalRef,symbolRef) !== true) return
 
@@ -228,12 +236,11 @@ const addCurrency = async ({page, itemsPerPage, sortBy}) => {
   }
 
   try {
-
     const res = await currency.add(body)
     if (res.status === 201) {
       await getCurrencyData({page, itemsPerPage, sortBy})
       showToast(addMessage)
-      valueRef.value = null
+      valueRef.value = nullgit 
       idCurrency.value = res.data.result.id
       currencyInDialogTitle.value = res.data.result.name
       markedID.value.push(res.data.result.id)
@@ -540,7 +547,16 @@ watch(rateDialog, newVal => {
               ></v-text-field>
             </div>
           </div>
-          <Icons name="filter" title="Фильтр" @click="filterModal = true" class="mt-1"/>
+          <div class="filterElement">
+            <Icons
+              name="filter"
+              title="фильтр"
+              @click="filterModal = true"
+              class="mt-1"
+            />
+
+            <span v-if="count !== 0" class="countFilter">{{ count }}</span>
+          </div>
         </v-card>
       </div>
 
@@ -783,7 +799,7 @@ watch(rateDialog, newVal => {
               <span>Фильтр</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons  title="Сохранить" @click="filter" name="save"/>
+                  <Icons  title="Сохранить" @click="getCurrencyData" name="save"/>
                 </div>
                 <v-btn @click="closeFilterModal" variant="text" :size="32" class="pt-2 pl-1">
                   <Icons  title="Закрыть" name="close"/>
@@ -795,7 +811,7 @@ watch(rateDialog, newVal => {
                 <v-col class="d-flex flex-column w-100">
                   <div class="d-flex justify-space-between ga-6 mb-3">
                     <v-text-field
-                        v-model="nameFilter"
+                        v-model="filterForm.name"
                         color="green"
                         rounded="md"
                         variant="outlined"
@@ -811,7 +827,7 @@ watch(rateDialog, newVal => {
                   </div>
                   <div class="d-flex justify-space-between ga-6 mb-3">
                      <v-text-field
-                        v-model="symbolFilter"
+                        v-model="filterForm.symbol_code"
                         color="green"
                         rounded="md"
                         variant="outlined"
@@ -827,7 +843,7 @@ watch(rateDialog, newVal => {
                   </div>
                   <div class="d-flex justify-space-between ga-6 mb-3">
                      <v-text-field
-                        v-model="digitalFilter"
+                        v-model="filterForm.digital_code"
                         color="green"
                         rounded="md"
                         variant="outlined"
