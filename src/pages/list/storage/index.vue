@@ -106,7 +106,7 @@ const rules = {
 const getGroup = async ({page, itemsPerPage, sortBy}) => {
   loadingGroup.value = true
   try {
-    const { data } = await storageGroup.get({page, itemsPerPage, sortBy})
+    const {data} = await storageGroup.get({page, itemsPerPage, sortBy})
     paginationsGroup.value = data.result.pagination
     groups.value = data.result.data.map(item => ({
       id: item.id,
@@ -142,7 +142,7 @@ const getStorageEmployeeData = async ({page, itemsPerPage, sortBy, search}) => {
 
   loadingStorageData.value = true
   try {
-    const { data } = await storage.getStorageEmployee({page, itemsPerPage, sortBy}, search, idStorage.value)
+    const {data} = await storage.getStorageEmployee({page, itemsPerPage, sortBy}, search, idStorage.value)
 
     paginationsStorageData.value = data.result.pagination
     storageData.value = data.result.data.map(item => ({
@@ -175,7 +175,6 @@ const addStorage = async () => {
     }
 
     const res = await storage.add(body)
-
     if (res.status === 201) {
       await getStorage({})
       showToast(addMessage)
@@ -184,7 +183,10 @@ const addStorage = async () => {
       employeeAdd.value = null
       idStorage.value = res.data.result.id
       isExistsStorage.value = true
-      console.log(idStorage.value)
+      storageInDialogTitle.value = res.data.result.name
+
+      organizationAdd.value = res.data.result.organization.id
+
       markedID.value = []
       markedItem.value = []
 
@@ -224,7 +226,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
   }
 
   try {
-    const { status } = await storage.update(idStorage.value, body)
+    const {status} = await storage.update(idStorage.value, body)
     if (status === 200) {
       nameRef.value = null
       organizationAdd.value = null
@@ -240,7 +242,6 @@ const update = async ({page, itemsPerPage, sortBy}) => {
     console.log(e)
   }
 }
-
 
 
 const addGroup = async (page, itemsPerPage, sortBy) => {
@@ -317,7 +318,7 @@ const closeFilterDialog = () => {
 const massDel = async ({page, itemsPerPage, sortBy, search}) => {
 
   try {
-    const {status} = await storage.massDeletion({ ids: markedID.value})
+    const {status} = await storage.massDeletion({ids: markedID.value})
 
     if (status === 200) {
       showToast(removeMessage, 'red')
@@ -334,7 +335,7 @@ const massDel = async ({page, itemsPerPage, sortBy, search}) => {
 
 const massRestore = async ({page, itemsPerPage, sortBy, search}) => {
   try {
-    const {status} = await storage.massRestore({ ids: markedID.value})
+    const {status} = await storage.massRestore({ids: markedID.value})
 
     if (status === 200) {
       showToast(restoreMessage)
@@ -350,7 +351,7 @@ const massRestore = async ({page, itemsPerPage, sortBy, search}) => {
 
 const massDelEmployee = async ({page, itemsPerPage, sortBy, search}) => {
   try {
-    const {status} = await storage.massDeletionEmployee({ ids: markedEmployeeID.value})
+    const {status} = await storage.massDeletionEmployee({ids: markedEmployeeID.value})
 
     if (status === 200) {
 
@@ -619,7 +620,7 @@ const getStorage = async ({page, itemsPerPage, sortBy, search}) => {
 
     loading.value = true
 
-    const { data } = await storageGroup.getStorages({page, itemsPerPage, sortBy}, search, groupIdRef.value, filterData)
+    const {data} = await storageGroup.getStorages({page, itemsPerPage, sortBy}, search, groupIdRef.value, filterData)
     paginations.value = data.result.pagination
     storages.value = data.result.data
 
@@ -728,7 +729,8 @@ onMounted(async () => {
               <v-skeleton-loader type="table-row@9"></v-skeleton-loader>
             </template>
             <template v-slot:item="{ item, index }">
-              <tr :class="{'bg-grey-lighten-2': item.id === groupIdRef }" @mouseenter="hoveredRowIndex = index + 100000" @mouseleave="hoveredRowIndex = null" @click="lineMarkingGroup(item.id)" >
+              <tr :class="{'bg-grey-lighten-2': item.id === groupIdRef }" @mouseenter="hoveredRowIndex = index + 100000"
+                  @mouseleave="hoveredRowIndex = null" @click="lineMarkingGroup(item.id)">
                 <td>
                   <div class="d-flex">
                     <span>{{ item.id }}</span>
@@ -850,7 +852,8 @@ onMounted(async () => {
             </v-form>
 
             <v-card class="table" style="border: 1px solid #3AB700">
-              <div v-if="isExistsStorage" class="d-flex w-100 rounded-t-lg mb-1 align-center " style="border-bottom: 1px solid #3AB700">
+              <div v-if="isExistsStorage" class="d-flex w-100 rounded-t-lg mb-1 align-center "
+                   style="border-bottom: 1px solid #3AB700">
                 <div class="d-flex justify-end w-100 ga-2 pt-1 me-2" style="padding-top: 4px !important;">
                   <Icons @click="removeStorageEmployee" name="delete"/>
                   <Icons @click="dataDialog = true" name="add"/>
@@ -1007,66 +1010,64 @@ onMounted(async () => {
       </v-card>
 
       <v-dialog class="mt-2 pa-2" v-model="filterDialog">
-          <v-card style="border: 2px solid #3AB700" min-width="450"
-                  class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
-            <div class="d-flex justify-space-between align-center mb-2">
-              <span>Фильтр</span>
-              <div class="d-flex align-center justify-space-between">
-                <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons title="Сохранить" @click="getStorage" name="save"/>
-                </div>
-                <v-btn @click="closeFilterDialog" variant="text" :size="32" class="pt-2 pl-1">
-                  <Icons title="Закрыть" name="close"/>
-                </v-btn>
+        <v-card style="border: 2px solid #3AB700" min-width="450"
+                class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
+          <div class="d-flex justify-space-between align-center mb-2">
+            <span>Фильтр</span>
+            <div class="d-flex align-center justify-space-between">
+              <div class="d-flex ga-3 align-center mt-2 me-4">
+                <Icons title="Сохранить" @click="getStorage" name="save"/>
               </div>
+              <v-btn @click="closeFilterDialog" variant="text" :size="32" class="pt-2 pl-1">
+                <Icons title="Закрыть" name="close"/>
+              </v-btn>
             </div>
-            <v-form class="d-flex w-100">
-              <v-row class="w-100">
-                <v-col class="d-flex flex-column w-100">
-                  <v-text-field
-                      v-model="filterForm.name"
-                      color="green"
-                      :base-color="FIELD_COLOR"
-                      variant="outlined"
-                      class="w-auto text-sm-body-1"
-                      density="compact"
-                      placeholder="Наименование"
-                      label="Название"
-                      clear-icon="close"
-                      clearable
-                  />
-                  <v-select
-                      variant="outlined"
-                      label="Выберите организацию"
-                      :base-color="FIELD_COLOR"
-                      color="green"
-                      item-color="green"
-                      v-model="filterForm.organization_id"
-                      :items="organizations"
-                      item-title="name"
-                      item-value="id"
-                  />
-                  <v-select
-                      v-model="filterForm.employee_id"
-                      :items="employees"
-                      item-title="name"
-                      item-value="id"
-                      :base-color="FIELD_COLOR"
-                      color="green"
-                      item-color="green"
-                      variant="outlined"
-                      label="Сотрудник"
-                  />
-                </v-col>
-              </v-row>
-            </v-form>
-            </v-card>
-            </v-dialog>
-
+          </div>
+          <v-form class="d-flex w-100">
+            <v-row class="w-100">
+              <v-col class="d-flex flex-column w-100">
+                <v-text-field
+                    v-model="filterForm.name"
+                    color="green"
+                    :base-color="FIELD_COLOR"
+                    variant="outlined"
+                    class="w-auto text-sm-body-1"
+                    density="compact"
+                    placeholder="Наименование"
+                    label="Название"
+                    clear-icon="close"
+                    clearable
+                />
+                <v-select
+                    variant="outlined"
+                    label="Выберите организацию"
+                    :base-color="FIELD_COLOR"
+                    color="green"
+                    item-color="green"
+                    v-model="filterForm.organization_id"
+                    :items="organizations"
+                    item-title="name"
+                    item-value="id"
+                />
+                <v-select
+                    v-model="filterForm.employee_id"
+                    :items="employees"
+                    item-title="name"
+                    item-value="id"
+                    :base-color="FIELD_COLOR"
+                    color="green"
+                    item-color="green"
+                    variant="outlined"
+                    label="Сотрудник"
+                />
+              </v-col>
+            </v-row>
+          </v-form>
+        </v-card>
+      </v-dialog>
     </v-col>
   </div>
   <!-- Group Modal -->
-
 
 </template>
 
