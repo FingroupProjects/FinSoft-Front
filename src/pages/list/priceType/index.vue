@@ -6,6 +6,7 @@ import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import priceType from '../../../api/priceType.js';
 import currency from '../../../api/currency.js';
+import {FIELD_COLOR} from "../../../composables/constant/colors.js";
 import validate from "./validate.js";
 const showConfirmDialog = ref(false)
 import {
@@ -443,6 +444,7 @@ onMounted(async () => {
                 <v-col class="d-flex flex-column w-100">
                   <v-text-field
                       v-model="nameRef"
+                      :base-color="FIELD_COLOR"
                       :rules="[rules.required]"
                       color="green"
                       rounded="md"
@@ -457,6 +459,7 @@ onMounted(async () => {
                   <v-select
                       variant="outlined"
                       label="Выберите валюту"
+                      :base-color="FIELD_COLOR"
                       v-model="currencyAdd"
                       :items="currencies"
                       item-title="name"
@@ -464,6 +467,7 @@ onMounted(async () => {
                   />
                   <v-textarea
                       v-model="descriptionRef"
+                      :base-color="FIELD_COLOR"
                       :rules="[rules.required]"
                       color="green"
                       rounded="md"
@@ -501,6 +505,7 @@ onMounted(async () => {
                       v-model="filterForm.name"
                       color="green"
                       rounded="md"
+                      :base-color="FIELD_COLOR"
                       variant="outlined"
                       class="w-auto text-sm-body-1"
                       density="compact"
@@ -514,6 +519,7 @@ onMounted(async () => {
                       label="Валюта"
                       v-model="filterForm.currency_id"
                       :items="currencies"
+                      :base-color="FIELD_COLOR"
                       item-title="name"
                       item-value="id"
                   />
@@ -522,6 +528,7 @@ onMounted(async () => {
                       color="green"
                       rounded="md"
                       variant="outlined"
+                      :base-color="FIELD_COLOR"
                       class="w-auto text-sm-body-1"
                       density="compact"
                       placeholder="Описание"

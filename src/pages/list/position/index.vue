@@ -4,6 +4,7 @@ import {useRouter} from "vue-router";
 import showToast from '../../../composables/toast'
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import position from '../../../api/position.js'
+import {FIELD_COLOR} from "../../../composables/constant/colors.js";
 import {
   addMessage,
   editMessage,
@@ -266,6 +267,7 @@ watch(dialog, newVal => {
                   color="info"
                   rounded="lg"
                   clear-icon="close"
+                  :base-color="FIELD_COLOR"
                   hide-details
                   single-line
                   clearable
@@ -347,6 +349,7 @@ watch(dialog, newVal => {
                       color="green"
                       rounded="lg"
                       variant="outlined"
+                      :base-color="FIELD_COLOR"
                       class="w-auto text-sm-body-1"
                       density="compact"
                       placeholder="Бухгалтер"
@@ -386,6 +389,7 @@ watch(dialog, newVal => {
                       color="green"
                       rounded="lg"
                       variant="outlined"
+                      :base-color="FIELD_COLOR"
                       class="w-auto text-sm-body-1"
                       density="compact"
                       placeholder="Фильтр"
