@@ -50,7 +50,14 @@ const innFilter = ref(null);
 const directorFilter = ref(null);
 const accountantFilter = ref(null);
 const addressFilter = ref(null);
-const descriptionFilter = ref(null);
+const descriptionFilter = ref(null); 
+const showModal = ref(false);
+
+const toggleModal = () => {
+  showModal.value = !showModal.value;
+  console.log('showModal');
+};
+
 
 const rules = {
   required: (value) => !!value || "Поле обязательно для заполнения",
@@ -60,11 +67,8 @@ const headers = ref([
   { title: "№", key: "id" },
   { title: "Наименование", key: "name" },
 ]);
+ 
 
-
-const showConfirmModal = () => {
-  showConfirmDialog.value = true;
-};
 
 const getOrganizationData = async ({
   page,
@@ -141,6 +145,7 @@ const addOrganization = async ({ page, itemsPerPage, sortBy, search }) => {
       isDataSaved.value = true;
     }
     addDialog.value = false;
+    toggleModal();
   } catch (error) {}
 };
 
@@ -212,7 +217,7 @@ const update = async ({ page, itemsPerPage, sortBy, search }) => {
     }
 
     cleanForm();
-
+    toggleModal();
     addDialog.value = false;
   } catch (e) {}
 };
@@ -310,6 +315,7 @@ const remove = async ({ page, itemsPerPage, sortBy, search }) => {
       showToast(removeMessage, "red");
       await getOrganizationData({ page, itemsPerPage, sortBy }, search);
       markedID.value = [];
+      toggleModal();
     }
   } catch (e) {}
 };
@@ -563,7 +569,7 @@ onMounted(async () => {
             }}</span>
             <div class="d-flex align-center justify-space-between">
               <div class="d-flex ga-3 align-center mt-2 me-4">
-                <Icons @click="removeOrganization" name="delete" />
+                <Icons @click="remove" name="delete" />
                 <Icons
                   v-if="isExistsOrganization"
                   @click="update"
@@ -572,17 +578,7 @@ onMounted(async () => {
                 <Icons v-else @click="addOrganization" name="save" />
               </div>
               <v-btn
-                @click="
-                  isExistsOrganization
-                    ? checkUpdate()
-                    : checkAndClose({
-                        page,
-                        itemsPerPage,
-                        sortBy,
-                        search,
-                        filterData,
-                      })
-                "
+                @click="toggleModal"
                 variant="text"
                 :size="32"
                 class="pt-2 pl-1"
@@ -776,8 +772,8 @@ onMounted(async () => {
             </v-form>
           </v-card>
         </v-dialog>
-        <confirm-modal :showConfirmDialog="showConfirmDialog" @close="closeDialogWithoutSaving"/>
       </v-card>
+      <ConfirmModal :show-modal="showModal" @close="toggleModal" />
     </v-card>
   </div>
 </template>

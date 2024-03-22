@@ -1,5 +1,5 @@
 <template>
-  <v-dialog style="min-width: 300px" v-if="showConfirmDialog" persistent>
+  <v-dialog style="min-width: 300px"  v-if="showModal">
         <v-card style="max-width: 400px" class="mx-auto flex flex-col">
           <v-card-title class="text-h6">Подтверждение</v-card-title>
           <v-card-text class="text-subtitle-1"
@@ -8,12 +8,14 @@
           >
           <v-card-actions>
             <v-btn
+              @click="closeModal"
               class="text-none mb-4 w-[200px] h-[20px]"
               color="red"
               variant="flat"
               >Нет</v-btn
             >
             <v-btn
+              @click="confirmClose"
               class="text-none mb-4 w-[200px] h-[20px]"
               color="green"
               variant="flat"
@@ -21,15 +23,24 @@
             >
           </v-card-actions>
         </v-card>
+        
       </v-dialog>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, defineProps, defineEmits } from 'vue';
 
-const showConfirmDialog = ref(false);
+const props = defineProps({
+  showModal: Boolean
+});
 
-const openSecondModal = () => {
-  showConfirmDialog.value = true;
-}
+const { emit } = defineEmits(['close']);
+
+const closeModal = () => {
+  emit('close');
+};
+
+const confirmClose = () => {
+  closeModal();
+};
 </script>
