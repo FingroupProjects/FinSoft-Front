@@ -297,18 +297,6 @@ const restore = async ({ page, itemsPerPage, sortBy }) => {
   } catch (e) {}
 };
 
-const remove = async ({ page, itemsPerPage, sortBy, search }) => {
-  try {
-    const { status } = await organization.remove({ ids: markedID.value });
-    if (status === 200) {
-      showToast(removeMessage, "red");
-      await getOrganizationData({ page, itemsPerPage, sortBy }, search);
-      markedID.value = [];
-      toggleModal();
-    }
-  } catch (e) {}
-};
-
 const handleCheckboxClick = function (item) {
   lineMarking(item);
 };
@@ -323,7 +311,19 @@ const cleanForm = () => {
 };
 
 
+const remove = async ({page, itemsPerPage, sortBy}) => {
+  try {
+    const { status } = await user.remove({ids: markedID.value})
+    if (status === 200) {
+      showToast(removeMessage, 'red')
+      await getUser({page, itemsPerPage, sortBy})
+      markedID.value = []
+      dialog.value = false
+    }
+  } catch (e) {
 
+  }
+}
 const  closeFilterModal = async ({page, itemsPerPage, sortBy, search, filterData}) => {
   filterModal.value = false
   filterForm.value = {}
