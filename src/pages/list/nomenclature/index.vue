@@ -198,6 +198,7 @@ onMounted(() => {
               <v-text-field
                 v-model="search"
                 prepend-inner-icon="search"
+                base-color="info"
                 density="compact"
                 label="Поиск..."
                 variant="outlined"

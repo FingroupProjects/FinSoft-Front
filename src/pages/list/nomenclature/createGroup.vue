@@ -7,7 +7,11 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import { addMessage } from "../../../composables/constant/buttons";
 
 const emit = defineEmits();
-const props = defineProps(["createGroupOnBase", "groupData", "isFilter"]);
+const props = defineProps([
+  "createGroupOnBase",
+  "groupData",
+  "isFilter",
+]);
 
 const dialog = ref(true);
 const isValid = ref(false);
@@ -61,6 +65,9 @@ watch(
   (newValue) => {
     if (newValue === false) {
       emit("toggleDialog");
+      name.value = "";
+      is_good.value = false;
+      is_service.value = false;
     }
   }
 );

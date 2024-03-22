@@ -10,6 +10,7 @@ import storageApi from "../../../api/storage";
 import { useRoute, useRouter } from "vue-router";
 import { addMessage, editMessage } from "../../../composables/constant/buttons";
 import validate from "./validate";
+import { FIELD_COLOR } from "../../../composables/constant/colors.js";
 
 const { query, params: routeParams } = useRoute();
 const router = useRouter();
@@ -243,7 +244,9 @@ const createGood = async () => {
     isCreated.value = true;
   } catch (e) {
     console.log(e);
-    showToast(e.response.data.message, "warning");
+    if (e.response.data.errors.vendor_code) {
+      showToast("Такой артикуль уже существует", "warning");
+    }
   } finally {
     isValid.value = false;
   }
@@ -330,7 +333,8 @@ onMounted(async () => {
                 clear-icon="close"
                 clearablehide-details
                 clearable
-                hide-details=""
+                hide-details
+                :base-color="FIELD_COLOR"
               />
               <v-text-field
                 v-model="vendor_code"
@@ -345,6 +349,7 @@ onMounted(async () => {
                 clear-icon="close"
                 clearable
                 hide-details
+                :base-color="FIELD_COLOR"
               />
               <div
                 :class="
@@ -407,9 +412,10 @@ onMounted(async () => {
                     <input
                       accept="image/*"
                       type="file"
-                      @change="EditAvatar(img.id)"
+                      @change="selectAvatar"
                       style="display: none"
                       ref="fileInput"
+                      multiple
                     />
                   </div>
                 </div>
@@ -426,6 +432,7 @@ onMounted(async () => {
                     :items="storages"
                     color="green"
                     hide-details
+                    :base-color="FIELD_COLOR"
                   />
                   <v-select
                     :rules="isValid ? [rules.required] : []"
@@ -439,6 +446,7 @@ onMounted(async () => {
                     :items="units"
                     color="green"
                     hide-details
+                    :base-color="FIELD_COLOR"
                   />
                   <v-select
                     :rules="isValid ? [rules.required] : []"
@@ -452,6 +460,7 @@ onMounted(async () => {
                     :items="groups"
                     color="green"
                     hide-details
+                    :base-color="FIELD_COLOR"
                   />
                 </div>
               </div>
@@ -460,6 +469,7 @@ onMounted(async () => {
                 variant="outlined"
                 label="Описание"
                 color="green"
+                :base-color="FIELD_COLOR"
               />
               <div
                 v-if="isEdit"
