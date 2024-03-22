@@ -48,6 +48,14 @@ const emailRef = ref(null)
 const imageRef = ref(null)
 const imagePreview = ref(null)
 const fileInput = ref(null)
+const filterModal = ref(false);
+
+const fioFilter = ref(null)
+const loginFilter = ref(null)
+const phoneFilter = ref(null)
+const emailFilter = ref(null)
+const organizationFilter = ref(null)
+const groupFilter = ref(null)
 
 const users = ref([])
 const organizations = ref([])
@@ -165,7 +173,7 @@ const addUser = async ({page, itemsPerPage, sortBy}) => {
     const res = await user.add(formData)
 
     if (res.status === 201) {
-      await getUser({page, itemsPerPage, sortBy})
+      await getUser({page, itemsPerPage, sortBy,})
       showToast(addMessage)
       idUser.value = res.data.result.id
       dialog.value = false
@@ -223,7 +231,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
 
   try {
     const response = await user.update(idUser.value, formData)
-
+    cleanForm()
     if (response.status === 200) {
       dialog.value = null
       await getUser({page, itemsPerPage, sortBy})
@@ -262,6 +270,55 @@ const restore = async ({page, itemsPerPage, sortBy, search}) => {
 
   }
 }
+
+
+const filter = async ({ page, itemsPerPage, sortBy, search }) => {
+  loading.value = true;
+  const filterData = {
+    name: fioFilter.value,
+    organization_id: organizationFilter.value,
+    login: loginFilter.value,
+    phone: phoneFilter.value,
+    email: emailFilter.value,
+    group_id: groupFilter.value,
+  };
+  console.log(filterData);
+
+  try {
+    await getUser({
+      page,
+      itemsPerPage,
+      sortBy,
+      search,
+      filterData,
+    });
+    filterModal.value = false;
+    fioFilter.value = null;
+    organizationFilter.value = null;
+    loginFilter.value = null;
+    phoneFilter.value = null;
+    emailFilter.value = null;
+    groupFilter.value = null;
+  } catch (e) {}
+};
+
+const closeFilterModal = async ({
+  page,
+  itemsPerPage,
+  sortBy,
+  search,
+  filterData,
+}) => {
+  filterModal.value = false;
+  await getUser({ page, itemsPerPage, sortBy, search, filterData });
+  fioFilter.value = null;
+    organizationFilter.value = null;
+    loginFilter.value = null;
+    phoneFilter.value = null;
+    emailFilter.value = null;
+    groupFilter.value = null;
+};
+
 
 
 
@@ -579,9 +636,16 @@ onMounted(async () =>  {
                   </div>
                   <Icons v-else @click="addUser" name="save"/>
                 </div>
-                <v-btn @click="dialog = false" variant="text" :size="32" class="pt-2 pl-1">
-                  <Icons name="close"/>
-                </v-btn>
+                <v-btn
+                @click="
+                  dialog = false                  
+                "
+                variant="text"
+                :size="32"
+                class="pt-2 pl-1"
+              >
+                <Icons name="close" title="Закрыть" />
+              </v-btn>
               </div>
             </div>
             <v-form class="d-flex w-100" @submit.prevent="addUser">

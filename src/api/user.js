@@ -4,8 +4,8 @@ export default {
   add(data) {
     return  api.post('/user', data)
   },
-  get({page = 1, itemsPerPage = 10, sortBy}, search = '') {
-    const params = buildParams(page, itemsPerPage, sortBy, search);
+  get({page = 1, itemsPerPage = 10, sortBy}, search = '', filterData) {
+    const params = buildParams(page, itemsPerPage, sortBy, search, filterData);
     return api.get('/user', { params });
   },
   show(id) {
@@ -22,5 +22,9 @@ export default {
   },
   password(id, body) {
     return api.post(`/users/change-password/${id}`, body)
+  },
+  filter(body) 
+  {
+    return api.get(`/users/filter`, body)
   }
 }
