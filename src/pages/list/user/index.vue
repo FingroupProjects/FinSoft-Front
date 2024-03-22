@@ -48,6 +48,14 @@ const emailRef = ref(null)
 const imageRef = ref(null)
 const imagePreview = ref(null)
 const fileInput = ref(null)
+const filterModal = ref(false);
+
+const fioFilter = ref(null)
+const loginFilter = ref(null)
+const phoneFilter = ref(null)
+const emailFilter = ref(null)
+const organizationFilter = ref(null)
+const groupFilter = ref(null)
 
 const users = ref([])
 const organizations = ref([])
@@ -55,7 +63,15 @@ const groups = ref([])
 const paginations = ref([])
 const paginationsGroup = ref([])
 
+const filterForm = ref({
+  name: null,
+  email: null,
+  phone: null,
+  login: null,
+  organization_id: null
+})
 
+const showModalDialog = ref(null)
 
 const headers = ref([
   {title: '№', key: 'id', align: 'start'},
@@ -67,22 +83,10 @@ const headersGroup = ref([
   {title: 'Название группы', key: 'name', align: 'start'},
 ])
 
-
-
-//filter
-const filterForm = ref({
-  name: null,
-  email: null,
-  phone: null,
-  login: null,
-  organization_id: null
-})
-
-const showModalDialog = ref(null)
-
-
 const rules = {
   required: v => !!v,
+  email: (v) => /.+@.+\..+/.test(v),
+  phone: (v) => v.length === 13,
 }
 
 const getGroup = async ({page, itemsPerPage, sortBy}) => {
@@ -102,9 +106,6 @@ const getGroup = async ({page, itemsPerPage, sortBy}) => {
 }
 
 const getOrganization = async () => {
-  const filterData = filterForm.value
-  showModalDialog.value = false
-
   try {
     const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000})
     organizations.value = data.result.data.map(item => ({
@@ -151,8 +152,6 @@ const addUser = async ({page, itemsPerPage, sortBy}) => {
     groupValue = group.value
   }
 
-
-
   const formData = new FormData()
   formData.append('name', fioRef.value);
   formData.append('organization_id', organizationValue)
@@ -166,11 +165,15 @@ const addUser = async ({page, itemsPerPage, sortBy}) => {
     formData.append('image', imageRef.value);
   }
 
+  for(let pair of formData.entries()) {
+    console.log(pair[0]+ ', '+ pair[1]);
+  }
+
   try {
     const res = await user.add(formData)
 
     if (res.status === 201) {
-      await getUser({page, itemsPerPage, sortBy})
+      await getUser({page, itemsPerPage, sortBy,})
       showToast(addMessage)
       idUser.value = res.data.result.id
       dialog.value = false
@@ -228,7 +231,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
 
   try {
     const response = await user.update(idUser.value, formData)
-
+    cleanForm()
     if (response.status === 200) {
       dialog.value = null
       await getUser({page, itemsPerPage, sortBy})
@@ -269,6 +272,55 @@ const restore = async ({page, itemsPerPage, sortBy, search}) => {
 }
 
 
+const filter = async ({ page, itemsPerPage, sortBy, search }) => {
+  loading.value = true;
+  const filterData = {
+    name: fioFilter.value,
+    organization_id: organizationFilter.value,
+    login: loginFilter.value,
+    phone: phoneFilter.value,
+    email: emailFilter.value,
+    group_id: groupFilter.value,
+  };
+  console.log(filterData);
+
+  try {
+    await getUser({
+      page,
+      itemsPerPage,
+      sortBy,
+      search,
+      filterData,
+    });
+    filterModal.value = false;
+    fioFilter.value = null;
+    organizationFilter.value = null;
+    loginFilter.value = null;
+    phoneFilter.value = null;
+    emailFilter.value = null;
+    groupFilter.value = null;
+  } catch (e) {}
+};
+
+const closeFilterModal = async ({
+  page,
+  itemsPerPage,
+  sortBy,
+  search,
+  filterData,
+}) => {
+  filterModal.value = false;
+  await getUser({ page, itemsPerPage, sortBy, search, filterData });
+  fioFilter.value = null;
+    organizationFilter.value = null;
+    loginFilter.value = null;
+    phoneFilter.value = null;
+    emailFilter.value = null;
+    groupFilter.value = null;
+};
+
+
+
 
 const handleCheckboxClick = item => {
   lineMarking(item)
@@ -276,6 +328,14 @@ const handleCheckboxClick = item => {
 
 const openDialog = item => {
   dialog.value = true
+
+  if (groupIdRef.value !== 0) {
+    const groupValue = groups.value.find(item => item.id === groupIdRef.value)
+    group.value = {
+      id: groupValue.id,
+      name: groupValue.name
+    }
+  }
 
   if (item === 0) {
     idUser.value = 0
@@ -576,9 +636,16 @@ onMounted(async () =>  {
                   </div>
                   <Icons v-else @click="addUser" name="save"/>
                 </div>
-                <v-btn @click="dialog = false" variant="text" :size="32" class="pt-2 pl-1">
-                  <Icons name="close"/>
-                </v-btn>
+                <v-btn
+                @click="
+                  dialog = false                  
+                "
+                variant="text"
+                :size="32"
+                class="pt-2 pl-1"
+              >
+                <Icons name="close" title="Закрыть" />
+              </v-btn>
               </div>
             </div>
             <v-form class="d-flex w-100" @submit.prevent="addUser">
@@ -641,6 +708,7 @@ onMounted(async () =>  {
                           density="compact"
                           placeholder="Ivan"
                           label="Логин"
+                          v-mask="'XXXXXXXXXXXXXXXXXXX'"
                           clear-icon="close"
                           :append-inner-icon="loginRef ? 'close' : ''"
                           @click:append-inner="loginRef = null"
@@ -690,14 +758,16 @@ onMounted(async () =>  {
                   <div class="d-flex ga-4 mt-5">
                     <v-text-field
                         v-model="phoneRef"
-                        :rules="[rules.required]"
+                        :rules="[rules.required, rules.phone]"
                         color="green"
                         :base-color="FIELD_COLOR"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
                         density="compact"
+                        type="tel"
                         placeholder="+992119111881"
                         label="Номер телефона"
+                        v-mask="'+############'"
                         clear-icon="close"
                         :append-inner-icon="phoneRef ? 'close' : ''"
                         @click:append-inner="phoneRef = null"
@@ -705,13 +775,14 @@ onMounted(async () =>  {
                     />
                     <v-text-field
                         v-model="emailRef"
-                        :rules="[rules.required]"
+                        :rules="[rules.required, rules.email]"
                         color="green"
                         :base-color="FIELD_COLOR"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
                         density="compact"
                         placeholder="ivan@gmail.com"
+                        type="email"
                         label="Почта"
                         clear-icon="close"
                         :append-inner-icon="emailRef ? 'close' : ''"
@@ -730,7 +801,6 @@ onMounted(async () =>  {
         <div v-if="isDialogPassword">
           <change-password @toggleDialogPassword="isDialogPassword = false" :id="idUser" />
         </div>
-        
 
         <v-dialog class="mt-2 pa-2" v-model="showModalDialog">
           <v-card style="border: 2px solid #3AB700" min-width="600"
@@ -787,13 +857,12 @@ onMounted(async () =>  {
                           :base-color="FIELD_COLOR"
                           item-title="name"
                           item-value="id"
-                          
                           variant="outlined"
                           label="Организация"
                       />
                       <v-text-field
                           v-model="filterForm.login"
-                          
+
                           color="green"
                           :base-color="FIELD_COLOR"
                           variant="outlined"

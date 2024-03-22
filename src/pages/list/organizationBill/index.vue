@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref, watch, computed } from "vue";
 
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
@@ -48,7 +48,7 @@ const descriptionRef = ref(null);
 const organizationBills = ref([]);
 const paginations = ref([]);
 
-const total = ref(1);
+const count = ref(0);
 //filter
 
 const filterForm = ref({
@@ -69,6 +69,20 @@ const headers = ref([
   { title: "Организация", key: "organization.name" },
   { title: "Валюта", key: "currency.name" },
 ]);
+
+
+
+
+function countFilter() {
+   
+    for (const key in filterForm.value) {
+        if (filterForm.value[key] !== null) {
+            count.value++;
+        }
+    }
+    return count;
+}
+
 
 const closeDialogWithoutSaving = () => {
   dialog.value = false;
@@ -127,6 +141,8 @@ const getOrganizationBillData = async ({
 }) => {
   const filterData = filterForm.value;
   filterModal.value = false;
+  count.value = 0;
+  countFilter();
 
   loading.value = true;
   try {
@@ -297,8 +313,12 @@ const cleanForm = () => {
   comment.value = null;
 };
 
+
+
+
 const cleanFilterForm = () => {
   filterForm.value = {};
+  count.value = 0
 };
 
 const addBasedOnorganizationBill = () => {
@@ -413,7 +433,8 @@ onMounted(async () => {
               @click="filterModal = true"
               class="mt-1"
             />
-            <span class="countFilter">{{ total }}</span>
+
+            <span v-if="count !== 0" class="countFilter">{{ count }}</span>
           </div>
         </v-card>
       </div>

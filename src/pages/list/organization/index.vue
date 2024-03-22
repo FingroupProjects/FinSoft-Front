@@ -1,5 +1,6 @@
 <script setup>
 import { ref, watch, onMounted } from "vue";
+import { useRouter } from 'vue-router';
 import organization from "../../../api/organizations";
 import {
   addMessage,
@@ -7,15 +8,18 @@ import {
   removeMessage,
   restoreMessage,
   selectOneItemMessage,
-  ErrorSelectMessage
+  ErrorSelectMessage,
 } from "../../../composables/constant/buttons.js";
 import showToast from "../../../composables/toast";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import Icons from "../../../composables/Icons/Icons.vue";
 import employee from "../../../api/employee";
+import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import validate from "./validate.js";
 import {FIELD_COLOR} from "../../../composables/constant/colors.js";
 
+const showConfirmDialog = ref(false);
+const router = useRouter();
 const addDialog = ref(false);
 const loading = ref(true);
 const markedID = ref([]);
@@ -26,6 +30,7 @@ const isExistsOrganization = ref(false);
 const organizationInDialogTitle = ref(null);
 const isDataSaved = ref(true);
 const filterModal = ref(false);
+
 
 const organizations = ref([]);
 const paginations = ref([]);
@@ -39,7 +44,12 @@ const accountantRef = ref(null);
 const addressRef = ref(null);
 const descriptionRef = ref(null);
 const search = ref(null);
-const showConfirmDialog = ref(false);
+const showModal = ref(false);
+
+const toggleModal = () => {
+  showModal.value = !showModal.value;
+  // console.log('openModal');
+};
 
 const filterForm = ref({
   name: null,
@@ -49,8 +59,6 @@ const filterForm = ref({
   address: null,
   description: null,
 });
-
-
 
 const rules = {
   required: (value) => !!value || "Поле обязательно для заполнения",
@@ -66,9 +74,13 @@ const getOrganizationData = async ({ page, itemsPerPage, sortBy, search}) => {
   filterModal.value = false
   loading.value = true;
   try {
-    const { data } = await organization.get({ page, itemsPerPage, sortBy }, search, filterData);
+    const { data } = await organization.get(
+      { page, itemsPerPage, sortBy },
+      search,
+      filterData
+    );
     organizations.value = data.result.data.map((item) => ({
-      ...item
+      ...item,
     }));
     paginations.value = data.result.pagination;
     loading.value = false;
@@ -77,23 +89,32 @@ const getOrganizationData = async ({ page, itemsPerPage, sortBy, search}) => {
   }
 };
 
-
 const addOrganization = async ({ page, itemsPerPage, sortBy, search }) => {
-  if (validate(nameRef, innRef, directorRef, accountantRef, addressRef, descriptionRef) !== true) return
+  if (
+    validate(
+      nameRef,
+      innRef,
+      directorRef,
+      accountantRef,
+      addressRef,
+      descriptionRef
+    ) !== true
+  )
+    return;
 
   try {
     let director;
-    if (typeof directorRef.value === 'object') {
-      director = directorRef.value.id
+    if (typeof directorRef.value === "object") {
+      director = directorRef.value.id;
     } else {
-      director = directorRef.value
+      director = directorRef.value;
     }
 
     let accountant;
-    if (typeof accountantRef.value === 'object') {
-      accountant = accountantRef.value.id
+    if (typeof accountantRef.value === "object") {
+      accountant = accountantRef.value.id;
     } else {
-      accountant = accountantRef.value
+      accountant = accountantRef.value;
     }
 
     const body = {
@@ -114,53 +135,65 @@ const addOrganization = async ({ page, itemsPerPage, sortBy, search }) => {
       organizationInDialogTitle.value = res.data.result.name;
       markedID.value.push(res.data.result.id);
       isExistsOrganization.value = true;
-      
+
       isDataSaved.value = true;
     }
+    showModal.value = true;
     addDialog.value = false;
-  } catch (error) {
-  }
+    toggleModal();
+  } catch (error) {}
 };
 
 const addBasedOnOrganization = () => {
-  if (markedID.value.length !== 1 && !isExistsOrganization.value) return showToast(selectOneItemMessage, 'warning')
-  addDialog.value = true
- 
-  organizations.value.forEach(item => {
+  if (markedID.value.length !== 1 && !isExistsOrganization.value)
+    return showToast(selectOneItemMessage, "warning");
+  addDialog.value = true;
+
+  organizations.value.forEach((item) => {
     if (markedID.value[0] === item.id) {
-      idOrganizations.value = item.id
-      nameRef.value = item.name
+      idOrganizations.value = item.id;
+      nameRef.value = item.name;
       innRef.value = item.INN;
       directorRef.value = {
-        "id": item.director.id,
-        "name": item.director.name
-      }
+        id: item.director.id,
+        name: item.director.name,
+      };
       accountantRef.value = {
-        "id": item.chief_accountant.id,
-        "name": item.chief_accountant.name
-      }
+        id: item.chief_accountant.id,
+        name: item.chief_accountant.name,
+      };
       addressRef.value = item.address;
       descriptionRef.value = item.description;
     }
-  })
-}
+  });
+};
 
 const update = async ({ page, itemsPerPage, sortBy, search }) => {
-  if (validate(nameRef,innRef,directorRef,accountantRef,addressRef,descriptionRef) !== true) return
+  if (
+    validate(
+      nameRef,
+      innRef,
+      directorRef,
+      accountantRef,
+      addressRef,
+      descriptionRef
+    ) !== true
+  )
+    return;
 
   let director;
-    if (typeof directorRef.value === 'object') {
-      director = directorRef.value.id
-    } else {
-      director = directorRef.value
-    }
+  if (typeof directorRef.value === "object") {
+    director = directorRef.value.id;
+  } else {
+    director = directorRef.value;
+  }
 
-    let accountant;
-    if (typeof accountantRef.value === 'object') {
-      accountant = accountantRef.value.id
-    } else {
-      accountant = accountantRef.value
-    }
+  let accountant;
+  if (typeof accountantRef.value === "object") {
+    accountant = accountantRef.value.id;
+  } else {
+    accountant = accountantRef.value;
+  }
 
   const body = {
     name: nameRef.value,
@@ -169,7 +202,7 @@ const update = async ({ page, itemsPerPage, sortBy, search }) => {
     chief_accountant_id: accountant,
     address: addressRef.value,
     description: descriptionRef.value,
-  }
+  };
 
   try {
     const { status } = await organization.update(idOrganizations.value, body);
@@ -178,11 +211,11 @@ const update = async ({ page, itemsPerPage, sortBy, search }) => {
       showToast(editMessage);
     }
 
-    cleanForm()
-
+    cleanForm();
+    toggleModal();
     addDialog.value = false;
-  } catch (e) {
-  }
+    showModal.value = true;
+  } catch (e) {}
 };
 
 const openDialog = (item) => {
@@ -197,13 +230,13 @@ const openDialog = (item) => {
     innRef.value = item.INN;
 
     directorRef.value = {
-      "id": item.director.id,
-      "name": item.director.name
-    }
+      id: item.director.id,
+      name: item.director.name,
+    };
     accountantRef.value = {
-      "id": item.chief_accountant.id,
-      "name": item.chief_accountant.name
-    }
+      id: item.chief_accountant.id,
+      name: item.chief_accountant.name,
+    };
 
     addressRef.value = item.address;
     descriptionRef.value = item.description;
@@ -216,9 +249,9 @@ const openDialog = (item) => {
 const getEmployees = async ({ page, itemsPerPage, sortBy, search }) => {
   try {
     const { data } = await employee.get({ page, itemsPerPage, sortBy }, search);
-    employees.value = data.result.data.map(item => ({
+    employees.value = data.result.data.map((item) => ({
       id: item.id,
-      name: item.name
+      name: item.name,
     }));
   } catch (error) {
     console.error(error);
@@ -227,16 +260,18 @@ const getEmployees = async ({ page, itemsPerPage, sortBy, search }) => {
 
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
-    const firstMarkedItem = organizations.value.find(el => el.id === markedID.value[0]);
+    const firstMarkedItem = organizations.value.find(
+      (el) => el.id === markedID.value[0]
+    );
     if (firstMarkedItem && firstMarkedItem.deleted_at) {
       if (item.deleted_at === null) {
-        showToast(ErrorSelectMessage, 'warning')
+        showToast(ErrorSelectMessage, "warning");
         return;
       }
     }
     if (firstMarkedItem && firstMarkedItem.deleted_at === null) {
       if (item.deleted_at !== null) {
-        showToast(ErrorSelectMessage, 'warning')
+        showToast(ErrorSelectMessage, "warning");
         return;
       }
     }
@@ -260,44 +295,43 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
 
 const restore = async ({ page, itemsPerPage, sortBy }) => {
   try {
-    const { status } = await organization.restore({ ids: markedID.value});
+    const { status } = await organization.restore({ ids: markedID.value });
     if (status === 200) {
       showToast(restoreMessage, "green");
       await getOrganizationData({ page, itemsPerPage, sortBy });
       markedID.value = [];
     }
-  } catch (e) {
-  }
-};
-
-const remove = async ({ page, itemsPerPage, sortBy, search }) => {
-
-  try {
-    const { status } = await organization.remove({ ids: markedID.value});
-    if (status === 200) {
-      showToast(removeMessage, "red");
-      await getOrganizationData({ page, itemsPerPage, sortBy }, search);
-      markedID.value = [];
-    }
-  } catch (e) {
-  }
+  } catch (e) {}
 };
 
 const handleCheckboxClick = function (item) {
   lineMarking(item);
 };
 
-const cleanForm =  () => {
-  nameRef.value = null
-  innRef.value = null
-  directorRef.value = null
-  accountantRef.value = null
-  addressRef.value = null
-  descriptionRef.value = null
+const cleanForm = () => {
+  nameRef.value = null;
+  innRef.value = null;
+  directorRef.value = null;
+  accountantRef.value = null;
+  addressRef.value = null;
+  descriptionRef.value = null;
+};
+
+
+const remove = async ({page, itemsPerPage, sortBy}) => {
+  try {
+    const { status } = await user.remove({ids: markedID.value})
+    if (status === 200) {
+      showToast(removeMessage, 'red')
+      await getUser({page, itemsPerPage, sortBy})
+      markedID.value = []
+      dialog.value = false
+      showModal.value = true;
+    }
+  } catch (e) {
+
+  }
 }
-
-
-
 const  closeFilterModal = async ({page, itemsPerPage, sortBy, search, filterData}) => {
   filterModal.value = false
   filterForm.value = {}
@@ -306,14 +340,15 @@ const  closeFilterModal = async ({page, itemsPerPage, sortBy, search, filterData
 
 
 const isDataChanged = () => {
-  
-  const item = organizations.value.find(item => item.id === idOrganizations.value)
+  const item = organizations.value.find(
+    (item) => item.id === idOrganizations.value
+  );
 
-  const isChanged = 
+  const isChanged =
     nameRef.value !== item.name ||
     innRef.value !== item.INN ||
     directorRef.value.id !== item.director.id ||
-    accountantRef.value.id  !== item.chief_accountant.id ||
+    accountantRef.value.id !== item.chief_accountant.id ||
     addressRef.value !== item.address ||
     descriptionRef.value !== item.description;
 
@@ -321,7 +356,15 @@ const isDataChanged = () => {
 };
 
 const checkAndClose = () => {
-  if (nameRef.value || innRef.value || directorRef.value || accountantRef.value || addressRef.value || descriptionRef.value) {
+  console.log(1);
+  if (
+    nameRef.value ||
+    innRef.value ||
+    directorRef.value ||
+    accountantRef.value ||
+    addressRef.value ||
+    descriptionRef.value
+  ) {
     showConfirmDialog.value = true;
   } else {
     addDialog.value = false;
@@ -330,7 +373,9 @@ const checkAndClose = () => {
 
 const closeDialogWithoutSaving = () => {
   addDialog.value = false;
+  showModal.value = false
   showConfirmDialog.value = false;
+  cleanForm();
 };
 
 const checkUpdate = () => {
@@ -354,19 +399,19 @@ watch(addDialog, (newVal) => {
   }
 });
 
-
 watch(addDialog, (newVal) => {
   if (!newVal) {
-    cleanForm()
+    cleanForm();
   }
 });
 
 onMounted(async () => {
   await getEmployees({ page: 1, itemsPerPage: 10000 });
-})
+});
 </script>
 
 <template>
+  
   <div>
     <v-col>
       <div class="d-flex justify-space-between text-uppercase">
@@ -376,13 +421,13 @@ onMounted(async () => {
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons @click="openDialog(0)" name="add" title="Создать"/>
-              <Icons name="copy" @click="addBasedOnOrganization" title="Скопировать"/>
+              <Icons @click="openDialog(0)" name="add" title="Создать" />
               <Icons
-                @click="compute"
-                name="delete"
-                title="Удалить"
+                name="copy"
+                @click="addBasedOnOrganization"
+                title="Скопировать"
               />
+              <Icons @click="compute" name="delete" title="Удалить" />
             </div>
             <div class="w-100">
               <v-text-field
@@ -402,7 +447,12 @@ onMounted(async () => {
               ></v-text-field>
             </div>
           </div>
-          <Icons name="filter" title="фильтр" @click="filterModal = true" class="mt-1" />
+          <Icons
+            name="filter"
+            title="фильтр"
+            @click="filterModal = true"
+            class="mt-1"
+          />
         </v-card>
       </div>
 
@@ -413,18 +463,18 @@ onMounted(async () => {
           loading-text="Загрузка"
           no-data-text="Нет данных"
           v-model:items-per-page="paginations.per_page"
-           :loading="loading"
+          :loading="loading"
           :headers="headers"
           :items-length="paginations.total || 0"
           :items="organizations"
           :item-value="headers.title"
           @update:options="getOrganizationData"
-          page-text =  '{0}-{1} от {2}'
+          page-text="{0}-{1} от {2}"
           :items-per-page-options="[
-                {value: 25, title: '25'},
-                {value: 50, title: '50'},
-                {value: 100, title: '100'},
-            ]"
+            { value: 25, title: '25' },
+            { value: 50, title: '50' },
+            { value: 100, title: '100' },
+          ]"
           fixed-footer
           :search="search"
           hover
@@ -464,6 +514,7 @@ onMounted(async () => {
           </template>
         </v-data-table-server>
       </v-card>
+
     </v-col>
 
     <!-- modal -->
@@ -483,14 +534,23 @@ onMounted(async () => {
             }}</span>
             <div class="d-flex align-center justify-space-between">
               <div class="d-flex ga-3 align-center mt-2 me-4">
-                <Icons @click="removeOrganization" name="delete" />
-                <Icons v-if="isExistsOrganization" @click="update" name="save"/>
+                <Icons @click="remove" name="delete" />
+                <Icons
+                  v-if="isExistsOrganization"
+                  @click="update"
+                  name="save"
+                />
                 <Icons v-else @click="addOrganization" name="save" />
               </div>
-              <v-btn @click="isExistsOrganization ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData }) "
-                  variant="text" :size="32" class="pt-2 pl-1">
-                  <Icons name="close"   title="Закрыть"/>
-                </v-btn>
+              <v-btn
+                @click="toggleModal() ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
+                
+                variant="text"
+                :size="32"
+                class="pt-2 pl-1"
+              >
+                <Icons name="close" title="Закрыть" />
+              </v-btn>
             </div>
           </div>
           <v-form class="d-flex w-100" @submit.prevent="addOrganization">
@@ -537,7 +597,7 @@ onMounted(async () => {
                 ></v-select>
                 <v-select
                   v-model="accountantRef"
-                  :rules="[rules.required]" 
+                  :rules="[rules.required]"
                   :items="employees"
                   :base-color="FIELD_COLOR"
                   rounded="lg"
@@ -582,8 +642,12 @@ onMounted(async () => {
 
       <v-card>
         <v-dialog class="mt-2 pa-2" v-model="filterModal">
-          <v-card style="border: 2px solid #3AB700" min-width="600"
-                  class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
+          <v-card
+            style="border: 2px solid #3ab700"
+            min-width="600"
+            class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
+            rounded="xl"
+          >
             <div class="d-flex justify-space-between align-center mb-2">
               <span>Фильтр</span>
               <div class="d-flex align-center justify-space-between">
@@ -676,35 +740,17 @@ onMounted(async () => {
             </v-form>
           </v-card>
         </v-dialog>
+        <div v-if="showModal">
+        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" />
+      </div>
       </v-card>
-
-
-
-
-      <v-dialog style="min-width: 300px;"  v-model="showConfirmDialog" persistent>
-  <v-card style="max-width: 400px;" class="mx-auto flex flex-col">
-    <v-card-title class="text-h6"
-    >Подтверждение</v-card-title>
-    <v-card-text class="text-subtitle-1">Точно хотите закрыть? Введенные данные не будут сохранены.</v-card-text>
-    <v-card-actions>
-      <v-btn @click="showConfirmDialog = false"
-        class="text-none mb-4 w-[200px] h-[20px]"
-        color="red"
-        variant="flat"
-      >Нет</v-btn>
-      <v-btn @click="closeDialogWithoutSaving"
-        class="text-none mb-4 w-[200px] h-[20px]"
-        color="green"
-        variant="flat"
-      >Да</v-btn>
-    </v-card-actions>
-  </v-card>
-</v-dialog>
-    </v-card> 
+    </v-card>
+    
   </div>
 </template>
 
 <style scoped>
+
 </style> 
 
 
