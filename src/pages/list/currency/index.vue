@@ -599,7 +599,7 @@ watch(rateDialog, newVal => {
           <v-card style="border: 2px solid #3AB700" min-width="300"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
-              <span>{{ isExistsCurrency ? currencyInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
+              <span>{{ isExistsCurrency ? 'Валюта: ' + currencyInDialogTitle : 'Добавление' }}</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
                   <Icons title="Удалить"  v-show="isExistsCurrency" @click="compute" name="delete"/>
