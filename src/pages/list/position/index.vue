@@ -4,6 +4,7 @@ import {useRouter} from "vue-router";
 import showToast from '../../../composables/toast'
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import position from '../../../api/position.js'
+import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import {FIELD_COLOR} from "../../../composables/constant/colors.js";
 import {
   addMessage,

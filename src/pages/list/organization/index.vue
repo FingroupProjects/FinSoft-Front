@@ -320,16 +320,14 @@ const cleanForm = () => {
 
 const remove = async ({page, itemsPerPage, sortBy}) => {
   try {
-    const { status } = await user.remove({ids: markedID.value})
+    const {status} = await organization.remove({ids: markedID.value})
     if (status === 200) {
       showToast(removeMessage, 'red')
-      await getUser({page, itemsPerPage, sortBy})
+      await getOrganizationData({page, itemsPerPage, sortBy})
       markedID.value = []
-      dialog.value = false
-      showModal.value = true;
     }
   } catch (e) {
-
+    console.log(e)
   }
 }
 const  closeFilterModal = async ({page, itemsPerPage, sortBy, search, filterData}) => {
@@ -368,6 +366,7 @@ const checkAndClose = () => {
     showConfirmDialog.value = true;
   } else {
     addDialog.value = false;
+    showModal.value = false;
   }
 };
 
@@ -384,6 +383,7 @@ const checkUpdate = () => {
   } else {
     addDialog.value = false;
   }
+
 };
 
 watch(addDialog, (newVal) => {
@@ -534,7 +534,7 @@ onMounted(async () => {
             }}</span>
             <div class="d-flex align-center justify-space-between">
               <div class="d-flex ga-3 align-center mt-2 me-4">
-                <Icons @click="remove" name="delete" />
+                <Icons @click="compute" name="delete" />
                 <Icons
                   v-if="isExistsOrganization"
                   @click="update"
