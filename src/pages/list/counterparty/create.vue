@@ -9,6 +9,7 @@ import {
   ErrorSelectMessage,
   removeMessage,
   restoreMessage,
+  warningMessage,
 } from "@/composables/constant/buttons.js";
 import currencyApi from "../../../api/currency.js";
 import organizationApi from "@/api/organizations.js";
@@ -230,6 +231,7 @@ const getOrganization = async (page, items) => {
   try {
     const { data } = await organizationApi.get(page, items);
     organizations.value = data.result.data;
+    console.log(data);
   } catch (e) {
     console.log(e);
   }
@@ -285,10 +287,10 @@ const getId = async () => {
 };
 
 const CreateCounterparty = async () => {
+  isValid.value = true;
   if (validate(name, phone, address, email, roles) !== true) return;
 
   try {
-    isValid.value = true;
     const body = {
       name: name.value,
       phone: phone.value,
@@ -302,6 +304,13 @@ const CreateCounterparty = async () => {
     clearForm();
   } catch (error) {
     console.log(error);
+    if (error.response.data.errors.email) {
+      showToast("Такой email уже существует", "warning");
+    } else if (error.response.data.errors.phone) {
+      showToast("Такой номер телефона уже существует", "warning");
+    }
+  } finally {
+    isValid.value = false;
   }
 };
 
@@ -328,6 +337,10 @@ const getDocuments = async ({ page, itemsPerPage, sortBy, search }) => {
 };
 
 const del = async ({ page, itemsPerPage, sortBy, search }) => {
+  if (markedID.value.length === 0) {
+    showToast(warningMessage, "warning");
+    return;
+  }
   const body = {
     ids: markedID.value,
   };
@@ -344,6 +357,10 @@ const del = async ({ page, itemsPerPage, sortBy, search }) => {
 };
 
 const restore = async ({ page, itemsPerPage, sortBy }) => {
+  if (markedID.value.length === 0) {
+    showToast(warningMessage, "warning");
+    return;
+  }
   try {
     const body = {
       ids: markedID.value,
@@ -480,11 +497,7 @@ const currencyProps = (item) => {
       >
         <div class="d-flex justify-space-between align-center mb-2">
           <span>{{
-            isEdit && !createOnBase
-              ? `Контрагент: ${modalTitle}`
-              : createOnBase
-              ? "Добавление на основании"
-              : "Добавление"
+            isEdit && !createOnBase ? `Контрагент: ${modalTitle}` : "Добавление"
           }}</span>
           <div class="d-flex align-center justify-space-between">
             <div class="d-flex align-center mt-2 me-4">
@@ -574,7 +587,6 @@ const currencyProps = (item) => {
                 <v-text-field
                   variant="outlined"
                   :base-color="FIELD_COLOR"
-                  prepend-inner-icon="email"
                   :rules="isValid ? [rules.required, rules.email] : []"
                   label="Почта"
                   v-model="email"

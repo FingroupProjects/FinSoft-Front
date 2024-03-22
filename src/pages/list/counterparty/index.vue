@@ -7,6 +7,7 @@ import {
   removeMessage,
   restoreMessage,
   selectOneItemMessage,
+  warningMessage,
 } from "../../../composables/constant/buttons.js";
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
@@ -129,6 +130,10 @@ const getCounterparty = async ({ page, itemsPerPage, sortBy, search }) => {
 };
 
 const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
+  if (markedID.value.length === 0) {
+    showToast(warningMessage, "warning");
+    return;
+  }
   const body = {
     ids: markedID.value,
   };
@@ -145,6 +150,10 @@ const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
 };
 
 const massRestoreCounterparty = async ({ page, itemsPerPage, sortBy }) => {
+  if (markedID.value.length === 0) {
+    showToast(warningMessage, "warning");
+    return;
+  }
   try {
     const body = {
       ids: markedID.value,
