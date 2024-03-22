@@ -55,7 +55,15 @@ const groups = ref([])
 const paginations = ref([])
 const paginationsGroup = ref([])
 
+const filterForm = ref({
+  name: null,
+  email: null,
+  phone: null,
+  login: null,
+  organization_id: null
+})
 
+const showModalDialog = ref(null)
 
 const headers = ref([
   {title: '№', key: 'id', align: 'start'},
@@ -67,22 +75,10 @@ const headersGroup = ref([
   {title: 'Название группы', key: 'name', align: 'start'},
 ])
 
-
-
-//filter
-const filterForm = ref({
-  name: null,
-  email: null,
-  phone: null,
-  login: null,
-  organization_id: null
-})
-
-const showModalDialog = ref(null)
-
-
 const rules = {
   required: v => !!v,
+  email: (v) => /.+@.+\..+/.test(v),
+  phone: (v) => v.length === 13,
 }
 
 const getGroup = async ({page, itemsPerPage, sortBy}) => {
@@ -102,9 +98,6 @@ const getGroup = async ({page, itemsPerPage, sortBy}) => {
 }
 
 const getOrganization = async () => {
-  const filterData = filterForm.value
-  showModalDialog.value = false
-
   try {
     const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000})
     organizations.value = data.result.data.map(item => ({
@@ -151,8 +144,6 @@ const addUser = async ({page, itemsPerPage, sortBy}) => {
     groupValue = group.value
   }
 
-
-
   const formData = new FormData()
   formData.append('name', fioRef.value);
   formData.append('organization_id', organizationValue)
@@ -164,6 +155,10 @@ const addUser = async ({page, itemsPerPage, sortBy}) => {
 
   if (imageRef.value !== null) {
     formData.append('image', imageRef.value);
+  }
+
+  for(let pair of formData.entries()) {
+    console.log(pair[0]+ ', '+ pair[1]);
   }
 
   try {
@@ -276,6 +271,14 @@ const handleCheckboxClick = item => {
 
 const openDialog = item => {
   dialog.value = true
+
+  if (groupIdRef.value !== 0) {
+    const groupValue = groups.value.find(item => item.id === groupIdRef.value)
+    group.value = {
+      id: groupValue.id,
+      name: groupValue.name
+    }
+  }
 
   if (item === 0) {
     idUser.value = 0
@@ -641,6 +644,7 @@ onMounted(async () =>  {
                           density="compact"
                           placeholder="Ivan"
                           label="Логин"
+                          v-mask="'XXXXXXXXXXXXXXXXXXX'"
                           clear-icon="close"
                           :append-inner-icon="loginRef ? 'close' : ''"
                           @click:append-inner="loginRef = null"
@@ -690,14 +694,16 @@ onMounted(async () =>  {
                   <div class="d-flex ga-4 mt-5">
                     <v-text-field
                         v-model="phoneRef"
-                        :rules="[rules.required]"
+                        :rules="[rules.required, rules.phone]"
                         color="green"
                         :base-color="FIELD_COLOR"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
                         density="compact"
+                        type="tel"
                         placeholder="+992119111881"
                         label="Номер телефона"
+                        v-mask="'+############'"
                         clear-icon="close"
                         :append-inner-icon="phoneRef ? 'close' : ''"
                         @click:append-inner="phoneRef = null"
@@ -705,13 +711,14 @@ onMounted(async () =>  {
                     />
                     <v-text-field
                         v-model="emailRef"
-                        :rules="[rules.required]"
+                        :rules="[rules.required, rules.email]"
                         color="green"
                         :base-color="FIELD_COLOR"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
                         density="compact"
                         placeholder="ivan@gmail.com"
+                        type="email"
                         label="Почта"
                         clear-icon="close"
                         :append-inner-icon="emailRef ? 'close' : ''"
@@ -730,7 +737,6 @@ onMounted(async () =>  {
         <div v-if="isDialogPassword">
           <change-password @toggleDialogPassword="isDialogPassword = false" :id="idUser" />
         </div>
-        
 
         <v-dialog class="mt-2 pa-2" v-model="showModalDialog">
           <v-card style="border: 2px solid #3AB700" min-width="600"
@@ -787,13 +793,12 @@ onMounted(async () =>  {
                           :base-color="FIELD_COLOR"
                           item-title="name"
                           item-value="id"
-                          
                           variant="outlined"
                           label="Организация"
                       />
                       <v-text-field
                           v-model="filterForm.login"
-                          
+
                           color="green"
                           :base-color="FIELD_COLOR"
                           variant="outlined"

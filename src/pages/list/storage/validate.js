@@ -11,7 +11,7 @@ export default function validate(
   if (organizationAdd.value.length === 0) {
     return showToast("Поле Организация не может быть пустым", "warning")
   }
-  if (!group.value || !group.value.id) {
+  if (!group.value || group.value.length === 0) {
     return showToast("Поле Группа не может быть пустым", "warning")
   }
 
