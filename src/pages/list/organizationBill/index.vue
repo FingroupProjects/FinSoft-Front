@@ -1,14 +1,15 @@
 <script setup>
 import {onMounted, ref, watch} from "vue";
-import {useRouter} from "vue-router";
+
 import showToast from '../../../composables/toast'
 import Icons from "../../../composables/Icons/Icons.vue";
-import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import organizationBill from '../../../api/organizationBill.js';
 import currencyApi from '../../../api/currency.js';
 import organizationApi from '../../../api/organizations.js';
+import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showDate from "../../../composables/date/showDate.js";
 import validate from "./validate.js"
+import {FIELD_COLOR} from "../../../composables/constant/colors.js";
 import {
   addMessage,
   editMessage,
@@ -19,25 +20,25 @@ import {
   restoreMessage
 } from "../../../composables/constant/buttons.js";
 
-const router = useRouter()
 
 const loading = ref(true)
-const loadingRate = ref(true)
+
 const dialog = ref(false)
 const idOrganizationBill = ref(null)
 const hoveredRowIndex = ref(null)
-const name = ref(null)
+
 const filterModal = ref(false);
 const dateRef = ref(null)
 const bill_number = ref(null)
-const isValid = ref(null)
+
 const comment = ref(null)
 const organizationAdd = ref(null)
-const organizationUpdate = ref([])
+
 const currencies = ref([])
-const currency = ref(null)
+
 const currencyAdd = ref(null)
 const organizations = ref(null)
+
 
 const isExistsOrganizationBill = ref(false)
 const markedID = ref([]);
@@ -50,12 +51,18 @@ const organizationBills = ref([])
 const paginations = ref([])
 
 //filter
-const nameFilter = ref(null)
-const currencyFilter = ref(null)
-const dateFilter = ref(null)
-const bill_numberFilter = ref(null)
-const organizationFilter = ref(null)
-const commentFilter = ref(null)
+
+const filterForm = ref({
+    name: null,
+    currency_id: null,
+    date: null,
+    bill_number: null,
+    organization_id: null,
+    comment: null,
+})
+
+
+const showConfirmDialog = ref(false)
 
 
 const headers = ref([
@@ -64,16 +71,55 @@ const headers = ref([
   {title: 'Баланс', key: 'name', sortable: false},
   {title: 'Организация', key: 'organization.name'},
   {title: 'Валюта', key: 'currency.name'},
-  
 ])
+
+const closeDialogWithoutSaving = () => {
+  dialog.value = false;
+  showConfirmDialog.value = false;
+};
+const checkUpdate = () => {
+    if(isDataChanged() === true){
+      showConfirmDialog.value = true
+    }
+    else {
+      dialog.value = false
+    }
+}
+const checkAndClose = () => {
+  if (nameRef.value || organizationBill.value || currencyAdd.value || organizationAdd.value || dateRef.value || descriptionRef.value) {
+    showConfirmDialog.value = true;
+  } else {
+    dialog.value = false;
+  }
+};
+watch(dialog, (newVal) => {
+  if (!newVal) {
+    cleanForm()
+  }
+});
+
+const isDataChanged = () => {
+  
+  const item = organizationBills.value.find(item => item.id === idOrganizationBill.value)
+  const isChanged =
+    nameRef.value !== item.name ||
+    bill_number.value !== item.bill_number ||
+    currencyAdd.value !== item.currency.id ||
+    organizationAdd.value !== item.organization.id ||
+    comment.value !== item.comment ||
+    showDate(dateRef.value) !== item.date;
+  return isChanged;
+};
 
 const rules = {
   required: v => !!v,
 } 
 
 
-const getOrganizationBillData = async ({page, itemsPerPage, sortBy, search, filterData}) => {
-  console.log(filterData)
+const getOrganizationBillData = async ({page, itemsPerPage, sortBy, search}) => {
+  const filterData = filterForm.value
+  filterModal.value = false
+
   loading.value = true
   try {
     
@@ -90,24 +136,7 @@ const getOrganizationBillData = async ({page, itemsPerPage, sortBy, search, filt
 }
 
 
-const filter = async ({page, itemsPerPage, sortBy, search}) => {
-  loading.value = true
-  const filterData = {
-    name: nameFilter.value,
-    organization_id: organizationFilter.value,
-    currency_id: currencyFilter.value,
-    bill_number: bill_numberFilter.value,
-    date: dateFilter.value,
-    comment: commentFilter.value
-  }
 
-  try {
-    await getOrganizationBillData({page, itemsPerPage, sortBy, search, filterData})
-    filterModal.value = false
-  } catch (e) {
-    
-  }
-}
 
 const addOrganizationBill = async ({page, itemsPerPage, sortBy}) => {
 
@@ -121,7 +150,6 @@ const addOrganizationBill = async ({page, itemsPerPage, sortBy}) => {
   }
 
   if (validate(nameRef, bill_number, dateRef, organizationAdd, currencyAdd ) !== true) return
-
 
     const res = await organizationBill.create(body)
 
@@ -140,7 +168,6 @@ const addOrganizationBill = async ({page, itemsPerPage, sortBy}) => {
 
 const remove = async ({page, itemsPerPage, sortBy, search}) => {
  
-
   try {
     const {status} = await organizationBill.remove({ids: markedID.value})
 
@@ -277,12 +304,7 @@ const cleanForm =  () => {
 
 
 const cleanFilterForm =  () => {
-  nameFilter.value = null
-  bill_numberFilter.value = null
-  dateFilter.value = null
-  organizationFilter.value = null
-  currencyFilter.value = null
-  commentFilter.value = null
+  filterForm.value = {}
 }
 
 const addBasedOnorganizationBill = () => {
@@ -316,11 +338,10 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
 
 
 
-const  closeFilterModal = async ({page, itemsPerPage, sortBy, search, filterData}) => {
+const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
   filterModal.value = false
-  await getOrganizationBillData({page, itemsPerPage, sortBy, search, filterData})
   cleanFilterForm()
-
+  await getOrganizationBillData({page, itemsPerPage, sortBy, search})
 }
 
 const lineMarking = (item) => {
@@ -370,14 +391,15 @@ onMounted(async () => {
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons @click="openDialog(0)" name="add"/>
-              <Icons @click="addBasedOnorganizationBill" name="copy"/>
-              <Icons @click="compute" name="delete"/>
+              <Icons @click="openDialog(0)" name="add"  title="Создать"/>
+              <Icons @click="addBasedOnorganizationBill"  title="Скопировать" name="copy"/>
+              <Icons @click="compute"  title="Удалить" name="delete"/>
             </div>
 
             <div class="w-100">
               <v-text-field
                   v-model="search"
+                  :base-color="FIELD_COLOR"
                   prepend-inner-icon="search"
                   density="compact"
                   label="Поиск..."
@@ -392,7 +414,7 @@ onMounted(async () => {
               ></v-text-field>
             </div>
           </div>
-          <Icons name="filter" @click="filterModal = true" class="mt-1"/>
+          <Icons name="filter"  title="фильтр" @click="filterModal = true" class="mt-1"/>
         </v-card>
       </div>
 
@@ -454,13 +476,14 @@ onMounted(async () => {
               <span>{{ isExistsOrganizationBill ? organizationBillInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons v-if="isExistsOrganizationBill"  @click="compute" name="delete"/>
-                  <Icons v-if="isExistsOrganizationBill" @click="update" name="save"/>
-                  <Icons v-else @click="addOrganizationBill" name="save"/>
+                  <Icons v-if="isExistsOrganizationBill"  title="Удалить"  @click="compute" name="delete"/>
+                  <Icons v-if="isExistsOrganizationBill"  title="Сохранить" @click="update" name="save"/>
+                  <Icons v-else @click="addOrganizationBill"  title="Сохранить" name="save"/>
                 </div>
-                <v-btn @click="dialog = false" variant="text" :size="32" class="pt-2 pl-1">
-                  <Icons name="close"/>
-                </v-btn>
+                <v-btn @click="isExistsOrganizationBill ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search }) "
+                  variant="text" :size="32" class="pt-2 pl-1">
+                  <Icons name="close"   title="Закрыть"/>
+                  </v-btn>
               </div>
             </div>
             <v-form class="d-flex w-100">
@@ -475,7 +498,9 @@ onMounted(async () => {
                         variant="outlined"
                         class="w-auto text-sm-body-1"
                         density="compact"
-                        placeholder="Контрагент"
+                        :base-color="FIELD_COLOR"
+                        basecolor=""
+                        placeholder="Наименование"
                         label="Наименование"
                         clear-icon="close"
                         clearable
@@ -490,12 +515,12 @@ onMounted(async () => {
                   <div class="d-flex ga-2 mb-3">
                     <v-text-field style="max-width: 30%"
                         variant="outlined"
-                        
                         :rules="[rules.required]"
                         label="Дата создания"
                         type="date"
                         v-model="dateRef"
                         density="compact"
+                        :base-color="FIELD_COLOR"
                         rounded="md"
                         color="green"
                         :append-inner-icon="dateRef ? 'close' : ''"
@@ -503,10 +528,10 @@ onMounted(async () => {
                         hide-details
                     />
                     <v-text-field
-                   
                         v-model="bill_number"
                         :rules="[rules.required]"
                         variant="outlined"
+                        :base-color="FIELD_COLOR"
                         label="Номер счёта"
                         density="compact"
                         rounded="md"
@@ -519,6 +544,7 @@ onMounted(async () => {
                      style="max-width: 40%; min-width: 40%"
                         v-model="currencyAdd"
                         :items="currencies"
+                        :base-color="FIELD_COLOR"
                         item-title="name"
                         item-value="id"
                         :rules="[rules.required]"
@@ -532,6 +558,7 @@ onMounted(async () => {
                       v-model="organizationAdd"
                       :items="organizations"
                       item-title="name"
+                      :base-color="FIELD_COLOR"
                       item-value="id"
                       :rules="[rules.required]"
                       label="Организация"
@@ -540,7 +567,7 @@ onMounted(async () => {
                   />
                   <v-textarea
                       variant="outlined"
-                      :rules="[rules.required]"
+                      :base-color="FIELD_COLOR"
                       label="Комментарий"
                       v-model="comment"
                       density="compact"
@@ -557,7 +584,25 @@ onMounted(async () => {
         </v-dialog>
       </v-card>
 
-
+<v-dialog style="min-width: 300px;"  v-model="showConfirmDialog" persistent>
+  <v-card style="max-width: 400px;" class="mx-auto flex flex-col">
+    <v-card-title class="text-h6"
+    >Подтверждение</v-card-title>
+    <v-card-text class="text-subtitle-1">Точно хотите закрыть? Введенные данные не будут сохранены.</v-card-text>
+    <v-card-actions>
+      <v-btn @click="showConfirmDialog = false"
+        class="text-none mb-4 w-[200px] h-[20px]"
+        color="red"
+        variant="flat"
+      >Нет</v-btn>
+      <v-btn @click="closeDialogWithoutSaving"
+        class="text-none mb-4 w-[200px] h-[20px]"
+        color="green"
+        variant="flat"
+      >Да</v-btn>
+    </v-card-actions>
+  </v-card>
+</v-dialog>
     <v-card>
         <v-dialog class="mt-2 pa-2" v-model="filterModal">
           <v-card style="border: 2px solid #3AB700" min-width="600"
@@ -566,7 +611,7 @@ onMounted(async () => {
               <span>Фильтр</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons @click="filter" name="save"/>
+                  <Icons @click="getOrganizationBillData" name="save"/>
                 </div>
                 <v-btn @click="closeFilterModal" variant="text" :size="32" class="pt-2 pl-1">
                   <Icons name="close"/>
@@ -578,8 +623,9 @@ onMounted(async () => {
                 <v-col class="d-flex flex-column w-100">
                   <div class="d-flex justify-space-between ga-6 mb-3">
                     <v-text-field
-                        v-model="nameFilter"
+                        v-model="filterForm.name"
                         color="green"
+                        :base-color="FIELD_COLOR"
                         rounded="md"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
@@ -597,31 +643,34 @@ onMounted(async () => {
                         variant="outlined"
                         label="Дата создания"
                         type="date"
+                        :base-color="FIELD_COLOR"
                         style="max-width: 30%"
-                        v-model="dateFilter"
+                        v-model="filterForm.date"
                         density="compact"
                         rounded="md"
                         color="green"
-                        :append-inner-icon="dateFilter ? 'close' : ''"
-                        @click:append-inner="dateFilter = null"
+                        :append-inner-icon="filterForm.date ? 'close' : ''"
+                        @click:append-inner="filterForm.date = null"
                         hide-details
                     />
                     <v-text-field
-                        v-model="bill_numberFilter"
+                        v-model="filterForm.bill_number"
                         variant="outlined"
                         label="Номер счёта"
                         density="compact"
                         rounded="md"
+                        :base-color="FIELD_COLOR"
                         color="green"
-                        :append-inner-icon="bill_numberFilter ? 'close' : ''"
-                        @click:append-inner="bill_numberFilter = null"
+                        :append-inner-icon="filterForm.bill_number ? 'close' : ''"
+                        @click:append-inner="filterForm.bill_number = null"
                         hide-details
                     />
                     <v-select
                       style="max-width: 40%; min-width: 40%"
-                        v-model="currencyFilter"
+                        v-model="filterForm.currency_id"
                         :items="currencies"
                         item-title="name"
+                        :base-color="FIELD_COLOR"
                         item-value="id"
                         label="Валюта"
                         variant="outlined"
@@ -630,9 +679,10 @@ onMounted(async () => {
                     />
                   </div>
                   <v-select
-                      v-model="organizationFilter"
+                      v-model="filterForm.organization_id"
                       :items="organizations"
                       item-title="name"
+                      :base-color="FIELD_COLOR"
                       item-value="id"
                       label="Организация"
                       variant="outlined"
@@ -641,13 +691,14 @@ onMounted(async () => {
                   <v-textarea
                       variant="outlined"
                       label="Комментарий"
-                      v-model="commentFilter"
+                      :base-color="FIELD_COLOR"
+                      v-model="filterForm.comment"
                       density="compact"
                       rounded="md"
                       color="green"
                       hide-details
-                      :append-inner-icon="commentFilter ? 'close' : ''"
-                      @click:append-inner="commentFilter = null"
+                      :append-inner-icon="filterForm.comment ? 'close' : ''"
+                      @click:append-inner="filterForm.comment = null"
                   />
                 </v-col>
               </v-row>

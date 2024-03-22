@@ -4,6 +4,7 @@ import {useRouter} from "vue-router";
 import showToast from '../../../composables/toast'
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import position from '../../../api/position.js'
+import {FIELD_COLOR} from "../../../composables/constant/colors.js";
 import {
   addMessage,
   editMessage,
@@ -43,6 +44,13 @@ const headers = ref([
   { title: 'Наименование', key: 'name'}
 ])
 
+const filterForm = ref({
+    name: null,
+})
+
+
+const filterModal = ref(false)
+
 const rules = {
   required: v => !!v,
   date: v => (v && /^\d{2}-\d{2}-\d{4}$/.test(v)) || 'Формат даты должен быть DD-MM-YYYY',
@@ -50,9 +58,13 @@ const rules = {
 
 
 const getPositionData = async ({ page, itemsPerPage, sortBy, search }) => {
+  const filterData = filterForm.value
+  filterModal.value = false
+  
+
   loading.value = true
   try {
-    const { data } = await position.get({page, itemsPerPage, sortBy}, search)
+    const { data } = await position.get({page, itemsPerPage, sortBy}, search, filterData)
     console.log(data.result)
     paginations.value = data.result.pagination
     positions.value = data.result.data
@@ -61,7 +73,18 @@ const getPositionData = async ({ page, itemsPerPage, sortBy, search }) => {
   }
 }
 
+const cleanFilterForm =  () => {
+  filterForm.value = {}
+}
 
+
+const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
+  filterModal.value = false
+  cleanFilterForm()
+  await getPositionData({page, itemsPerPage, sortBy, search})
+
+
+}
 
 const addPosition = async ({ page, itemsPerPage, sortBy }) => {
   if (validate(nameRef) !== true) return 
@@ -229,9 +252,9 @@ watch(dialog, newVal => {
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons @click="openDialog(0)" name="add" />
-              <Icons @click="addBasedOnPosition" name="copy" />
-              <Icons @click="compute" name="delete" />
+              <Icons title="Сохранить" @click="openDialog(0)" name="add" />
+              <Icons title="Скопировать" @click="addBasedOnPosition" name="copy" />
+              <Icons title="Удалить" @click="compute" name="delete" />
             </div>
 
             <div class="w-100">
@@ -244,6 +267,7 @@ watch(dialog, newVal => {
                   color="info"
                   rounded="lg"
                   clear-icon="close"
+                  :base-color="FIELD_COLOR"
                   hide-details
                   single-line
                   clearable
@@ -251,7 +275,7 @@ watch(dialog, newVal => {
               ></v-text-field>
             </div>
           </div>
-          <Icons name="filter" class="mt-1"/>
+          <Icons title="фильтр" name="filter" @click="filterModal = true" class="mt-1"/>
         </v-card>
       </div>
 
@@ -307,12 +331,12 @@ watch(dialog, newVal => {
               <span>{{ isExistsPosition ? positionInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons  v-if="isExistsPosition"  @click="compute" name="delete"/>
-                  <Icons v-if="isExistsPosition" @click="update" name="save"/>
-                  <Icons v-else @click="addPosition" name="save"/>
+                  <Icons title="Удалить"  v-if="isExistsPosition"  @click="compute" name="delete"/>
+                  <Icons title="Сохранить" v-if="isExistsPosition" @click="update" name="save"/>
+                  <Icons title="Сохранить" v-else @click="addPosition" name="save"/>
                 </div>
                 <v-btn @click="dialog = false"  variant="text" :size="32" class="pt-2 pl-1">
-                  <Icons name="close" />
+                  <Icons title="Закрыть" name="close" />
                 </v-btn>
               </div>
             </div>
@@ -325,6 +349,7 @@ watch(dialog, newVal => {
                       color="green"
                       rounded="lg"
                       variant="outlined"
+                      :base-color="FIELD_COLOR"
                       class="w-auto text-sm-body-1"
                       density="compact"
                       placeholder="Бухгалтер"
@@ -339,6 +364,47 @@ watch(dialog, newVal => {
         </v-dialog>
 
       </v-card>
+
+
+
+      <v-card>
+        <v-dialog class="mt-2 pa-2"  v-model="filterModal">
+          <v-card style="border: 2px solid #3AB700" min-width="400" min-height="150" class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
+            <div class="d-flex justify-space-between align-center mb-2">
+              <span>Фильтр</span>
+              <div class="d-flex align-center justify-space-between">
+                <div class="d-flex ga-3 align-center mt-2 me-4">
+                  <Icons  @click="getPositionData" title="Сохранить" name="save"/>
+                </div>
+                <v-btn @click="closeFilterModal"  name="Закрыть" variant="text" :size="32" class="pt-2 pl-1">
+                  <Icons title="Закрыть" name="close" />
+                </v-btn>
+              </div>
+            </div>
+            <v-form class="d-flex w-100" @submit.prevent="addPosition">
+              <v-row class="w-100">
+                <v-col class="d-flex flex-column w-100">
+                  <v-text-field
+                      v-model="filterForm.name"
+                      color="green"
+                      rounded="lg"
+                      variant="outlined"
+                      :base-color="FIELD_COLOR"
+                      class="w-auto text-sm-body-1"
+                      density="compact"
+                      placeholder="Фильтр"
+                      label="Наименование"
+                      clear-icon="close"
+                      clearable
+                  />
+                </v-col>
+              </v-row>
+            </v-form>
+          </v-card>
+        </v-dialog>
+
+      </v-card>
+
     </v-col>
   </div>
 

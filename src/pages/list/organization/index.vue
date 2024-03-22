@@ -15,8 +15,7 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import Icons from "../../../composables/Icons/Icons.vue";
 import employee from "../../../api/employee";
 import validate from "./validate.js";
-import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
-
+import {FIELD_COLOR} from "../../../composables/constant/colors.js";
 
 const showConfirmDialog = ref(false);
 const router = useRouter();
@@ -45,18 +44,15 @@ const addressRef = ref(null);
 const descriptionRef = ref(null);
 const search = ref(null);
 
-const nameFilter = ref(null);
-const innFilter = ref(null);
-const directorFilter = ref(null);
-const accountantFilter = ref(null);
-const addressFilter = ref(null);
-const descriptionFilter = ref(null); 
-const showModal = ref(false);
+const filterForm = ref({
+  name: null,
+  inn: null,
+  chief_accountant_id: null,
+  director_id: null,
+  address: null,
+  description: null,
+});
 
-const toggleModal = () => {
-  showModal.value = !showModal.value;
-  console.log('showModal');
-};
 
 
 const rules = {
@@ -67,17 +63,10 @@ const headers = ref([
   { title: "№", key: "id" },
   { title: "Наименование", key: "name" },
 ]);
- 
 
-
-const getOrganizationData = async ({
-  page,
-  itemsPerPage,
-  sortBy,
-  search,
-  filterData,
-}) => {
-  console.log(filterData);
+const getOrganizationData = async ({ page, itemsPerPage, sortBy, search}) => {
+  const filterData = filterForm.value
+  filterModal.value = false
   loading.value = true;
   try {
     const { data } = await organization.get(
@@ -333,52 +322,14 @@ const cleanForm = () => {
   descriptionRef.value = null;
 };
 
-const filter = async ({ page, itemsPerPage, sortBy, search }) => {
-  loading.value = true;
-  const filterData = {
-    name: nameFilter.value,
-    INN: innFilter.value,
-    director_id: directorFilter.value,
-    chief_accountant_id: accountantFilter.value,
-    address: addressFilter.value,
-    description: descriptionFilter.value,
-  };
-  console.log(filterData);
 
-  try {
-    await getOrganizationData({
-      page,
-      itemsPerPage,
-      sortBy,
-      search,
-      filterData,
-    });
-    filterModal.value = false;
-    nameFilter.value = null;
-    innFilter.value = null;
-    directorFilter.value = null;
-    accountantFilter.value = null;
-    addressFilter.value = null;
-    descriptionFilter.value = null;
-  } catch (e) {}
-};
 
-const closeFilterModal = async ({
-  page,
-  itemsPerPage,
-  sortBy,
-  search,
-  filterData,
-}) => {
-  filterModal.value = false;
-  await getOrganizationData({ page, itemsPerPage, sortBy, search, filterData });
-  nameFilter.value = null;
-  innFilter.value = null;
-  directorFilter.value = null;
-  accountantFilter.value = null;
-  addressFilter.value = null;
-  descriptionFilter.value = null;
-};
+const  closeFilterModal = async ({page, itemsPerPage, sortBy, search, filterData}) => {
+  filterModal.value = false
+  filterForm.value = {}
+  await getOrganizationData({page, itemsPerPage, sortBy, search})
+}
+
 
 const isDataChanged = () => {
   const item = organizations.value.find(
@@ -469,6 +420,7 @@ onMounted(async () => {
             <div class="w-100">
               <v-text-field
                 v-model="search"
+                :base-color="FIELD_COLOR"
                 prepend-inner-icon="search"
                 density="compact"
                 label="Поиск..."
@@ -595,6 +547,7 @@ onMounted(async () => {
                   :rules="[rules.required]"
                   color="green"
                   rounded="lg"
+                  :base-color="FIELD_COLOR"
                   variant="outlined"
                   class="w-auto text-sm-body-1"
                   density="compact"
@@ -607,6 +560,7 @@ onMounted(async () => {
                   v-model="innRef"
                   :rules="[rules.required]"
                   color="green"
+                  :base-color="FIELD_COLOR"
                   rounded="lg"
                   variant="outlined"
                   class="w-auto text-sm-body-1"
@@ -620,6 +574,7 @@ onMounted(async () => {
                   v-model="directorRef"
                   :rules="[rules.required]"
                   :items="employees"
+                  :base-color="FIELD_COLOR"
                   rounded="lg"
                   item-title="name"
                   item-value="id"
@@ -630,6 +585,7 @@ onMounted(async () => {
                   v-model="accountantRef"
                   :rules="[rules.required]"
                   :items="employees"
+                  :base-color="FIELD_COLOR"
                   rounded="lg"
                   item-title="name"
                   item-value="id"
@@ -640,6 +596,7 @@ onMounted(async () => {
                   v-model="addressRef"
                   :rules="[rules.required]"
                   color="green"
+                  :base-color="FIELD_COLOR"
                   rounded="lg"
                   variant="outlined"
                   class="w-auto text-sm-body-1"
@@ -652,6 +609,7 @@ onMounted(async () => {
                 <v-text-field
                   v-model="descriptionRef"
                   color="green"
+                  :base-color="FIELD_COLOR"
                   rounded="lg"
                   variant="outlined"
                   class="w-auto text-sm-body-1"
@@ -667,7 +625,7 @@ onMounted(async () => {
           </v-form>
         </v-card>
       </v-dialog>
-    <!-- filterModal -->
+
       <v-card>
         <v-dialog class="mt-2 pa-2" v-model="filterModal">
           <v-card
@@ -680,15 +638,10 @@ onMounted(async () => {
               <span>Фильтр</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons @click="filter" name="save" />
+                  <Icons title="Фильтр" @click="getOrganizationData" name="save"/>
                 </div>
-                <v-btn
-                  @click="closeFilterModal"
-                  variant="text"
-                  :size="32"
-                  class="pt-2 pl-1"
-                >
-                  <Icons name="close" />
+                <v-btn @click="closeFilterModal" variant="text" :size="32" class="pt-2 pl-1">
+                  <Icons title="Закрыть" name="close"/>
                 </v-btn>
               </div>
             </div>
@@ -696,77 +649,78 @@ onMounted(async () => {
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100">
                   <v-text-field
-                    v-model="nameFilter"
-                    :rules="[rules.required]"
-                    color="green"
-                    rounded="lg"
-                    variant="outlined"
-                    class="w-auto text-sm-body-1"
-                    density="compact"
-                    placeholder="Организация"
-                    label="Наименования"
-                    clear-icon="close"
-                    clearable
-                  />
-                  <v-text-field
-                    v-model="innFilter"
-                    :rules="[rules.required]"
-                    color="green"
-                    rounded="lg"
-                    variant="outlined"
-                    class="w-auto text-sm-body-1"
-                    density="compact"
-                    placeholder="ИНН"
-                    label="ИНН"
-                    clear-icon="close"
-                    clearable
-                  />
-                  <v-select
-                    v-model="directorFilter"
-                    :rules="[rules.required]"
-                    :items="employees"
-                    rounded="lg"
-                    item-title="name"
-                    item-value="id"
-                    label="Директор"
-                    variant="outlined"
-                  ></v-select>
-                  <v-select
-                    v-model="accountantFilter"
-                    :rules="[rules.required]"
-                    :items="employees"
-                    rounded="lg"
-                    item-title="name"
-                    item-value="id"
-                    label="Гл. бухгалтер"
-                    variant="outlined"
-                  ></v-select>
-                  <v-text-field
-                    v-model="addressFilter"
-                    :rules="[rules.required]"
-                    color="green"
-                    rounded="lg"
-                    variant="outlined"
-                    class="w-auto text-sm-body-1"
-                    density="compact"
-                    placeholder="Адрес"
-                    label="Адрес"
-                    clear-icon="close"
-                    clearable
-                  />
-                  <v-text-field
-                    v-model="descriptionFilter"
-                    color="green"
-                    rounded="lg"
-                    variant="outlined"
-                    class="w-auto text-sm-body-1"
-                    density="compact"
-                    placeholder="Описание"
-                    label="Описание"
-                    clear-icon="close"
-                    style="height: 120px; margin-bottom: -20px"
-                    clearable
-                  />
+                  v-model="filterForm.name"
+                  :base-color="FIELD_COLOR"
+                  color="green"
+                  rounded="lg"
+                  variant="outlined"
+                  class="w-auto text-sm-body-1"
+                  density="compact"
+                  placeholder="Организация"
+                  label="Наименования"
+                  clear-icon="close"
+                  clearable
+                />
+                <v-text-field
+                  v-model="filterForm.inn"
+                  :base-color="FIELD_COLOR"
+                  color="green"
+                  rounded="lg"
+                  variant="outlined"
+                  class="w-auto text-sm-body-1"
+                  density="compact"
+                  placeholder="ИНН"
+                  label="ИНН"
+                  clear-icon="close"
+                  clearable
+                />
+                <v-select
+                  v-model="filterForm.director_id"
+                  :base-color="FIELD_COLOR"
+                  :items="employees"
+                  rounded="lg"
+                  item-title="name"
+                  item-value="id"
+                  label="Директор"
+                  variant="outlined"
+                ></v-select>
+                <v-select
+                  v-model="filterForm.chief_accountant_id"
+                  :base-color="FIELD_COLOR"
+                  :items="employees"
+                  rounded="lg"
+                  item-title="name"
+                  item-value="id"
+                  label="Гл. бухгалтер"
+                  variant="outlined"
+                ></v-select>
+                <v-text-field
+                  v-model="filterForm.address"
+                  :base-color="FIELD_COLOR"
+                  color="green"
+                  rounded="lg"
+                  variant="outlined"
+                  class="w-auto text-sm-body-1"
+                  density="compact"
+                  placeholder="Адрес"
+                  label="Адрес"
+                  clear-icon="close"
+                  clearable
+                />
+                <v-text-field
+                  v-model="filterForm.description"
+                  color="green"
+                  rounded="lg"
+                  variant="outlined"
+                  class="w-auto text-sm-body-1"
+                  :base-color="FIELD_COLOR"
+                  density="compact"
+                  placeholder="Описание"
+                  label="Описание"
+                  clear-icon="close"
+                  style="height: 120px; margin-bottom: -20px"
+                  clearable
+                />
                 </v-col>
               </v-row>
             </v-form>

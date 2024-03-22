@@ -1,17 +1,18 @@
 <script setup>
-import { ref, watch } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import groupApi from "../../../api/goodGroup";
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import createGroup from "./createGroup.vue";
-import createUpdate from "./createUpdate.vue";
+import createUpdate from "./createUpdateGood.vue";
 import {
   ErrorSelectMessage,
   removeMessage,
   restoreMessage,
   selectOneItemMessage,
+  warningMessage,
 } from "../../../composables/constant/buttons.js";
 
 const router = useRouter();
@@ -19,7 +20,9 @@ const route = useRoute();
 
 const loading = ref(true);
 const isCreate = ref(false);
+const isFilter = ref(false);
 const isCreateGroup = ref(false);
+const createGroupOnBase = ref(false);
 
 const hoveredRowIndex = ref(null);
 
@@ -29,7 +32,7 @@ const groups = ref([]);
 const markedID = ref([]);
 const markedItem = ref([]);
 const pagination = ref([]);
-
+const groupData = ref([]);
 const headers = ref([
   { title: "№", key: "id", align: "start" },
   { title: "Наименование", key: "name" },
@@ -59,10 +62,23 @@ const goToCreate = () => {
   });
 };
 
-const createOnBase = () => {
-  isCreate.value = true;
+const openFilter = () => {
+  isFilter.value = true;
   isCreateGroup.value = true;
-}
+};
+
+const createOnBase = async () => {
+  if (markedID.value.length > 1) {
+    showToast(selectOneItemMessage, "warning");
+    return;
+  } else if (markedID.value.length === 0) {
+    showToast(warningMessage, "warning");
+    return;
+  }
+  await getGroupById({ page: 1, itemsPerPage: 1 });
+  createGroupOnBase.value = true;
+  isCreateGroup.value = true;
+};
 
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
@@ -91,10 +107,22 @@ const lineMarking = (item) => {
   markedItem.value = item;
 };
 
-const getGroups = async ({ page, itemsPerPage, sortBy, search }) => {
+const getGroupById = async ({ page, itemsPerPage, sortBy, search }) => {
+  try {
+    const { data } = await groupApi.getGroupById(
+      markedItem.value.id,
+      { page, itemsPerPage, sortBy },
+      search
+    );
+    groupData.value = data.result;
+  } catch (e) {
+    console.log(e);
+  }
+};
+const getGroups = async ({ page, itemsPerPage, sortBy, search, filterData }) => {
   try {
     loading.value = true;
-    const { data } = await groupApi.get({ page, itemsPerPage, sortBy }, search);
+    const { data } = await groupApi.get({ page, itemsPerPage, sortBy }, search, filterData);
     groups.value = data.result.data;
     pagination.value = data.result.pagination;
     loading.value = false;
@@ -142,6 +170,19 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
     return massDel({ page, itemsPerPage, sortBy, search });
   }
 };
+
+const filterGroup = async (filterData) => {
+  try {
+    // await getGroups({ page, itemsPerPage, sortBy, filterData });
+    console.log(filterData);
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+onMounted(() => {
+  markedID.value = [];
+});
 </script>
 
 <template>
@@ -191,7 +232,7 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
               ></v-text-field>
             </div>
           </div>
-          <Icons name="filter" class="mt-1" />
+          <Icons @click="openFilter()" name="filter" class="mt-1" />
         </v-card>
       </div>
 
@@ -263,7 +304,13 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
         <createUpdate @toggleDialog="isCreate = false" />
       </div>
       <div v-if="isCreateGroup">
-        <createGroup @toggleDialog="isCreateGroup = false" />
+        <createGroup
+          @toggleDialog="isCreateGroup = false"
+          @filter="filterGroup"
+          :createGroupOnBase="createGroupOnBase"
+          :groupData="groupData"
+          :isFilter="isFilter"
+        />
       </div>
     </v-col>
   </div>

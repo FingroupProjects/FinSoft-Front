@@ -8,6 +8,7 @@ import currency from '../../../api/currency.js';
 import organization from '../../../api/organizations.js';
 import employee from '../../../api/employee.js';
 import validate from "./validate.js"
+import {FIELD_COLOR} from "../../../composables/constant/colors.js";
 import {
   addMessage,
   editMessage,
@@ -58,6 +59,19 @@ const valueRef = ref(null)
 
 const cashRegisters = ref([])
 const paginations = ref([])
+const showConfirmDialog = ref(false)
+
+
+
+const filterForm = ref({
+    name: null,
+    currency_id: null,
+    employee_id: null,
+    organization_id: null,
+
+})
+
+const showFilterModal = ref(false)
 
 const headers = ref([
   {title: '№', key: 'id', align: 'start'},
@@ -65,6 +79,41 @@ const headers = ref([
   {title: 'Баланс', key: 'name'},
 
 ])
+
+
+const isDataChanged = () => {
+  
+  const item = cashRegisters.value.find(item => item.id === idCashRegister.value)
+  const isChanged =
+    nameRef.value !== item.name ||
+    employeeAdd.value !== item.responsiblePerson.id ||
+    organizationAdd.value !== item.organization.id ||
+    currencyAdd.value !== item.currency.id
+  return isChanged;
+};
+const closeDialogWithoutSaving = () => {
+  dialog.value = false;
+  showConfirmDialog.value = false;
+};
+const checkUpdate = () => {
+    if(isDataChanged() === true){
+      showConfirmDialog.value = true
+    }
+    else {
+      dialog.value = false
+    }
+}
+const checkAndClose = () => {
+  if (nameRef.value || currencyAdd.value || organizationAdd.value  || employeeAdd.value) {
+    showConfirmDialog.value = true;
+  } else {
+    console.log(1);
+    dialog.value = false;
+  }
+};
+
+
+
 
 const rules = {
   required: v => !!v,
@@ -74,8 +123,11 @@ const rules = {
 
 const getcashRegisterData = async ({page, itemsPerPage, sortBy, search}) => {
   loading.value = true
+  const filterData = filterForm.value
+  showFilterModal.value = false
+
   try {
-    const {data} = await cashRegister.get({page, itemsPerPage, sortBy}, search)
+    const {data} = await cashRegister.get({page, itemsPerPage, sortBy}, search, filterData)
 
     paginations.value = data.result.pagination
     cashRegisters.value = data.result.data
@@ -357,6 +409,20 @@ const lineMarking = (item) => {
 }
 
 
+
+const cleanFilterForm = () => {
+  filterForm.value = {}
+}
+
+const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
+  showFilterModal.value = false
+  cleanFilterForm()
+  await getcashRegisterData({page, itemsPerPage, sortBy, search})
+  
+
+}
+
+
 watch(dialog, newVal => {
   if (!newVal) {
     nameRef.value = null
@@ -384,9 +450,9 @@ watch(dialog, newVal => {
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons @click="openDialog(0)" name="add"/>
-              <Icons @click="addBasedOncashRegister" name="copy"/>
-              <Icons @click="compute" name="delete"/>
+              <Icons @click="openDialog(0)" name="add" title="Создать" />
+              <Icons @click="addBasedOncashRegister" title="Скопировать" name="copy"/>
+              <Icons @click="compute" name="delete" title="Удалить" />
             </div>
 
             <div class="w-100">
@@ -399,6 +465,7 @@ watch(dialog, newVal => {
                   color="info"
                   rounded="lg"
                   clear-icon="close"
+                  :base-color="FIELD_COLOR"
                   hide-details
                   single-line
                   clearable
@@ -407,7 +474,7 @@ watch(dialog, newVal => {
 
             </div>
           </div>
-          <Icons name="filter" class="mt-1"/>
+          <Icons @click="showFilterModal = !showFilterModal" title="Фильтр" name="filter" class="mt-1"/>
         </v-card>
       </div>
 
@@ -466,12 +533,13 @@ watch(dialog, newVal => {
               <span>{{ isExistsCashRegister ? cashRegisterInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons v-if="isExistsCashRegister"  @click="compute" name="delete"/>
-                  <Icons v-if="isExistsCashRegister" @click="update" name="save"/>
-                  <Icons v-else @click="addcashRegister" name="save"/>
+                  <Icons title="Удалить" v-if="isExistsCashRegister"  @click="compute" name="delete"/>
+                  <Icons title="Сохранить" v-if="isExistsCashRegister" @click="update" name="save"/>
+                  <Icons title="Сохранить" v-else @click="addcashRegister" name="save"/>
                 </div>
-                <v-btn @click="dialog = false" variant="text" :size="32" class="pt-2 pl-1">
-                  <Icons name="close"/>
+                <v-btn @click="isExistsCashRegister ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search }) "
+                  variant="text" :size="32" class="pt-2 pl-1">
+                  <Icons name="close"   title="Закрыть"/>
                 </v-btn>
               </div>
             </div>
@@ -482,40 +550,47 @@ watch(dialog, newVal => {
                       v-model="nameRef"
                       :rules="[rules.required]"
                       color="green"
+                      :base-color="FIELD_COLOR"
                       rounded="md"
                       variant="outlined"
                       class="w-auto text-sm-body-1"
                       density="compact"
-                      placeholder="Доллар"
-                      label="Название"
+                      placeholder="Наименование"
+                      label="Наименование"
                       clear-icon="close"
                       clearable
                   />
                   <div class="d-flex ga-4 mb-3">
                     <v-select
+                        style="max-width: 50%; min-width: 50%;"
                         variant="outlined"
-                        label="Выберите валюту"
+                        :base-color="FIELD_COLOR"
+                        label="Валюта"
                         v-model="currencyAdd"
+                      
                         :items="currencies"
                         item-title="name"
                         item-value="id"
                     />
                     <v-select
+                      style="max-width: 47%; min-width: 46%;"
                         variant="outlined"
-                        label="Выберите сотрудника"
+                        :base-color="FIELD_COLOR"
+                        label="Ответственное лицо"
                         v-model="employeeAdd"
+                        
                         :items="employees"
                         item-title="name"
                         item-value="id"
                     />
 
                   </div>
-
                   <v-select
                       variant="outlined"
-                      label="Выберите организацию"
+                      label="Организация"
                       v-model="organizationAdd"
                       :items="organizations"
+                      :base-color="FIELD_COLOR"
                       item-title="name"
                       item-value="id"
                   />
@@ -527,7 +602,100 @@ watch(dialog, newVal => {
           </v-card>
         </v-dialog>
 
-        <!--  addCurrencyRate    -->
+        <!--  Filter    -->
+
+      </v-card>
+      <v-card>
+        <v-dialog class="mt-2 pa-2" v-model="showFilterModal">
+          <v-card style="border: 2px solid #3AB700" min-width="500"
+                  class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
+            <div class="d-flex justify-space-between align-center mb-2">
+              <span>Фильтр</span>
+              <div class="d-flex align-center justify-space-between">
+                <div class="d-flex ga-3 align-center mt-2 me-4">
+            
+                <Icons @click="getcashRegisterData" title="Фильтр" name="save"/>
+                </div>
+                <v-btn @click="closeFilterModal" variant="text" :size="32" class="pt-2 pl-1">
+                  <Icons title="Закрыть" name="close"/>
+                </v-btn>
+              </div>
+            </div>
+            <v-form class="d-flex w-100" @submit.prevent="addcashRegister">
+              <v-row class="w-100">
+                <v-col class="d-flex flex-column w-100">
+                  <v-text-field
+                      v-model="filterForm.name"
+                      color="green"
+                      rounded="md"
+                      :base-color="FIELD_COLOR"
+                      variant="outlined"
+                      class="w-auto text-sm-body-1"
+                      density="compact"
+                      placeholder="Наименование"
+                      label="Наименование"
+                      clear-icon="close"
+                      clearable
+                  />
+                  <div class="d-flex ga-4 mb-3">
+                    <v-select
+                        style="max-width: 50%; min-width: 50%;"
+                        variant="outlined"
+                        :base-color="FIELD_COLOR"
+                        label="Валюта"
+                        v-model="filterForm.currency_id"
+                        :items="currencies"
+                        item-title="name"
+                        item-value="id"
+                    />
+                    <v-select
+                      style="max-width: 47%; min-width: 46%;"
+                        variant="outlined"
+                        :base-color="FIELD_COLOR"
+                        label="Ответственное лицо"
+                        v-model="filterForm.employee_id"
+                        :items="employees"
+                        item-title="name"
+                        item-value="id"
+                    />
+
+                  </div>
+                  <v-select
+                      variant="outlined"
+                      label="Организация"
+                      :base-color="FIELD_COLOR"
+                      v-model="filterForm.organization_id"
+                      :items="organizations"
+                      item-title="name"
+                      item-value="id"
+                  />
+                </v-col>
+              </v-row>
+            </v-form>
+
+
+          </v-card>
+        </v-dialog>
+        
+        <v-dialog style="min-width: 300px;"  v-model="showConfirmDialog" persistent>
+  <v-card style="max-width: 400px;" class="mx-auto flex flex-col">
+    <v-card-title class="text-h6"
+    >Подтверждение</v-card-title>
+    <v-card-text class="text-subtitle-1">Точно хотите закрыть? Введенные данные не будут сохранены.</v-card-text>
+    <v-card-actions>
+      <v-btn @click="showConfirmDialog = false"
+        class="text-none mb-4 w-[200px] h-[20px]"
+        color="red"
+        variant="flat"
+      >Нет</v-btn>
+      <v-btn @click="closeDialogWithoutSaving"
+        class="text-none mb-4 w-[200px] h-[20px]"
+        color="green"
+        variant="flat"
+      >Да</v-btn>
+    </v-card-actions>
+  </v-card>
+</v-dialog>
 
       </v-card>
     </v-col>

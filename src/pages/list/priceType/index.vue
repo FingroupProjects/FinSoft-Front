@@ -6,7 +6,9 @@ import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import priceType from '../../../api/priceType.js';
 import currency from '../../../api/currency.js';
+import {FIELD_COLOR} from "../../../composables/constant/colors.js";
 import validate from "./validate.js";
+const showConfirmDialog = ref(false)
 import {
   addMessage,
   editMessage,
@@ -27,7 +29,7 @@ const filterModal = ref(false)
 const idPriceType = ref(null)
 const hoveredRowIndex = ref(null)
 
-const currencyAdd = ref([])
+const currencyAdd = ref(null)
 const currencyUpdate = ref([])
 const currencies = ref([])
 
@@ -42,6 +44,13 @@ const descriptionRef = ref(null)
 const priceTypes = ref([])
 const paginations = ref([])
 
+const filterForm = ref({
+    name: null,
+    description: null,
+    currency_id: null
+})
+
+
 const headers = ref([
   {title: '№', key: 'id', align: 'start'},
   {title: 'Наименование', key: 'name'},
@@ -54,10 +63,13 @@ const rules = {
 
 
 const getPriceTypeData = async ({page, itemsPerPage, sortBy, search}) => {
+  const filterData = filterForm.value
+  filterModal.value = false
   loading.value = true
   try {
-    const { data } = await priceType.get({page, itemsPerPage, sortBy}, search)
-
+    
+    const { data } = await priceType.get({page, itemsPerPage, sortBy}, search, filterData)
+    
     paginations.value = data.result.pagination
     priceTypes.value = data.result.data
     loading.value = false
@@ -65,24 +77,40 @@ const getPriceTypeData = async ({page, itemsPerPage, sortBy, search}) => {
   }
 }
 
+const isDataChanged = () => {
 
-const filter = async ({page, itemsPerPage, sortBy, search}) => {
-  const body = {
-    currency_id: currencyAdd.value
-  }
+  const item = priceTypes.value.find(item => item.id === idPriceType.value)
+
+  const isChanged =
+    nameRef.value !== item.name ||
+    descriptionRef.value !== item.description ||
+    currencyAdd.value !== item.currency.id;
+  return isChanged;
+};
 
 
-  try {
-    const { res } = await priceType.filter(body)
-    console.log(res)
-    if (res.status === 200) {
-      getPriceTypeData({page, itemsPerPage, sortBy, search})
+const closeDialogWithoutSaving = () => {
+  dialog.value = false;
+  showConfirmDialog.value = false;
+};
+const checkUpdate = () => {
+    if(isDataChanged() === true){
+      showConfirmDialog.value = true
     }
-
-    filterModal.value = false
-  } catch (e) {
-  }
+    else {
+      dialog.value = false
+    }
 }
+const checkAndClose = () => {
+  if (nameRef.value || descriptionRef.value || currencyAdd.value) {
+    showConfirmDialog.value = true;
+  } else {
+    dialog.value = false;
+  }
+};
+
+
+
 
 
 const addPriceType = async ({page, itemsPerPage, sortBy}) => {
@@ -276,6 +304,19 @@ const lineMarking = (item) => {
   markedItem.value = item;
 }
 
+const  closeFilterModal = async ({page, itemsPerPage, sortBy, search, filterData}) => {
+  filterModal.value = false
+  cleanFilterForm()
+  await getPriceTypeData({page, itemsPerPage, sortBy, search})
+  
+
+}
+
+const cleanFilterForm = () => {
+  filterForm.value = {}
+}
+
+
 
 watch(dialog, newVal => {
   if (!newVal) {
@@ -305,9 +346,9 @@ onMounted(async () => {
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons @click="openDialog(0)" name="add"/>
-              <Icons @click="addBasedOnPriceType" name="copy"/>
-              <Icons @click="compute" name="delete"/>
+              <Icons title="Добавить" @click="openDialog(0)" name="add"/>
+              <Icons title="Скопировать" @click="addBasedOnPriceType" name="copy"/>
+              <Icons title="Удалить" @click="compute" name="delete"/>
             </div>
 
             <div class="w-100">
@@ -328,7 +369,7 @@ onMounted(async () => {
 
             </div>
           </div>
-          <Icons name="filter" @click="filterModal = true" class="mt-1"/>
+          <Icons title="Фильтр" name="filter" @click="filterModal = true" class="mt-1"/>
         </v-card>
       </div>
 
@@ -388,12 +429,13 @@ onMounted(async () => {
               <span>{{ isExistsPriceType ? priceTypeInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons v-if="isExistsPriceType"  @click="compute" name="delete"/>
-                  <Icons v-if="isExistsPriceType" @click="update" name="save"/>
-                  <Icons v-else @click="addPriceType" name="save"/>
+                  <Icons title="Удалить" v-if="isExistsPriceType"  @click="compute" name="delete"/>
+                  <Icons title="Сохранить" v-if="isExistsPriceType" @click="update" name="save"/>
+                  <Icons title="Сохранить" v-else @click="addPriceType" name="save"/>
                 </div>
-                <v-btn @click="dialog = false" variant="text" :size="32" class="pt-2 pl-1">
-                  <Icons name="close"/>
+                <v-btn @click="isExistsPriceType ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData }) "
+                  variant="text" :size="32" class="pt-2 pl-1">
+                  <Icons name="close"   title="Закрыть"/>
                 </v-btn>
               </div>
             </div>
@@ -402,6 +444,7 @@ onMounted(async () => {
                 <v-col class="d-flex flex-column w-100">
                   <v-text-field
                       v-model="nameRef"
+                      :base-color="FIELD_COLOR"
                       :rules="[rules.required]"
                       color="green"
                       rounded="md"
@@ -416,6 +459,7 @@ onMounted(async () => {
                   <v-select
                       variant="outlined"
                       label="Выберите валюту"
+                      :base-color="FIELD_COLOR"
                       v-model="currencyAdd"
                       :items="currencies"
                       item-title="name"
@@ -423,6 +467,7 @@ onMounted(async () => {
                   />
                   <v-textarea
                       v-model="descriptionRef"
+                      :base-color="FIELD_COLOR"
                       :rules="[rules.required]"
                       color="green"
                       rounded="md"
@@ -446,38 +491,75 @@ onMounted(async () => {
               <span>Фильтр</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons @click="filter" name="save"/>
+                  <Icons @click="getPriceTypeData" title="Сохранить" name="save"/>
                 </div>
                 <v-btn @click="filterModal = false" variant="text" :size="32" class="pt-2 pl-1">
-                  <Icons name="close"/>
+                  <Icons title="Закрыть" @click="closeFilterModal" name="close"/>
                 </v-btn>
               </div>
             </div>
-            <v-form class="d-flex w-100">
+            <v-form class="d-flex w-100" @submit.prevent="addPriceType">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100">
-                
-                  <div class="d-flex ga-2 mb-3">
-                  
-                    <v-select
-                        v-model="currencyAdd"
-                        :items="currencies"
-                        item-title="name"
-                        item-value="id"
-                        :rules="[rules.required]"
-                        label="Валюта"
-                        variant="outlined"
-                        density="compact"
-                        hide-details
-                    />
-                  </div>
-                                
+                  <v-text-field
+                      v-model="filterForm.name"
+                      color="green"
+                      rounded="md"
+                      :base-color="FIELD_COLOR"
+                      variant="outlined"
+                      class="w-auto text-sm-body-1"
+                      density="compact"
+                      placeholder="Наименование"
+                      label="Наименование"
+                      clear-icon="close"
+                      clearable
+                  />
+                  <v-select
+                      variant="outlined"
+                      label="Валюта"
+                      v-model="filterForm.currency_id"
+                      :items="currencies"
+                      :base-color="FIELD_COLOR"
+                      item-title="name"
+                      item-value="id"
+                  />
+                  <v-textarea
+                      v-model="filterForm.description"
+                      color="green"
+                      rounded="md"
+                      variant="outlined"
+                      :base-color="FIELD_COLOR"
+                      class="w-auto text-sm-body-1"
+                      density="compact"
+                      placeholder="Описание"
+                      label="Описание"
+                  />
                 </v-col>
               </v-row>
             </v-form>
           </v-card>
         </v-dialog>
       </v-card>
+
+      <v-dialog style="min-width: 300px;"  v-model="showConfirmDialog" persistent>
+  <v-card style="max-width: 400px;" class="mx-auto flex flex-col">
+    <v-card-title class="text-h6"
+    >Подтверждение</v-card-title>
+    <v-card-text class="text-subtitle-1">Точно хотите закрыть? Введенные данные не будут сохранены.</v-card-text>
+    <v-card-actions>
+      <v-btn @click="showConfirmDialog = false"
+        class="text-none mb-4 w-[200px] h-[20px]"
+        color="red"
+        variant="flat"
+      >Нет</v-btn>
+      <v-btn @click="closeDialogWithoutSaving"
+        class="text-none mb-4 w-[200px] h-[20px]"
+        color="green"
+        variant="flat"
+      >Да</v-btn>
+    </v-card-actions>
+  </v-card>
+</v-dialog>
 
 
 

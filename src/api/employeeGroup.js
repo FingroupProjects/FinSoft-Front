@@ -6,11 +6,11 @@ export default {
   },
   get({page = 1, itemsPerPage = 10, sortBy}, search = '') {
     const params = buildParams(page, itemsPerPage, sortBy, search);
-    return api.get(`/group/storages-group`, { params });
+    return api.get(`/group/employees-group`, { params });
   },
-  getStorages({page = 1, itemsPerPage = 10, sortBy}, search, id, filterData) {
-    const params = buildParams(page, itemsPerPage, sortBy, search, filterData);
-    return api.get(`/group/get-storages/${id}`, { params });
+  getEmployees({page = 1, itemsPerPage = 10, sortBy}, search, id) {
+    const params = buildParams(page, itemsPerPage, sortBy, search);
+    return api.get(`/group/get-employees/${id}`, { params });
   },
   update(id, body) {
     return api.patch(`/group/${id}`, body)

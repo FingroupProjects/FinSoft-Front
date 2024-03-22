@@ -18,11 +18,12 @@ import organizationApi from "../../../api/organizations.js";
 import user from "../../../api/user.js";
 import validate from "./validate.js";
 import groupApi from "../../../api/userGroup.js";
-import {USER_GROUP} from "../../../composables/constant/paramsApi.js";
+import {FIELD_COLOR} from "../../../composables/constant/colors.js";
 
 const router = useRouter()
 
 const loading = ref(true)
+const loadingGroup = ref(true)
 const dialog = ref(false)
 const isDialogPassword = ref(false)
 const idUser = ref(null)
@@ -61,6 +62,8 @@ const organizations = ref([])
 const groups = ref([])
 const paginations = ref([])
 
+
+
 const headers = ref([
   {title: '№', key: 'id', align: 'start'},
   {title: 'ФИО', key: 'name', align: 'start'},
@@ -72,14 +75,27 @@ const headersGroup = ref([
 ])
 
 
+
+//filter
+const filterForm = ref({
+  name: null,
+  email: null,
+  phone: null,
+  login: null,
+  organization_id: null
+})
+
+const showModalDialog = ref(null)
+
+
 const rules = {
   required: v => !!v,
 }
 
-const getGroup = async ({page, itemsPerPage, sortBy, search}) => {
-  loading.value = true
+const getGroup = async ({page, itemsPerPage, sortBy}) => {
+  loadingGroup.value = true
   try {
-    const { data } = await groupApi.get({page, itemsPerPage, sortBy}, search, USER_GROUP)
+    const { data } = await groupApi.get({page, itemsPerPage, sortBy})
     paginations.value = data.result.pagination
     groups.value = data.result.data.map(item => ({
       id: item.id,
@@ -88,12 +104,14 @@ const getGroup = async ({page, itemsPerPage, sortBy, search}) => {
   } catch (e) {
     console.log(e)
   } finally {
-    loading.value = false
-
+    loadingGroup.value = false
   }
 }
 
 const getOrganization = async () => {
+  const filterData = filterForm.value
+  showModalDialog.value = false
+
   try {
     const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000})
     organizations.value = data.result.data.map(item => ({
@@ -140,6 +158,8 @@ const addUser = async ({page, itemsPerPage, sortBy}) => {
     groupValue = group.value
   }
 
+
+
   const formData = new FormData()
   formData.append('name', fioRef.value);
   formData.append('organization_id', organizationValue)
@@ -162,7 +182,6 @@ const addUser = async ({page, itemsPerPage, sortBy}) => {
       idUser.value = res.data.result.id
       dialog.value = false
 
-      markedID.value = []
       markedItem.value = []
     }
   } catch (e) {
@@ -185,7 +204,7 @@ const addUser = async ({page, itemsPerPage, sortBy}) => {
 }
 
 const update = async ({page, itemsPerPage, sortBy}) => {
-  if (validate(fioRef, organization, loginRef, passwordRef, phoneRef, emailRef) !== true) return
+  if (validate(fioRef, organization, loginRef, passwordRef, phoneRef, emailRef, group) !== true) return
 
   let organizationValue
   if (typeof organization.value === 'object') {
@@ -227,23 +246,12 @@ const update = async ({page, itemsPerPage, sortBy}) => {
   }
 }
 
-
-
-const cleanForm = () => {
-  fioRef.value = null;
-  organization.value = null;
-  loginRef.value = null;
-  phoneRef.value = null;
-  emailRef.value = null;
-  group.value = null;
-};
-
-const remove = async ({page, itemsPerPage, sortBy, search}) => {
+const remove = async ({page, itemsPerPage, sortBy}) => {
   try {
     const { status } = await user.remove({ids: markedID.value})
     if (status === 200) {
       showToast(removeMessage, 'red')
-      await getUser({page, itemsPerPage, sortBy}, search)
+      await getUser({page, itemsPerPage, sortBy})
       markedID.value = []
       dialog.value = false
     }
@@ -337,9 +345,10 @@ const openDialog = item => {
     phoneRef.value = item.phone
     passwordRef.value = '#########'
     statusRef.value = item.status
+    const groupValue = groups.value.find(item => item.id === groupIdRef.value)
     group.value = {
-      "id": item.group.id,
-      "name": item.group.name
+      id: groupValue.id,
+      name: groupValue.name
     }
 
     if (item.organization !== null) {
@@ -356,7 +365,8 @@ const openDialog = item => {
     }
 
     emailRef.value = item.email
-    userDialogTitle.value = fioRef.value
+    userDialogTitle.value = item.name
+    console.log(userDialogTitle.value)
   }
 
 }
@@ -373,6 +383,12 @@ const addBasedOnUser = () => {
       phoneRef.value = item.phone
       statusRef.value = item.status
       emailRef.value = item.email
+
+      const groupValue = groups.value.find(item => item.id === groupIdRef.value)
+      group.value = {
+        id: groupValue.id,
+        name: groupValue.name
+      }
 
       if (item.organization !== null) {
         organization.value = {
@@ -417,28 +433,44 @@ const lineMarking = item => {
   markedItem.value = item;
 }
 
-const lineMarkingGroup = ({page, itemsPerPage, sortBy, search}, group_id) => {
+const lineMarkingGroup = (group_id) => {
   groupIdRef.value = group_id
-  console.log(groupIdRef.value)
-  getUser({page, itemsPerPage, sortBy, search})
+  getUser({})
 }
 
-const getUser = async ({page, itemsPerPage, sortBy, search, filterData}) => {
+const getUser = async ({page, itemsPerPage, sortBy, search}) => {
+  const filterData = filterForm.value
+  showModalDialog.value = false
+  loading.value = true
+  if (groupIdRef.value === 0) return loading.value = false
   try {
-    const { data } = await groupApi.get({page, itemsPerPage, sortBy}, search, USER_GROUP, filterData)
+    const { data } = await groupApi.getUsers({page, itemsPerPage, sortBy}, search, groupIdRef.value, filterData)
     paginations.value = data.result.pagination
-    users.value = data.result.data.find(item => item.id === groupIdRef.value).users
-    console.log(users.value)
+    users.value = data.result.data
   } catch (e) {
-
+    users.value = []
+  } finally {
+    loading.value = false
   }
+}
+
+const closeFilterDialog = () => {
+  showModalDialog.value = false
+  filterForm.value = {}
+  console.log(filterForm)
+  getUser({})
+}
+
+const toggleGroup = async () => {
+  isCreateGroup.value = false
+  await getGroup({})
 }
 
 
 watch(dialog, newVal => {
   if (!newVal) {
     fioRef.value = null
-    organization.value = []
+    organization.value = null
     passwordRef.value = null
     imagePreview.value = null
     loginRef.value = null
@@ -469,9 +501,9 @@ onMounted(async () =>  {
               >
                 <span class="px-2 py-0">создать группу</span>
               </button>
-              <Icons @click="openDialog(0)" name="add"/>
-              <Icons @click="addBasedOnUser" name="copy"/>
-              <Icons @click="compute" name="delete"/>
+              <Icons title="Создать" @click="openDialog(0)" name="add"/>
+              <Icons title="Скопировать" @click="addBasedOnUser" name="copy"/>
+              <Icons title="Удалить" @click="compute" name="delete"/>
             </div>
             <v-text-field
                 v-model="search"
@@ -479,7 +511,8 @@ onMounted(async () =>  {
                 density="compact"
                 label="Поиск..."
                 variant="outlined"
-                color="info"
+                color="green"
+                :base-color="FIELD_COLOR"
                 rounded="lg"
                 clear-icon="close"
                 hide-details
@@ -488,7 +521,7 @@ onMounted(async () =>  {
                 flat
             ></v-text-field>
           </div>
-          <Icons name="filter"  @click="filterModal = true" title="фильтр" class="mt-1"/>
+          <Icons title="фильтр" @click="showModalDialog = true" name="filter" class="mt-1"/>
         </v-card>
       </div>
       <div class="d-flex ga-4 w-100">
@@ -499,24 +532,23 @@ onMounted(async () =>  {
               loading-text="Загрузка"
               no-data-text="Нет данных"
               v-model:items-per-page="paginations.per_page"
-              :loading="loading"
+              :loading="loadingGroup"
               :headers="headersGroup"
               :items-length="paginations.total || 0"
               :items="groups"
               :item-value="headers.title"
-              :search="search"
               @update:options="getGroup"
               page-text='{0}-{1} от {2}'
               :items-per-page-options="[
                 {value: 25, title: '25'},
                 {value: 50, title: '50'},
                 {value: 100, title: '100'},
-            ]"
+               ]"
               fixed-header
               hover
           >
             <template v-slot:item="{ item, index }">
-              <tr @mouseenter="hoveredRowIndex = index + 100000" @mouseleave="hoveredRowIndex = null" @click="lineMarkingGroup({}, item.id)" >
+              <tr :class="{'bg-grey-lighten-2': item.id === groupIdRef }" @mouseenter="hoveredRowIndex = index + 100000" @mouseleave="hoveredRowIndex = null" @click="lineMarkingGroup(item.id)" >
                 <td>
                  <div class="d-flex">
                    <span>{{ item.id }}</span>
@@ -617,7 +649,7 @@ onMounted(async () =>  {
                         v-model="fioRef"
                         :rules="[rules.required]"
                         color="green"
-                        rounded="md"
+                        :base-color="FIELD_COLOR"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
                         density="compact"
@@ -651,6 +683,8 @@ onMounted(async () =>  {
                       <v-select
                           v-model="organization"
                           :items="organizations"
+                          color="green"
+                          :base-color="FIELD_COLOR"
                           item-title="name"
                           item-value="id"
                           :rules="[rules.required]"
@@ -661,7 +695,7 @@ onMounted(async () =>  {
                           v-model="loginRef"
                           :rules="[rules.required]"
                           color="green"
-                          rounded="md"
+                          :base-color="FIELD_COLOR"
                           variant="outlined"
                           class="w-auto text-sm-body-1"
                           density="compact"
@@ -676,7 +710,7 @@ onMounted(async () =>  {
                             v-model="passwordRef"
                             :rules="[rules.required]"
                             color="green"
-                            rounded="md"
+                            :base-color="FIELD_COLOR"
                             type="password"
                             variant="outlined"
                             class="w-auto text-sm-body-1"
@@ -701,6 +735,8 @@ onMounted(async () =>  {
                     <v-select
                       v-model="group"
                       :items="groups"
+                      color="green"
+                      :base-color="FIELD_COLOR"
                       item-title="name"
                       item-value="id"
                       :rules="[rules.required]"
@@ -714,7 +750,7 @@ onMounted(async () =>  {
                         v-model="phoneRef"
                         :rules="[rules.required]"
                         color="green"
-                        rounded="md"
+                        :base-color="FIELD_COLOR"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
                         density="compact"
@@ -729,7 +765,7 @@ onMounted(async () =>  {
                         v-model="emailRef"
                         :rules="[rules.required]"
                         color="green"
-                        rounded="md"
+                        :base-color="FIELD_COLOR"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
                         density="compact"
@@ -747,46 +783,35 @@ onMounted(async () =>  {
           </v-card>
         </v-dialog>
         <div v-if="isCreateGroup">
-          <create-group @toggleDialog="isCreateGroup = false" />
+          <create-group @toggleDialog="toggleGroup" />
         </div>
         <div v-if="isDialogPassword">
           <change-password @toggleDialogPassword="isDialogPassword = false" :id="idUser" />
         </div>
+        
 
-        <!-- filtermodal -->
-        <v-card>
-        <v-dialog class="mt-2 pa-2" v-model="filterModal">
-          <v-card
-            style="border: 2px solid #3ab700"
-            min-width="600"
-            class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
-            rounded="xl"
-          >
+        <v-dialog class="mt-2 pa-2" v-model="showModalDialog">
+          <v-card style="border: 2px solid #3AB700" min-width="600"
+                  class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
               <span>Фильтр</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons @click="filter" name="save" />
+                <Icons @click="getUser" title="Сохранить" name="save"/>
                 </div>
-                <v-btn
-                  @click="closeFilterModal"
-                  variant="text"
-                  :size="32"
-                  class="pt-2 pl-1"
-                >
-                  <Icons name="close" />
+                <v-btn @click="closeFilterDialog" variant="text" :size="32" class="pt-2 pl-1">
+                  <Icons title="Закрыть" name="close"/>
                 </v-btn>
               </div>
             </div>
-            <v-form class="d-flex w-100">
+            <v-form class="d-flex w-100" >
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100">
                   <div class="d-flex" :style="isExistsUser ?? { width: '98%' }">
                     <v-text-field
-                        v-model="fioFilter"
-                        :rules="[rules.required]"
+                        v-model="filterForm.name"
                         color="green"
-                        rounded="md"
+                        :base-color="FIELD_COLOR"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
                         density="compact"
@@ -796,101 +821,77 @@ onMounted(async () =>  {
                         :append-inner-icon="fioRef ? 'close' : ''"
                         @click:append-inner="fioRef = null"
                     />
+                    <div class="mt-2 ms-4" v-if="isExistsUser">
+                      <CustomCheckbox @change="filterForm.status" :checked="filterForm.status">
+                        <span>Активный</span>
+                      </CustomCheckbox>
+                    </div>
                   </div>
                   <div class="d-flex w-100 ga-4">
                     <div class="border d-flex justify-center align-center" style="width: 70%;">
+                      <input
+                          accept="image/*"
+                          type="file"
+                          @change="selectAvatar"
+                          style="display: none;"
+                          ref="fileInput"
+                      />
                     </div>
                     <div class="w-100">
                       <v-select
-                          v-model="organizationFilter"
+                          v-model="filterForm.organization_id"
                           :items="organizations"
+                          color="green"
+                          :base-color="FIELD_COLOR"
                           item-title="name"
                           item-value="id"
-                          :rules="[rules.required]"
+                          
                           variant="outlined"
                           label="Организация"
                       />
                       <v-text-field
-                          v-model="loginFilter"
-                          :rules="[rules.required]"
+                          v-model="filterForm.login"
+                          
                           color="green"
-                          rounded="md"
+                          :base-color="FIELD_COLOR"
                           variant="outlined"
                           class="w-auto text-sm-body-1"
                           density="compact"
                           placeholder="Ivan"
                           label="Логин"
                           clear-icon="close"
-                          :append-inner-icon="loginRef ? 'close' : ''"
-                          @click:append-inner="loginRef = null"
+                          :append-inner-icon="filterForm.login ? 'close' : ''"
+                          @click:append-inner="filterForm.login = null"
                       />
-                      <div class="d-flex">
-                        <v-text-field
-                            v-model="passwordRef"
-                            :rules="[rules.required]"
-                            color="green"
-                            rounded="md"
-                            type="password"
-                            variant="outlined"
-                            class="w-auto text-sm-body-1"
-                            density="compact"
-                            placeholder="********"
-                            label="Пароль"
-                            clear-icon="close"
-                            :disabled="passwordRef === '#########'"
-                            hide-details
-                        />
-                        <span v-show="isExistsUser" class="mt-1 ms-2 text-blue-darken-4 cursor-pointer" @click="isDialogPassword = true">Изменить пароль</span>
-                      </div>
                     </div>
-                  </div>
-                  <span
-                    v-show="isExistsUser"
-                    @click="onPickFile"
-                    class="text-sm-body-2 text-blue-darken-4 cursor-pointer"
-                  >Изменить
-                  </span>
-                  <div :class="isExistsUser ? 'mt-2' : 'mt-5'">
-                    <v-select
-                      v-model="groupFilter"
-                      :items="groups"
-                      item-title="name"
-                      item-value="id"
-                      :rules="[rules.required]"
-                      variant="outlined"
-                      label="Группа"
-                      hide-details
-                    />
                   </div>
                   <div class="d-flex ga-4 mt-5">
                     <v-text-field
-                        v-model="phoneFilter"
-                        :rules="[rules.required]"
+                        v-model="filterForm.phone"
                         color="green"
-                        rounded="md"
+                        :base-color="FIELD_COLOR"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
                         density="compact"
                         placeholder="+992119111881"
                         label="Номер телефона"
                         clear-icon="close"
-                        :append-inner-icon="phoneRef ? 'close' : ''"
-                        @click:append-inner="phoneRef = null"
+                        :append-inner-icon="filterForm.phone ? 'close' : ''"
+                        @click:append-inner="filterForm.phone = null"
                         hide-details
                     />
                     <v-text-field
-                        v-model="emailFilter"
-                        :rules="[rules.required]"
+                        v-model="filterForm.email"
                         color="green"
-                        rounded="md"
+                        :base-color="FIELD_COLOR"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
                         density="compact"
                         placeholder="ivan@gmail.com"
                         label="Почта"
                         clear-icon="close"
-                        :append-inner-icon="emailRef ? 'close' : ''"
-                        @click:append-inner="emailRef = null"
+                        :append-inner-icon="filterForm.email ? 'close' : ''"
+                        @click:append-inner="filterForm.email = null"
                         hide-details
                     />
                   </div>
@@ -899,7 +900,7 @@ onMounted(async () =>  {
             </v-form>
           </v-card>
         </v-dialog>
-      </v-card>
+
       </v-card>
     </v-col>
   </div>

@@ -25,6 +25,9 @@ const authentication = async () => {
       setToken(res.data.token)
       setUser(res.data.user)
       router.push('/')
+      setTimeout(() => {
+        location.reload()
+      }, 1000)
     }
   } catch (e) {
     console.log(e)
