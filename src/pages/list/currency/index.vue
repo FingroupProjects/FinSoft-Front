@@ -77,7 +77,31 @@ const rules = {
   date: v => (v && /^\d{2}-\d{2}-\d{4}$/.test(v)) || 'Формат даты должен быть DD-MM-YYYY',
 }
 
+<<<<<<< Updated upstream
 const getCurrencyData = async ({page, itemsPerPage, sortBy, search, filterData}) => {
+=======
+
+function countFilter() {
+   
+   for (const key in filterForm.value) {
+       if (filterForm.value[key] !== null) {
+           count.value++;
+       }
+   }
+   
+   return count;
+}
+
+
+
+const getCurrencyData = async ({page, itemsPerPage, sortBy, search}) => {
+
+  filterModal.value = false
+  const filterData = filterForm.value
+  count.value = 0
+  console.log(count)
+  countFilter()
+>>>>>>> Stashed changes
 
   loading.value = true;
   try {
