@@ -81,14 +81,12 @@ const rules = {
 }
 
 
-function countFilter() {
-   
+const countFilter = () => {
    for (const key in filterForm.value) {
        if (filterForm.value[key] !== null) {
            count.value++;
        }
    }
-   
    return count;
 }
 
@@ -99,7 +97,6 @@ const getCurrencyData = async ({page, itemsPerPage, sortBy, search}) => {
   filterModal.value = false
   const filterData = filterForm.value
   count.value = 0
-  console.log(count)
   countFilter()
 
   loading.value = true;
@@ -192,15 +189,15 @@ const checkRateAndClose = () => {
 
 
 
-const getCurrencyRateData = async ({page, itemsPerPage, sortBy, search}, idCurrency) => {
-  if (idCurrency === 0) {
+const getCurrencyRateData = async ({page, itemsPerPage, sortBy, search}) => {
+  if (idCurrency.value === 0) {
     loadingRate.value = false
     return
   }
 
   try {
-    const response = await currency.show(idCurrency)
-    const { data } = await currency.showRate(idCurrency, {page, itemsPerPage, sortBy}, search)
+    const response = await currency.show(idCurrency.value)
+    const { data } = await currency.showRate(idCurrency.value, {page, itemsPerPage, sortBy}, search)
     rates.value = data.result.data.map(item => ({
       ...item,
       date: showDate(item.date),
@@ -227,7 +224,7 @@ const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
 
 
 const addCurrency = async ({page, itemsPerPage, sortBy}) => {
-  if (validate(nameRef,digitalRef,symbolRef) !== true) return
+  if (validate(nameRef, digitalRef, symbolRef) !== true) return
 
   const body = {
     name: nameRef.value,
@@ -240,7 +237,7 @@ const addCurrency = async ({page, itemsPerPage, sortBy}) => {
     if (res.status === 201) {
       await getCurrencyData({page, itemsPerPage, sortBy})
       showToast(addMessage)
-      valueRef.value = nullgit 
+      valueRef.value = null
       idCurrency.value = res.data.result.id
       currencyInDialogTitle.value = res.data.result.name
       markedID.value.push(res.data.result.id)
@@ -272,11 +269,13 @@ const update = async ({page, itemsPerPage, sortBy, search}) => {
 
 
 const removeCurrency = async ({page, itemsPerPage, sortBy}) => {
+
   try {
     const {status} = await currency.remove({ids: markedID.value})
     if (status === 200) {
       showToast(removeMessage, 'red')
       await getCurrencyData({page, itemsPerPage, sortBy})
+      dialog.value = false
       markedID.value = []
     }
   } catch (e) {
@@ -304,7 +303,6 @@ const openDialog = (item) => {
     idCurrency.value = 0
     isExistsCurrency.value = false
   } else {
-
     idCurrency.value = item.id
     isExistsCurrency.value = true
     nameRef.value = item.name
@@ -323,7 +321,7 @@ const addRate = async ({page, itemsPerPage, sortBy}) => {
 
   try {
     await currency.addRate(idCurrency.value, body)
-    await getCurrencyRateData({page, itemsPerPage, sortBy}, idCurrency.value)
+    await getCurrencyRateData({page, itemsPerPage, sortBy})
     await getCurrencyData({page, itemsPerPage, sortBy})
     showToast(addMessage)
     valueRef.value = null
@@ -345,7 +343,7 @@ const updateRate = async ({page, itemsPerPage, sortBy}) => {
     const {status} = await currency.updateRate(idCurrencyRate.value, body)
 
     if (status === 200) {
-      await getCurrencyRateData({page, itemsPerPage, sortBy}, idCurrency.value)
+      await getCurrencyRateData({page, itemsPerPage, sortBy})
       await getCurrencyData({page, itemsPerPage, sortBy})
       showToast(editMessage)
       rateDialog.value = false
@@ -375,7 +373,7 @@ const removeCurrencyRate = async ({page, itemsPerPage, sortBy}) => {
     const {status} = await currency.removeRate({ids: markedIDRate.value})
     if (status === 200) {
       showToast(removeMessage, 'red')
-      await getCurrencyRateData({page, itemsPerPage, sortBy}, idCurrency.value)
+      await getCurrencyRateData({page, itemsPerPage, sortBy})
       markedIDRate.value = []
     }
   } catch (e) {
@@ -389,7 +387,7 @@ const restoreCurrencyRate = async ({page, itemsPerPage, sortBy}) => {
     const {status} = await currency.restoreRate({ids: markedIDRate.value})
     if (status === 200) {
       showToast(restoreMessage)
-      await getCurrencyRateData({page, itemsPerPage, sortBy}, idCurrency.value)
+      await getCurrencyRateData({page, itemsPerPage, sortBy})
       markedIDRate.value = []
     }
   } catch (e) {
@@ -429,10 +427,7 @@ const lineMarking = (item) => {
     }
   }
 
-  const index = markedID.value.indexOf(item.id);
-  if (index !== -1) {
-    markedID.value.splice(index, 1);
-  } else {
+  if (!markedID.value.includes(item.id)) {
     markedID.value.push(item.id);
   }
   markedItem.value = item;
@@ -489,21 +484,27 @@ const computeRate = ({page, itemsPerPage, sortBy}) => {
   }
 }
 
+const validateCurrency = () => {
+  const value = valueRef.value.toString();
+  valueRef.value = value.replace(/(?!^\.)([^\d.])/g, '');
+}
+
 onMounted(async () => {
   dateRef.value = currentDate()
 })
 
 watch(dialog, newVal => {
   if (!newVal) {
-    nameRef.value = null
-    symbolRef.value = null
-    digitalRef.value = null
-    loadingRate.value = true
-    isExistsCurrency.value = false
-    rates.value = []
+    nameRef.value = null;
+    symbolRef.value = null;
+    digitalRef.value = null;
+    loadingRate.value = true;
+    isExistsCurrency.value = false;
+    rates.value = [];
+  } else {
+    markedID.value = [markedID.value[markedID.value.length - 1]];
   }
 })
-
 watch(rateDialog, newVal => {
   if (!newVal) {
     dateRef.value = currentDate()
@@ -536,7 +537,7 @@ watch(rateDialog, newVal => {
                   density="compact"
                   label="Поиск..."
                   variant="outlined"
-                  color="info"
+                  color="green"
                   :base-color="FIELD_COLOR"
                   rounded="lg"
                   clear-icon="close"
@@ -554,7 +555,6 @@ watch(rateDialog, newVal => {
               @click="filterModal = true"
               class="mt-1"
             />
-
             <span v-if="count !== 0" class="countFilter">{{ count }}</span>
           </div>
         </v-card>
@@ -697,7 +697,7 @@ watch(rateDialog, newVal => {
                   :items="rates"
                   :item-value="headersRate.title"
                   :search="search"
-                  @update:options="getCurrencyRateData({}, idCurrency)"
+                  @update:options="getCurrencyRateData"
                   page-text='{0}-{1} от {2}'
                   :items-per-page-options="[
                       {value: 25, title: '25'},
@@ -770,8 +770,8 @@ watch(rateDialog, newVal => {
                   />
                   <v-text-field
                       v-model="valueRef"
+                      @input="validateCurrency"
                       :rules="[rules.required]"
-                      type="number"
                       placeholder="1.0000"
                       label="Курс"
                       rounded="md"
