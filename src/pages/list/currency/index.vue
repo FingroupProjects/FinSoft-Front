@@ -13,7 +13,7 @@ import Icons from "../../../composables/Icons/Icons.vue";
 import showDate from "../../../composables/date/showDate.js";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import validate from "./validate.js";
-
+import {FIELD_COLOR} from "../../../composables/constant/colors.js";
 import {tr} from "vuetify/locale";
 
 
@@ -530,6 +530,7 @@ watch(rateDialog, newVal => {
                   label="Поиск..."
                   variant="outlined"
                   color="info"
+                  :base-color="FIELD_COLOR"
                   rounded="lg"
                   clear-icon="close"
                   hide-details
@@ -619,6 +620,7 @@ watch(rateDialog, newVal => {
                       :rules="[rules.required]"
                       color="green"
                       rounded="md"
+                      :base-color="FIELD_COLOR"
                       variant="outlined"
                       class="w-auto text-sm-body-1"
                       density="compact"
@@ -632,6 +634,7 @@ watch(rateDialog, newVal => {
                       :rules="[rules.required]"
                       color="green"
                       rounded="md"
+                      :base-color="FIELD_COLOR"
                       variant="outlined"
                       density="compact"
                       placeholder="USD"
@@ -647,6 +650,7 @@ watch(rateDialog, newVal => {
                       rounded="md"
                       density="compact"
                       variant="outlined"
+                      :base-color="FIELD_COLOR"
                       placeholder="132"
                       v-mask="'###'"
                       label="Цифровой код"
@@ -743,6 +747,7 @@ watch(rateDialog, newVal => {
                       label="Дата"
                       rounded="md"
                       color="green"
+                      :base-color="FIELD_COLOR"
                       variant="outlined"
                       density="compact"
                       clear-icon="close"
@@ -754,6 +759,7 @@ watch(rateDialog, newVal => {
                       placeholder="1.0000"
                       label="Курс"
                       rounded="md"
+                      :base-color="FIELD_COLOR"
                       color="green"
                       variant="outlined"
                       density="compact"
@@ -795,6 +801,7 @@ watch(rateDialog, newVal => {
                         variant="outlined"
                         class="w-auto text-sm-body-1"
                         density="compact"
+                        :base-color="FIELD_COLOR"
                         placeholder="Наименование"
                         label="Наименование"
                         clear-icon="close"
@@ -810,6 +817,7 @@ watch(rateDialog, newVal => {
                         variant="outlined"
                         class="w-auto text-sm-body-1"
                         density="compact"
+                        :base-color="FIELD_COLOR"
                         placeholder="Символьный код"
                         label="Символьный код"
                         clear-icon="close"
@@ -825,6 +833,7 @@ watch(rateDialog, newVal => {
                         variant="outlined"
                         class="w-auto text-sm-body-1"
                         density="compact"
+                        :base-color="FIELD_COLOR"
                         placeholder="Цифровой код"
                         label="Цифровой код"
                         clear-icon="close"
@@ -838,8 +847,9 @@ watch(rateDialog, newVal => {
           </v-card>
         </v-dialog>
       </v-card>
-      
-      <v-dialog style="min-width: 300px;"  v-model="showConfirmDialog" persistent>
+    
+
+<v-dialog style="min-width: 300px;"  v-model="showConfirmDialog" persistent>
   <v-card style="max-width: 400px;" class="mx-auto flex flex-col">
     <v-card-title class="text-h6"
     >Подтверждение</v-card-title>
