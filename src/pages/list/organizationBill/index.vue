@@ -473,7 +473,7 @@ onMounted(async () => {
           <v-card style="border: 2px solid #3AB700" min-width="600"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
-              <span>{{ isExistsOrganizationBill ? organizationBillInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
+              <span>Банковский счет:  {{ isExistsOrganizationBill ? organizationBillInDialogTitle : 'Добавление' }}</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
                   <Icons v-if="isExistsOrganizationBill"  title="Удалить"  @click="compute" name="delete"/>
