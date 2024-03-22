@@ -101,7 +101,7 @@ const rules = {
                 <!-- <Icons name="delete" /> -->
                 <Icons
                   @click="isFilter ? filter() : createGroup()"
-                  name="save"
+                  name="save" title="Сохранить"
                 />
               </div>
               <v-btn
@@ -110,7 +110,7 @@ const rules = {
                 :size="32"
                 class="pt-2 pl-1"
               >
-                <Icons name="close" />
+                <Icons name="close" title="Закрыть"/>
               </v-btn>
             </div>
           </div>

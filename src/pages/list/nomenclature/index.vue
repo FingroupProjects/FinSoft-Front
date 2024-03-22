@@ -273,11 +273,11 @@ onMounted(() => {
               >
                 <span class="px-2 py-0">создать группу</span>
               </button>
-              <Icons @click="goToCreate()" name="add" />
-              <Icons @click="createOnBase()" name="copy" />
+              <Icons @click="goToCreate()" name="add" title="Создать"/>
+              <Icons @click="createOnBase()" name="copy" title="Создать на основе"/>
               <Icons
                 @click="compute({ page, itemsPerPage, sortBy, search })"
-                name="delete"
+                name="delete" title="Удалить"
               />
             </div>
             <div class="w-100">
@@ -298,7 +298,7 @@ onMounted(() => {
               ></v-text-field>
             </div>
           </div>
-          <Icons @click="isFilter = true" name="filter" class="mt-1" />
+          <Icons @click="isFilter = true" name="filter" class="mt-1" title="Фильтр"/>
         </v-card>
       </div>
 
