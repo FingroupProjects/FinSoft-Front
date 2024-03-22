@@ -53,6 +53,7 @@ const users = ref([])
 const organizations = ref([])
 const groups = ref([])
 const paginations = ref([])
+const paginationsGroup = ref([])
 
 
 
@@ -88,7 +89,7 @@ const getGroup = async ({page, itemsPerPage, sortBy}) => {
   loadingGroup.value = true
   try {
     const { data } = await groupApi.get({page, itemsPerPage, sortBy})
-    paginations.value = data.result.pagination
+    paginationsGroup.value = data.result.pagination
     groups.value = data.result.data.map(item => ({
       id: item.id,
       name: item.name
@@ -376,7 +377,8 @@ const lineMarking = item => {
   markedItem.value = item;
 }
 
-const lineMarkingGroup = (group_id) => {
+const lineMarkingGroup = group_id => {
+  markedID.value = []
   groupIdRef.value = group_id
   getUser({})
 }
@@ -400,7 +402,6 @@ const getUser = async ({page, itemsPerPage, sortBy, search}) => {
 const closeFilterDialog = () => {
   showModalDialog.value = false
   filterForm.value = {}
-  console.log(filterForm)
   getUser({})
 }
 
@@ -474,10 +475,10 @@ onMounted(async () =>  {
               items-per-page-text="Элементов на странице:"
               loading-text="Загрузка"
               no-data-text="Нет данных"
-              v-model:items-per-page="paginations.per_page"
+              v-model:items-per-page="paginationsGroup.per_page"
               :loading="loadingGroup"
               :headers="headersGroup"
-              :items-length="paginations.total || 0"
+              :items-length="paginationsGroup.total || 0"
               :items="groups"
               :item-value="headers.title"
               @update:options="getGroup"
@@ -490,6 +491,9 @@ onMounted(async () =>  {
               fixed-header
               hover
           >
+            <template v-slot:loading>
+              <v-skeleton-loader type="table-row@9"></v-skeleton-loader>
+            </template>
             <template v-slot:item="{ item, index }">
               <tr :class="{'bg-grey-lighten-2': item.id === groupIdRef }" @mouseenter="hoveredRowIndex = index + 100000" @mouseleave="hoveredRowIndex = null" @click="lineMarkingGroup(item.id)" >
                 <td>
@@ -653,8 +657,10 @@ onMounted(async () =>  {
                             density="compact"
                             placeholder="********"
                             label="Пароль"
-                            clear-icon="close"
                             :disabled="passwordRef === '#########'"
+                            clear-icon="close"
+                            :append-inner-icon="passwordRef ? 'close' : ''"
+                            @click:append-inner="passwordRef = null"
                             hide-details
                         />
                         <span v-show="isExistsUser" class="mt-1 ms-2 text-blue-darken-4 cursor-pointer" @click="isDialogPassword = true">Изменить пароль</span>
