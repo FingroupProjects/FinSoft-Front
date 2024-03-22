@@ -17,7 +17,7 @@ export default {
   },
   getBarcodeById(id, { page = 1, itemsPerPage = 10, sortBy }, search = "") {
     const params = buildParams(page, itemsPerPage, sortBy, search);
-    return api.get(`/get-barcode/${id}`, { params });
+    return api.get(`/barcode/${id}`, { params });
   },
   massDeletion(data) {
     return api.post(`/barcode/massDelete/`, data);

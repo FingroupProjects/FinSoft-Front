@@ -13,6 +13,7 @@ import {
   addMessage,
   editMessage,
 } from "../../../composables/constant/buttons.js";
+import { FIELD_COLOR } from "../../../composables/constant/colors.js";
 
 const router = useRouter();
 const route = useRoute();
@@ -41,7 +42,7 @@ const rules = {
 const editItem = (id) => {
   isEdit.value = true;
   barcodeId.value = id;
-  getBarcodeById(id);
+  getBarcodeById(id, { page: 1, itemsPerPage: 100 });
 };
 
 const getBarcodeById = async (id, { page, itemsPerPage, sortBy, search }) => {
@@ -51,7 +52,8 @@ const getBarcodeById = async (id, { page, itemsPerPage, sortBy, search }) => {
       { page, itemsPerPage, sortBy },
       search
     );
-    barcode.value = data.result.barcode;
+    console.log(data);
+    barcode.value = data.result.data[0].barcode;
     isEdit.value = true;
     addBarcode.value = true;
   } catch (e) {
@@ -77,6 +79,9 @@ const createBarcode = async () => {
     await getBarcodes({ page: 1, itemsPerPage: 100 });
   } catch (e) {
     console.log(e);
+    if (e.response.data.errors.barcode) {
+      showToast("Такой штрих-код уже существует", "warning");
+    }
   }
 };
 
@@ -92,6 +97,9 @@ const updateBarcode = async () => {
     await getBarcodes({ page: 1, itemsPerPage: 100 });
   } catch (e) {
     console.log(e);
+    if (e.response.data.errors.barcode) {
+      showToast("Такой штрих-код уже существует", "warning");
+    }
   }
 };
 const getBarcodes = async ({ page, itemsPerPage, sortBy, search }) => {
@@ -292,12 +300,15 @@ onMounted(async () => {
               />
             </div>
             <v-btn
-              @click="dialog = false"
+              @click="
+                dialog = false;
+                addBarcode = false;
+              "
               variant="text"
               :size="32"
               class="pt-2 pl-1"
             >
-              <Icons @click="addBarcode = false" name="close" />
+              <Icons name="close" />
             </v-btn>
           </div>
         </div>
@@ -316,6 +327,7 @@ onMounted(async () => {
                 label="Наименование"
                 clear-icon="close"
                 clearable
+                :base-color="FIELD_COLOR"
                 hide-details
             /></v-col> </v-row
         ></v-form>
