@@ -412,9 +412,10 @@ onMounted(async () => {
                     <input
                       accept="image/*"
                       type="file"
-                      @change="EditAvatar(img.id)"
+                      @change="selectAvatar"
                       style="display: none"
                       ref="fileInput"
+                      multiple
                     />
                   </div>
                 </div>

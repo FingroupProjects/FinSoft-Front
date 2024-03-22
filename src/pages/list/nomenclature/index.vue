@@ -8,7 +8,6 @@ import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import createGroup from "./createGroup.vue";
 import createUpdate from "./createUpdateGood.vue";
-import { FIELD_COLOR } from "../../../composables/constant/colors.js";
 import {
   ErrorSelectMessage,
   removeMessage,
@@ -199,11 +198,11 @@ onMounted(() => {
               <v-text-field
                 v-model="search"
                 prepend-inner-icon="search"
-                :base-color="FIELD_COLOR"
+                base-color="info"
                 density="compact"
                 label="Поиск..."
                 variant="outlined"
-                color="green"
+                color="info"
                 rounded="lg"
                 clear-icon="close"
                 hide-details

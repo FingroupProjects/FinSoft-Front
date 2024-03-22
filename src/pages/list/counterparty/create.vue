@@ -15,6 +15,7 @@ import organizationApi from "@/api/organizations.js";
 import counterpartyApi from "../../../api/counterparty.js";
 import priceTypeApi from "@/api/priceType.js";
 import validate from "./validate.js";
+import { FIELD_COLOR } from "../../../composables/constant/colors.js";
 
 const props = defineProps(["isOpen", "isEdit", "item", "createOnBase"]);
 const emits = defineEmits();
@@ -284,7 +285,7 @@ const getId = async () => {
 };
 
 const CreateCounterparty = async () => {
-  if (validate(name,phone,address,email) !== true) return
+  if (validate(name, phone, address, email) !== true) return;
 
   try {
     isValid.value = true;
@@ -359,7 +360,7 @@ const restore = async ({ page, itemsPerPage, sortBy }) => {
 };
 
 const updateCounterparty = async () => {
-  if (validate(name,phone,address,email,roles) !== true) return
+  if (validate(name, phone, address, email, roles) !== true) return;
   try {
     isValid.value = true;
     const body = {
@@ -514,6 +515,7 @@ const currencyProps = (item) => {
                   v-model="name"
                   :rules="isValid ? [rules.required] : []"
                   color="green"
+                  :base-color="FIELD_COLOR"
                   rounded="md"
                   variant="outlined"
                   class="w-auto text-sm-body-1"
@@ -557,26 +559,28 @@ const currencyProps = (item) => {
               <div class="d-flex ga-4 mb-3">
                 <v-text-field
                   variant="outlined"
+                  :base-color="FIELD_COLOR"
                   :rules="isValid ? [rules.required, rules.phone] : []"
                   label="Тел номер"
                   v-model.trim="phone"
                   density="compact"
                   v-mask="'+992#########'"
                   rounded="md"
-                  color="info"
+                  color="green"
                   hide-details
                   :append-inner-icon="phone.length > 1 ? 'close' : ''"
                   @click:append-inner="phone = ''"
                 />
                 <v-text-field
                   variant="outlined"
+                  :base-color="FIELD_COLOR"
                   prepend-inner-icon="email"
                   :rules="isValid ? [rules.required, rules.email] : []"
                   label="Почта"
                   v-model="email"
                   density="compact"
                   rounded="md"
-                  color="info"
+                  color="green"
                   hide-details
                   :append-inner-icon="email.length > 1 ? 'close' : ''"
                   @click:append-inner="email = ''"
@@ -584,12 +588,13 @@ const currencyProps = (item) => {
               </div>
               <v-text-field
                 variant="outlined"
+                :base-color="FIELD_COLOR"
                 :rules="isValid ? [rules.required] : []"
                 label="Адрес"
                 v-model="address"
                 density="compact"
                 rounded="md"
-                color="info"
+                color="green"
                 hide-details
                 :append-inner-icon="address.length > 1 ? 'close' : ''"
                 @click:append-inner="address = ''"
@@ -699,6 +704,7 @@ const currencyProps = (item) => {
                 <v-text-field
                   v-model="form.name"
                   :rules="[rules.required]"
+                  :base-color="FIELD_COLOR"
                   color="green"
                   rounded="md"
                   variant="outlined"
@@ -744,6 +750,7 @@ const currencyProps = (item) => {
                 <v-text-field
                   v-model="form.date"
                   :rules="[rules.required]"
+                  :base-color="FIELD_COLOR"
                   color="green"
                   rounded="md"
                   variant="outlined"
@@ -761,6 +768,7 @@ const currencyProps = (item) => {
                   variant="outlined"
                   label="Валюта"
                   v-model="form.currency_id"
+                  :base-color="FIELD_COLOR"
                   :items="currencies"
                   item-title="name"
                   item-value="id"
@@ -773,6 +781,7 @@ const currencyProps = (item) => {
                 variant="outlined"
                 label="Организация"
                 v-model="form.organization_id"
+                :base-color="FIELD_COLOR"
                 :items="organizations"
                 item-title="name"
                 item-value="id"
@@ -786,6 +795,7 @@ const currencyProps = (item) => {
                   variant="outlined"
                   label="Контрагент"
                   v-model="form.counterparty_id"
+                  :base-color="FIELD_COLOR"
                   :items="counterparties"
                   item-title="name"
                   item-value="id"
@@ -796,6 +806,7 @@ const currencyProps = (item) => {
                   color="green"
                   :item-props="price_typeProps"
                   v-model="form.price_type_id"
+                  :base-color="FIELD_COLOR"
                   :items="priceTypes"
                   variant="outlined"
                   item-title="name"
@@ -807,18 +818,21 @@ const currencyProps = (item) => {
               </div>
               <v-text-field
                 v-model="form.contact_person"
+                :base-color="FIELD_COLOR"
                 variant="outlined"
                 :rules="isValid ? [rules.required] : []"
                 label="Контактное лицо"
                 density="compact"
                 rounded="md"
-                color="info"
+                color="green"
                 hide-details
               />
               <v-container class="pa-0 mt-3">
                 <v-textarea
                   v-model="form.comment"
                   variant="outlined"
+                  :base-color="FIELD_COLOR"
+                  color="green"
                   label="Комментарий"
                   :rules="isValid ? [rules.required] : []"
                 />

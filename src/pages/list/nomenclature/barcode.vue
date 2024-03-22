@@ -53,7 +53,7 @@ const getBarcodeById = async (id, { page, itemsPerPage, sortBy, search }) => {
       search
     );
     console.log(data);
-    barcode.value = data.result.data[0].barcode;
+    barcode.value = data.result.barcode;
     isEdit.value = true;
     addBarcode.value = true;
   } catch (e) {
