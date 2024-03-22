@@ -21,6 +21,7 @@ import Icons from "@/composables/Icons/Icons.vue";
 import {restoreMessage} from "../../../composables/constant/buttons.js";
 import storageGroup from "../../../api/storageGroup.js";
 import {FIELD_COLOR} from "../../../composables/constant/colors.js";
+import validate from "./validate.js";
 
 const router = useRouter()
 const groupDialog = ref(false)
@@ -44,7 +45,6 @@ const isExistsGroup = ref(false);
 const groupIdRef = ref(0)
 
 const organizationAdd = ref([])
-const organizationUpdate = ref([])
 
 const employees = ref([])
 const organizations = ref([])
@@ -156,13 +156,8 @@ const getStorageEmployeeData = async ({page, itemsPerPage, sortBy, search}) => {
 }
 
 
-const addStorage = async ({page, itemsPerPage, sortBy}) => {
-  if (!nameRef.value) {
-    return showToast("Поле Название не может быть пустым", "warning")
-  }
-  if (!group.value) {
-    return showToast("Поле Группа не может быть пустым", "warning")
-  }
+const addStorage = async () => {
+  if (validate(nameRef, organizationAdd, group) !== true) return
 
   let groupValue;
   if (typeof group.value === 'object') {
@@ -179,44 +174,74 @@ const addStorage = async ({page, itemsPerPage, sortBy}) => {
       group_id: groupValue
     }
 
-    try {
-      const res = await storage.add(body)
-      if (res.status === 201) {
-        await getStorage({page, itemsPerPage, sortBy})
-        showToast(addMessage)
-        valueRef.value = null
-        organizationAdd.value = null
-        employeeAdd.value = null
-        idStorage.value = res.data.result.id
-        dialog.value = false
+    const res = await storage.add(body)
 
-        markedID.value = []
-        markedItem.value = []
+    if (res.status === 201) {
+      await getStorage({})
+      showToast(addMessage)
+      valueRef.value = null
+      organizationAdd.value = null
+      employeeAdd.value = null
+      idStorage.value = res.data.result.id
+      dialog.value = false
 
-      }
-    } catch (error) {
-
-      let showToastFlag = true;
-
-      if (error.response && error.response.status === 422) {
-        if (error.response.data.errors.name && showToastFlag) {
-          showToast(error.response.data.errors.name[0], "warning")
-          showToastFlag = false;
-        }
-
-        if (error.response.data.errors.organization_id && showToastFlag) {
-          showToast(error.response.data.errors.organization_id[0], "warning")
-          showToastFlag = false;
-        }
-      }
+      markedID.value = []
+      markedItem.value = []
 
     }
-
   } catch (error) {
-    console.log(error);
+
+    let showToastFlag = true;
+
+    if (error.response && error.response.status === 422) {
+      if (error.response.data.errors.name && showToastFlag) {
+        showToast(error.response.data.errors.name[0], "warning")
+        showToastFlag = false;
+      }
+
+      if (error.response.data.errors.organization_id && showToastFlag) {
+        showToast(error.response.data.errors.organization_id[0], "warning")
+      }
+    }
+
+  }
+}
+
+const update = async ({page, itemsPerPage, sortBy}) => {
+  if (validate(nameRef, organizationAdd, group) !== true) return
+
+  let groupValue;
+  if (typeof group.value === 'object') {
+    groupValue = group.value.id
+  } else {
+    groupValue = group.value
   }
 
+  const body = {
+    name: nameRef.value,
+    organization_id: organizationAdd.value,
+    group_id: groupValue
+  }
+
+  try {
+    const { status } = await storage.update(idStorage.value, body)
+    if (status === 200) {
+      nameRef.value = null
+      organizationAdd.value = null
+
+      dialog.value = null
+      await getStorageData({page, itemsPerPage, sortBy})
+      markedID.value = []
+      showToast(editMessage)
+
+
+    }
+  } catch (e) {
+    console.log(e)
+  }
 }
+
+
 
 const addGroup = async (page, itemsPerPage, sortBy) => {
   if (!groupName.value) {
@@ -359,39 +384,6 @@ const massRestoreEmployee = async ({page, itemsPerPage, sortBy, search}) => {
   }
 }
 
-
-const update = async ({page, itemsPerPage, sortBy}) => {
-  if (!groupName.value) {
-    return showToast("Поле наименования не может быть пустым", "warning")
-  }
-  if (!nameRef.value) {
-    return showToast("Поле Название не может быть пустым", "warning")
-  }
-
-  const body = {
-    name: nameRef.value,
-    organization_id: organizationAdd.value
-  }
-
-  try {
-    const {status} = await storage.update(idStorage.value, body)
-    if (status === 200) {
-      nameRef.value = null
-      organizationUpdate.value = null;
-
-      dialog.value = null
-      await getStorageData({page, itemsPerPage, sortBy})
-      markedID.value = []
-      showToast(editMessage)
-
-
-    }
-  } catch (e) {
-    console.log(e)
-  }
-}
-
-
 const updateEmployee = async ({page, itemsPerPage, sortBy}) => {
 
   const body = {
@@ -406,12 +398,9 @@ const updateEmployee = async ({page, itemsPerPage, sortBy}) => {
 
       await getStorageEmployeeData({page, itemsPerPage, sortBy})
       dataDialog.value = false
-
       employeeAdd.value = null
       startDateRef.value = null
-
       endDateRef.value = null
-
 
       markedEmployeeID.value = []
       showToast(editMessage)
@@ -447,7 +436,6 @@ const getOrganizations = async () => {
         name: item.name
       }
     })
-
   } catch (e) {
 
   }
@@ -466,6 +454,9 @@ const openDialog = (item) => {
   }
   dialog.value = true
 
+  const groupValue = groups.value.find(item => item.id === groupIdRef.value)
+  console.log(groupValue)
+
   if (item === 0) {
     idStorage.value = 0
     isExistsStorage.value = false
@@ -474,7 +465,8 @@ const openDialog = (item) => {
     markedID.value.push(item.id);
     isExistsStorage.value = true
     nameRef.value = item.name
-    const groupValue = groups.value.find(item => item.id === groupIdRef.value)
+
+
     group.value = {
       id: groupValue.id,
       name: groupValue.name
@@ -489,13 +481,17 @@ const openDialog = (item) => {
 const addBasedOnStorage = () => {
   if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
   if (markedID.value.length > 1) return showToast(selectOneItemMessage, 'warning')
+
   dialog.value = true
   isExistsStorage.value = false
+
   const groupValue = groups.value.find(item => item.id === groupIdRef.value)
+
   storages.value.forEach(item => {
     if (markedID.value[0] === item.id) {
       idStorage.value = item.id
       nameRef.value = item.name
+
       group.value = {
         id: groupValue.id,
         name: groupValue.name
@@ -609,6 +605,7 @@ const employeeLineMarking = (item) => {
 }
 
 const lineMarkingGroup = group_id => {
+  markedID.value = []
   groupIdRef.value = group_id
   getStorage({})
 }
@@ -616,12 +613,15 @@ const lineMarkingGroup = group_id => {
 const getStorage = async ({page, itemsPerPage, sortBy, search}) => {
   try {
     const filterData = filterForm.value
-    console.log(filterData)
     filterDialog.value = false
+    if (groupIdRef.value === 0) return
+
     loading.value = true
+
     const { data } = await storageGroup.getStorages({page, itemsPerPage, sortBy}, search, groupIdRef.value, filterData)
     paginations.value = data.result.pagination
     storages.value = data.result.data
+
   } catch (e) {
 
   } finally {
@@ -632,13 +632,16 @@ const getStorage = async ({page, itemsPerPage, sortBy, search}) => {
 watch(dialog, newVal => {
   if (!newVal) {
     nameRef.value = null
-    organizationUpdate.value = null
     organizationAdd.value = null
     employeeAdd.value = null
     employeeUpdate.value = null;
     startDateRef.value = null;
     endDateRef.value = null;
   }
+})
+
+watch(group, (newVal) => {
+  console.log(newVal)
 })
 
 onMounted(async () => {
@@ -688,9 +691,9 @@ onMounted(async () => {
                   color="green"
                   :base-color="FIELD_COLOR"
                   rounded="lg"
-                  clear-icon="close"
                   hide-details
                   single-line
+                  clear-icon="close"
                   clearable
                   flat
               ></v-text-field>
@@ -723,6 +726,9 @@ onMounted(async () => {
               fixed-header
               hover
           >
+            <template v-slot:loading>
+              <v-skeleton-loader type="table-row@9"></v-skeleton-loader>
+            </template>
             <template v-slot:item="{ item, index }">
               <tr :class="{'bg-grey-lighten-2': item.id === groupIdRef }" @mouseenter="hoveredRowIndex = index + 100000" @mouseleave="hoveredRowIndex = null" @click="lineMarkingGroup(item.id)" >
                 <td>
@@ -735,7 +741,7 @@ onMounted(async () => {
             </template>
           </v-data-table-server>
         </v-card>
-        <v-card class="mt-2 table">
+        <v-card class="mt-2 table w-100">
           <v-data-table-server
               style="height: 78vh"
               items-per-page-text="Элементов на странице:"
@@ -758,6 +764,9 @@ onMounted(async () => {
               fixed-header
               hover
           >
+            <template v-slot:loading>
+              <v-skeleton-loader type="table-row@9"></v-skeleton-loader>
+            </template>
             <template v-slot:item="{ item, index }">
               <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)"
                   @dblclick="openDialog(item)"
@@ -871,6 +880,9 @@ onMounted(async () => {
                   fixed-footer
                   hover
               >
+                <template v-slot:loading>
+                  <v-skeleton-loader type="table-row@9"></v-skeleton-loader>
+                </template>
                 <template v-slot:item="{ item, index }">
                   <tr @mouseenter="hoveredRowEmployeeIndex = index" @mouseleave="hoveredRowEmployeeIndex = null"
                       @click="employeeLineMarking(item)"
