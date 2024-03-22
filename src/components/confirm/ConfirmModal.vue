@@ -1,5 +1,5 @@
 <template>
-  <v-dialog style="min-width: 300px"  v-if="showModal">
+    <v-dialog style="min-width: 300px"  v-model="props.showModal">
         <v-card style="max-width: 400px" class="mx-auto flex flex-col">
           <v-card-title class="text-h6">Подтверждение</v-card-title>
           <v-card-text class="text-subtitle-1"
@@ -28,19 +28,20 @@
 </template>
 
 <script setup>
-import { ref, defineProps, defineEmits } from 'vue';
+import { defineProps, defineEmits } from 'vue';
 
 const props = defineProps({
   showModal: Boolean
 });
 
-const { emit } = defineEmits(['close']);
+const emit = defineEmits();
 
 const closeModal = () => {
   emit('close');
+  
 };
 
 const confirmClose = () => {
-  closeModal();
+  emit('closeClear')
 };
 </script>

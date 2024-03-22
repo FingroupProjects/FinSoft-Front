@@ -14,6 +14,7 @@ import showToast from "../../../composables/toast";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import Icons from "../../../composables/Icons/Icons.vue";
 import employee from "../../../api/employee";
+import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import validate from "./validate.js";
 import {FIELD_COLOR} from "../../../composables/constant/colors.js";
 
@@ -43,6 +44,12 @@ const accountantRef = ref(null);
 const addressRef = ref(null);
 const descriptionRef = ref(null);
 const search = ref(null);
+const showModal = ref(false);
+
+const toggleModal = () => {
+  showModal.value = !showModal.value;
+  // console.log('openModal');
+};
 
 const filterForm = ref({
   name: null,
@@ -52,8 +59,6 @@ const filterForm = ref({
   address: null,
   description: null,
 });
-
-
 
 const rules = {
   required: (value) => !!value || "Поле обязательно для заполнения",
@@ -133,6 +138,7 @@ const addOrganization = async ({ page, itemsPerPage, sortBy, search }) => {
 
       isDataSaved.value = true;
     }
+    showModal.value = true;
     addDialog.value = false;
     toggleModal();
   } catch (error) {}
@@ -208,6 +214,7 @@ const update = async ({ page, itemsPerPage, sortBy, search }) => {
     cleanForm();
     toggleModal();
     addDialog.value = false;
+    showModal.value = true;
   } catch (e) {}
 };
 
@@ -319,6 +326,7 @@ const remove = async ({page, itemsPerPage, sortBy}) => {
       await getUser({page, itemsPerPage, sortBy})
       markedID.value = []
       dialog.value = false
+      showModal.value = true;
     }
   } catch (e) {
 
@@ -348,6 +356,7 @@ const isDataChanged = () => {
 };
 
 const checkAndClose = () => {
+  console.log(1);
   if (
     nameRef.value ||
     innRef.value ||
@@ -364,7 +373,9 @@ const checkAndClose = () => {
 
 const closeDialogWithoutSaving = () => {
   addDialog.value = false;
+  showModal.value = false
   showConfirmDialog.value = false;
+  cleanForm();
 };
 
 const checkUpdate = () => {
@@ -400,6 +411,7 @@ onMounted(async () => {
 </script>
 
 <template>
+  
   <div>
     <v-col>
       <div class="d-flex justify-space-between text-uppercase">
@@ -502,6 +514,7 @@ onMounted(async () => {
           </template>
         </v-data-table-server>
       </v-card>
+
     </v-col>
 
     <!-- modal -->
@@ -530,7 +543,8 @@ onMounted(async () => {
                 <Icons v-else @click="addOrganization" name="save" />
               </div>
               <v-btn
-                @click="toggleModal"
+                @click="toggleModal() ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
+                
                 variant="text"
                 :size="32"
                 class="pt-2 pl-1"
@@ -726,13 +740,17 @@ onMounted(async () => {
             </v-form>
           </v-card>
         </v-dialog>
+        <div v-if="showModal">
+        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" />
+      </div>
       </v-card>
-      <ConfirmModal :show-modal="showModal" @close="toggleModal" />
     </v-card>
+    
   </div>
 </template>
 
 <style scoped>
+
 </style> 
 
 
