@@ -375,7 +375,7 @@ const updateCounterparty = async () => {
       return;
     }
     await counterpartyApi.update(props.item, body);
-    showToast("Успешно изменено", "#");
+    showToast("Успешно изменено", "green");
     emits("toggleIsOpen");
   } catch (error) {
     console.log(error);
