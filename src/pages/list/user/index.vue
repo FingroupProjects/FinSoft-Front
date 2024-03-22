@@ -61,8 +61,17 @@ const users = ref([])
 const organizations = ref([])
 const groups = ref([])
 const paginations = ref([])
+const paginationsGroup = ref([])
 
+const filterForm = ref({
+  name: null,
+  email: null,
+  phone: null,
+  login: null,
+  organization_id: null
+})
 
+const showModalDialog = ref(null)
 
 const headers = ref([
   {title: '№', key: 'id', align: 'start'},
@@ -74,29 +83,17 @@ const headersGroup = ref([
   {title: 'Название группы', key: 'name', align: 'start'},
 ])
 
-
-
-//filter
-const filterForm = ref({
-  name: null,
-  email: null,
-  phone: null,
-  login: null,
-  organization_id: null
-})
-
-const showModalDialog = ref(null)
-
-
 const rules = {
   required: v => !!v,
+  email: (v) => /.+@.+\..+/.test(v),
+  phone: (v) => v.length === 13,
 }
 
 const getGroup = async ({page, itemsPerPage, sortBy}) => {
   loadingGroup.value = true
   try {
     const { data } = await groupApi.get({page, itemsPerPage, sortBy})
-    paginations.value = data.result.pagination
+    paginationsGroup.value = data.result.pagination
     groups.value = data.result.data.map(item => ({
       id: item.id,
       name: item.name
@@ -109,9 +106,6 @@ const getGroup = async ({page, itemsPerPage, sortBy}) => {
 }
 
 const getOrganization = async () => {
-  const filterData = filterForm.value
-  showModalDialog.value = false
-
   try {
     const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000})
     organizations.value = data.result.data.map(item => ({
@@ -158,8 +152,6 @@ const addUser = async ({page, itemsPerPage, sortBy}) => {
     groupValue = group.value
   }
 
-
-
   const formData = new FormData()
   formData.append('name', fioRef.value);
   formData.append('organization_id', organizationValue)
@@ -171,6 +163,10 @@ const addUser = async ({page, itemsPerPage, sortBy}) => {
 
   if (imageRef.value !== null) {
     formData.append('image', imageRef.value);
+  }
+
+  for(let pair of formData.entries()) {
+    console.log(pair[0]+ ', '+ pair[1]);
   }
 
   try {
@@ -333,6 +329,14 @@ const handleCheckboxClick = item => {
 const openDialog = item => {
   dialog.value = true
 
+  if (groupIdRef.value !== 0) {
+    const groupValue = groups.value.find(item => item.id === groupIdRef.value)
+    group.value = {
+      id: groupValue.id,
+      name: groupValue.name
+    }
+  }
+
   if (item === 0) {
     idUser.value = 0
     isExistsUser.value = false
@@ -433,7 +437,8 @@ const lineMarking = item => {
   markedItem.value = item;
 }
 
-const lineMarkingGroup = (group_id) => {
+const lineMarkingGroup = group_id => {
+  markedID.value = []
   groupIdRef.value = group_id
   getUser({})
 }
@@ -457,7 +462,6 @@ const getUser = async ({page, itemsPerPage, sortBy, search}) => {
 const closeFilterDialog = () => {
   showModalDialog.value = false
   filterForm.value = {}
-  console.log(filterForm)
   getUser({})
 }
 
@@ -531,10 +535,10 @@ onMounted(async () =>  {
               items-per-page-text="Элементов на странице:"
               loading-text="Загрузка"
               no-data-text="Нет данных"
-              v-model:items-per-page="paginations.per_page"
+              v-model:items-per-page="paginationsGroup.per_page"
               :loading="loadingGroup"
               :headers="headersGroup"
-              :items-length="paginations.total || 0"
+              :items-length="paginationsGroup.total || 0"
               :items="groups"
               :item-value="headers.title"
               @update:options="getGroup"
@@ -547,6 +551,9 @@ onMounted(async () =>  {
               fixed-header
               hover
           >
+            <template v-slot:loading>
+              <v-skeleton-loader type="table-row@9"></v-skeleton-loader>
+            </template>
             <template v-slot:item="{ item, index }">
               <tr :class="{'bg-grey-lighten-2': item.id === groupIdRef }" @mouseenter="hoveredRowIndex = index + 100000" @mouseleave="hoveredRowIndex = null" @click="lineMarkingGroup(item.id)" >
                 <td>
@@ -701,6 +708,7 @@ onMounted(async () =>  {
                           density="compact"
                           placeholder="Ivan"
                           label="Логин"
+                          v-mask="'XXXXXXXXXXXXXXXXXXX'"
                           clear-icon="close"
                           :append-inner-icon="loginRef ? 'close' : ''"
                           @click:append-inner="loginRef = null"
@@ -717,8 +725,10 @@ onMounted(async () =>  {
                             density="compact"
                             placeholder="********"
                             label="Пароль"
-                            clear-icon="close"
                             :disabled="passwordRef === '#########'"
+                            clear-icon="close"
+                            :append-inner-icon="passwordRef ? 'close' : ''"
+                            @click:append-inner="passwordRef = null"
                             hide-details
                         />
                         <span v-show="isExistsUser" class="mt-1 ms-2 text-blue-darken-4 cursor-pointer" @click="isDialogPassword = true">Изменить пароль</span>
@@ -748,14 +758,16 @@ onMounted(async () =>  {
                   <div class="d-flex ga-4 mt-5">
                     <v-text-field
                         v-model="phoneRef"
-                        :rules="[rules.required]"
+                        :rules="[rules.required, rules.phone]"
                         color="green"
                         :base-color="FIELD_COLOR"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
                         density="compact"
+                        type="tel"
                         placeholder="+992119111881"
                         label="Номер телефона"
+                        v-mask="'+############'"
                         clear-icon="close"
                         :append-inner-icon="phoneRef ? 'close' : ''"
                         @click:append-inner="phoneRef = null"
@@ -763,13 +775,14 @@ onMounted(async () =>  {
                     />
                     <v-text-field
                         v-model="emailRef"
-                        :rules="[rules.required]"
+                        :rules="[rules.required, rules.email]"
                         color="green"
                         :base-color="FIELD_COLOR"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
                         density="compact"
                         placeholder="ivan@gmail.com"
+                        type="email"
                         label="Почта"
                         clear-icon="close"
                         :append-inner-icon="emailRef ? 'close' : ''"
@@ -788,7 +801,6 @@ onMounted(async () =>  {
         <div v-if="isDialogPassword">
           <change-password @toggleDialogPassword="isDialogPassword = false" :id="idUser" />
         </div>
-        
 
         <v-dialog class="mt-2 pa-2" v-model="showModalDialog">
           <v-card style="border: 2px solid #3AB700" min-width="600"
@@ -845,13 +857,12 @@ onMounted(async () =>  {
                           :base-color="FIELD_COLOR"
                           item-title="name"
                           item-value="id"
-                          
                           variant="outlined"
                           label="Организация"
                       />
                       <v-text-field
                           v-model="filterForm.login"
-                          
+
                           color="green"
                           :base-color="FIELD_COLOR"
                           variant="outlined"

@@ -530,7 +530,7 @@ watch(dialog, newVal => {
           <v-card style="border: 2px solid #3AB700" min-width="500"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
-              <span>{{ isExistsCashRegister ? cashRegisterInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
+              <span>Касса: {{ isExistsCashRegister ? cashRegisterInDialogTitle : 'Добавление' }}</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
                   <Icons title="Удалить" v-if="isExistsCashRegister"  @click="compute" name="delete"/>
@@ -663,7 +663,7 @@ watch(dialog, newVal => {
                   <v-select
                       variant="outlined"
                       label="Организация"
-                      :base-color="FIELD_COLOR"
+                      
                       v-model="filterForm.organization_id"
                       :items="organizations"
                       item-title="name"

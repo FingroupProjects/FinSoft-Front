@@ -1,28 +1,31 @@
 <script setup>
 import { ref, watch } from "vue";
 import counterpartyApi from "../../../api/counterparty";
-import showDate from "../../../composables/date/showDate"
-import { ErrorSelectMessage, removeMessage, restoreMessage, selectOneItemMessage} from "../../../composables/constant/buttons.js";
-import showToast from '../../../composables/toast'
+import showDate from "../../../composables/date/showDate";
+import {
+  ErrorSelectMessage,
+  removeMessage,
+  restoreMessage,
+  selectOneItemMessage,
+  warningMessage,
+} from "../../../composables/constant/buttons.js";
+import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import createCounterparty from "./create.vue"
+import createCounterparty from "./create.vue";
 
 const loading = ref(true);
-const isCreate = ref(false)
-const isEdit = ref(false)
-const createOnBase = ref(false)
-const hoveredRowIndex = ref(null)
+const isCreate = ref(false);
+const isEdit = ref(false);
+const createOnBase = ref(false);
+const hoveredRowIndex = ref(null);
 
-const markedID = ref([])
-const markedItem = ref([])
+const markedID = ref([]);
+const markedItem = ref([]);
 const counterparty = ref([]);
 const pagination = ref([]);
 
-
-
-
-const search = ref('')
+const search = ref("");
 
 const headers = ref([
   { title: "№", key: "id", align: "start" },
@@ -44,25 +47,29 @@ const formatRole = (roles) => {
   return roles.map((role) => roleMap[role] || "Неизвестная роль").join(", ");
 };
 
-watch(() => isEdit.value, (newValue, { page, itemsPerPage, sortBy }, search) => {
-  if (newValue === false) {
-
-    getCounterparty({ page, itemsPerPage, sortBy }, search)
+watch(
+  () => isEdit.value,
+  (newValue, { page, itemsPerPage, sortBy }, search) => {
+    if (newValue === false) {
+      getCounterparty({ page, itemsPerPage, sortBy }, search);
+    }
   }
-});
+);
 
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
-    const firstMarkedItem = counterparty.value.find(el => el.id === markedID.value[0]);
+    const firstMarkedItem = counterparty.value.find(
+      (el) => el.id === markedID.value[0]
+    );
     if (firstMarkedItem && firstMarkedItem.deleted_at) {
       if (item.deleted_at === null) {
-        showToast(ErrorSelectMessage, 'warning')
+        showToast(ErrorSelectMessage, "warning");
         return;
       }
     }
     if (firstMarkedItem && firstMarkedItem.deleted_at === null) {
       if (item.deleted_at !== null) {
-        showToast(ErrorSelectMessage, 'warning')
+        showToast(ErrorSelectMessage, "warning");
         return;
       }
     }
@@ -74,39 +81,42 @@ const lineMarking = (item) => {
     markedID.value.push(item.id);
   }
   markedItem.value = item;
-}
+};
 
 const createBase = () => {
-  if(markedID.value.length !== 1) return showToast(selectOneItemMessage, "warning")
-  isCreate.value = true
-  createOnBase.value = true
-  editItem(markedID.value[0])
-}
+  if (markedID.value.length !== 1)
+    return showToast(selectOneItemMessage, "warning");
+  isCreate.value = true;
+  createOnBase.value = true;
+  editItem(markedID.value[0]);
+};
 const editItem = (item) => {
   isCreate.value = true;
   isEdit.value = true;
-  markedItem.value = item
-}
+  markedItem.value = item;
+};
 
 const toggleModal = () => {
-  isCreate.value = false
-   setTimeout(() => {
-     isEdit.value = false
-   }, 100)
-}
+  isCreate.value = false;
+  setTimeout(() => {
+    isEdit.value = false;
+  }, 100);
+};
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
   if (markedItem.value.deleted_at) {
-    return massRestoreCounterparty({ page, itemsPerPage, sortBy })
+    return massRestoreCounterparty({ page, itemsPerPage, sortBy });
+  } else {
+    return massDel({ page, itemsPerPage, sortBy, search });
   }
-  else {
-    return massDel({ page, itemsPerPage, sortBy, search })
-  }
-}
+};
 
 const getCounterparty = async ({ page, itemsPerPage, sortBy, search }) => {
   loading.value = true;
   try {
-    const { data } = await counterpartyApi.get({ page, itemsPerPage, sortBy }, search);
+    const { data } = await counterpartyApi.get(
+      { page, itemsPerPage, sortBy },
+      search
+    );
     counterparty.value = data.result.data.map((item) => ({
       ...item,
       created_at: showDate(item.created_at),
@@ -120,44 +130,50 @@ const getCounterparty = async ({ page, itemsPerPage, sortBy, search }) => {
 };
 
 const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
-  const body = {
-    ids: markedID.value
+  if (markedID.value.length === 0) {
+    showToast(warningMessage, "warning");
+    return;
   }
+  const body = {
+    ids: markedID.value,
+  };
   try {
-    const { status } = await counterpartyApi.massDeletion(body)
+    const { status } = await counterpartyApi.massDeletion(body);
     if (status === 200) {
-      showToast(removeMessage, 'red')
-      await getCounterparty({ page, itemsPerPage, sortBy }, search)
-      markedID.value = []
+      showToast(removeMessage, "red");
+      await getCounterparty({ page, itemsPerPage, sortBy }, search);
+      markedID.value = [];
     }
   } catch (e) {
-    console.log(e)
+    console.log(e);
   }
-}
+};
 
 const massRestoreCounterparty = async ({ page, itemsPerPage, sortBy }) => {
+  if (markedID.value.length === 0) {
+    showToast(warningMessage, "warning");
+    return;
+  }
   try {
     const body = {
-      ids: markedID.value
-    }
-    const { status } = await counterpartyApi.massRestore(body)
+      ids: markedID.value,
+    };
+    const { status } = await counterpartyApi.massRestore(body);
     if (status === 200) {
-      showToast(restoreMessage, 'green')
-      await getCounterparty({ page, itemsPerPage, sortBy })
-      markedID.value = []
+      showToast(restoreMessage, "green");
+      await getCounterparty({ page, itemsPerPage, sortBy });
+      markedID.value = [];
     }
   } catch (e) {
-    console.log(e)
+    console.log(e);
   }
-}
-
+};
 </script>
 
 <template>
   <div>
     <v-col>
-
-      <div class="d-flex justify-space-between text-uppercase ">
+      <div class="d-flex justify-space-between text-uppercase">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
           <span>Контрагенты</span>
         </div>
@@ -166,12 +182,27 @@ const massRestoreCounterparty = async ({ page, itemsPerPage, sortBy }) => {
             <div class="d-flex ga-2 mt-2 me-3">
               <Icons @click="isCreate = true" name="add" />
               <Icons @click="createBase()" name="copy" />
-              <Icons @click="compute({ page, itemsPerPage, sortBy, search })" name="delete" />
+              <Icons
+                @click="compute({ page, itemsPerPage, sortBy, search })"
+                name="delete"
+              />
             </div>
             <div class="w-100">
-              <v-text-field v-model="search" prepend-inner-icon="search" density="compact" label="Поиск..."
-                variant="outlined" color="info" rounded="lg" clear-icon="close" hide-details single-line clearable
-                flat></v-text-field>
+              <v-text-field
+                v-model="search"
+                prepend-inner-icon="search"
+                base-color="info"
+                density="compact"
+                label="Поиск..."
+                variant="outlined"
+                color="info"
+                rounded="lg"
+                clear-icon="close"
+                hide-details
+                single-line
+                clearable
+                flat
+              ></v-text-field>
             </div>
           </div>
           <Icons name="filter" class="mt-1" />
@@ -179,7 +210,6 @@ const massRestoreCounterparty = async ({ page, itemsPerPage, sortBy }) => {
       </div>
 
       <v-card class="table mt-2">
-
         <v-data-table-server
           style="height: 78vh"
           fixed-header
@@ -196,11 +226,12 @@ const massRestoreCounterparty = async ({ page, itemsPerPage, sortBy }) => {
           :item-value="headers.title"
           hover
           fixed-footer
-          page-text =  '{0}-{1} от {2}'
+          page-text="{0}-{1} от {2}"
           :items-per-page-options="[
-          {value: 25, title: '25'},
-          {value: 50, title: '50'},
-          {value: 100, title: '100'},]"
+            { value: 25, title: '25' },
+            { value: 50, title: '50' },
+            { value: 100, title: '100' },
+          ]"
         >
           <template v-slot:item="{ item, index }">
             <tr
@@ -209,18 +240,25 @@ const massRestoreCounterparty = async ({ page, itemsPerPage, sortBy }) => {
               @click="lineMarking(item)"
               @dblclick="editItem(item.id)"
               :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
-             >
+            >
               <td>
-                <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
-                  <CustomCheckbox :checked="markedID.includes(item.id)" @change="lineMarking(item)">
+                <template
+                  v-if="hoveredRowIndex === index || markedID.includes(item.id)"
+                >
+                  <CustomCheckbox
+                    :checked="markedID.includes(item.id)"
+                    @change="lineMarking(item)"
+                  >
                     <span>{{ item.id }}</span>
                   </CustomCheckbox>
                 </template>
 
                 <template v-else>
                   <span class="d-flex align-center">
-                    <Icons style="margin-right: 10px; margin-top: 4px"
-                      :name="item.deleted_at === null ? 'valid' : 'inValid'" />
+                    <Icons
+                      style="margin-right: 10px; margin-top: 4px"
+                      :name="item.deleted_at === null ? 'valid' : 'inValid'"
+                    />
                     <span>{{ item.id }}</span>
                   </span>
                 </template>
@@ -245,12 +283,15 @@ const massRestoreCounterparty = async ({ page, itemsPerPage, sortBy }) => {
               </td>
             </tr>
           </template>
-
         </v-data-table-server>
-
       </v-card>
-      <create-counterparty :isEdit="isEdit" :isOpen="isCreate" @toggleIsOpen="toggleModal()"
-        :item="markedItem" :createOnBase="createOnBase" />
+      <create-counterparty
+        :isEdit="isEdit"
+        :isOpen="isCreate"
+        @toggleIsOpen="toggleModal()"
+        :item="markedItem"
+        :createOnBase="createOnBase"
+      />
     </v-col>
   </div>
 </template>

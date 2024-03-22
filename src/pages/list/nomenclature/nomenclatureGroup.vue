@@ -7,6 +7,7 @@ import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import createGroup from "./createGroup.vue";
 import createUpdate from "./createUpdateGood.vue";
+import { FIELD_COLOR } from "../../../composables/constant/colors.js";
 import {
   ErrorSelectMessage,
   removeMessage,
@@ -22,6 +23,7 @@ const loading = ref(true);
 const isCreate = ref(false);
 const isFilter = ref(false);
 const isCreateGroup = ref(false);
+const isCreataOnBase = ref(false);
 const createGroupOnBase = ref(false);
 
 const hoveredRowIndex = ref(null);
@@ -119,10 +121,20 @@ const getGroupById = async ({ page, itemsPerPage, sortBy, search }) => {
     console.log(e);
   }
 };
-const getGroups = async ({ page, itemsPerPage, sortBy, search, filterData }) => {
+const getGroups = async ({
+  page,
+  itemsPerPage,
+  sortBy,
+  search,
+  filterData,
+}) => {
   try {
     loading.value = true;
-    const { data } = await groupApi.get({ page, itemsPerPage, sortBy }, search, filterData);
+    const { data } = await groupApi.get(
+      { page, itemsPerPage, sortBy },
+      search,
+      filterData
+    );
     groups.value = data.result.data;
     pagination.value = data.result.pagination;
     loading.value = false;
@@ -219,6 +231,7 @@ onMounted(() => {
               <v-text-field
                 v-model="search"
                 prepend-inner-icon="search"
+                base-color="info"
                 density="compact"
                 label="Поиск..."
                 variant="outlined"
@@ -305,7 +318,10 @@ onMounted(() => {
       </div>
       <div v-if="isCreateGroup">
         <createGroup
-          @toggleDialog="isCreateGroup = false"
+          @toggleDialog="
+            isCreateGroup = false;
+            createGroupOnBase = false;
+          "
           @filter="filterGroup"
           :createGroupOnBase="createGroupOnBase"
           :groupData="groupData"

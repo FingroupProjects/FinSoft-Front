@@ -9,12 +9,14 @@ import {
   ErrorSelectMessage,
   removeMessage,
   restoreMessage,
+  warningMessage,
 } from "@/composables/constant/buttons.js";
 import currencyApi from "../../../api/currency.js";
 import organizationApi from "@/api/organizations.js";
 import counterpartyApi from "../../../api/counterparty.js";
 import priceTypeApi from "@/api/priceType.js";
 import validate from "./validate.js";
+import { FIELD_COLOR } from "../../../composables/constant/colors.js";
 
 const props = defineProps(["isOpen", "isEdit", "item", "createOnBase"]);
 const emits = defineEmits();
@@ -229,6 +231,7 @@ const getOrganization = async (page, items) => {
   try {
     const { data } = await organizationApi.get(page, items);
     organizations.value = data.result.data;
+    console.log(data);
   } catch (e) {
     console.log(e);
   }
@@ -284,10 +287,10 @@ const getId = async () => {
 };
 
 const CreateCounterparty = async () => {
-  if (validate(name,phone,address,email) !== true) return
+  isValid.value = true;
+  if (validate(name, phone, address, email, roles) !== true) return;
 
   try {
-    isValid.value = true;
     const body = {
       name: name.value,
       phone: phone.value,
@@ -301,6 +304,13 @@ const CreateCounterparty = async () => {
     clearForm();
   } catch (error) {
     console.log(error);
+    if (error.response.data.errors.email) {
+      showToast("Такой email уже существует", "warning");
+    } else if (error.response.data.errors.phone) {
+      showToast("Такой номер телефона уже существует", "warning");
+    }
+  } finally {
+    isValid.value = false;
   }
 };
 
@@ -327,6 +337,10 @@ const getDocuments = async ({ page, itemsPerPage, sortBy, search }) => {
 };
 
 const del = async ({ page, itemsPerPage, sortBy, search }) => {
+  if (markedID.value.length === 0) {
+    showToast(warningMessage, "warning");
+    return;
+  }
   const body = {
     ids: markedID.value,
   };
@@ -343,6 +357,10 @@ const del = async ({ page, itemsPerPage, sortBy, search }) => {
 };
 
 const restore = async ({ page, itemsPerPage, sortBy }) => {
+  if (markedID.value.length === 0) {
+    showToast(warningMessage, "warning");
+    return;
+  }
   try {
     const body = {
       ids: markedID.value,
@@ -359,7 +377,7 @@ const restore = async ({ page, itemsPerPage, sortBy }) => {
 };
 
 const updateCounterparty = async () => {
-  if (validate(name,phone,address,email,roles) !== true) return
+  if (validate(name, phone, address, email, roles) !== true) return;
   try {
     isValid.value = true;
     const body = {
@@ -374,7 +392,7 @@ const updateCounterparty = async () => {
       return;
     }
     await counterpartyApi.update(props.item, body);
-    showToast("Успешно изменено", "#");
+    showToast("Успешно изменено", "green");
     emits("toggleIsOpen");
   } catch (error) {
     console.log(error);
@@ -479,11 +497,7 @@ const currencyProps = (item) => {
       >
         <div class="d-flex justify-space-between align-center mb-2">
           <span>{{
-            isEdit && !createOnBase
-              ? `Контрагент: ${modalTitle}`
-              : createOnBase
-              ? "Добавление на основании"
-              : "Добавление"
+            isEdit && !createOnBase ? `Контрагент: ${modalTitle}` : "Добавление"
           }}</span>
           <div class="d-flex align-center justify-space-between">
             <div class="d-flex align-center mt-2 me-4">
@@ -514,6 +528,7 @@ const currencyProps = (item) => {
                   v-model="name"
                   :rules="isValid ? [rules.required] : []"
                   color="green"
+                  :base-color="FIELD_COLOR"
                   rounded="md"
                   variant="outlined"
                   class="w-auto text-sm-body-1"
@@ -557,26 +572,27 @@ const currencyProps = (item) => {
               <div class="d-flex ga-4 mb-3">
                 <v-text-field
                   variant="outlined"
+                  :base-color="FIELD_COLOR"
                   :rules="isValid ? [rules.required, rules.phone] : []"
                   label="Тел номер"
                   v-model.trim="phone"
                   density="compact"
                   v-mask="'+992#########'"
                   rounded="md"
-                  color="info"
+                  color="green"
                   hide-details
                   :append-inner-icon="phone.length > 1 ? 'close' : ''"
                   @click:append-inner="phone = ''"
                 />
                 <v-text-field
                   variant="outlined"
-                  prepend-inner-icon="email"
+                  :base-color="FIELD_COLOR"
                   :rules="isValid ? [rules.required, rules.email] : []"
                   label="Почта"
                   v-model="email"
                   density="compact"
                   rounded="md"
-                  color="info"
+                  color="green"
                   hide-details
                   :append-inner-icon="email.length > 1 ? 'close' : ''"
                   @click:append-inner="email = ''"
@@ -584,12 +600,13 @@ const currencyProps = (item) => {
               </div>
               <v-text-field
                 variant="outlined"
+                :base-color="FIELD_COLOR"
                 :rules="isValid ? [rules.required] : []"
                 label="Адрес"
                 v-model="address"
                 density="compact"
                 rounded="md"
-                color="info"
+                color="green"
                 hide-details
                 :append-inner-icon="address.length > 1 ? 'close' : ''"
                 @click:append-inner="address = ''"
@@ -699,6 +716,7 @@ const currencyProps = (item) => {
                 <v-text-field
                   v-model="form.name"
                   :rules="[rules.required]"
+                  :base-color="FIELD_COLOR"
                   color="green"
                   rounded="md"
                   variant="outlined"
@@ -744,6 +762,7 @@ const currencyProps = (item) => {
                 <v-text-field
                   v-model="form.date"
                   :rules="[rules.required]"
+                  :base-color="FIELD_COLOR"
                   color="green"
                   rounded="md"
                   variant="outlined"
@@ -761,6 +780,7 @@ const currencyProps = (item) => {
                   variant="outlined"
                   label="Валюта"
                   v-model="form.currency_id"
+                  :base-color="FIELD_COLOR"
                   :items="currencies"
                   item-title="name"
                   item-value="id"
@@ -773,6 +793,7 @@ const currencyProps = (item) => {
                 variant="outlined"
                 label="Организация"
                 v-model="form.organization_id"
+                :base-color="FIELD_COLOR"
                 :items="organizations"
                 item-title="name"
                 item-value="id"
@@ -786,6 +807,7 @@ const currencyProps = (item) => {
                   variant="outlined"
                   label="Контрагент"
                   v-model="form.counterparty_id"
+                  :base-color="FIELD_COLOR"
                   :items="counterparties"
                   item-title="name"
                   item-value="id"
@@ -796,6 +818,7 @@ const currencyProps = (item) => {
                   color="green"
                   :item-props="price_typeProps"
                   v-model="form.price_type_id"
+                  :base-color="FIELD_COLOR"
                   :items="priceTypes"
                   variant="outlined"
                   item-title="name"
@@ -807,18 +830,21 @@ const currencyProps = (item) => {
               </div>
               <v-text-field
                 v-model="form.contact_person"
+                :base-color="FIELD_COLOR"
                 variant="outlined"
                 :rules="isValid ? [rules.required] : []"
                 label="Контактное лицо"
                 density="compact"
                 rounded="md"
-                color="info"
+                color="green"
                 hide-details
               />
               <v-container class="pa-0 mt-3">
                 <v-textarea
                   v-model="form.comment"
                   variant="outlined"
+                  :base-color="FIELD_COLOR"
+                  color="green"
                   label="Комментарий"
                   :rules="isValid ? [rules.required] : []"
                 />
