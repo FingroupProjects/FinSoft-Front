@@ -183,8 +183,8 @@ const addStorage = async () => {
       organizationAdd.value = null
       employeeAdd.value = null
       idStorage.value = res.data.result.id
-      dialog.value = false
-
+      isExistsStorage.value = true
+      console.log(idStorage.value)
       markedID.value = []
       markedItem.value = []
 
@@ -269,7 +269,6 @@ const addStorageEmployee = async ({page, itemsPerPage, sortBy}) => {
   }
 
   try {
-
     const res = await storage.addStorageEmployee(idStorage.value, body)
 
     if (res.status === 201) {
@@ -453,9 +452,14 @@ const openDialog = (item) => {
     return showToast(selectOneItemMessage, 'warning');
   }
   dialog.value = true
-
   const groupValue = groups.value.find(item => item.id === groupIdRef.value)
-  console.log(groupValue)
+
+  if (groupIdRef.value !== 0) {
+    group.value = {
+      id: groupValue.id,
+      name: groupValue.name
+    }
+  }
 
   if (item === 0) {
     idStorage.value = 0
@@ -465,8 +469,6 @@ const openDialog = (item) => {
     markedID.value.push(item.id);
     isExistsStorage.value = true
     nameRef.value = item.name
-
-
     group.value = {
       id: groupValue.id,
       name: groupValue.name
@@ -640,9 +642,6 @@ watch(dialog, newVal => {
   }
 })
 
-watch(group, (newVal) => {
-  console.log(newVal)
-})
 
 onMounted(async () => {
   await getEmployee()
@@ -852,7 +851,7 @@ onMounted(async () => {
             </v-form>
 
             <v-card class="table" style="border: 1px solid #3AB700">
-              <div class="d-flex w-100 rounded-t-lg mb-1 align-center " style="border-bottom: 1px solid #3AB700">
+              <div v-if="isExistsStorage" class="d-flex w-100 rounded-t-lg mb-1 align-center " style="border-bottom: 1px solid #3AB700">
                 <div class="d-flex justify-end w-100 ga-2 pt-1 me-2" style="padding-top: 4px !important;">
                   <Icons @click="removeStorageEmployee" name="delete"/>
                   <Icons @click="dataDialog = true" name="add"/>
