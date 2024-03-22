@@ -1,14 +1,15 @@
 <script setup>
 import {onMounted, ref, watch} from "vue";
-import {useRouter} from "vue-router";
+
 import showToast from '../../../composables/toast'
 import Icons from "../../../composables/Icons/Icons.vue";
-import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import organizationBill from '../../../api/organizationBill.js';
 import currencyApi from '../../../api/currency.js';
 import organizationApi from '../../../api/organizations.js';
+import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showDate from "../../../composables/date/showDate.js";
 import validate from "./validate.js"
+import {FIELD_COLOR} from "../../../composables/constant/colors.js";
 import {
   addMessage,
   editMessage,
@@ -19,25 +20,25 @@ import {
   restoreMessage
 } from "../../../composables/constant/buttons.js";
 
-const router = useRouter()
 
 const loading = ref(true)
-const loadingRate = ref(true)
+
 const dialog = ref(false)
 const idOrganizationBill = ref(null)
 const hoveredRowIndex = ref(null)
-const name = ref(null)
+
 const filterModal = ref(false);
 const dateRef = ref(null)
 const bill_number = ref(null)
-const isValid = ref(null)
+
 const comment = ref(null)
 const organizationAdd = ref(null)
-const organizationUpdate = ref([])
+
 const currencies = ref([])
-const currency = ref(null)
+
 const currencyAdd = ref(null)
 const organizations = ref(null)
+
 
 const isExistsOrganizationBill = ref(false)
 const markedID = ref([]);
@@ -88,7 +89,6 @@ const checkAndClose = () => {
   if (nameRef.value || organizationBill.value || currencyAdd.value || organizationAdd.value || dateRef.value || descriptionRef.value) {
     showConfirmDialog.value = true;
   } else {
-    console.log(1);
     dialog.value = false;
   }
 };
@@ -150,9 +150,6 @@ const addOrganizationBill = async ({page, itemsPerPage, sortBy}) => {
   }
 
   if (validate(nameRef, bill_number, dateRef, organizationAdd, currencyAdd ) !== true) return
-  console.log(filterForm.value);
-
-   
 
     const res = await organizationBill.create(body)
 
@@ -171,7 +168,6 @@ const addOrganizationBill = async ({page, itemsPerPage, sortBy}) => {
 
 const remove = async ({page, itemsPerPage, sortBy, search}) => {
  
-
   try {
     const {status} = await organizationBill.remove({ids: markedID.value})
 
@@ -308,7 +304,6 @@ const cleanForm =  () => {
 
 
 const cleanFilterForm =  () => {
-  console.log(filterForm.value);
   filterForm.value = {}
 }
 
@@ -347,8 +342,6 @@ const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
   filterModal.value = false
   cleanFilterForm()
   await getOrganizationBillData({page, itemsPerPage, sortBy, search})
-
-
 }
 
 const lineMarking = (item) => {
@@ -406,6 +399,7 @@ onMounted(async () => {
             <div class="w-100">
               <v-text-field
                   v-model="search"
+                  :base-color="FIELD_COLOR"
                   prepend-inner-icon="search"
                   density="compact"
                   label="Поиск..."
@@ -504,6 +498,8 @@ onMounted(async () => {
                         variant="outlined"
                         class="w-auto text-sm-body-1"
                         density="compact"
+                        :base-color="FIELD_COLOR"
+                        basecolor=""
                         placeholder="Наименование"
                         label="Наименование"
                         clear-icon="close"
@@ -519,12 +515,12 @@ onMounted(async () => {
                   <div class="d-flex ga-2 mb-3">
                     <v-text-field style="max-width: 30%"
                         variant="outlined"
-                        
                         :rules="[rules.required]"
                         label="Дата создания"
                         type="date"
                         v-model="dateRef"
                         density="compact"
+                        :base-color="FIELD_COLOR"
                         rounded="md"
                         color="green"
                         :append-inner-icon="dateRef ? 'close' : ''"
@@ -532,10 +528,10 @@ onMounted(async () => {
                         hide-details
                     />
                     <v-text-field
-                   
                         v-model="bill_number"
                         :rules="[rules.required]"
                         variant="outlined"
+                        :base-color="FIELD_COLOR"
                         label="Номер счёта"
                         density="compact"
                         rounded="md"
@@ -548,6 +544,7 @@ onMounted(async () => {
                      style="max-width: 40%; min-width: 40%"
                         v-model="currencyAdd"
                         :items="currencies"
+                        :base-color="FIELD_COLOR"
                         item-title="name"
                         item-value="id"
                         :rules="[rules.required]"
@@ -561,6 +558,7 @@ onMounted(async () => {
                       v-model="organizationAdd"
                       :items="organizations"
                       item-title="name"
+                      :base-color="FIELD_COLOR"
                       item-value="id"
                       :rules="[rules.required]"
                       label="Организация"
@@ -569,7 +567,7 @@ onMounted(async () => {
                   />
                   <v-textarea
                       variant="outlined"
-                      :rules="[rules.required]"
+                      :base-color="FIELD_COLOR"
                       label="Комментарий"
                       v-model="comment"
                       density="compact"
@@ -627,6 +625,7 @@ onMounted(async () => {
                     <v-text-field
                         v-model="filterForm.name"
                         color="green"
+                        :base-color="FIELD_COLOR"
                         rounded="md"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
@@ -644,6 +643,7 @@ onMounted(async () => {
                         variant="outlined"
                         label="Дата создания"
                         type="date"
+                        :base-color="FIELD_COLOR"
                         style="max-width: 30%"
                         v-model="filterForm.date"
                         density="compact"
@@ -659,6 +659,7 @@ onMounted(async () => {
                         label="Номер счёта"
                         density="compact"
                         rounded="md"
+                        :base-color="FIELD_COLOR"
                         color="green"
                         :append-inner-icon="filterForm.bill_number ? 'close' : ''"
                         @click:append-inner="filterForm.bill_number = null"
@@ -669,6 +670,7 @@ onMounted(async () => {
                         v-model="filterForm.currency_id"
                         :items="currencies"
                         item-title="name"
+                        :base-color="FIELD_COLOR"
                         item-value="id"
                         label="Валюта"
                         variant="outlined"
@@ -680,6 +682,7 @@ onMounted(async () => {
                       v-model="filterForm.organization_id"
                       :items="organizations"
                       item-title="name"
+                      :base-color="FIELD_COLOR"
                       item-value="id"
                       label="Организация"
                       variant="outlined"
@@ -688,6 +691,7 @@ onMounted(async () => {
                   <v-textarea
                       variant="outlined"
                       label="Комментарий"
+                      :base-color="FIELD_COLOR"
                       v-model="filterForm.comment"
                       density="compact"
                       rounded="md"

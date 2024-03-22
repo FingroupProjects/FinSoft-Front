@@ -8,6 +8,7 @@ import currency from '../../../api/currency.js';
 import organization from '../../../api/organizations.js';
 import employee from '../../../api/employee.js';
 import validate from "./validate.js"
+import {FIELD_COLOR} from "../../../composables/constant/colors.js";
 import {
   addMessage,
   editMessage,
@@ -464,6 +465,7 @@ watch(dialog, newVal => {
                   color="info"
                   rounded="lg"
                   clear-icon="close"
+                  :base-color="FIELD_COLOR"
                   hide-details
                   single-line
                   clearable
@@ -548,6 +550,7 @@ watch(dialog, newVal => {
                       v-model="nameRef"
                       :rules="[rules.required]"
                       color="green"
+                      :base-color="FIELD_COLOR"
                       rounded="md"
                       variant="outlined"
                       class="w-auto text-sm-body-1"
@@ -561,8 +564,10 @@ watch(dialog, newVal => {
                     <v-select
                         style="max-width: 50%; min-width: 50%;"
                         variant="outlined"
+                        :base-color="FIELD_COLOR"
                         label="Валюта"
                         v-model="currencyAdd"
+                      
                         :items="currencies"
                         item-title="name"
                         item-value="id"
@@ -570,6 +575,7 @@ watch(dialog, newVal => {
                     <v-select
                       style="max-width: 47%; min-width: 46%;"
                         variant="outlined"
+                        :base-color="FIELD_COLOR"
                         label="Ответственное лицо"
                         v-model="employeeAdd"
                         
@@ -584,6 +590,7 @@ watch(dialog, newVal => {
                       label="Организация"
                       v-model="organizationAdd"
                       :items="organizations"
+                      :base-color="FIELD_COLOR"
                       item-title="name"
                       item-value="id"
                   />
@@ -621,6 +628,7 @@ watch(dialog, newVal => {
                       v-model="filterForm.name"
                       color="green"
                       rounded="md"
+                      :base-color="FIELD_COLOR"
                       variant="outlined"
                       class="w-auto text-sm-body-1"
                       density="compact"
@@ -633,6 +641,7 @@ watch(dialog, newVal => {
                     <v-select
                         style="max-width: 50%; min-width: 50%;"
                         variant="outlined"
+                        :base-color="FIELD_COLOR"
                         label="Валюта"
                         v-model="filterForm.currency_id"
                         :items="currencies"
@@ -642,6 +651,7 @@ watch(dialog, newVal => {
                     <v-select
                       style="max-width: 47%; min-width: 46%;"
                         variant="outlined"
+                        :base-color="FIELD_COLOR"
                         label="Ответственное лицо"
                         v-model="filterForm.employee_id"
                         :items="employees"
@@ -653,6 +663,7 @@ watch(dialog, newVal => {
                   <v-select
                       variant="outlined"
                       label="Организация"
+                      :base-color="FIELD_COLOR"
                       v-model="filterForm.organization_id"
                       :items="organizations"
                       item-title="name"

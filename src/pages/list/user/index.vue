@@ -54,6 +54,8 @@ const organizations = ref([])
 const groups = ref([])
 const paginations = ref([])
 
+
+
 const headers = ref([
   {title: '№', key: 'id', align: 'start'},
   {title: 'ФИО', key: 'name', align: 'start'},
@@ -63,6 +65,19 @@ const headersGroup = ref([
   {title: '№', key: 'id', align: 'start'},
   {title: 'Название группы', key: 'name', align: 'start'},
 ])
+
+
+
+//filter
+const filterForm = ref({
+  name: null,
+  email: null,
+  phone: null,
+  login: null,
+  organization_id: null
+})
+
+const showModalDialog = ref(null)
 
 
 const rules = {
@@ -86,6 +101,9 @@ const getGroup = async ({page, itemsPerPage, sortBy}) => {
 }
 
 const getOrganization = async () => {
+  const filterData = filterForm.value
+  showModalDialog.value = false
+
   try {
     const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000})
     organizations.value = data.result.data.map(item => ({
@@ -132,7 +150,7 @@ const addUser = async ({page, itemsPerPage, sortBy}) => {
     groupValue = group.value
   }
 
-  console.log(groupValue)
+
 
   const formData = new FormData()
   formData.append('name', fioRef.value);
@@ -364,10 +382,12 @@ const lineMarkingGroup = (group_id) => {
 }
 
 const getUser = async ({page, itemsPerPage, sortBy, search}) => {
+  const filterData = filterForm.value
+  showModalDialog.value = false
   loading.value = true
   if (groupIdRef.value === 0) return loading.value = false
   try {
-    const { data } = await groupApi.getUsers({page, itemsPerPage, sortBy}, search, groupIdRef.value)
+    const { data } = await groupApi.getUsers({page, itemsPerPage, sortBy}, search, groupIdRef.value, filterData)
     paginations.value = data.result.pagination
     users.value = data.result.data
   } catch (e) {
@@ -375,6 +395,13 @@ const getUser = async ({page, itemsPerPage, sortBy, search}) => {
   } finally {
     loading.value = false
   }
+}
+
+const closeFilterDialog = () => {
+  showModalDialog.value = false
+  filterForm.value = {}
+  console.log(filterForm)
+  getUser({})
 }
 
 const toggleGroup = async () => {
@@ -417,9 +444,9 @@ onMounted(async () =>  {
               >
                 <span class="px-2 py-0">создать группу</span>
               </button>
-              <Icons @click="openDialog(0)" name="add"/>
-              <Icons @click="addBasedOnUser" name="copy"/>
-              <Icons @click="compute" name="delete"/>
+              <Icons title="Создать" @click="openDialog(0)" name="add"/>
+              <Icons title="Скопировать" @click="addBasedOnUser" name="copy"/>
+              <Icons title="Удалить" @click="compute" name="delete"/>
             </div>
             <v-text-field
                 v-model="search"
@@ -437,7 +464,7 @@ onMounted(async () =>  {
                 flat
             ></v-text-field>
           </div>
-          <Icons name="filter" class="mt-1"/>
+          <Icons title="фильтр" @click="showModalDialog = true" name="filter" class="mt-1"/>
         </v-card>
       </div>
       <div class="d-flex ga-4 w-100">
@@ -697,6 +724,119 @@ onMounted(async () =>  {
         <div v-if="isDialogPassword">
           <change-password @toggleDialogPassword="isDialogPassword = false" :id="idUser" />
         </div>
+        
+
+        <v-dialog class="mt-2 pa-2" v-model="showModalDialog">
+          <v-card style="border: 2px solid #3AB700" min-width="600"
+                  class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
+            <div class="d-flex justify-space-between align-center mb-2">
+              <span>Фильтр</span>
+              <div class="d-flex align-center justify-space-between">
+                <div class="d-flex ga-3 align-center mt-2 me-4">
+                <Icons @click="getUser" title="Сохранить" name="save"/>
+                </div>
+                <v-btn @click="closeFilterDialog" variant="text" :size="32" class="pt-2 pl-1">
+                  <Icons title="Закрыть" name="close"/>
+                </v-btn>
+              </div>
+            </div>
+            <v-form class="d-flex w-100" >
+              <v-row class="w-100">
+                <v-col class="d-flex flex-column w-100">
+                  <div class="d-flex" :style="isExistsUser ?? { width: '98%' }">
+                    <v-text-field
+                        v-model="filterForm.name"
+                        color="green"
+                        :base-color="FIELD_COLOR"
+                        variant="outlined"
+                        class="w-auto text-sm-body-1"
+                        density="compact"
+                        placeholder="Иван Иванов Иванович"
+                        label="ФИО"
+                        clear-icon="close"
+                        :append-inner-icon="fioRef ? 'close' : ''"
+                        @click:append-inner="fioRef = null"
+                    />
+                    <div class="mt-2 ms-4" v-if="isExistsUser">
+                      <CustomCheckbox @change="filterForm.status" :checked="filterForm.status">
+                        <span>Активный</span>
+                      </CustomCheckbox>
+                    </div>
+                  </div>
+                  <div class="d-flex w-100 ga-4">
+                    <div class="border d-flex justify-center align-center" style="width: 70%;">
+                      <input
+                          accept="image/*"
+                          type="file"
+                          @change="selectAvatar"
+                          style="display: none;"
+                          ref="fileInput"
+                      />
+                    </div>
+                    <div class="w-100">
+                      <v-select
+                          v-model="filterForm.organization_id"
+                          :items="organizations"
+                          color="green"
+                          :base-color="FIELD_COLOR"
+                          item-title="name"
+                          item-value="id"
+                          
+                          variant="outlined"
+                          label="Организация"
+                      />
+                      <v-text-field
+                          v-model="filterForm.login"
+                          
+                          color="green"
+                          :base-color="FIELD_COLOR"
+                          variant="outlined"
+                          class="w-auto text-sm-body-1"
+                          density="compact"
+                          placeholder="Ivan"
+                          label="Логин"
+                          clear-icon="close"
+                          :append-inner-icon="filterForm.login ? 'close' : ''"
+                          @click:append-inner="filterForm.login = null"
+                      />
+                    </div>
+                  </div>
+                  <div class="d-flex ga-4 mt-5">
+                    <v-text-field
+                        v-model="filterForm.phone"
+                        color="green"
+                        :base-color="FIELD_COLOR"
+                        variant="outlined"
+                        class="w-auto text-sm-body-1"
+                        density="compact"
+                        placeholder="+992119111881"
+                        label="Номер телефона"
+                        clear-icon="close"
+                        :append-inner-icon="filterForm.phone ? 'close' : ''"
+                        @click:append-inner="filterForm.phone = null"
+                        hide-details
+                    />
+                    <v-text-field
+                        v-model="filterForm.email"
+                        color="green"
+                        :base-color="FIELD_COLOR"
+                        variant="outlined"
+                        class="w-auto text-sm-body-1"
+                        density="compact"
+                        placeholder="ivan@gmail.com"
+                        label="Почта"
+                        clear-icon="close"
+                        :append-inner-icon="filterForm.email ? 'close' : ''"
+                        @click:append-inner="filterForm.email = null"
+                        hide-details
+                    />
+                  </div>
+                </v-col>
+              </v-row>
+            </v-form>
+          </v-card>
+        </v-dialog>
+
       </v-card>
     </v-col>
   </div>

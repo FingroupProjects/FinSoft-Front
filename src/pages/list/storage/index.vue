@@ -90,6 +90,14 @@ const headersStorageEmployee = ref([
   {title: 'Дата конец', key: 'to'},
 ])
 
+const filterForm = ref({
+  name: null,
+  organization_id: null,
+  employee_id: null
+})
+const filterDialog = ref(false)
+
+
 const rules = {
   required: v => !!v,
   date: v => (v && /^\d{2}-\d{2}-\d{4}$/.test(v)) || 'Формат даты должен быть DD-MM-YYYY',
@@ -113,6 +121,7 @@ const getGroup = async ({page, itemsPerPage, sortBy}) => {
 }
 
 const getStorageData = async ({page, itemsPerPage, sortBy, search}) => {
+
   loading.value = true
   try {
     const {data} = await storage.get({page, itemsPerPage, sortBy}, search)
@@ -275,6 +284,12 @@ const addStorageEmployee = async ({page, itemsPerPage, sortBy}) => {
 
 }
 
+const closeFilterDialog = () => {
+  filterDialog.value = false
+  filterForm.value = {}
+
+  getStorage({})
+}
 
 const massDel = async ({page, itemsPerPage, sortBy, search}) => {
 
@@ -600,8 +615,11 @@ const lineMarkingGroup = group_id => {
 
 const getStorage = async ({page, itemsPerPage, sortBy, search}) => {
   try {
+    const filterData = filterForm.value
+    console.log(filterData)
+    filterDialog.value = false
     loading.value = true
-    const { data } = await storageGroup.getStorages({page, itemsPerPage, sortBy}, search, groupIdRef.value)
+    const { data } = await storageGroup.getStorages({page, itemsPerPage, sortBy}, search, groupIdRef.value, filterData)
     paginations.value = data.result.pagination
     storages.value = data.result.data
   } catch (e) {
@@ -678,7 +696,7 @@ onMounted(async () => {
               ></v-text-field>
             </div>
           </div>
-          <Icons name="filter" class="mt-1"/>
+          <Icons title="фильтр" @click="filterDialog = true" name="filter" class="mt-1"/>
         </v-card>
       </div>
 
@@ -977,6 +995,63 @@ onMounted(async () => {
         </v-dialog>
 
       </v-card>
+
+      <v-dialog class="mt-2 pa-2" v-model="filterDialog">
+          <v-card style="border: 2px solid #3AB700" min-width="450"
+                  class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
+            <div class="d-flex justify-space-between align-center mb-2">
+              <span>Фильтр</span>
+              <div class="d-flex align-center justify-space-between">
+                <div class="d-flex ga-3 align-center mt-2 me-4">
+                  <Icons title="Сохранить" @click="getStorage" name="save"/>
+                </div>
+                <v-btn @click="closeFilterDialog" variant="text" :size="32" class="pt-2 pl-1">
+                  <Icons title="Закрыть" name="close"/>
+                </v-btn>
+              </div>
+            </div>
+            <v-form class="d-flex w-100">
+              <v-row class="w-100">
+                <v-col class="d-flex flex-column w-100">
+                  <v-text-field
+                      v-model="filterForm.name"
+                      color="green"
+                      :base-color="FIELD_COLOR"
+                      variant="outlined"
+                      class="w-auto text-sm-body-1"
+                      density="compact"
+                      placeholder="Наименование"
+                      label="Название"
+                      clear-icon="close"
+                      clearable
+                  />
+                  <v-select
+                      variant="outlined"
+                      label="Выберите организацию"
+                      :base-color="FIELD_COLOR"
+                      color="green"
+                      item-color="green"
+                      v-model="filterForm.organization_id"
+                      :items="organizations"
+                      item-title="name"
+                      item-value="id"
+                  />
+                  <v-select
+                      v-model="filterForm.employee_id"
+                      :items="employees"
+                      item-title="name"
+                      item-value="id"
+                      :base-color="FIELD_COLOR"
+                      color="green"
+                      item-color="green"
+                      variant="outlined"
+                      label="Сотрудник"
+                  />
+                </v-col>
+              </v-row>
+            </v-form>
+            </v-card>
+            </v-dialog>
 
     </v-col>
   </div>
