@@ -39,6 +39,12 @@ const valueRef = ref(null)
 
 const positions = ref([])
 const paginations = ref([])
+const showModal = ref(false);
+const showConfirmDialog = ref(false);
+
+const toggleModal = () => {
+  showModal.value = !showModal.value;
+};
 
 const headers = ref([
   { title: '№', key: 'id', align: 'start'},
@@ -164,6 +170,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
       showToast(editMessage)
 
       dialog.value = false
+      cleanForm()
     }
   } catch (e) {
     console.log(e)
@@ -231,6 +238,48 @@ const lineMarking = (item) => {
     markedID.value.push(item.id);
   }
   markedItem.value = item;
+}
+
+const isDataChanged = () => {
+  const item = position.value.find(
+    (item) => item.id === idPosition.value
+  );
+
+  const isChanged =
+    nameRef.value !== item.name 
+  return isChanged;
+};
+
+const checkAndClose = () => {
+  console.log(1);
+  if (
+    nameRef.value 
+  ) {
+    showConfirmDialog.value = true;
+  } else {
+    dialog.value = false;
+    showModal.value = false;
+  }
+};
+
+const closeDialogWithoutSaving = () => {
+  dialog.value = false;
+  showModal.value = false
+  showConfirmDialog.value = false;
+  cleanForm();
+};
+
+const checkUpdate = () => {
+  if (isDataChanged()) {
+    showConfirmDialog.value = true;
+  } else {
+    dialog.value = false;
+  }
+
+};
+
+const cleanForm = () => {
+  nameRef.value = null
 }
 
 
@@ -336,9 +385,15 @@ watch(dialog, newVal => {
                   <Icons title="Сохранить" v-if="isExistsPosition" @click="update" name="save"/>
                   <Icons title="Сохранить" v-else @click="addPosition" name="save"/>
                 </div>
-                <v-btn @click="dialog = false"  variant="text" :size="32" class="pt-2 pl-1">
-                  <Icons title="Закрыть" name="close" />
-                </v-btn>
+                <v-btn
+                @click="toggleModal() ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
+                
+                variant="text"
+                :size="32"
+                class="pt-2 pl-1"
+              >
+                <Icons name="close" title="Закрыть" />
+              </v-btn>
               </div>
             </div>
             <v-form class="d-flex w-100" @submit.prevent="addPosition">
@@ -405,8 +460,11 @@ watch(dialog, newVal => {
         </v-dialog>
 
       </v-card>
-
+      <div v-if="showModal">
+        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" />
+      </div>
     </v-col>
+    
   </div>
 
 

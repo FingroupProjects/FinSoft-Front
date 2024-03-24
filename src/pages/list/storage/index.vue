@@ -7,6 +7,7 @@ import storage from '../../../api/storage.js';
 import employee from '../../../api/employee.js';
 import organization from '../../../api/organizations.js';
 import showDate from "../../../composables/date/showDate.js";
+import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 
 import {
   addMessage,
@@ -24,6 +25,7 @@ import {FIELD_COLOR} from "../../../composables/constant/colors.js";
 import validate from "./validate.js";
 
 const router = useRouter()
+const showConfirmDialog = ref(false);
 const groupDialog = ref(false)
 const loading = ref(true)
 const loadingGroup = ref(true)
@@ -71,6 +73,12 @@ const groups = ref([])
 const paginations = ref([])
 const paginationsGroup = ref([])
 const paginationsStorageData = ref([])
+const showModal = ref(false);
+
+const toggleModal = () => {
+  showModal.value = !showModal.value;
+  console.log('openModal');
+};
 
 
 const headers = ref([
@@ -232,6 +240,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
       organizationAdd.value = null
 
       dialog.value = null
+      cleanForm()
       await getStorageData({page, itemsPerPage, sortBy})
       markedID.value = []
       showToast(editMessage)
@@ -630,6 +639,55 @@ const getStorage = async ({page, itemsPerPage, sortBy, search}) => {
     loading.value = false
   }
 }
+const isDataChanged = () => {
+  const item = storages.value.find(
+    (item) => item.id === idStorage.value
+  );
+
+  const isChanged =
+    nameRef.value !== item.name ||
+    organizationAdd.value.id !== item.organization.id ||
+    group .value.id !== item.group.id
+
+  return isChanged;
+};
+
+const cleanForm = () => {
+  nameRef.value = null;
+  organizationAdd.value = null;
+  group.value = null;
+};
+
+
+const checkAndClose = () => {
+  console.log(1);
+  if (
+    nameRef.value ||
+    organizationAdd.value ||
+    group.value 
+  ) {
+    showConfirmDialog.value = true;
+  } else {
+    dialog.value = false;
+    showModal.value = false;
+  }
+};
+
+const closeDialogWithoutSaving = () => {
+  dialog.value = false;
+  showModal.value = false
+  showConfirmDialog.value = false;
+  cleanForm();
+};
+
+const checkUpdate = () => {
+  if (isDataChanged()) {
+    showConfirmDialog.value = true;
+  } else {
+    dialog.value = false;
+  }
+
+};
 
 watch(dialog, newVal => {
   if (!newVal) {
@@ -803,9 +861,15 @@ onMounted(async () => {
                   <Icons v-if="isExistsStorage" @click="update" name="save"/>
                   <Icons v-else @click="addStorage" name="save"/>
                 </div>
-                <v-btn @click="dialog = false" variant="text" :size="32" class="pt-2 pl-1">
-                  <Icons name="close"/>
-                </v-btn>
+                <v-btn
+                @click="toggleModal() ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
+                
+                variant="text"
+                :size="32"
+                class="pt-2 pl-1"
+              >
+                <Icons name="close" title="Закрыть" />
+              </v-btn>
               </div>
             </div>
             <v-form class="d-flex w-100" @submit.prevent="addStorage">
@@ -1065,6 +1129,9 @@ onMounted(async () => {
           </v-form>
         </v-card>
       </v-dialog>
+      <div v-if="showModal">
+        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" />
+      </div>
     </v-col>
   </div>
   <!-- Group Modal -->

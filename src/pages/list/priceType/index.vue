@@ -8,7 +8,7 @@ import priceType from '../../../api/priceType.js';
 import currency from '../../../api/currency.js';
 import {FIELD_COLOR} from "../../../composables/constant/colors.js";
 import validate from "./validate.js";
-const showConfirmDialog = ref(false)
+import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import {
   addMessage,
   editMessage,
@@ -43,6 +43,12 @@ const nameRef = ref(null)
 const descriptionRef = ref(null)
 const priceTypes = ref([])
 const paginations = ref([])
+const showConfirmDialog = ref(false);
+const showModal = ref(false);
+
+const toggleModal = () => {
+  showModal.value = !showModal.value;
+};
 
 const filterForm = ref({
     name: null,
@@ -76,43 +82,6 @@ const getPriceTypeData = async ({page, itemsPerPage, sortBy, search}) => {
   } catch (e) {
   }
 }
-
-const isDataChanged = () => {
-
-  const item = priceTypes.value.find(item => item.id === idPriceType.value)
-
-  const isChanged =
-    nameRef.value !== item.name ||
-    descriptionRef.value !== item.description ||
-    currencyAdd.value !== item.currency.id;
-  return isChanged;
-};
-
-
-const closeDialogWithoutSaving = () => {
-  dialog.value = false;
-  showConfirmDialog.value = false;
-};
-const checkUpdate = () => {
-    if(isDataChanged() === true){
-      showConfirmDialog.value = true
-    }
-    else {
-      dialog.value = false
-    }
-}
-const checkAndClose = () => {
-  if (nameRef.value || descriptionRef.value || currencyAdd.value) {
-    showConfirmDialog.value = true;
-  } else {
-    dialog.value = false;
-  }
-};
-
-
-
-
-
 const addPriceType = async ({page, itemsPerPage, sortBy}) => {
   if (validate(nameRef,currencyAdd,descriptionRef) !== true) return
   const body = {
@@ -201,6 +170,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
       currencyUpdate.value = null;
 
       dialog.value = null
+      cleanForm()
       await getPriceTypeData({page, itemsPerPage, sortBy})
       showToast(editMessage)
     }
@@ -316,7 +286,56 @@ const cleanFilterForm = () => {
   filterForm.value = {}
 }
 
+const isDataChanged = () => {
+  const item = priceTypes.value.find(
+    (item) => item.id === idPriceType.value
+  );
 
+  const isChanged =
+    nameRef.value !== item.name ||
+    currencyAdd.value !== item.currency.id ||
+    descriptionRef.value.id !== item.descriptionRef
+
+  return isChanged;
+};
+
+const checkAndClose = () => {
+  if (
+    nameRef.value ||
+    currencyAdd.value ||
+    descriptionRef.value 
+  ) {
+    showConfirmDialog.value = true;
+  } else {
+    dialog.value = false;
+    showModal.value = false;
+  }
+};
+
+const closeDialogWithoutSaving = () => {
+  dialog.value = false;
+  showModal.value = false
+  showConfirmDialog.value = false;
+  cleanForm();
+};
+
+const checkUpdate = () => {
+  if (isDataChanged()) {
+    showConfirmDialog.value = true;
+  } else {
+    dialog.value = false;
+  }
+
+};
+
+const cleanForm = () => {
+  nameRef.value = null;
+  innRef.value = null;
+  directorRef.value = null;
+  accountantRef.value = null;
+  addressRef.value = null;
+  descriptionRef.value = null;
+};
 
 watch(dialog, newVal => {
   if (!newVal) {
@@ -433,10 +452,15 @@ onMounted(async () => {
                   <Icons title="Сохранить" v-if="isExistsPriceType" @click="update" name="save"/>
                   <Icons title="Сохранить" v-else @click="addPriceType" name="save"/>
                 </div>
-                <v-btn @click="isExistsPriceType ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData }) "
-                  variant="text" :size="32" class="pt-2 pl-1">
-                  <Icons name="close"   title="Закрыть"/>
-                </v-btn>
+                <v-btn
+                @click="toggleModal() ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
+                
+                variant="text"
+                :size="32"
+                class="pt-2 pl-1"
+              >
+                <Icons name="close" title="Закрыть" />
+              </v-btn>
               </div>
             </div>
             <v-form class="d-flex w-100" @submit.prevent="addPriceType">
@@ -540,29 +564,9 @@ onMounted(async () => {
           </v-card>
         </v-dialog>
       </v-card>
-
-      <v-dialog style="min-width: 300px;"  v-model="showConfirmDialog" persistent>
-  <v-card style="max-width: 400px;" class="mx-auto flex flex-col">
-    <v-card-title class="text-h6"
-    >Подтверждение</v-card-title>
-    <v-card-text class="text-subtitle-1">Точно хотите закрыть? Введенные данные не будут сохранены.</v-card-text>
-    <v-card-actions>
-      <v-btn @click="showConfirmDialog = false"
-        class="text-none mb-4 w-[200px] h-[20px]"
-        color="red"
-        variant="flat"
-      >Нет</v-btn>
-      <v-btn @click="closeDialogWithoutSaving"
-        class="text-none mb-4 w-[200px] h-[20px]"
-        color="green"
-        variant="flat"
-      >Да</v-btn>
-    </v-card-actions>
-  </v-card>
-</v-dialog>
-
-
-
+      <div v-if="showModal">
+        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" />
+      </div>
     </v-col>
   </div>
 
