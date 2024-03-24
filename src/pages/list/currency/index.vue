@@ -11,6 +11,7 @@ import {
 } from "../../../composables/constant/buttons.js";
 import Icons from "../../../composables/Icons/Icons.vue";
 import showDate from "../../../composables/date/showDate.js";
+import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import validate from "./validate.js";
 import {FIELD_COLOR} from "../../../composables/constant/colors.js";
@@ -25,13 +26,13 @@ const dialog = ref(false)
 const rateDialog = ref(false)
 
 const idCurrencyRate = ref(null)
+const showConfirmDialog = ref(false);
 const isExistsCurrency = ref(false)
 const isExistsCurrencyRate = ref(false)
 const idCurrency = ref(null)
 const currencyInDialogTitle = ref(null)
 const search = ref('')
 const filterModal = ref(null)
-const showConfirmDialog = ref(false)
 const count = ref(0)
 
 const hoveredRowIndex = ref(null)
@@ -48,6 +49,12 @@ const symbolRef = ref(null)
 const digitalRef = ref(null)
 const dateRef = ref(null)
 const valueRef = ref(null)
+const showModal = ref(false);
+
+const toggleModal = () => {
+  showModal.value = !showModal.value;
+  // console.log('openModal');
+};
 
 
 const filterForm = ref({
@@ -114,80 +121,56 @@ const getCurrencyData = async ({page, itemsPerPage, sortBy, search}) => {
 
 
 
-
-
-
-
+// name: nameRef.value,
+//     digital_code: digitalRef.value,
+//     symbol_code: symbolRef.value
 const isDataChanged = () => {
-  
-  const item = currencies.value.find(item => item.id === idCurrency.value)
+  const item = currencies.value.find(
+    (item) => item.id === idCurrency.value
+  );
 
   const isChanged =
-    nameRef.value !== item.name ||
-    digitalRef.value != item.digital_code ||
-    symbolRef.value !== item.symbol_code
+  nameRef.value !== item.name ||
+  digitalRef.value !== item.digital_code ||
+  symbolRef.value !== item.symbol_code 
+
   return isChanged;
 };
-const isRateChanged = () => {
 
-  const item = rates.value.find(item => item.id === idCurrencyRate.value)
-  console.log(item)
-  const isChanged =
-    valueRef.value !== item.name ||
-    showDate(dateRef.value) != item.date
-  return isChanged;
-}
+const checkAndClose = () => {
+  console.log(1);
+  if (
+    nameRef.value ||
+    digitalRef.value ||
+    symbolRef.value 
+  ) {
+    showConfirmDialog.value = true;
+  } else {
+    dialog.value = false;
+    showModal.value = false;
+  }
+};
 
 const closeDialogWithoutSaving = () => {
-  
-  if(rateDialog.value) {
-    rateDialog.value = false
-  }
-  else {
-    dialog.value = false;
-  }
+  dialog.value = false;
+  showModal.value = false
   showConfirmDialog.value = false;
+  cleanForm();
 };
+
 const checkUpdate = () => {
-
-    if(isDataChanged() === true){
-      showConfirmDialog.value = true
-    }
-    else {
-      dialog.value = false
-    }
-
-}
-const checkRateUpdate = () => {
-   
-    if(isRateChanged() === true){
-      showConfirmDialog.value = true
-    }
-    else {
-      rateDialog.value = false
-    }
-}
-const checkAndClose = () => {
-
-  if (nameRef.value || digitalRef.value || symbolRef.value) {
+  if (isDataChanged()) {
     showConfirmDialog.value = true;
   } else {
     dialog.value = false;
   }
-  
+
 };
-
-const checkRateAndClose = () => {
-  
-  if (valueRef.value) {
-    showConfirmDialog.value = true;
-  } else {
-    rateDialog.value = false;
-  }
-}
-
-
-
+const cleanForm = () => {
+  nameRef.value = null;
+  digitalRef.value = null;
+  symbolRef.value = null;
+};
 
 const getCurrencyRateData = async ({page, itemsPerPage, sortBy, search}) => {
   if (idCurrency.value === 0) {
@@ -261,6 +244,7 @@ const update = async ({page, itemsPerPage, sortBy, search}) => {
     if (status === 200) {
       await getCurrencyData({page, itemsPerPage, sortBy, search})
       showToast(editMessage)
+      cleanForm()
     }
   } catch (e) {
     console.log(e)
@@ -622,10 +606,15 @@ watch(rateDialog, newVal => {
                   <Icons title="Сохранить"  v-if="isExistsCurrency" @click="update" name="save"/>
                   <Icons title="Сохранить"  v-else @click="addCurrency" name="save"/>
                 </div>
-                <v-btn @click="isExistsCurrency ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData }) "
-                  variant="text" :size="32" class="pt-2 pl-1">
-                  <Icons name="close"   title="Закрыть"/>
-                </v-btn>
+                <v-btn
+                @click="toggleModal() ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
+                
+                variant="text"
+                :size="32"
+                class="pt-2 pl-1"
+              >
+                <Icons name="close" title="Закрыть" />
+              </v-btn>
               </div>
             </div>
             <v-form class="d-flex w-100" @submit.prevent="addCurrency">
@@ -865,25 +854,9 @@ watch(rateDialog, newVal => {
       </v-card>
     
 
-<v-dialog style="min-width: 300px;"  v-model="showConfirmDialog" persistent>
-  <v-card style="max-width: 400px;" class="mx-auto flex flex-col">
-    <v-card-title class="text-h6"
-    >Подтверждение</v-card-title>
-    <v-card-text class="text-subtitle-1">Точно хотите закрыть? Введенные данные не будут сохранены.</v-card-text>
-    <v-card-actions>
-      <v-btn @click="showConfirmDialog = false"
-        class="text-none mb-4 w-[200px] h-[20px]"
-        color="red"
-        variant="flat"
-      >Нет</v-btn>
-      <v-btn @click="closeDialogWithoutSaving"
-        class="text-none mb-4 w-[200px] h-[20px]"
-        color="green"
-        variant="flat"
-      >Да</v-btn>
-    </v-card-actions>
-  </v-card>
-</v-dialog>
+      <div v-if="showModal">
+        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" />
+      </div>
 
     </v-col>
   </div>

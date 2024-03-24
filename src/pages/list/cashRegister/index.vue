@@ -8,6 +8,7 @@ import currency from '../../../api/currency.js';
 import organization from '../../../api/organizations.js';
 import employee from '../../../api/employee.js';
 import validate from "./validate.js"
+import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import {FIELD_COLOR} from "../../../composables/constant/colors.js";
 import {
   addMessage,
@@ -25,6 +26,7 @@ import {restoreMessage} from "../../../composables/constant/buttons.js";
 const router = useRouter()
 
 const loading = ref(true)
+const showConfirmDialog = ref(false);
 const loadingRate = ref(true)
 const dialog = ref(false)
 const digitalRef = ref(null)
@@ -59,7 +61,12 @@ const valueRef = ref(null)
 
 const cashRegisters = ref([])
 const paginations = ref([])
-const showConfirmDialog = ref(false)
+const showModal = ref(false);
+
+const toggleModal = () => {
+  showModal.value = !showModal.value;
+  // console.log('openModal');
+};
 
 
 
@@ -81,35 +88,56 @@ const headers = ref([
 ])
 
 
+
 const isDataChanged = () => {
-  
-  const item = cashRegisters.value.find(item => item.id === idCashRegister.value)
+  const item = cashRegisters.value.find(
+    (item) => item.id === idCashRegister.value
+  );
+
   const isChanged =
-    nameRef.value !== item.name ||
-    employeeAdd.value !== item.responsiblePerson.id ||
-    organizationAdd.value !== item.organization.id ||
-    currencyAdd.value !== item.currency.id
+  nameRef.value !== item.name ||
+  currencyAdd.value !== item.currency.id ||
+  organizationAdd.value.id !== item.organization.id ||
+  employeeAdd.value.id !== item.responsible_person.id 
+
   return isChanged;
 };
-const closeDialogWithoutSaving = () => {
-  dialog.value = false;
-  showConfirmDialog.value = false;
-};
-const checkUpdate = () => {
-    if(isDataChanged() === true){
-      showConfirmDialog.value = true
-    }
-    else {
-      dialog.value = false
-    }
-}
+
 const checkAndClose = () => {
-  if (nameRef.value || currencyAdd.value || organizationAdd.value  || employeeAdd.value) {
+  console.log(1);
+  if (
+    nameRef.value ||
+    currencyAdd.value ||
+    organizationAdd.value ||
+    employeeAdd.value 
+  ) {
     showConfirmDialog.value = true;
   } else {
-    console.log(1);
+    dialog.value = false;
+    showModal.value = false;
+  }
+};
+
+const closeDialogWithoutSaving = () => {
+  dialog.value = false;
+  showModal.value = false
+  showConfirmDialog.value = false;
+  cleanForm();
+};
+
+const checkUpdate = () => {
+  if (isDataChanged()) {
+    showConfirmDialog.value = true;
+  } else {
     dialog.value = false;
   }
+
+};
+const cleanForm = () => {
+  nameRef.value = null;
+  currencyAdd.value = null;
+  organizationAdd.value = null;
+  employeeAdd.value = null;
 };
 
 
@@ -230,6 +258,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
       currencyUpdate.value = null;
 
       dialog.value = null
+      cleanForm()
       await getcashRegisterData({page, itemsPerPage, sortBy})
       showToast(editMessage)
     }
@@ -537,10 +566,15 @@ watch(dialog, newVal => {
                   <Icons title="Сохранить" v-if="isExistsCashRegister" @click="update" name="save"/>
                   <Icons title="Сохранить" v-else @click="addcashRegister" name="save"/>
                 </div>
-                <v-btn @click="isExistsCashRegister ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search }) "
-                  variant="text" :size="32" class="pt-2 pl-1">
-                  <Icons name="close"   title="Закрыть"/>
-                </v-btn>
+                <v-btn
+                @click="toggleModal() ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
+                
+                variant="text"
+                :size="32"
+                class="pt-2 pl-1"
+              >
+                <Icons name="close" title="Закрыть" />
+              </v-btn>
               </div>
             </div>
             <v-form class="d-flex w-100" @submit.prevent="addcashRegister">
@@ -677,25 +711,9 @@ watch(dialog, newVal => {
           </v-card>
         </v-dialog>
         
-        <v-dialog style="min-width: 300px;"  v-model="showConfirmDialog" persistent>
-  <v-card style="max-width: 400px;" class="mx-auto flex flex-col">
-    <v-card-title class="text-h6"
-    >Подтверждение</v-card-title>
-    <v-card-text class="text-subtitle-1">Точно хотите закрыть? Введенные данные не будут сохранены.</v-card-text>
-    <v-card-actions>
-      <v-btn @click="showConfirmDialog = false"
-        class="text-none mb-4 w-[200px] h-[20px]"
-        color="red"
-        variant="flat"
-      >Нет</v-btn>
-      <v-btn @click="closeDialogWithoutSaving"
-        class="text-none mb-4 w-[200px] h-[20px]"
-        color="green"
-        variant="flat"
-      >Да</v-btn>
-    </v-card-actions>
-  </v-card>
-</v-dialog>
+        <div v-if="showModal">
+        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" />
+      </div>
 
       </v-card>
     </v-col>

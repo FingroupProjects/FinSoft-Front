@@ -44,6 +44,7 @@ const imagePreview = ref(null)
 const fileInput = ref(null)
 
 const paginations = ref([])
+const showConfirmDialog = ref(false);
 const showModal = ref(false);
 
 const toggleModal = () => {
