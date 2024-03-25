@@ -57,7 +57,7 @@ label {
 }
 
 .v-select__menu-icon {
-  color: green;
+  color: #008000;
   font-size: 28px !important;
 }
 
@@ -68,4 +68,5 @@ label {
   height: 25px;
   font-size: 12px;
   border: 1px solid red;
+  padding: 0 5px;
 }
