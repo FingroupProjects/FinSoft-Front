@@ -6,6 +6,7 @@ import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import CreateGroup from "./createGroup.vue"
 import ChangePassword from "./changePassword.vue";
+import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import {
   editMessage,
   removeMessage,
@@ -19,7 +20,11 @@ import user from "../../../api/user.js";
 import validate from "./validate.js";
 import groupApi from "../../../api/userGroup.js";
 import {FIELD_COLOR} from "../../../composables/constant/colors.js";
-
+const showModal = ref(false);
+const showConfirmDialog = ref(false);
+const toggleModal = () => {
+  showModal.value = !showModal.value;
+};
 const router = useRouter()
 
 const loading = ref(true)
@@ -62,6 +67,8 @@ const organizations = ref([])
 const groups = ref([])
 const paginations = ref([])
 const paginationsGroup = ref([])
+const count = ref(0)
+
 
 const filterForm = ref({
   name: null,
@@ -104,6 +111,78 @@ const getGroup = async ({page, itemsPerPage, sortBy}) => {
     loadingGroup.value = false
   }
 }
+
+
+
+const isDataChanged = () => {
+  const item = users.value.find(
+    (item) => item.id === idUser.value
+  );
+
+  console.log(123)
+
+  
+
+
+    const isChanged =
+      fioRef.value !== item.name ||
+      emailRef.value !== item.email ||
+      loginRef.value !== item.login ||
+      statusRef.value !== item.status
+
+  return isChanged;
+};
+
+
+function countFilter() {
+   
+   for (const key in filterForm.value) {
+       if (filterForm.value[key] !== null) {
+           count.value++;
+       }
+   }
+   
+   return count;
+}
+
+const checkAndClose = () => {
+  
+  if (
+    fioRef.value || emailRef.value || phoneRef.value || loginRef.value || passwordRef.value || imageRef.value
+  ) {
+    
+    showModal.value = true;
+  } else {
+    dialog.value = false;
+    showModal.value = false;
+  }
+};
+const closeDialogWithoutSaving = () => {
+  dialog.value = false;
+  showModal.value = false
+  showConfirmDialog.value = false;
+  cleanForm();
+};
+const checkUpdate = () => {
+  if (isDataChanged()) {
+     showModal.value = true;
+  } else {
+    dialog.value = false;
+  }
+};
+const cleanForm = () => {
+  fioRef.value = null
+  statusRef.value = null
+  loginRef.value = null
+  passwordRef.value = null
+  phoneRef.value = null
+  emailRef.value = null
+  imageRef.value = null
+  imagePreview.value = null
+}
+
+
+
 
 const getOrganization = async () => {
   try {
@@ -272,36 +351,6 @@ const restore = async ({page, itemsPerPage, sortBy, search}) => {
 }
 
 
-const filter = async ({ page, itemsPerPage, sortBy, search }) => {
-  loading.value = true;
-  const filterData = {
-    name: fioFilter.value,
-    organization_id: organizationFilter.value,
-    login: loginFilter.value,
-    phone: phoneFilter.value,
-    email: emailFilter.value,
-    group_id: groupFilter.value,
-  };
-  console.log(filterData);
-
-  try {
-    await getUser({
-      page,
-      itemsPerPage,
-      sortBy,
-      search,
-      filterData,
-    });
-    filterModal.value = false;
-    fioFilter.value = null;
-    organizationFilter.value = null;
-    loginFilter.value = null;
-    phoneFilter.value = null;
-    emailFilter.value = null;
-    groupFilter.value = null;
-  } catch (e) {}
-};
-
 const closeFilterModal = async ({
   page,
   itemsPerPage,
@@ -447,6 +496,10 @@ const getUser = async ({page, itemsPerPage, sortBy, search}) => {
   const filterData = filterForm.value
   showModalDialog.value = false
   loading.value = true
+  count.value = 0
+  countFilter()
+
+
   if (groupIdRef.value === 0) return loading.value = false
   try {
     const { data } = await groupApi.getUsers({page, itemsPerPage, sortBy}, search, groupIdRef.value, filterData)
@@ -525,7 +578,16 @@ onMounted(async () =>  {
                 flat
             ></v-text-field>
           </div>
-          <Icons title="фильтр" @click="showModalDialog = true" name="filter" class="mt-1"/>
+          <div class="filterElement">
+            <Icons
+              name="filter"
+              title="фильтр"
+              @click="showModalDialog = true"
+              class="mt-1"
+            />
+
+            <span v-if="count !== 0" class="countFilter">{{ count }}</span>
+          </div>
         </v-card>
       </div>
       <div class="d-flex ga-4 w-100">
@@ -632,14 +694,13 @@ onMounted(async () =>  {
                 <div class="d-flex ga-3 align-center mt-2 me-4">
                   <Icons v-if="isExistsUser"  @click="compute" name="delete"/>
                   <div v-if="isExistsUser" @click="update">
-                    <Icons name="save"/>
+                    <Icons title="Сохранить" name="save"/>
                   </div>
-                  <Icons v-else @click="addUser" name="save"/>
+                  <Icons title="Сохранить" v-else @click="addUser" name="save"/>
                 </div>
                 <v-btn
-                @click="
-                  dialog = false                  
-                "
+                @click="isExistsUser ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
+
                 variant="text"
                 :size="32"
                 class="pt-2 pl-1"
@@ -912,6 +973,10 @@ onMounted(async () =>  {
           </v-card>
         </v-dialog>
 
+        <div v-if="showModal">
+        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" />
+      </div>
+
       </v-card>
     </v-col>
   </div>
@@ -920,5 +985,21 @@ onMounted(async () =>  {
 </template>
 
 <style scoped>
-
+.filterElement {
+  position: relative;
+}
+.countFilter {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #82abf6;
+  border-radius: 50%;
+  font-size: 10px;
+  color: white;
+}
 </style>
