@@ -6,6 +6,7 @@ import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import CreateGroup from "./createGroup.vue"
 import ChangePassword from "./changePassword.vue";
+import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import {
   editMessage,
   removeMessage,
@@ -23,6 +24,12 @@ import {FIELD_COLOR} from "../../../composables/constant/colors.js";
 const router = useRouter()
 
 const loading = ref(true)
+const showModal = ref(false);
+
+const toggleModal = () => {
+  showModal.value = !showModal.value;
+  // console.log('openModal');
+};
 const loadingGroup = ref(true)
 const dialog = ref(false)
 const isDialogPassword = ref(false)

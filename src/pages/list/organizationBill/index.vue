@@ -10,6 +10,7 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showDate from "../../../composables/date/showDate.js";
 import validate from "./validate.js";
 import { FIELD_COLOR } from "../../../composables/constant/colors.js";
+import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import {
   addMessage,
   editMessage,
@@ -32,6 +33,12 @@ const bill_number = ref(null);
 
 const comment = ref(null);
 const organizationAdd = ref(null);
+const showModal = ref(false);
+
+const toggleModal = () => {
+  showModal.value = !showModal.value;
+  // console.log('openModal');
+};
 
 const currencies = ref([]);
 
@@ -86,11 +93,11 @@ function countFilter() {
 
 const closeDialogWithoutSaving = () => {
   dialog.value = false;
-  showConfirmDialog.value = false;
+  showModal.value = false;
 };
 const checkUpdate = () => {
   if (isDataChanged() === true) {
-    showConfirmDialog.value = true;
+    showModal.value = true;
   } else {
     dialog.value = false;
   }
@@ -104,7 +111,7 @@ const checkAndClose = () => {
     dateRef.value ||
     descriptionRef.value
   ) {
-    showConfirmDialog.value = true;
+    showModal.value = true;
   } else {
     dialog.value = false;
   }
@@ -655,46 +662,12 @@ onMounted(async () => {
         </v-dialog>
       </v-card>
 
-      <v-dialog style="min-width: 300px" v-model="showConfirmDialog" persistent>
-        <v-card
-          style="max-width: 400px; border-radius: 16px"
-          class="mx-auto flex flex-col"
-        >
-          <v-card-title
-            class="d-flex justify-space-between align-center text-h6"
-          >
-            <span>Подтверждение</span>
-            <v-btn
-              @click="showConfirmDialog = false"
-              variant="text"
-              :size="32"
-              class="pt-2 pl-1"
-            >
-              <Icons name="close" title="Закрыть" />
-            </v-btn>
-          </v-card-title>
-          <v-card-text class="text-subtitle-1"
-            >Точно хотите закрыть? Введенные данные не будут
-            сохранены.</v-card-text
-          >
-          <v-card-actions class="d-flex justify-end align-end">
-            <v-btn
-              @click="showConfirmDialog = false"
-              class="text-none w-[200px] h-[20px]"
-              color="red"
-              variant="flat"
-              >Нет</v-btn
-            >
-            <v-btn
-              @click="closeDialogWithoutSaving"
-              class="text-none w-[200px] h-[20px]"
-              color="green"
-              variant="flat"
-              >Да</v-btn
-            >
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
+      
+      <div v-if="showModal">
+        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" />
+      </div>
+
+
       <v-card>
         <v-dialog class="mt-2 pa-2" v-model="filterModal">
           <v-card

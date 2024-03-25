@@ -213,6 +213,7 @@ const update = async ({ page, itemsPerPage, sortBy, search }) => {
 
     cleanForm();
     toggleModal();
+    
     addDialog.value = false;
     showModal.value = true;
   } catch (e) {}
