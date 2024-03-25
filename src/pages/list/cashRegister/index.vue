@@ -112,7 +112,7 @@ const isDataChanged = () => {
 };
 
 const checkAndClose = () => {
-  console.log(1);
+  
   if (
     nameRef.value ||
     currencyAdd.value ||
@@ -599,7 +599,7 @@ watch(dialog, newVal => {
                   <Icons title="Сохранить" v-else @click="addcashRegister" name="save"/>
                 </div>
                 <v-btn
-                @click="isExistsCashRegister ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
+                @click="isExistsCashRegister ? checkUpdate : checkAndClose"
                 
                 variant="text"
                 :size="32"
