@@ -60,6 +60,8 @@ const filterForm = ref({
   description: null,
 });
 
+const count = ref(0)
+
 const rules = {
   required: (value) => !!value || "Поле обязательно для заполнения",
 };
@@ -70,6 +72,9 @@ const headers = ref([
 ]);
 
 const getOrganizationData = async ({ page, itemsPerPage, sortBy, search}) => {
+  count.value = 0
+  countFilter()
+
   const filterData = filterForm.value
   filterModal.value = false
   loading.value = true;
@@ -353,8 +358,18 @@ const isDataChanged = () => {
   return isChanged;
 };
 
+function countFilter() {
+   
+   for (const key in filterForm.value) {
+       if (filterForm.value[key] !== null) {
+           count.value++;
+       }
+   }
+   
+   return count;
+}
+
 const checkAndClose = () => {
-  console.log(1);
   if (
     nameRef.value ||
     innRef.value ||
@@ -363,7 +378,7 @@ const checkAndClose = () => {
     addressRef.value ||
     descriptionRef.value
   ) {
-    showConfirmDialog.value = true;
+    showModal.value = true;
   } else {
     addDialog.value = false;
     showModal.value = false;
@@ -379,7 +394,7 @@ const closeDialogWithoutSaving = () => {
 
 const checkUpdate = () => {
   if (isDataChanged()) {
-    showConfirmDialog.value = true;
+    showModal.value = true;
   } else {
     addDialog.value = false;
   }
@@ -447,12 +462,18 @@ onMounted(async () => {
               ></v-text-field>
             </div>
           </div>
-          <Icons
-            name="filter"
-            title="фильтр"
-            @click="filterModal = true"
-            class="mt-1"
-          />
+          
+          <div class="filterElement">
+            <Icons
+              name="filter"
+              title="фильтр"
+              @click="filterModal = true"
+              class="mt-1"
+            />
+
+            <span v-if="count !== 0" class="countFilter">{{ count }}</span>
+          </div>
+
         </v-card>
       </div>
 
@@ -543,7 +564,7 @@ onMounted(async () => {
                 <Icons v-else @click="addOrganization" name="save" />
               </div>
               <v-btn
-                @click="toggleModal() ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
+                @click="isExistsOrganization ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
                 
                 variant="text"
                 :size="32"
@@ -750,6 +771,24 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+.filterElement {
+  position: relative;
+}
+.countFilter {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #82abf6;
+  border-radius: 50%;
+  font-size: 10px;
+  color: white;
+}
+
 
 </style> 
 

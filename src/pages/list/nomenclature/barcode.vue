@@ -27,6 +27,7 @@ const markedItem = ref([]);
 const isEdit = ref(false);
 const addBarcode = ref(false);
 const loading = ref(true);
+const isValid = ref(false);
 
 const hoveredRowIndex = ref(null);
 
@@ -35,15 +36,22 @@ const barcodeId = ref(null);
 
 const barcode = ref("");
 
+const headers = ref([{ title: "Наименование", key: "barcode" }]);
+
 const rules = {
   required: (v) => !!v,
 };
+
+watch(markedID, (newVal) => {
+  markedItem.value = barcodes.value.find((el) => el.id === newVal[0]);
+});
 
 watch(
   () => addBarcode.value,
   (newValue) => {
     if (newValue === false) {
       barcode.value = "";
+      isValid.value = false;
     }
   }
 );
@@ -61,7 +69,6 @@ const getBarcodeById = async (id, { page, itemsPerPage, sortBy, search }) => {
       { page, itemsPerPage, sortBy },
       search
     );
-    console.log(data);
     barcode.value = data.result.barcode;
     isEdit.value = true;
     addBarcode.value = true;
@@ -71,6 +78,7 @@ const getBarcodeById = async (id, { page, itemsPerPage, sortBy, search }) => {
 };
 
 const createBarcode = async () => {
+  isValid.value = true;
   if (!barcode.value) {
     showToast("Поле Наименование не может быть пустым", "warning");
     return;
@@ -96,6 +104,11 @@ const createBarcode = async () => {
 };
 
 const updateBarcode = async () => {
+  isValid.value = true;
+  if (!barcode.value) {
+    showToast("Поле Наименование не может быть пустым", "warning");
+    return;
+  }
   try {
     const body = {
       good_id: id.value,
@@ -131,11 +144,6 @@ const getBarcodes = async ({ page, itemsPerPage, sortBy, search }) => {
     console.log(e);
   }
 };
-
-const headers = ref([
-  { title: "№", key: "id", align: "start" },
-  { title: "Наименование", key: "name" },
-]);
 
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
@@ -241,6 +249,8 @@ onMounted(async () => {
           v-model:items-per-page="pagination.per_page"
           :items-length="pagination.total || 0"
           :item-value="headers.title"
+          show-select
+          v-model="markedID"
           hover
           fixed-footer
           page-text="{0}-{1} от {2}"
@@ -327,7 +337,7 @@ onMounted(async () => {
             <v-col class="d-flex flex-column w-100"
               ><v-text-field
                 v-model="barcode"
-                :rules="[rules.required]"
+                :rules="isValid ? [rules.required] : []"
                 color="green"
                 rounded="md"
                 variant="outlined"

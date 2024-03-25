@@ -62,11 +62,14 @@ const valueRef = ref(null)
 const cashRegisters = ref([])
 const paginations = ref([])
 const showModal = ref(false);
+const count = ref(0)
 
 const toggleModal = () => {
   showModal.value = !showModal.value;
   // console.log('openModal');
 };
+
+
 
 
 
@@ -94,17 +97,22 @@ const isDataChanged = () => {
     (item) => item.id === idCashRegister.value
   );
 
+  console.log(item)
+  
+
   const isChanged =
-  nameRef.value !== item.name ||
-  currencyAdd.value !== item.currency.id ||
-  organizationAdd.value.id !== item.organization.id ||
-  employeeAdd.value.id !== item.responsible_person.id 
+    nameRef.value !== item.name ||
+    currencyAdd.value !== item.currency.id ||
+    organizationAdd.value !== item.organization.id ||
+    employeeAdd.value !== item.responsiblePerson.id
+  
+
 
   return isChanged;
 };
 
 const checkAndClose = () => {
-  console.log(1);
+  
   if (
     nameRef.value ||
     currencyAdd.value ||
@@ -118,6 +126,17 @@ const checkAndClose = () => {
   }
 };
 
+function countFilter() {
+   
+   for (const key in filterForm.value) {
+       if (filterForm.value[key] !== null) {
+           count.value++;
+       }
+   }
+   
+   return count;
+}
+
 const closeDialogWithoutSaving = () => {
   dialog.value = false;
   showModal.value = false
@@ -127,7 +146,7 @@ const closeDialogWithoutSaving = () => {
 
 const checkUpdate = () => {
   if (isDataChanged()) {
-    showConfirmDialog.value = true;
+    showModal.value = true;
   } else {
     dialog.value = false;
   }
@@ -151,6 +170,8 @@ const rules = {
 
 const getcashRegisterData = async ({page, itemsPerPage, sortBy, search}) => {
   loading.value = true
+  count.value = 0
+  countFilter()
   const filterData = filterForm.value
   showFilterModal.value = false
 
@@ -344,6 +365,8 @@ const getOrganizations = async () => {
   }
 }
 
+
+
 onMounted(async () => {
   await getEmployee()
   await getCurrencies()
@@ -503,7 +526,16 @@ watch(dialog, newVal => {
 
             </div>
           </div>
-          <Icons @click="showFilterModal = !showFilterModal" title="Фильтр" name="filter" class="mt-1"/>
+          <div class="filterElement">
+            <Icons
+              name="filter"
+              title="фильтр"
+              @click="showFilterModal = true"
+              class="mt-1"
+            />
+
+            <span v-if="count !== 0" class="countFilter">{{ count }}</span>
+          </div>
         </v-card>
       </div>
 
@@ -567,7 +599,7 @@ watch(dialog, newVal => {
                   <Icons title="Сохранить" v-else @click="addcashRegister" name="save"/>
                 </div>
                 <v-btn
-                @click="toggleModal() ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
+                @click="isExistsCashRegister ? checkUpdate : checkAndClose"
                 
                 variant="text"
                 :size="32"
@@ -579,7 +611,7 @@ watch(dialog, newVal => {
             </div>
             <v-form class="d-flex w-100" @submit.prevent="addcashRegister">
               <v-row class="w-100">
-                <v-col class="d-flex flex-column w-100">
+                <v-col class="d-flex flex-column w-100 ga-3">
                   <v-text-field
                       v-model="nameRef"
                       :rules="[rules.required]"
@@ -590,14 +622,16 @@ watch(dialog, newVal => {
                       class="w-auto text-sm-body-1"
                       density="compact"
                       placeholder="Наименование"
+                      hide-details
                       label="Наименование"
                       clear-icon="close"
                       clearable
                   />
-                  <div class="d-flex ga-4 mb-3">
+                  <div class="d-flex ga-4">
                     <v-select
                         style="max-width: 50%; min-width: 50%;"
                         variant="outlined"
+                        hide-details
                         :base-color="FIELD_COLOR"
                         label="Валюта"
                         v-model="currencyAdd"
@@ -609,10 +643,10 @@ watch(dialog, newVal => {
                     <v-select
                       style="max-width: 47%; min-width: 46%;"
                         variant="outlined"
+                        hide-details
                         :base-color="FIELD_COLOR"
                         label="Ответственное лицо"
                         v-model="employeeAdd"
-                        
                         :items="employees"
                         item-title="name"
                         item-value="id"
@@ -622,6 +656,7 @@ watch(dialog, newVal => {
                   <v-select
                       variant="outlined"
                       label="Организация"
+                      hide-details
                       v-model="organizationAdd"
                       :items="organizations"
                       :base-color="FIELD_COLOR"
@@ -637,7 +672,6 @@ watch(dialog, newVal => {
         </v-dialog>
 
         <!--  Filter    -->
-
       </v-card>
       <v-card>
         <v-dialog class="mt-2 pa-2" v-model="showFilterModal">
@@ -657,12 +691,13 @@ watch(dialog, newVal => {
             </div>
             <v-form class="d-flex w-100" @submit.prevent="addcashRegister">
               <v-row class="w-100">
-                <v-col class="d-flex flex-column w-100">
+                <v-col class="d-flex flex-column w-100 ga-4">
                   <v-text-field
                       v-model="filterForm.name"
                       color="green"
                       rounded="md"
                       :base-color="FIELD_COLOR"
+                      hide-details
                       variant="outlined"
                       class="w-auto text-sm-body-1"
                       density="compact"
@@ -671,10 +706,11 @@ watch(dialog, newVal => {
                       clear-icon="close"
                       clearable
                   />
-                  <div class="d-flex ga-4 mb-3">
+                  <div class="d-flex ga-4">
                     <v-select
                         style="max-width: 50%; min-width: 50%;"
                         variant="outlined"
+                        hide-details
                         :base-color="FIELD_COLOR"
                         label="Валюта"
                         v-model="filterForm.currency_id"
@@ -686,6 +722,7 @@ watch(dialog, newVal => {
                       style="max-width: 47%; min-width: 46%;"
                         variant="outlined"
                         :base-color="FIELD_COLOR"
+                        hide-details
                         label="Ответственное лицо"
                         v-model="filterForm.employee_id"
                         :items="employees"
@@ -697,7 +734,7 @@ watch(dialog, newVal => {
                   <v-select
                       variant="outlined"
                       label="Организация"
-                      
+                      hide-details
                       v-model="filterForm.organization_id"
                       :items="organizations"
                       item-title="name"
@@ -723,5 +760,21 @@ watch(dialog, newVal => {
 </template>
 
 <style scoped>
-
+.filterElement {
+  position: relative;
+}
+.countFilter {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #82abf6;
+  border-radius: 50%;
+  font-size: 10px;
+  color: white;
+}
 </style>

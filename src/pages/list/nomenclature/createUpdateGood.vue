@@ -196,7 +196,9 @@ const updateGood = async () => {
     appendIfNotNull("vendor_code", vendor_code.value);
     appendIfNotNull("description", description.value);
     appendIfNotNull("main_image", imageRef.value);
-    appendIfNotNull("image_ids[]", images_id.value);
+    if (!images_id.value) {
+      appendIfNotNull("image_ids[]", images_id.value);
+    }
     // for (const file of add_images.value) {
     //   appendIfNotNull("add_images[]", file);
     // }
@@ -406,11 +408,15 @@ onMounted(async () => {
                     v-if="add_images.length > 0 || firstImage || isEdit"
                     class="d-flex justify-center my-1"
                   >
-                    <v-btn @click="onPickFile">{{
-                      isEdit && firstImage && add_images.length !== 0
-                        ? "Изменить фото"
-                        : "Загрузить фото"
-                    }}</v-btn>
+                    <v-btn
+                      style="width: 120px; height: 30px; font-size: 10px"
+                      @click="onPickFile"
+                      >{{
+                        isEdit && firstImage && add_images.length !== 0
+                          ? "Изменить фото"
+                          : "Загрузить фото"
+                      }}</v-btn
+                    >
                     <input
                       accept="image/*"
                       type="file"

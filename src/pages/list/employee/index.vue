@@ -327,15 +327,17 @@ const toggleGroup = async () => {
 
 
 const isDataChanged = () => {
-  const item = employee.value.find(
+  const item = employees.value.find(
     (item) => item.id === idEmployee.value
   );
+
+  console.log(12)
 
   const isChanged =
     nameRef.value !== item.name ||
     phoneRef.value !== item.phone ||
-    emailRef.value.id !== item.email ||
-    addressRef.value.id !== item.address 
+    emailRef.value !== item.email ||
+    addressRef.value !== item.address 
 
   return isChanged;
 };
@@ -364,7 +366,7 @@ const closeDialogWithoutSaving = () => {
 
 const checkUpdate = () => {
   if (isDataChanged()) {
-    showConfirmDialog.value = true;
+    showModal.value = true;
   } else {
     dialog.value = false;
   }
@@ -394,7 +396,7 @@ watch(dialog, newVal => {
                   class="group_create"
                   @click="isCreateGroup = true"
               >
-                <span class="px-2 py-0">создать группу</span>
+              
               </button>
               <Icons @click="openDialog(0)" name="add"/>
               <Icons @click="addBasedOnEmployee" name="copy"/>
@@ -485,7 +487,7 @@ watch(dialog, newVal => {
                   <Icons v-else @click="addEmployee" name="save"/>
                 </div>
                 <v-btn
-                @click="toggleModal() ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
+                @click="isExistsEmployee ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
                 
                 variant="text"
                 :size="32"

@@ -40,6 +40,8 @@ const markedItem = ref([]);
 const goods = ref([]);
 const pagination = ref([]);
 
+const count = ref(0);
+
 const filterForm = ref({
   name: null,
   vendor_code: null,
@@ -49,10 +51,7 @@ const filterForm = ref({
   description: null,
 });
 
-const headers = ref([
-  { title: "№", key: "id", align: "start" },
-  { title: "Наименование", key: "name" },
-]);
+const headers = ref([{ title: "Наименование", key: "name" }]);
 
 watch(
   () => isFilter.value,
@@ -68,11 +67,28 @@ watch(
   }
 );
 
+watch(markedID, (newVal) => {
+  markedItem.value = goods.value.find((el) => el.id === newVal[0]);
+});
+
 const itemsProps = (item) => {
   return {
     title: item.name,
   };
 };
+
+function countFilter() {
+  for (const key in filterForm.value) {
+    if (
+      filterForm.value[key] !== null &&
+      (!Array.isArray(filterForm.value[key]) ||
+        filterForm.value[key].length !== 0)
+    ) {
+      count.value++;
+    }
+  }
+  return count;
+}
 
 const clearForm = () => {
   filterForm.value = {
@@ -180,6 +196,7 @@ const lineMarking = (item) => {
 };
 
 const getGoods = async ({ page, itemsPerPage, sortBy, search }) => {
+  countFilter();
   const filterData = filterForm.value;
   try {
     loading.value = true;
@@ -303,12 +320,16 @@ onMounted(() => {
               ></v-text-field>
             </div>
           </div>
-          <Icons
-            @click="isFilter = true"
-            name="filter"
-            class="mt-1"
-            title="Фильтр"
-          />
+          <div class="filterElement">
+            <Icons
+              name="filter"
+              title="фильтр"
+              @click="isFilter = true"
+              class="mt-1"
+            />
+
+            <!-- <span v-if="count !== 0" class="countFilter">{{ count }}</span> -->
+          </div>
         </v-card>
       </div>
 
@@ -327,6 +348,8 @@ onMounted(() => {
           v-model:items-per-page="pagination.per_page"
           :items-length="pagination.total || 0"
           :item-value="headers.title"
+          show-select
+          v-model="markedID"
           hover
           fixed-footer
           page-text="{0}-{1} от {2}"
@@ -394,7 +417,6 @@ onMounted(() => {
             <span>Фильтр</span>
             <div class="d-flex align-center justify-space-between">
               <div class="d-flex ga-3 align-center mt-2 me-4">
-                <!-- <Icons name="delete" /> -->
                 <Icons @click="filterGoods()" name="save" />
               </div>
               <v-btn
