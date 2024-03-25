@@ -135,12 +135,12 @@ const getGoodByid = async () => {
   try {
     const { data } = await goodsApi.getById(id.value);
     const good = data.result;
-    console.log(good);
     name.value = good.name;
     (vendor_code.value = good.vendor_code),
       (description.value = good.description),
       (unit_id.value = good.unit_id.id),
       (storage_id.value = good.storage.id),
+      (good_group_id.value = good.good_group.id),
       (firstImage.value =
         good.images.length > 0
           ? import.meta.env.VITE_IMG_URL + good.images[0].image
@@ -150,8 +150,7 @@ const getGoodByid = async () => {
       (add_images.value = good.images),
       // good.images.forEach((image) => {
       //   images_id.value.push(image.id);}),
-      (images_id.value = good.images[0].id),
-      (good_group_id.value = good.good_group.id);
+      good.images.length > 0 ? (images_id.value = good.images[0].id) : "";
   } catch (e) {
     console.log(e);
   }
@@ -309,7 +308,8 @@ onMounted(async () => {
           <div class="d-flex ga-3 align-center mt-2 me-4">
             <Icons
               @click="isEdit && !isCreateOnBase ? updateGood() : createGood()"
-              name="save" title="Сохранить"
+              name="save"
+              title="Сохранить"
             />
           </div>
         </div>
@@ -346,6 +346,7 @@ onMounted(async () => {
                 variant="outlined"
                 class="w-auto text-sm-body-1"
                 density="compact"
+                maxlength="8"
                 placeholder="Артикуль"
                 label="Артикуль"
                 clear-icon="close"

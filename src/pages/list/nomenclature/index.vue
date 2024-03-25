@@ -273,11 +273,16 @@ onMounted(() => {
               >
                 <span class="px-2 py-0">создать группу</span>
               </button>
-              <Icons @click="goToCreate()" name="add" title="Создать"/>
-              <Icons @click="createOnBase()" name="copy" title="Создать на основе"/>
+              <Icons @click="goToCreate()" name="add" title="Создать" />
+              <Icons
+                @click="createOnBase()"
+                name="copy"
+                title="Создать на основе"
+              />
               <Icons
                 @click="compute({ page, itemsPerPage, sortBy, search })"
-                name="delete" title="Удалить"
+                name="delete"
+                title="Удалить"
               />
             </div>
             <div class="w-100">
@@ -298,7 +303,12 @@ onMounted(() => {
               ></v-text-field>
             </div>
           </div>
-          <Icons @click="isFilter = true" name="filter" class="mt-1" title="Фильтр"/>
+          <Icons
+            @click="isFilter = true"
+            name="filter"
+            class="mt-1"
+            title="Фильтр"
+          />
         </v-card>
       </div>
 
@@ -406,7 +416,7 @@ onMounted(() => {
                     color="green"
                     rounded="md"
                     variant="outlined"
-                    class="w-auto text-sm-body-1"
+                    class="w-50 text-sm-body-1"
                     density="compact"
                     placeholder="Наименование"
                     label="Наименование"
@@ -421,11 +431,13 @@ onMounted(() => {
                     color="green"
                     rounded="md"
                     variant="outlined"
-                    class="w-auto text-sm-body-1"
+                    class="w-50 text-sm-body-1"
                     density="compact"
                     placeholder="Артикуль"
+                    maxlength="8"
                     label="Артикуль"
                     clear-icon="close"
+                    clearablehide-details
                     clearable
                     hide-details
                     :base-color="FIELD_COLOR"
@@ -442,6 +454,7 @@ onMounted(() => {
                     item-value="id"
                     :items="storages"
                     color="green"
+                    class="w-50"
                     hide-details
                     :base-color="FIELD_COLOR"
                   />
@@ -455,6 +468,7 @@ onMounted(() => {
                     item-value="id"
                     :items="units"
                     color="green"
+                    class="w-50"
                     hide-details
                     :base-color="FIELD_COLOR"
                   />

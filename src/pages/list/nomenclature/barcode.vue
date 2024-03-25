@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Icons from "../../../composables/Icons/Icons.vue";
 import barcodeApi from "../../../api/barcode";
@@ -38,6 +38,15 @@ const barcode = ref("");
 const rules = {
   required: (v) => !!v,
 };
+
+watch(
+  () => addBarcode.value,
+  (newValue) => {
+    if (newValue === false) {
+      barcode.value = "";
+    }
+  }
+);
 
 const editItem = (id) => {
   isEdit.value = true;
@@ -81,6 +90,7 @@ const createBarcode = async () => {
     console.log(e);
     if (e.response.data.errors.barcode) {
       showToast("Такой штрих-код уже существует", "warning");
+      loading.value = false;
     }
   }
 };
