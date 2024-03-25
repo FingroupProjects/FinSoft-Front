@@ -26,6 +26,7 @@ const isCreateGroup = ref(false);
 const isCreataOnBase = ref(false);
 const createGroupOnBase = ref(false);
 
+const count = ref(0);
 const hoveredRowIndex = ref(null);
 
 const search = ref("");
@@ -41,15 +42,16 @@ const filterForm = ref({
   is_service: null,
 });
 
-const headers = ref([
-  { title: "№", key: "id", align: "start" },
-  { title: "Наименование", key: "name" },
-]);
+const headers = ref([{ title: "Наименование", key: "name" }]);
 
 watch(isCreateGroup, (newVal) => {
   if (newVal === false) {
     getGroups({ page: 1, itemsPerPage: 100 });
   }
+});
+
+watch(markedID, (newVal) => {
+  markedItem.value = groups.value.find((el) => el.id === newVal[0]);
 });
 
 const detail = (item) => {
@@ -77,6 +79,19 @@ const openFilter = () => {
   isFilter.value = true;
   isCreateGroup.value = true;
 };
+
+function countFilter() {
+  for (const key in filterForm.value) {
+    if (
+      filterForm.value[key] !== null &&
+      (!Array.isArray(filterForm.value[key]) ||
+        filterForm.value[key].length !== 0)
+    ) {
+      count.value++;
+    }
+  }
+  return count;
+}
 
 const createOnBase = async () => {
   if (markedID.value.length > 1) {
@@ -132,6 +147,7 @@ const getGroupById = async ({ page, itemsPerPage, sortBy, search }) => {
 };
 const getGroups = async ({ page, itemsPerPage, sortBy, search }) => {
   try {
+    countFilter();
     const filterData = {
       name: filterForm.value.name,
       is_good: filterForm.value.is_good ? 1 : 0,
@@ -193,7 +209,6 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
 
 const filterGroup = async (filterData) => {
   try {
-    // await getGroups({ page: 1, itemsPerPage: 100 });
     filterForm.value = filterData;
   } catch (e) {
     console.log(e);
@@ -253,7 +268,16 @@ onMounted(() => {
               ></v-text-field>
             </div>
           </div>
-          <Icons @click="openFilter()" name="filter" class="mt-1" />
+          <div class="filterElement">
+            <Icons
+              name="filter"
+              title="фильтр"
+              @click="openFilter()"
+              class="mt-1"
+            />
+
+            <!-- <span v-if="count !== 0" class="countFilter">{{ count }}</span> -->
+          </div>
         </v-card>
       </div>
 
@@ -272,6 +296,8 @@ onMounted(() => {
           v-model:items-per-page="pagination.per_page"
           :items-length="pagination.total || 0"
           :item-value="headers.title"
+          show-select
+          v-model="markedID"
           hover
           fixed-footer
           page-text="{0}-{1} от {2}"
@@ -340,3 +366,22 @@ onMounted(() => {
     </v-col>
   </div>
 </template>
+<style>
+.filterElement {
+  position: relative;
+}
+.countFilter {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #82abf6;
+  border-radius: 50%;
+  font-size: 10px;
+  color: white;
+}
+</style>
