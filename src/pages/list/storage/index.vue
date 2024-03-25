@@ -75,6 +75,8 @@ const paginationsGroup = ref([])
 const paginationsStorageData = ref([])
 const showModal = ref(false);
 
+const count = ref(0)
+
 const toggleModal = () => {
   showModal.value = !showModal.value;
   console.log('openModal');
@@ -106,6 +108,7 @@ const filterForm = ref({
 const filterDialog = ref(false)
 
 
+
 const rules = {
   required: v => !!v,
   date: v => (v && /^\d{2}-\d{2}-\d{4}$/.test(v)) || 'Формат даты должен быть DD-MM-YYYY',
@@ -126,6 +129,17 @@ const getGroup = async ({page, itemsPerPage, sortBy}) => {
     loadingGroup.value = false
 
   }
+}
+
+function countFilter() {
+   
+   for (const key in filterForm.value) {
+       if (filterForm.value[key] !== null) {
+           count.value++;
+       }
+   }
+   
+   return count;
 }
 
 const getStorageData = async ({page, itemsPerPage, sortBy, search}) => {
@@ -623,6 +637,8 @@ const lineMarkingGroup = group_id => {
 
 const getStorage = async ({page, itemsPerPage, sortBy, search}) => {
   try {
+    count.value = 0
+    countFilter()
     const filterData = filterForm.value
     filterDialog.value = false
     if (groupIdRef.value === 0) return
@@ -644,10 +660,10 @@ const isDataChanged = () => {
     (item) => item.id === idStorage.value
   );
 
+
   const isChanged =
     nameRef.value !== item.name ||
-    organizationAdd.value.id !== item.organization.id ||
-    group .value.id !== item.group.id
+    organizationAdd.value !== item.organization.id
 
   return isChanged;
 };
@@ -660,11 +676,11 @@ const cleanForm = () => {
 
 
 const checkAndClose = () => {
-  console.log(1);
+  
+
   if (
-    nameRef.value ||
-    organizationAdd.value ||
-    group.value 
+    nameRef.value
+   
   ) {
     showConfirmDialog.value = true;
   } else {
@@ -682,8 +698,10 @@ const closeDialogWithoutSaving = () => {
 
 const checkUpdate = () => {
   if (isDataChanged()) {
+    
     showConfirmDialog.value = true;
   } else {
+    console.log(2)
     dialog.value = false;
   }
 
@@ -756,7 +774,15 @@ onMounted(async () => {
               ></v-text-field>
             </div>
           </div>
-          <Icons title="фильтр" @click="filterDialog = true" name="filter" class="mt-1"/>
+          <div class="filterElement">
+            <Icons
+              name="filter"
+              title="фильтр"
+              @click="filterDialog = true"
+              class="mt-1"
+            />
+            <span v-if="count !== 0" class="countFilter">{{ count }}</span>
+          </div>
         </v-card>
       </div>
 
@@ -862,7 +888,7 @@ onMounted(async () => {
                   <Icons v-else @click="addStorage" name="save"/>
                 </div>
                 <v-btn
-                @click="toggleModal() ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
+                @click="isExistsStorage ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
                 
                 variant="text"
                 :size="32"
@@ -1129,7 +1155,7 @@ onMounted(async () => {
           </v-form>
         </v-card>
       </v-dialog>
-      <div v-if="showModal">
+      <div v-if="showConfirmDialog">
         <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" />
       </div>
     </v-col>
@@ -1139,5 +1165,21 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-
+.filterElement {
+  position: relative;
+}
+.countFilter {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #82abf6;
+  border-radius: 50%;
+  font-size: 10px;
+  color: white;
+}
 </style>

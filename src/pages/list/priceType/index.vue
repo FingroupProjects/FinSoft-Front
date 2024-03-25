@@ -45,6 +45,8 @@ const priceTypes = ref([])
 const paginations = ref([])
 const showConfirmDialog = ref(false);
 const showModal = ref(false);
+const count = ref(0);
+
 
 const toggleModal = () => {
   showModal.value = !showModal.value;
@@ -69,6 +71,8 @@ const rules = {
 
 
 const getPriceTypeData = async ({page, itemsPerPage, sortBy, search}) => {
+  count.value = 0;
+  countFilter()
   const filterData = filterForm.value
   filterModal.value = false
   loading.value = true
@@ -82,6 +86,19 @@ const getPriceTypeData = async ({page, itemsPerPage, sortBy, search}) => {
   } catch (e) {
   }
 }
+
+function countFilter() {
+   
+   for (const key in filterForm.value) {
+       if (filterForm.value[key] !== null) {
+           count.value++;
+       }
+   }
+   
+   return count;
+}
+
+
 const addPriceType = async ({page, itemsPerPage, sortBy}) => {
   if (validate(nameRef,currencyAdd,descriptionRef) !== true) return
   const body = {
@@ -275,7 +292,7 @@ const lineMarking = (item) => {
 }
 
 const  closeFilterModal = async ({page, itemsPerPage, sortBy, search, filterData}) => {
-  filterModal.value = false
+  filterModal.value = {}
   cleanFilterForm()
   await getPriceTypeData({page, itemsPerPage, sortBy, search})
   
@@ -320,8 +337,10 @@ const closeDialogWithoutSaving = () => {
 };
 
 const checkUpdate = () => {
+  console.log(23)
   if (isDataChanged()) {
-    showConfirmDialog.value = true;
+    console.log(1)
+    showModal.value = true;
   } else {
     dialog.value = false;
   }
@@ -330,11 +349,8 @@ const checkUpdate = () => {
 
 const cleanForm = () => {
   nameRef.value = null;
-  innRef.value = null;
-  directorRef.value = null;
-  accountantRef.value = null;
-  addressRef.value = null;
-  descriptionRef.value = null;
+  currencyAdd.value = null
+  descriptionRef.value = null
 };
 
 watch(dialog, newVal => {
@@ -388,7 +404,17 @@ onMounted(async () => {
 
             </div>
           </div>
-          <Icons title="Фильтр" name="filter" @click="filterModal = true" class="mt-1"/>
+          <div class="filterElement">
+            <Icons
+              name="filter"
+              title="фильтр"
+              @click="filterModal = true"
+              class="mt-1"
+            />
+
+            <span v-if="count !== 0" class="countFilter">{{ count }}</span>
+          </div>
+
         </v-card>
       </div>
 
@@ -453,7 +479,7 @@ onMounted(async () => {
                   <Icons title="Сохранить" v-else @click="addPriceType" name="save"/>
                 </div>
                 <v-btn
-                @click="toggleModal() ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
+                @click="isExistsPriceType ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
                 
                 variant="text"
                 :size="32"
@@ -465,12 +491,13 @@ onMounted(async () => {
             </div>
             <v-form class="d-flex w-100" @submit.prevent="addPriceType">
               <v-row class="w-100">
-                <v-col class="d-flex flex-column w-100">
+                <v-col class="d-flex flex-column w-100 ga-4">
                   <v-text-field
                       v-model="nameRef"
                       :base-color="FIELD_COLOR"
                       :rules="[rules.required]"
                       color="green"
+                      hide-details
                       rounded="md"
                       variant="outlined"
                       class="w-auto text-sm-body-1"
@@ -482,6 +509,7 @@ onMounted(async () => {
                   />
                   <v-select
                       variant="outlined"
+                      hide-details
                       label="Выберите валюту"
                       :base-color="FIELD_COLOR"
                       v-model="currencyAdd"
@@ -492,6 +520,7 @@ onMounted(async () => {
                   <v-textarea
                       v-model="descriptionRef"
                       :base-color="FIELD_COLOR"
+                      hide-details
                       :rules="[rules.required]"
                       color="green"
                       rounded="md"
@@ -574,5 +603,21 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-
+.filterElement {
+  position: relative;
+}
+.countFilter {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #82abf6;
+  border-radius: 50%;
+  font-size: 10px;
+  color: white;
+}
 </style>

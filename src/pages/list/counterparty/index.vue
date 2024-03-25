@@ -14,6 +14,8 @@ import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import createCounterparty from "./create.vue";
 
+
+
 const loading = ref(true);
 const isCreate = ref(false);
 const isEdit = ref(false);
@@ -148,6 +150,8 @@ const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
     console.log(e);
   }
 };
+
+
 
 const massRestoreCounterparty = async ({ page, itemsPerPage, sortBy }) => {
   if (markedID.value.length === 0) {

@@ -42,6 +42,8 @@ const paginations = ref([])
 const showModal = ref(false);
 const showConfirmDialog = ref(false);
 
+const count = ref(0);
+
 const toggleModal = () => {
   showModal.value = !showModal.value;
 };
@@ -64,9 +66,23 @@ const rules = {
 }
 
 
+function countFilter() {
+   
+   for (const key in filterForm.value) {
+       if (filterForm.value[key] !== null) {
+           count.value++;
+       }
+   }
+   
+   return count;
+}
+
 const getPositionData = async ({ page, itemsPerPage, sortBy, search }) => {
+  count.value = 0;
+  countFilter()
   const filterData = filterForm.value
   filterModal.value = false
+  
   
 
   loading.value = true
@@ -241,7 +257,7 @@ const lineMarking = (item) => {
 }
 
 const isDataChanged = () => {
-  const item = position.value.find(
+  const item = positions.value.find(
     (item) => item.id === idPosition.value
   );
 
@@ -271,7 +287,7 @@ const closeDialogWithoutSaving = () => {
 
 const checkUpdate = () => {
   if (isDataChanged()) {
-    showConfirmDialog.value = true;
+    showModal.value = true;
   } else {
     dialog.value = false;
   }
@@ -325,7 +341,16 @@ watch(dialog, newVal => {
               ></v-text-field>
             </div>
           </div>
-          <Icons title="фильтр" name="filter" @click="filterModal = true" class="mt-1"/>
+          <div class="filterElement">
+            <Icons
+              name="filter"
+              title="фильтр"
+              @click="filterModal = true"
+              class="mt-1"
+            />
+
+            <span v-if="count !== 0" class="countFilter">{{ count }}</span>
+          </div>
         </v-card>
       </div>
 
@@ -386,7 +411,7 @@ watch(dialog, newVal => {
                   <Icons title="Сохранить" v-else @click="addPosition" name="save"/>
                 </div>
                 <v-btn
-                @click="toggleModal() ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
+                @click="isExistsPosition ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
                 
                 variant="text"
                 :size="32"
@@ -471,5 +496,21 @@ watch(dialog, newVal => {
 </template>
 
 <style scoped>
-
+.filterElement {
+  position: relative;
+}
+.countFilter {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #82abf6;
+  border-radius: 50%;
+  font-size: 10px;
+  color: white;
+}
 </style>
