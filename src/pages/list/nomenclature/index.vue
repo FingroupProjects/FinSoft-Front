@@ -80,9 +80,7 @@ const itemsProps = (item) => {
 function countFilter() {
   for (const key in filterForm.value) {
     if (
-      filterForm.value[key] !== null &&
-      (!Array.isArray(filterForm.value[key]) ||
-        filterForm.value[key].length !== 0)
+      filterForm.value[key] !== null
     ) {
       count.value++;
     }
@@ -196,6 +194,7 @@ const lineMarking = (item) => {
 };
 
 const getGoods = async ({ page, itemsPerPage, sortBy, search }) => {
+  count.value = 0
   countFilter();
   const filterData = filterForm.value;
   try {
@@ -328,7 +327,7 @@ onMounted(() => {
               class="mt-1"
             />
 
-            <!-- <span v-if="count !== 0" class="countFilter">{{ count }}</span> -->
+            <span v-if="count !== 0" class="countFilter">{{ count }}</span>
           </div>
         </v-card>
       </div>
