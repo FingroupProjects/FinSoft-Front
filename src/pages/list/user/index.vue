@@ -224,9 +224,6 @@ const addUser = async ({page, itemsPerPage, sortBy}) => {
     formData.append('image', imageRef.value);
   }
 
-  for(let pair of formData.entries()) {
-    console.log(pair[0]+ ', '+ pair[1]);
-  }
 
   try {
     const res = await user.add(formData)
