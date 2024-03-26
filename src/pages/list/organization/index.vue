@@ -143,9 +143,7 @@ const addOrganization = async ({ page, itemsPerPage, sortBy, search }) => {
 
       isDataSaved.value = true;
     }
-    showModal.value = true;
     addDialog.value = false;
-    toggleModal();
   } catch (error) {}
 };
 
@@ -217,9 +215,7 @@ const update = async ({ page, itemsPerPage, sortBy, search }) => {
     }
 
     cleanForm();
-    toggleModal();
     addDialog.value = false;
-    showModal.value = true;
   } catch (e) {}
 };
 
