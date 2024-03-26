@@ -524,15 +524,14 @@ onMounted(async () => {
                     :checked="markedID.includes(item.id)"
                     @change="handleCheckboxClick(item)"
                   >
-                    <span>{{ index.id }}</span>
+                    <span>{{ index + 1 }}</span>
                   </CustomCheckbox>
                 </template>
                 <template v-else>
-                  <Icons
-                    style="margin-right: 10px"
-                    :name="item.deleted_at === null ? 'valid' : 'inValid'"
-                  />
-                  <span>{{ index.id }}</span>
+                  <div class="d-flex">
+                      <Icons style="margin-right: 10px" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
+                      <span>{{ index + 1 }}</span>
+                    </div>
                 </template>
               </td>
               <td>{{ item.name }}</td>

@@ -664,8 +664,9 @@ const isDataChanged = () => {
 
   const isChanged =
     nameRef.value !== item.name ||
-    organizationAdd.value !== item.organization.id
-
+    organizationAdd.value.id !== item.organization.id ||
+    group.value.id !== item.group.id
+  
   return isChanged;
 };
 
@@ -677,11 +678,11 @@ const cleanForm = () => {
 
 
 const checkAndClose = () => {
-  
 
   if (
-    nameRef.value
-   
+    nameRef.value ||
+    organizationAdd.value ||
+    group.value 
   ) {
     showConfirmDialog.value = true;
   } else {
@@ -691,7 +692,6 @@ const checkAndClose = () => {
 };
 
 const closeDialogWithoutSaving = () => {
-  console.log(1)
   dialog.value = false;
   showModal.value = false
   showConfirmDialog.value = false;
@@ -767,7 +767,7 @@ onMounted(async () => {
                   density="default"
                   placeholder="Поиск..."
                   variant="outlined"
-                  color="green"
+                  color="info"
                   :base-color="FIELD_COLOR"
                   rounded="lg"
                   hide-details
