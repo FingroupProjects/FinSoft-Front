@@ -15,6 +15,7 @@ import { FIELD_COLOR } from "../../../composables/constant/colors.js";
 const { query, params: routeParams } = useRoute();
 const router = useRouter();
 
+const isImageDialog = ref(false);
 const isValid = ref(false);
 const isEdit = ref(false);
 const isCreated = ref(false);
@@ -29,7 +30,14 @@ const storage_id = ref(null);
 const unit_id = ref(null);
 const good_group_id = ref(null);
 const firstImage = ref(null);
+const secondImage = ref(null);
+const thirdImage = ref(null);
+const forthImage = ref(null);
 const fileInput = ref(null);
+const fileInput1 = ref(null);
+const fileInput2 = ref(null);
+const fileInput3 = ref(null);
+const fileInput4 = ref(null);
 
 const images_id = ref([]);
 const imageRef = ref([]);
@@ -66,12 +74,9 @@ const setImageByIndexInEdit = (index) => {
   }
 };
 
-const selectAvatar = async (event) => {
-  await Promise.all(
-    (imageRef.value = []),
-    (add_images.value = []),
-    (firstImage.value = null)
-  );
+const selectAvatar = async (event, num) => {
+  console.log(num);
+  (imageRef.value = []), (add_images.value = []), (firstImage.value = null);
   const files = event.target.files;
   imageRef.value = files[0];
   add_images.value.push(imageRef.value);
@@ -88,7 +93,15 @@ const selectAvatar = async (event) => {
   }
   const fileReader = new FileReader();
   fileReader.addEventListener("load", () => {
-    firstImage.value = fileReader.result;
+    if (num === 1) {
+      firstImage.value = fileReader.result;
+    } else if (num === 2) {
+      secondImage.value = fileReader.result;
+    } else if (num === 3) {
+      thirdImage.value = fileReader.result;
+    } else if (num === 4) {
+      forthImage.value = fileReader.result;
+    }
   });
   fileReader.readAsDataURL(files[0]);
 };
@@ -255,8 +268,18 @@ const createGood = async () => {
   }
 };
 
-const onPickFile = () => {
-  fileInput.value.click();
+const onPickFile = (num) => {
+  if (num === 1) {
+    fileInput1.value.click();
+  } else if (num === 2) {
+    fileInput2.value.click();
+  } else if (num === 3) {
+    fileInput3.value.click();
+  } else if (num === 4) {
+    fileInput4.value.click();
+  } else {
+    fileInput.value.click();
+  }
 };
 
 const setImage = (item) => {
@@ -372,11 +395,13 @@ onMounted(async () => {
                     "
                   >
                     <div v-if="firstImage === null">
-                      <v-btn @click="onPickFile">Загрузить фото</v-btn>
+                      <v-btn @click="isImageDialog = true"
+                        >Загрузить фото</v-btn
+                      >
                       <input
                         accept="image/*"
                         type="file"
-                        @change="selectAvatar"
+                        @change="selectAvatar($event, 1)"
                         style="display: none"
                         ref="fileInput"
                       />
@@ -415,16 +440,16 @@ onMounted(async () => {
                         isEdit && firstImage && add_images.length !== 0
                           ? "Изменить фото"
                           : "Загрузить фото"
-                      }}</v-btn
-                    >
+                      }}
+                    </v-btn>
                     <input
                       accept="image/*"
                       type="file"
-                      @change="selectAvatar"
                       style="display: none"
                       ref="fileInput"
                       multiple
                     />
+                    <!-- @change="selectAvatar($event, 1)" -->
                   </div>
                 </div>
                 <div class="d-flex flex-column w-75 ga-3">
@@ -490,6 +515,168 @@ onMounted(async () => {
         </v-form>
       </v-card>
     </v-col>
+
+    <v-dialog v-model="isImageDialog" class="mt-2 pa-2">
+      <v-card
+        style="border: 2px solid #3ab700"
+        min-width="350"
+        class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
+        rounded="xl"
+      >
+        <div class="d-flex justify-space-between align-center mb-2">
+          <span>Загрузить фото</span>
+          <div class="d-flex align-center justify-space-between">
+            <div class="d-flex ga-3 align-center mt-2 me-4">
+              <Icons
+                @click="isImageDialog = false"
+                name="save"
+                title="Сохранить"
+              />
+            </div>
+            <v-btn
+              @click="isImageDialog = false"
+              variant="text"
+              :size="32"
+              class="pt-2 pl-1"
+            >
+              <Icons name="close" title="Закрыть" />
+            </v-btn>
+          </div>
+        </div>
+        <div class="d-flex w-100 ga-3 mb-3">
+          <div style="width: 220px">
+            <div
+              class="d-flex justify-center align-center py-2 px-6 w-100"
+              style="
+                height: 160px;
+                border-radius: 4px;
+                border: 1px solid #3ab700;
+              "
+            >
+              <div v-if="firstImage === null">
+                <v-btn style="font-size: 10px" @click="onPickFile(1)"
+                  >Загрузить фото</v-btn
+                >
+                <input
+                  accept="image/*"
+                  type="file"
+                  @change="selectAvatar($event, 1)"
+                  style="display: none"
+                  ref="fileInput1"
+                />
+              </div>
+              <img
+                v-else
+                class="image"
+                :src="firstImage"
+                width="200"
+                height="150"
+                alt=""
+              />
+            </div>
+            <span class="d-flex justify-center">Фото 1</span>
+          </div>
+          <div style="width: 220px">
+            <div
+              class="d-flex justify-center align-center py-2 px-6 w-100"
+              style="
+                height: 160px;
+                border-radius: 4px;
+                border: 1px solid #3ab700;
+              "
+            >
+              <div class="d-flex justify-center" v-if="secondImage === null">
+                <v-btn style="font-size: 10px" @click="onPickFile(2)"
+                  >Загрузить фото</v-btn
+                >
+                <input
+                  accept="image/*"
+                  type="file"
+                  @change="selectAvatar($event, 2)"
+                  style="display: none"
+                  ref="fileInput2"
+                />
+              </div>
+              <img
+                v-else
+                class="image"
+                :src="secondImage"
+                width="200"
+                height="150"
+                alt=""
+              />
+            </div>
+            <span class="d-flex justify-center">Фото 2</span>
+          </div>
+        </div>
+        <div class="d-flex w-100 ga-3">
+          <div style="width: 220px">
+            <div
+              class="d-flex justify-center align-center py-2 px-6 w-100"
+              style="
+                height: 160px;
+                border-radius: 4px;
+                border: 1px solid #3ab700;
+              "
+            >
+              <div v-if="thirdImage === null">
+                <v-btn style="font-size: 10px" @click="onPickFile(3)"
+                  >Загрузить фото</v-btn
+                >
+                <input
+                  accept="image/*"
+                  type="file"
+                  @change="selectAvatar($event, 3)"
+                  style="display: none"
+                  ref="fileInput3"
+                />
+              </div>
+              <img
+                v-else
+                class="image"
+                :src="thirdImage"
+                width="200"
+                height="150"
+                alt=""
+              />
+            </div>
+            <span class="d-flex justify-center">Фото 3</span>
+          </div>
+          <div style="width: 220px">
+            <div
+              class="d-flex justify-center align-center py-2 px-6 w-100"
+              style="
+                height: 160px;
+                border-radius: 4px;
+                border: 1px solid #3ab700;
+              "
+            >
+              <div v-if="forthImage === null">
+                <v-btn style="font-size: 10px" @click="onPickFile(4)"
+                  >Загрузить фото</v-btn
+                >
+                <input
+                  accept="image/*"
+                  type="file"
+                  @change="selectAvatar($event, 4)"
+                  style="display: none"
+                  ref="fileInput4"
+                />
+              </div>
+              <img
+                v-else
+                class="image"
+                :src="forthImage"
+                width="200"
+                height="150"
+                alt=""
+              />
+            </div>
+            <span class="d-flex justify-center">Фото 4</span>
+          </div>
+        </div>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 <style>
