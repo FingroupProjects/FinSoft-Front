@@ -915,7 +915,7 @@ onMounted(async () => {
                       clear-icon="close"
                       clearable
                   />
-                  <v-select
+                  <v-autocomplete
                       variant="outlined"
                       label="Выберите организацию"
                       :base-color="FIELD_COLOR"
@@ -926,7 +926,7 @@ onMounted(async () => {
                       item-title="name"
                       item-value="id"
                   />
-                  <v-select
+                  <v-autocomplete
                       v-model="group"
                       :items="groups"
                       item-title="name"
@@ -1022,7 +1022,7 @@ onMounted(async () => {
             <v-form class="d-flex w-100 pa-5">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column justify-between w-100 ga-5">
-                  <v-select
+                  <v-autocomplete
                       variant="outlined"
                       label="Выберите сотрудника"
                       color="green"
@@ -1129,7 +1129,7 @@ onMounted(async () => {
                     clear-icon="close"
                     clearable
                 />
-                <v-select
+                <v-autocomplete
                     variant="outlined"
                     label="Выберите организацию"
                     :base-color="FIELD_COLOR"
@@ -1140,7 +1140,7 @@ onMounted(async () => {
                     item-title="name"
                     item-value="id"
                 />
-                <v-select
+                <v-autocomplete
                     v-model="filterForm.employee_id"
                     :items="employees"
                     item-title="name"

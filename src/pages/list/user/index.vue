@@ -734,7 +734,7 @@ onMounted(async () =>  {
                       <img v-else :src="imagePreview" width="150" height="150" alt="">
                     </div>
                     <div class="w-100">
-                      <v-select
+                      <v-autocomplete
                           v-model="organization"
                           :items="organizations"
                           color="green"
@@ -789,7 +789,7 @@ onMounted(async () =>  {
                   >Изменить
                   </span>
                   <div :class="isExistsUser ? 'mt-2' : 'mt-5'">
-                    <v-select
+                    <v-autocomplete
                       v-model="group"
                       :items="groups"
                       color="green"
@@ -897,7 +897,7 @@ onMounted(async () =>  {
                       />
                     </div>
                     <div class="w-100">
-                      <v-select
+                      <v-autocomplete
                           v-model="filterForm.organization_id"
                           :items="organizations"
                           color="green"

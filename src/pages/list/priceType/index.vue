@@ -507,7 +507,7 @@ onMounted(async () => {
                       clear-icon="close"
                       clearable
                   />
-                  <v-select
+                  <v-autocomplete
                       variant="outlined"
                       hide-details
                       label="Выберите валюту"
@@ -567,7 +567,7 @@ onMounted(async () => {
                       clear-icon="close"
                       clearable
                   />
-                  <v-select
+                  <v-autocomplete
                       variant="outlined"
                       label="Валюта"
                       v-model="filterForm.currency_id"

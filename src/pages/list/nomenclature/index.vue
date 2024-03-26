@@ -466,7 +466,7 @@ onMounted(() => {
                   />
                 </div>
                 <div class="d-flex ga-3">
-                  <v-select
+                  <v-autocomplete
                     placeholder="Место расположения"
                     label="Место расположения"
                     :item-props="itemsProps"
@@ -480,7 +480,7 @@ onMounted(() => {
                     hide-details
                     :base-color="FIELD_COLOR"
                   />
-                  <v-select
+                  <v-autocomplete
                     placeholder="Ед измерения"
                     :item-props="itemsProps"
                     label="Ед измерения"
@@ -495,7 +495,7 @@ onMounted(() => {
                     :base-color="FIELD_COLOR"
                   />
                 </div>
-                <v-select
+                <v-autocomplete
                   placeholder="Группа номенклатуры"
                   label="Группа номенклатуры"
                   :item-props="itemsProps"
