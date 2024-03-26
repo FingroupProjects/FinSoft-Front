@@ -80,7 +80,6 @@ const filterForm = ref({
 const showModalDialog = ref(null)
 
 const headers = ref([
-  {title: '№', key: 'id', align: 'start'},
   {title: 'ФИО', key: 'name', align: 'start'},
 ])
 
@@ -493,6 +492,10 @@ const getUser = async ({page, itemsPerPage, sortBy, search}) => {
   }
 }
 
+watch(markedID, (newVal) => {
+  markedItem.value = users.value.find((el) => el.id === newVal[0]);
+});
+
 const closeFilterDialog = () => {
   showModalDialog.value = false
   filterForm.value = {}
@@ -621,6 +624,8 @@ onMounted(async () =>  {
               :items-length="paginations.total || 0"
               :items="users"
               :item-value="headers.title"
+              show-select
+          v-model="markedID"
               :search="search"
               @update:options="getUser"
               page-text =  '{0}-{1} от {2}'
@@ -961,6 +966,9 @@ onMounted(async () =>  {
       </v-card>
     </v-col>
   </div>
+
+
+
 
 
 </template>

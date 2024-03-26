@@ -48,7 +48,6 @@ const c = ref(false);
 const search = ref("");
 
 const headers = ref([
-  { title: "№", key: "id", align: "start" },
   { title: "Наименование", key: "name" },
   { title: "Адрес", key: "address" },
   { title: "Тип контрагента", key: "roles", sortable: false },
@@ -145,6 +144,10 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
     return massDel({ page, itemsPerPage, sortBy, search });
   }
 };
+
+watch(markedID, (newVal) => {
+  markedItem.value = counterparties.value.find((el) => el.id === newVal[0]);
+});
 
 const getCounterparty = async ({ page, itemsPerPage, sortBy, search }) => {
   const filterData = filterForm.value;
@@ -330,6 +333,8 @@ onMounted(async () => {
       <v-card class="table mt-2">
         <v-data-table-server
           style="height: 78vh"
+          show-select
+          v-model="markedID"
           fixed-header
           :items="counterparty"
           :headers="headers"

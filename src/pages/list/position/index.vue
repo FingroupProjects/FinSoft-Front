@@ -285,6 +285,12 @@ const closeDialogWithoutSaving = () => {
   cleanForm();
 };
 
+const destroy = async () => {
+  markedID.value.push(idPosition.value);
+  compute({ page: 1, itemsPerPage: 10, sortBy: 'id' })
+  dialog.value = false
+}
+
 const checkUpdate = () => {
   if (isDataChanged()) {
     showModal.value = true;
@@ -304,6 +310,7 @@ watch(dialog, newVal => {
     nameRef.value = null
   }
 })
+
 
 
 </script>
@@ -406,7 +413,7 @@ watch(dialog, newVal => {
               <span>{{ isExistsPosition ? positionInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons title="Удалить"  v-if="isExistsPosition"  @click="compute" name="delete"/>
+                  <Icons title="Удалить"  v-if="isExistsPosition"  @click="destroy" name="delete"/>
                   <Icons title="Сохранить" v-if="isExistsPosition" @click="update" name="save"/>
                   <Icons title="Сохранить" v-else @click="addPosition" name="save"/>
                 </div>
