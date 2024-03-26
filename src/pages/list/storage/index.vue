@@ -79,7 +79,7 @@ const count = ref(0)
 
 const toggleModal = () => {
   showModal.value = !showModal.value;
-  console.log('openModal');
+  showConfirmDialog.value = false;
 };
 
 
@@ -660,6 +660,8 @@ const isDataChanged = () => {
     (item) => item.id === idStorage.value
   );
 
+  console.log(item)
+
 
   const isChanged =
     nameRef.value !== item.name ||
@@ -690,6 +692,7 @@ const checkAndClose = () => {
 };
 
 const closeDialogWithoutSaving = () => {
+  console.log(1)
   dialog.value = false;
   showModal.value = false
   showConfirmDialog.value = false;

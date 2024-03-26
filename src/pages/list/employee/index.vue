@@ -52,6 +52,17 @@ const paginationsGroup = ref([])
 const showConfirmDialog = ref(false);
 const showModal = ref(false);
 
+const filterDialog = ref(false)
+
+const filterForm = ref({
+  name: null,
+  phone: null,
+  email: null,
+  address: null,
+})
+
+const count = ref(0)
+
 const headers = ref([
   {title: '№', key: 'id', align: 'start'},
   {title: 'Наименование', key: 'name'},
@@ -61,7 +72,21 @@ const rules = {
   required: v => !!v,
 }
 
+function countFilter() {
+   
+   for (const key in filterForm.value) {
+       if (filterForm.value[key] !== null) {
+           count.value++;
+       }
+   }
+   
+   return count;
+}
+
+
 const getGroup = async ({page, itemsPerPage, sortBy}) => {
+  
+
   loadingGroup.value = true
   try {
     const {data} = await employeeGroup.get({page, itemsPerPage, sortBy})
@@ -309,11 +334,17 @@ const lineMarkingGroup = group_id => {
   getEmployee({})
 }
 const getEmployee = async ({page, itemsPerPage, sortBy, search}) => {
+
+  filterDialog.value = false
+  const filterData = filterForm.value
+  count.value = 0
+  countFilter()
+
   try {
     if (groupIdRef.value === 0) return
     loading.value = true
 
-    const {data} = await employeeGroup.getEmployees({page, itemsPerPage, sortBy}, search, groupIdRef.value)
+    const {data} = await employeeGroup.getEmployees({page, itemsPerPage, sortBy}, search, groupIdRef.value, filterData)
     paginations.value = data.result.pagination
     employees.value = data.result.data
   } catch (e) {
@@ -321,6 +352,14 @@ const getEmployee = async ({page, itemsPerPage, sortBy, search}) => {
   } finally {
     loading.value = false
   }
+}
+
+
+const  closeFilterModal = async () => {
+  filterDialog.value = false
+  filterForm.value = {}
+   await getEmployee({})
+  
 }
 
 
@@ -410,7 +449,16 @@ watch(dialog, newVal => {
 
             </div>
           </div>
-          <Icons name="filter" class="mt-1"/>
+          <div class="filterElement">
+            <Icons
+              name="filter"
+              title="фильтр"
+              @click="filterDialog = true"
+              class="mt-1"
+            />
+
+            <span v-if="count !== 0" class="countFilter">{{ count }}</span>
+          </div>
         </v-card>
       </div>
       <div class="d-flex ga-4 w-100">
@@ -627,7 +675,104 @@ watch(dialog, newVal => {
         </div>
         <div v-if="showModal">
         <ConfirmModal :showModal="true" @close="showModal = !showModal" @closeClear="closeDialogWithoutSaving" />
-      </div>
+        </div>
+
+        <v-dialog v-model="filterDialog" class="mt-2 pa-2">
+        <v-card
+          style="border: 2px solid #3ab700"
+          min-width="650"
+          class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
+          rounded="xl"
+        >
+          <div class="d-flex justify-space-between align-center mb-2">
+            <span>Фильтр</span>
+            <div class="d-flex align-center justify-space-between">
+              <div class="d-flex ga-3 align-center mt-2 me-4">
+                <Icons @click="getEmployee" name="save" title="Сохранить" />
+              </div>
+              <v-btn
+                @click="closeFilterModal"
+                variant="text"
+                :size="32"
+                class="pt-2 pl-1"
+              >
+                <Icons name="close" title="Закрыть" />
+              </v-btn>
+            </div>
+          </div>
+          <v-form class="d-flex w-100">
+            <v-row class="w-100">
+              <v-col class="d-flex flex-column w-100">
+                <div class="d-flex justify-space-between ga-6 mb-3">
+                  <v-text-field
+                    v-model="filterForm.name"
+                    color="green"
+                    :base-color="FIELD_COLOR"
+                    rounded="md"
+                    variant="outlined"
+                    class="w-auto text-sm-body-1"
+                    density="compact"
+                    placeholder="Наименование"
+                    label="Наименование"
+                    clear-icon="close"
+                    clearable
+                    hide-details
+                  />
+                </div>
+                
+                <div class="d-flex ga-4 mb-3">
+                  <v-text-field
+                    variant="outlined"
+                    :base-color="FIELD_COLOR"
+                    label="Тел номер"
+                    v-model.trim="filterForm.phone"
+                    density="compact"
+                    v-mask="'+992#########'"
+                    rounded="md"
+                    color="green"
+                    hide-details
+                    :append-inner-icon="
+                      filterForm.phone !== null ? 'close' : ''
+                    "
+                    @click:append-inner="filterForm.phone = null"
+                  />
+                  <v-text-field
+                    variant="outlined"
+                    :base-color="FIELD_COLOR"
+                    label="Почта"
+                    v-model="filterForm.email"
+                    density="compact"
+                    rounded="md"
+                    color="green"
+                    hide-details
+                    :append-inner-icon="
+                      filterForm.email !== null ? 'close' : ''
+                    "
+                    @click:append-inner="filterForm.email = null"
+                  />
+                </div>
+                <v-text-field
+                  variant="outlined"
+                  :base-color="FIELD_COLOR"
+                  label="Адрес"
+                  v-model="filterForm.address"
+                  density="compact"
+                  rounded="md"
+                  color="green"
+                  hide-details
+                  :append-inner-icon="
+                    filterForm.address !== null ? 'close' : ''
+                  "
+                  @click:append-inner="filterForm.address = null"
+                />
+              </v-col>
+            </v-row>
+          </v-form>
+        </v-card>
+      </v-dialog>
+
+
+
       </v-card>
     </v-col>
   </div>
@@ -636,5 +781,21 @@ watch(dialog, newVal => {
 </template>
 
 <style scoped>
-
+.filterElement {
+  position: relative;
+}
+.countFilter {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #82abf6;
+  border-radius: 50%;
+  font-size: 10px;
+  color: white;
+}
 </style>

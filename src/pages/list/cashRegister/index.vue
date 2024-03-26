@@ -84,7 +84,6 @@ const filterForm = ref({
 const showFilterModal = ref(false)
 
 const headers = ref([
-  {title: '№', key: 'id', align: 'start'},
   {title: 'Наименование', key: 'name'},
   {title: 'Баланс', key: 'name'},
 
@@ -474,6 +473,10 @@ const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
 
 }
 
+watch(markedID, (newVal) => {
+  markedItem.value = cashRegisters.value.find((el) => el.id === newVal[0]);
+});
+
 
 watch(dialog, newVal => {
   if (!newVal) {
@@ -553,6 +556,8 @@ watch(dialog, newVal => {
             :item-value="headers.title"
             :search="search"
             page-text='{0}-{1} от {2}'
+            show-select
+          v-model="markedID"
             :items-per-page-options="[
                 {value: 25, title: '25'},
                 {value: 50, title: '50'},

@@ -51,6 +51,12 @@ const dateRef = ref(null)
 const valueRef = ref(null)
 const showModal = ref(false);
 
+const toggleModal = () => {
+  showModal.value = !showModal.value;
+  // console.log('openModal');
+};
+
+
 const filterForm = ref({
   name: null,
   symbol_code: null,
@@ -113,15 +119,26 @@ const getCurrencyData = async ({page, itemsPerPage, sortBy, search}) => {
   }
 }
 
-const isDataChanged = () => {
-  const item = currencies.value.find(elem => elem.id === idCurrency.value)
 
-  return  nameRef.value !== item.name ||
+
+// name: nameRef.value,
+//     digital_code: digitalRef.value,
+//     symbol_code: symbolRef.value
+const isDataChanged = () => {
+  const item = currencies.value.find(
+    (item) => item.id === idCurrency.value
+  );
+
+  const isChanged =
+  nameRef.value !== item.name ||
   digitalRef.value !== item.digital_code ||
   symbolRef.value !== item.symbol_code 
-}
+
+  return isChanged;
+};
 
 const checkAndClose = () => {
+  console.log(1);
   if (
     nameRef.value ||
     digitalRef.value ||
@@ -139,20 +156,21 @@ const closeDialogWithoutSaving = () => {
   showModal.value = false
   showConfirmDialog.value = false;
   cleanForm();
-}
+};
 
 const checkUpdate = () => {
   if (isDataChanged()) {
-    showModal.value = true;
+    showConfirmDialog.value = true;
   } else {
     dialog.value = false;
   }
-}
+
+};
 const cleanForm = () => {
   nameRef.value = null;
   digitalRef.value = null;
   symbolRef.value = null;
-}
+};
 
 const getCurrencyRateData = async ({page, itemsPerPage, sortBy, search}) => {
   if (idCurrency.value === 0) {
@@ -589,7 +607,7 @@ watch(rateDialog, newVal => {
                   <Icons title="Сохранить"  v-else @click="addCurrency" name="save"/>
                 </div>
                 <v-btn
-                @click="isExistsCurrency ? checkUpdate : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
+                @click="toggleModal() ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
                 
                 variant="text"
                 :size="32"
@@ -837,7 +855,7 @@ watch(rateDialog, newVal => {
     
 
       <div v-if="showModal">
-        <ConfirmModal :showModal="true" @close="showModal = !showModal" @closeClear="closeDialogWithoutSaving()" />
+        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" />
       </div>
 
     </v-col>
@@ -847,21 +865,5 @@ watch(rateDialog, newVal => {
 </template>
 
 <style scoped>
-.filterElement {
-  position: relative;
-}
-.countFilter {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  width: 16px;
-  height: 16px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #82abf6;
-  border-radius: 50%;
-  font-size: 10px;
-  color: white;
-}
+
 </style>
