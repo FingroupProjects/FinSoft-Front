@@ -87,7 +87,7 @@ function countFilter() {
 const getGroup = async ({page, itemsPerPage, sortBy}) => {
   loadingGroup.value = true
   try {
-    const {data} = await employeeGroup.get({page, itemsPerPage, sortBy})
+    const { data } = await employeeGroup.get({page, itemsPerPage, sortBy})
     paginationsGroup.value = data.result.pagination
     groups.value = data.result.data.map(item => ({
       id: item.id,
@@ -124,7 +124,7 @@ const selectAvatar = event => {
 }
 
 const addEmployee = async ({page, itemsPerPage, sortBy}) => {
-
+ if (!validate(nameRef, phoneRef, emailRef, addressRef, group) !== true) return
   const formData = new FormData()
 
   function appendIfNotNull(key, value) {
@@ -618,7 +618,7 @@ watch(dialog, newVal => {
                       <div class="d-flex flex-column" style="width: 60%">
                           <v-text-field
                               v-model="phoneRef"
-                              :rules="[rules.required]"
+                              :rules="[rules.required, rules.phone]"
                               color="green"
                               :base-color="FIELD_COLOR"
                               variant="outlined"
@@ -626,6 +626,7 @@ watch(dialog, newVal => {
                               density="compact"
                               placeholder="номер телефона"
                               label="Номер телефона"
+                              v-mask="'+############'"
                               clear-icon="close"
                               clearable
                           />
