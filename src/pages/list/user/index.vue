@@ -621,7 +621,7 @@ onMounted(async () =>  {
               :items="users"
               :item-value="headers.title"
               show-select
-          v-model="markedID"
+              v-model="markedID"
               :search="search"
               @update:options="getUser"
               page-text =  '{0}-{1} от {2}'
