@@ -316,13 +316,14 @@ const isDataChanged = () => {
   return isChanged;
 };
 
+
 const checkAndClose = () => {
   if (
     nameRef.value ||
     currencyAdd.value ||
-    descriptionRef.value 
+    descriptionRef.value
   ) {
-    showConfirmDialog.value = true;
+    showModal.value = true;
   } else {
     dialog.value = false;
     showModal.value = false;
@@ -337,15 +338,13 @@ const closeDialogWithoutSaving = () => {
 };
 
 const checkUpdate = () => {
-  console.log(23)
   if (isDataChanged()) {
-    console.log(1)
     showModal.value = true;
   } else {
     dialog.value = false;
   }
-
 };
+
 
 const cleanForm = () => {
   nameRef.value = null;
@@ -353,7 +352,7 @@ const cleanForm = () => {
   descriptionRef.value = null
 };
 
-watch(dialog, newVal => {
+watch((dialog), newVal => {
   if (!newVal) {
     nameRef.value = null
     currencyUpdate.value = null
@@ -507,7 +506,7 @@ onMounted(async () => {
                       clear-icon="close"
                       clearable
                   />
-                  <v-select
+                  <v-autocomplete
                       variant="outlined"
                       hide-details
                       label="Выберите валюту"
@@ -567,7 +566,7 @@ onMounted(async () => {
                       clear-icon="close"
                       clearable
                   />
-                  <v-select
+                  <v-autocomplete
                       variant="outlined"
                       label="Валюта"
                       v-model="filterForm.currency_id"
@@ -594,7 +593,7 @@ onMounted(async () => {
         </v-dialog>
       </v-card>
       <div v-if="showModal">
-        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" />
+        <ConfirmModal :showModal="true" @close="toggleModal" @closeClear="closeDialogWithoutSaving" />
       </div>
     </v-col>
   </div>

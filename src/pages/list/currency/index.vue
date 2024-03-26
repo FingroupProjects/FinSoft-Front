@@ -69,7 +69,6 @@ const paginationsRate = ref([])
 const paginations = ref([]);
 
 const headers = ref([
-  {title: '№', key: 'id', align: 'start'},
   {title: 'Наименование', key: 'name'},
   {title: 'Символьный код', key: 'symbol_code'},
   {title: 'Цифровой код', key: 'digital_code'},
@@ -119,26 +118,15 @@ const getCurrencyData = async ({page, itemsPerPage, sortBy, search}) => {
   }
 }
 
-
-
-// name: nameRef.value,
-//     digital_code: digitalRef.value,
-//     symbol_code: symbolRef.value
 const isDataChanged = () => {
-  const item = currencies.value.find(
-    (item) => item.id === idCurrency.value
-  );
+  const item = currencies.value.find(elem => elem.id === idCurrency.value)
 
-  const isChanged =
-  nameRef.value !== item.name ||
+  return nameRef.value !== item.name ||
   digitalRef.value !== item.digital_code ||
   symbolRef.value !== item.symbol_code 
-
-  return isChanged;
-};
+}
 
 const checkAndClose = () => {
-  console.log(1);
   if (
     nameRef.value ||
     digitalRef.value ||
@@ -447,10 +435,7 @@ const lineMarkingRate = (item) => {
     }
   }
 
-  const index = markedIDRate.value.indexOf(item.id);
-  if (index !== -1) {
-    markedIDRate.value.splice(index, 1);
-  } else {
+  if (!markedIDRate.value.includes(item.id)) {
     markedIDRate.value.push(item.id);
   }
   markedItemRate.value = item;
@@ -476,6 +461,10 @@ const validateCurrency = () => {
 onMounted(async () => {
   dateRef.value = currentDate()
 })
+watch(markedID, (newVal) => {
+  markedItem.value = currencies.value.find((el) => el.id === newVal[0]);
+});
+
 
 watch(dialog, newVal => {
   if (!newVal) {
@@ -558,6 +547,8 @@ watch(rateDialog, newVal => {
             :item-value="headers.title"
             :search="search"
             @update:options="getCurrencyData"
+            show-select
+            v-model="markedID"
             page-text='{0}-{1} от {2}'
             :items-per-page-options="[
                 {value: 25, title: '25'},
@@ -568,18 +559,23 @@ watch(rateDialog, newVal => {
             hover
         >
           <template v-slot:item="{ item, index }">
-            <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @dblclick="openDialog(item)"
-                @click="lineMarking(item)" :class="{'bg-grey-lighten-2': markedID.includes(item.id)}">
+            <tr 
+            @mouseenter="hoveredRowIndex = index" 
+            @mouseleave="hoveredRowIndex = null" 
+            @dblclick="openDialog(item)"
+            @click="lineMarking(item)" :class="{'bg-grey-lighten-2': markedID.includes(item.id)}">
               <td>
                 <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
-                  <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)"
-                                  @change="handleCheckboxClick(item)">
+                  <CustomCheckbox v-model="markedID" 
+                  :checked="markedID.includes(item.id)"
+                  @change="handleCheckboxClick(item)">
                     <span>{{ item.id }}</span>
                   </CustomCheckbox>
                 </template>
                 <template v-else>
                   <div>
-                    <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
+                    <Icons style="margin-right: 10px;"
+                     :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
                     <span>{{ item.id }}</span>
                   </div>
                 </template>

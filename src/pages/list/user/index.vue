@@ -349,8 +349,6 @@ const closeFilterModal = async ({
 };
 
 
-
-
 const handleCheckboxClick = item => {
   lineMarking(item)
 }
@@ -399,7 +397,6 @@ const openDialog = item => {
 
     emailRef.value = item.email
     userDialogTitle.value = item.name
-    console.log(userDialogTitle.value)
   }
 
 }
@@ -457,10 +454,7 @@ const lineMarking = item => {
     }
   }
 
-  const index = markedID.value.indexOf(item.id)
-  if (index !== -1) {
-    markedID.value.splice(index, 1)
-  } else {
+  if (!markedID.value.includes(item.id)) {
     markedID.value.push(item.id);
   }
   markedItem.value = item;
@@ -492,9 +486,6 @@ const getUser = async ({page, itemsPerPage, sortBy, search}) => {
   }
 }
 
-watch(markedID, (newVal) => {
-  markedItem.value = users.value.find((el) => el.id === newVal[0]);
-});
 
 const closeFilterDialog = () => {
   showModalDialog.value = false
@@ -507,6 +498,9 @@ const toggleGroup = async () => {
   await getGroup({})
 }
 
+watch(markedID, (newVal) => {
+  markedItem.value = users.value.find((el) => el.id === newVal[0]);
+});
 
 watch(dialog, newVal => {
   if (!newVal) {
@@ -517,6 +511,8 @@ watch(dialog, newVal => {
     loginRef.value = null
     phoneRef.value = null
     emailRef.value = null
+  } else {
+    markedID.value = [markedID.value[markedID.value.length - 1]];
   }
 })
 
@@ -625,7 +621,7 @@ onMounted(async () =>  {
               :items="users"
               :item-value="headers.title"
               show-select
-          v-model="markedID"
+              v-model="markedID"
               :search="search"
               @update:options="getUser"
               page-text =  '{0}-{1} от {2}'
@@ -734,7 +730,7 @@ onMounted(async () =>  {
                       <img v-else :src="imagePreview" width="150" height="150" alt="">
                     </div>
                     <div class="w-100">
-                      <v-select
+                      <v-autocomplete
                           v-model="organization"
                           :items="organizations"
                           color="green"
@@ -789,7 +785,7 @@ onMounted(async () =>  {
                   >Изменить
                   </span>
                   <div :class="isExistsUser ? 'mt-2' : 'mt-5'">
-                    <v-select
+                    <v-autocomplete
                       v-model="group"
                       :items="groups"
                       color="green"
@@ -897,7 +893,7 @@ onMounted(async () =>  {
                       />
                     </div>
                     <div class="w-100">
-                      <v-select
+                      <v-autocomplete
                           v-model="filterForm.organization_id"
                           :items="organizations"
                           color="green"

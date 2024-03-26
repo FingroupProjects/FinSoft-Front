@@ -267,11 +267,10 @@ const isDataChanged = () => {
 };
 
 const checkAndClose = () => {
-  console.log(1);
   if (
     nameRef.value 
   ) {
-    showConfirmDialog.value = true;
+    showModal.value = true;
   } else {
     dialog.value = false;
     showModal.value = false;
@@ -493,10 +492,9 @@ watch(dialog, newVal => {
 
       </v-card>
       <div v-if="showModal">
-        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" />
+        <ConfirmModal :showModal="true" @close="toggleModal" @closeClear="closeDialogWithoutSaving" />
       </div>
-    </v-col>
-    
+    </v-col>  
   </div>
 
 
