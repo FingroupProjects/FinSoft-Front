@@ -611,7 +611,7 @@ onMounted(async () => {
                   clear-icon="close"
                   clearable
                 />
-                <v-select
+                <v-autocomplete
                   v-model="directorRef"
                   :rules="[rules.required]"
                   :items="employees"
@@ -621,8 +621,8 @@ onMounted(async () => {
                   item-value="id"
                   label="Директор"
                   variant="outlined"
-                ></v-select>
-                <v-select
+                />
+                <v-autocomplete
                   v-model="accountantRef"
                   :rules="[rules.required]"
                   :items="employees"
@@ -632,7 +632,7 @@ onMounted(async () => {
                   item-value="id"
                   label="Гл. бухгалтер"
                   variant="outlined"
-                ></v-select>
+                />
                 <v-text-field
                   v-model="addressRef"
                   :rules="[rules.required]"

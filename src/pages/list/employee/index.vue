@@ -664,7 +664,7 @@ watch(dialog, newVal => {
                       </div>
 
                   </div>
-                  <v-select
+                  <v-autocomplete
                       v-model="group"
                       class="mt-5"
                       :items="groups"

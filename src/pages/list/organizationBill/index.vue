@@ -49,6 +49,7 @@ const organizationBills = ref([]);
 const paginations = ref([]);
 
 const currenciesCopy = ref([])
+const organizationCopy = ref([])
 
 const count = ref(0);
 const searchSelect = ref(null)
@@ -396,26 +397,21 @@ onMounted(async () => {
   await getCurrencies();
   await getOrganizations();
   currenciesCopy.value = [...currencies.value];
+  organizationCopy.value = [...organizations.value]
 });
 
-const searchCurrency = () => {
-console.log(searchSelect.value)
+const searchOrganization = () => {
 
-    console.log(currencies.value.length)
-
-    console.log(currencies.value)
-    
-      if (!searchSelect.value) {
-        currencies.value = currenciesCopy.value
+       if (!searchSelect.value) {
+        organizations.value = organizationCopy.value
       }
 
-    currencies.value = currenciesCopy.value.filter((c) => {
-    
-    return c.name.indexOf(searchSelect.value) > -1
-});
 
+
+    organizations.value = organizationCopy.value.filter((c) => c.name.indexOf(searchSelect.value) > -1);
 
 };
+
 
 
 </script>
@@ -649,45 +645,35 @@ console.log(searchSelect.value)
                       @click:append-inner="bill_number = null"
                       hide-details
                     />
-
-                    
-
-                    <v-select
+                    <v-autocomplete
                       style="max-width: 40%; min-width: 40%"
                       v-model="currencyAdd"
                       :items="currencies"
                       :base-color="FIELD_COLOR"
                       item-title="name"
                       item-value="id"
+                      
                       :rules="[rules.required]"
                       label="Валюта"
                       variant="outlined"
                       density="compact"
                       hide-details
-                    >
+                    />
                    
-                     </v-select>
                   </div>
-                  <v-select
+                  <v-autocomplete
                     v-model="organizationAdd"
                     :items="organizations"
                     item-title="name"
+                    
                     :base-color="FIELD_COLOR"
                     item-value="id"
                     :rules="[rules.required]"
                     label="Организация"
                     variant="outlined"
                     density="compact"
-                  >
-                  <template v-slot:prepend-item>
-          <v-list-item>
-          
-              <v-text-field  variant="outlined" v-model="searchSelect" placeholder="Поиск" @input="searchCurrency"></v-text-field>
-           
-          </v-list-item>
-          <v-divider class="mt-2"></v-divider>
-        </template>
-                </v-select>
+                  />
+                  
                   <v-textarea
                     variant="outlined"
                     :base-color="FIELD_COLOR"
@@ -828,7 +814,9 @@ console.log(searchSelect.value)
                       variant="outlined"
                       density="compact"
                       hide-details
-                    />
+                    > 
+                    <v-text-field  density="compact"  variant="outlined" v-model="searchSelect" placeholder="Поиск" @input="searchCurrency"></v-text-field>
+            </v-select>
                   </div>
                   <v-select
                     v-model="filterForm.organization_id"
@@ -839,7 +827,10 @@ console.log(searchSelect.value)
                     label="Организация"
                     variant="outlined"
                     density="compact"
-                  />
+                  >
+                  <v-text-field  density="compact"  variant="outlined" v-model="searchSelect" placeholder="Поиск" @input="searchOrganization"></v-text-field>
+            
+                </v-select>
                   <v-textarea
                     variant="outlined"
                     label="Комментарий"
