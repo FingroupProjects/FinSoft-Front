@@ -570,11 +570,13 @@ watch(dialog, newVal => {
           <template v-slot:item="{ item, index }">
             <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)" @dblclick="openDialog(item)"
                 :class="{'bg-grey-lighten-2': markedID.includes(item.id) }">
-              <td class="">
+              <td class="d-flex">
                 <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
                   <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)"
                                   @change="handleCheckboxClick(item)">
-                    <span>{{ index.id }}</span>
+
+                    <span>{{ item.id }}</span>
+
                   </CustomCheckbox>
                 </template>
                 <template v-else>
@@ -633,7 +635,7 @@ watch(dialog, newVal => {
                       clearable
                   />
                   <div class="d-flex ga-4">
-                    <v-select
+                    <v-autocomplete
                         style="max-width: 50%; min-width: 50%;"
                         variant="outlined"
                         hide-details
@@ -645,7 +647,7 @@ watch(dialog, newVal => {
                         item-title="name"
                         item-value="id"
                     />
-                    <v-select
+                    <v-autocomplete
                       style="max-width: 47%; min-width: 46%;"
                         variant="outlined"
                         hide-details
@@ -658,7 +660,7 @@ watch(dialog, newVal => {
                     />
 
                   </div>
-                  <v-select
+                  <v-autocomplete
                       variant="outlined"
                       label="Организация"
                       hide-details
@@ -712,7 +714,7 @@ watch(dialog, newVal => {
                       clearable
                   />
                   <div class="d-flex ga-4">
-                    <v-select
+                    <v-autocomplete
                         style="max-width: 50%; min-width: 50%;"
                         variant="outlined"
                         hide-details
@@ -723,7 +725,7 @@ watch(dialog, newVal => {
                         item-title="name"
                         item-value="id"
                     />
-                    <v-select
+                    <v-autocomplete
                       style="max-width: 47%; min-width: 46%;"
                         variant="outlined"
                         :base-color="FIELD_COLOR"
@@ -736,7 +738,7 @@ watch(dialog, newVal => {
                     />
 
                   </div>
-                  <v-select
+                  <v-autocomplete
                       variant="outlined"
                       label="Организация"
                       hide-details
