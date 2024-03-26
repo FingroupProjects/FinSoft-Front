@@ -15,7 +15,6 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import createCounterparty from "./create.vue";
 import { FIELD_COLOR } from "../../../composables/constant/colors.js";
 
-
 const loading = ref(true);
 const isCreate = ref(false);
 const isEdit = ref(false);
@@ -27,14 +26,11 @@ const markedItem = ref([]);
 const counterparty = ref([]);
 const pagination = ref([]);
 
-const filterDialog = ref(false)
+const filterDialog = ref(false);
 const organizations = ref([]);
-const priceTypes = ref([])
+const priceTypes = ref([]);
 const counterparties = ref([]);
-const currencies = ref([])
-
-
-
+const currencies = ref([]);
 
 const filterForm = ref({
   name: null,
@@ -42,17 +38,16 @@ const filterForm = ref({
   phone: null,
   comment: null,
   address: null,
-  roles: []
-})
+  roles: [],
+});
 
-const a = ref(false)
-const b = ref(false)
-const c = ref(false)
+const a = ref(false);
+const b = ref(false);
+const c = ref(false);
 
 const search = ref("");
 
 const headers = ref([
-  { title: "№", key: "id", align: "start" },
   { title: "Наименование", key: "name" },
   { title: "Адрес", key: "address" },
   { title: "Тип контрагента", key: "roles", sortable: false },
@@ -82,11 +77,6 @@ watch(
   }
 );
 
-
-
-
-
-
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
     const firstMarkedItem = counterparty.value.find(
@@ -114,8 +104,6 @@ const lineMarking = (item) => {
   markedItem.value = item;
 };
 
-
-
 const createBase = () => {
   if (markedID.value.length !== 1)
     return showToast(selectOneItemMessage, "warning");
@@ -129,19 +117,18 @@ const editItem = (item) => {
   markedItem.value = item;
 };
 
-
 function countFilter() {
-   
-   for (const key in filterForm.value) {
-       if (
-           filterForm.value[key] !== null
-           && (!Array.isArray(filterForm.value[key]) || filterForm.value[key].length !== 0)
-       ) {
-           count.value++;
-       }
-   }
-   
-   return count;
+  for (const key in filterForm.value) {
+    if (
+      filterForm.value[key] !== null &&
+      (!Array.isArray(filterForm.value[key]) ||
+        filterForm.value[key].length !== 0)
+    ) {
+      count.value++;
+    }
+  }
+
+  return count;
 }
 
 const toggleModal = () => {
@@ -158,12 +145,15 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
   }
 };
 
+watch(markedID, (newVal) => {
+  markedItem.value = counterparties.value.find((el) => el.id === newVal[0]);
+});
+
 const getCounterparty = async ({ page, itemsPerPage, sortBy, search }) => {
-  const filterData = filterForm.value
-  filterDialog.value = false
-  count.value = 0
-  countFilter()
-  
+  const filterData = filterForm.value;
+  filterDialog.value = false;
+  count.value = 0;
+  countFilter();
 
   loading.value = true;
   try {
@@ -185,13 +175,13 @@ const getCounterparty = async ({ page, itemsPerPage, sortBy, search }) => {
 };
 
 const closeFilterDialog = async (page, itemsPerPage, sortBy) => {
-  filterForm.value = {}
-  a.value = false
-  b.value = false
-  c.value = false
-  filterDialog.value = false
+  filterForm.value = {};
+  a.value = false;
+  b.value = false;
+  c.value = false;
+  filterDialog.value = false;
   await getCounterparty({ page, itemsPerPage, sortBy });
-}
+};
 
 const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
   if (markedID.value.length === 0) {
@@ -213,8 +203,6 @@ const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
   }
 };
 
-
-
 const massRestoreCounterparty = async () => {
   if (markedID.value.length === 0) {
     showToast(warningMessage, "warning");
@@ -234,7 +222,6 @@ const massRestoreCounterparty = async () => {
     console.log(e);
   }
 };
-
 
 const getCurrencies = async () => {
   try {
@@ -265,44 +252,34 @@ const getOrganizations = async () => {
   } catch (e) {}
 };
 
-
-
 const handleCheckboxChange = (index) => {
   if (!filterForm.value.roles) {
     filterForm.value.roles = [];
   }
 
   if (filterForm.value.roles.includes(index + 1)) {
-    filterForm.value.roles = filterForm.value.roles.filter((role) => role !== index + 1);
+    filterForm.value.roles = filterForm.value.roles.filter(
+      (role) => role !== index + 1
+    );
   } else {
     filterForm.value.roles.push(index + 1);
   }
 
   computeRoles();
-  
 };
 
 const computeRoles = () => {
-
   filterForm.value.roles.forEach((roleIndex) => {
     if (roleIndex === 1) a.value = true;
     else if (roleIndex === 2) b.value = true;
     else if (roleIndex === 3) c.value = true;
   });
-
 };
-
-
-
 
 onMounted(async () => {
   await getCurrencies();
   await getOrganizations();
 });
-
-
-
-
 </script>
 
 <template>
@@ -356,6 +333,8 @@ onMounted(async () => {
       <v-card class="table mt-2">
         <v-data-table-server
           style="height: 78vh"
+          show-select
+          v-model="markedID"
           fixed-header
           :items="counterparty"
           :headers="headers"
@@ -437,129 +416,128 @@ onMounted(async () => {
         :createOnBase="createOnBase"
       />
 
-
       <v-dialog v-model="filterDialog" class="mt-2 pa-2">
-      <v-card
-        style="border: 2px solid #3ab700"
-        min-width="650"
-        class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
-        rounded="xl"
-      >
-        <div class="d-flex justify-space-between align-center mb-2">
-          <span>Фильтр</span>
-          <div class="d-flex align-center justify-space-between">
-            <div class="d-flex ga-3 align-center mt-2 me-4">
-              <Icons
-                @click="getCounterparty"
-                name="save"
-                title="Сохранить"
-              />
-            </div>
-            <v-btn
-              @click="closeFilterDialog"
-              variant="text"
-              :size="32"
-              class="pt-2 pl-1"
-            >
-              <Icons name="close" title="Закрыть" />
-            </v-btn>
-          </div>
-        </div>
-        <v-form class="d-flex w-100">
-          <v-row class="w-100">
-            <v-col class="d-flex flex-column w-100">
-              <div class="d-flex justify-space-between ga-6">
-                <v-text-field
-                  v-model="filterForm.name"
-                  color="green"
-                  :base-color="FIELD_COLOR"
-                  rounded="md"
-                  variant="outlined"
-                  class="w-auto text-sm-body-1"
-                  density="compact"
-                  placeholder="Контрагент"
-                  label="Наименование"
-                  clear-icon="close"
-                  clearable
-                  hide-details
-                />
-                
+        <v-card
+          style="border: 2px solid #3ab700"
+          min-width="650"
+          class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
+          rounded="xl"
+        >
+          <div class="d-flex justify-space-between align-center mb-2">
+            <span>Фильтр</span>
+            <div class="d-flex align-center justify-space-between">
+              <div class="d-flex ga-3 align-center mt-2 me-4">
+                <Icons @click="getCounterparty" name="save" title="Сохранить" />
               </div>
-              <div
-                :class="isEdit ? 'justify-space-between' : 'justify-end'"
-                class="d-flex justify-space-between ga-5 align-center my-3"
+              <v-btn
+                @click="closeFilterDialog"
+                variant="text"
+                :size="32"
+                class="pt-2 pl-1"
               >
-                <div
-                  v-if="isEdit"
-                  style="
-                    border: 1.5px solid #cbc8c8;
-                    border-radius: 4px;
-                    padding: 2px 12px;
-                  "
-                >
-                  <span>
-                    {{ date }}
-                  </span>
+                <Icons name="close" title="Закрыть" />
+              </v-btn>
+            </div>
+          </div>
+          <v-form class="d-flex w-100">
+            <v-row class="w-100">
+              <v-col class="d-flex flex-column w-100">
+                <div class="d-flex justify-space-between ga-6">
+                  <v-text-field
+                    v-model="filterForm.name"
+                    color="green"
+                    :base-color="FIELD_COLOR"
+                    rounded="md"
+                    variant="outlined"
+                    class="w-auto text-sm-body-1"
+                    density="compact"
+                    placeholder="Контрагент"
+                    label="Наименование"
+                    clear-icon="close"
+                    clearable
+                    hide-details
+                  />
                 </div>
-                <CustomCheckbox :checked="a" @change="handleCheckboxChange(0)"
-                  >Клиент</CustomCheckbox
+                <div
+                  :class="isEdit ? 'justify-space-between' : 'justify-end'"
+                  class="d-flex justify-space-between ga-5 align-center my-3"
                 >
-                <CustomCheckbox :checked="b" @change="handleCheckboxChange(1)"
-                  >Поставщик</CustomCheckbox
-                >
-                <CustomCheckbox :checked="c" @change="handleCheckboxChange(2)"
-                  >Прочее</CustomCheckbox
-                >
-              </div>
-              <div class="d-flex ga-4 mb-3">
+                  <div
+                    v-if="isEdit"
+                    style="
+                      border: 1.5px solid #cbc8c8;
+                      border-radius: 4px;
+                      padding: 2px 12px;
+                    "
+                  >
+                    <span>
+                      {{ date }}
+                    </span>
+                  </div>
+                  <CustomCheckbox :checked="a" @change="handleCheckboxChange(0)"
+                    >Клиент</CustomCheckbox
+                  >
+                  <CustomCheckbox :checked="b" @change="handleCheckboxChange(1)"
+                    >Поставщик</CustomCheckbox
+                  >
+                  <CustomCheckbox :checked="c" @change="handleCheckboxChange(2)"
+                    >Прочее</CustomCheckbox
+                  >
+                </div>
+                <div class="d-flex ga-4 mb-3">
+                  <v-text-field
+                    variant="outlined"
+                    :base-color="FIELD_COLOR"
+                    label="Тел номер"
+                    v-model.trim="filterForm.phone"
+                    density="compact"
+                    v-mask="'+992#########'"
+                    rounded="md"
+                    color="green"
+                    hide-details
+                    :append-inner-icon="
+                      filterForm.phone !== null ? 'close' : ''
+                    "
+                    @click:append-inner="filterForm.phone = null"
+                  />
+                  <v-text-field
+                    variant="outlined"
+                    :base-color="FIELD_COLOR"
+                    label="Почта"
+                    v-model="filterForm.email"
+                    density="compact"
+                    rounded="md"
+                    color="green"
+                    hide-details
+                    :append-inner-icon="
+                      filterForm.email !== null ? 'close' : ''
+                    "
+                    @click:append-inner="filterForm.email = null"
+                  />
+                </div>
                 <v-text-field
                   variant="outlined"
                   :base-color="FIELD_COLOR"
-                  label="Тел номер"
-                  v-model.trim="filterForm.phone"
-                  density="compact"
-                  v-mask="'+992#########'"
-                  rounded="md"
-                  color="green"
-                  hide-details
-                  :append-inner-icon="filterForm.phone !== null ? 'close' : ''"
-                  @click:append-inner="filterForm.phone = null"
-                />
-                <v-text-field
-                  variant="outlined"
-                  :base-color="FIELD_COLOR"
-                  label="Почта"
-                  v-model="filterForm.email"
+                  label="Адрес"
+                  v-model="filterForm.address"
                   density="compact"
                   rounded="md"
                   color="green"
                   hide-details
-                  :append-inner-icon="filterForm.email !== null ? 'close' : ''"
-                  @click:append-inner="filterForm.email = null"
+                  :append-inner-icon="
+                    filterForm.address !== null ? 'close' : ''
+                  "
+                  @click:append-inner="filterForm.address = null"
                 />
-              </div>
-              <v-text-field
-                variant="outlined"
-                :base-color="FIELD_COLOR"
-                label="Адрес"
-                v-model="filterForm.address"
-                density="compact"
-                rounded="md"
-                color="green"
-                hide-details
-                :append-inner-icon="filterForm.address !== null ? 'close' : ''"
-                @click:append-inner="filterForm.address = null"
-              />
-            </v-col>
-          </v-row>
-        </v-form>      </v-card>
-    </v-dialog>
-
+              </v-col>
+            </v-row>
+          </v-form>
+        </v-card>
+      </v-dialog>
     </v-col>
   </div>
 </template>
 <style scoped>
-
 .filterElement {
   position: relative;
 }

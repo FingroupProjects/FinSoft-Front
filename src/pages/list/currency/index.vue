@@ -160,7 +160,7 @@ const closeDialogWithoutSaving = () => {
 
 const checkUpdate = () => {
   if (isDataChanged()) {
-    showModal.value = true;
+    showConfirmDialog.value = true;
   } else {
     dialog.value = false;
   }
@@ -607,7 +607,7 @@ watch(rateDialog, newVal => {
                   <Icons title="Сохранить"  v-else @click="addCurrency" name="save"/>
                 </div>
                 <v-btn
-                @click="isExistsCurrency ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
+                @click="toggleModal() ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
                 
                 variant="text"
                 :size="32"
@@ -865,21 +865,5 @@ watch(rateDialog, newVal => {
 </template>
 
 <style scoped>
-.filterElement {
-  position: relative;
-}
-.countFilter {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  width: 16px;
-  height: 16px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #82abf6;
-  border-radius: 50%;
-  font-size: 10px;
-  color: white;
-}
+
 </style>

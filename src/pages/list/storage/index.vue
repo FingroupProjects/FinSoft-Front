@@ -79,7 +79,7 @@ const count = ref(0)
 
 const toggleModal = () => {
   showModal.value = !showModal.value;
-  console.log('openModal');
+  showConfirmDialog.value = false;
 };
 
 
@@ -645,7 +645,7 @@ const getStorage = async ({page, itemsPerPage, sortBy, search}) => {
 
     loading.value = true
 
-    const {data} = await storageGroup.getStorages({page, itemsPerPage, sortBy}, search, groupIdRef.value, filterData)
+    const { data } = await storageGroup.getStorages({page, itemsPerPage, sortBy}, search, groupIdRef.value, filterData)
     paginations.value = data.result.pagination
     storages.value = data.result.data
 
@@ -659,6 +659,8 @@ const isDataChanged = () => {
   const item = storages.value.find(
     (item) => item.id === idStorage.value
   );
+
+  console.log(item)
 
 
   const isChanged =
@@ -690,6 +692,7 @@ const checkAndClose = () => {
 };
 
 const closeDialogWithoutSaving = () => {
+  console.log(1)
   dialog.value = false;
   showModal.value = false
   showConfirmDialog.value = false;
@@ -698,10 +701,8 @@ const closeDialogWithoutSaving = () => {
 
 const checkUpdate = () => {
   if (isDataChanged()) {
-    
     showConfirmDialog.value = true;
   } else {
-    console.log(2)
     dialog.value = false;
   }
 
@@ -942,7 +943,7 @@ onMounted(async () => {
             </v-form>
 
             <v-card class="table" style="border: 1px solid #3AB700">
-              <div v-if="isExistsStorage" class="d-flex w-100 rounded-t-lg mb-1 align-center "
+              <div v-if="isExistsStorage" class="d-flex w-100 rounded-t-lg mb-1 align-center"
                    style="border-bottom: 1px solid #3AB700">
                 <div class="d-flex justify-end w-100 ga-2 pt-1 me-2" style="padding-top: 4px !important;">
                   <Icons @click="removeStorageEmployee" name="delete"/>
@@ -1156,7 +1157,7 @@ onMounted(async () => {
         </v-card>
       </v-dialog>
       <div v-if="showConfirmDialog">
-        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" />
+        <ConfirmModal :showModal="true" @close="toggleModal" @closeClear="closeDialogWithoutSaving" />
       </div>
     </v-col>
   </div>

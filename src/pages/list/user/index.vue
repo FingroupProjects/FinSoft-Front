@@ -69,7 +69,6 @@ const paginations = ref([])
 const paginationsGroup = ref([])
 const count = ref(0)
 
-
 const filterForm = ref({
   name: null,
   email: null,
@@ -81,7 +80,6 @@ const filterForm = ref({
 const showModalDialog = ref(null)
 
 const headers = ref([
-  {title: '№', key: 'id', align: 'start'},
   {title: 'ФИО', key: 'name', align: 'start'},
 ])
 
@@ -115,61 +113,46 @@ const getGroup = async ({page, itemsPerPage, sortBy}) => {
 
 
 const isDataChanged = () => {
-  const item = users.value.find(
-    (item) => item.id === idUser.value
-  );
+  const item = users.value.find(elem => elem.id === idUser.value)
 
-  console.log(123)
-
-  
-
-
-    const isChanged =
-      fioRef.value !== item.name ||
+  return fioRef.value !== item.name ||
       emailRef.value !== item.email ||
       loginRef.value !== item.login ||
       statusRef.value !== item.status
-
-  return isChanged;
-};
+}
 
 
 function countFilter() {
-   
    for (const key in filterForm.value) {
        if (filterForm.value[key] !== null) {
-           count.value++;
+           count.value++
        }
    }
-   
-   return count;
+   return count
 }
 
 const checkAndClose = () => {
-  
-  if (
-    fioRef.value || emailRef.value || phoneRef.value || loginRef.value || passwordRef.value || imageRef.value
-  ) {
-    
+  if (fioRef.value || emailRef.value || phoneRef.value || loginRef.value || passwordRef.value || imageRef.value) {
     showModal.value = true;
   } else {
     dialog.value = false;
     showModal.value = false;
   }
-};
+}
 const closeDialogWithoutSaving = () => {
   dialog.value = false;
   showModal.value = false
   showConfirmDialog.value = false;
   cleanForm();
-};
+}
 const checkUpdate = () => {
   if (isDataChanged()) {
      showModal.value = true;
   } else {
     dialog.value = false;
   }
-};
+}
+
 const cleanForm = () => {
   fioRef.value = null
   statusRef.value = null
@@ -180,9 +163,6 @@ const cleanForm = () => {
   imageRef.value = null
   imagePreview.value = null
 }
-
-
-
 
 const getOrganization = async () => {
   try {
@@ -499,8 +479,8 @@ const getUser = async ({page, itemsPerPage, sortBy, search}) => {
   count.value = 0
   countFilter()
 
-
   if (groupIdRef.value === 0) return loading.value = false
+
   try {
     const { data } = await groupApi.getUsers({page, itemsPerPage, sortBy}, search, groupIdRef.value, filterData)
     paginations.value = data.result.pagination
@@ -511,6 +491,10 @@ const getUser = async ({page, itemsPerPage, sortBy, search}) => {
     loading.value = false
   }
 }
+
+watch(markedID, (newVal) => {
+  markedItem.value = users.value.find((el) => el.id === newVal[0]);
+});
 
 const closeFilterDialog = () => {
   showModalDialog.value = false
@@ -640,6 +624,8 @@ onMounted(async () =>  {
               :items-length="paginations.total || 0"
               :items="users"
               :item-value="headers.title"
+              show-select
+          v-model="markedID"
               :search="search"
               @update:options="getUser"
               page-text =  '{0}-{1} от {2}'
@@ -980,6 +966,9 @@ onMounted(async () =>  {
       </v-card>
     </v-col>
   </div>
+
+
+
 
 
 </template>

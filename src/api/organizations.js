@@ -11,9 +11,6 @@ export default {
   add(data) {
     return api.post('/organization', data)
   },
-  remove(id) {
-    return api.delete(`/organization/${id}`)
-  },  
   getById(id) {
     return api.get(`/organization/${id}`);
   },

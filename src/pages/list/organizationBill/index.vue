@@ -48,7 +48,10 @@ const descriptionRef = ref(null);
 const organizationBills = ref([]);
 const paginations = ref([]);
 
+const currenciesCopy = ref([])
+
 const count = ref(0);
+const searchSelect = ref(null)
 //filter
 
 const filterForm = ref({
@@ -63,7 +66,6 @@ const filterForm = ref({
 const showConfirmDialog = ref(false);
 
 const headers = ref([
-  { title: "№", key: "id", align: "start" },
   { title: "Наименование", key: "name" },
   { title: "Баланс", key: "name", sortable: false },
   { title: "Организация", key: "organization.name" },
@@ -282,6 +284,11 @@ const handleCheckboxClick = (item) => {
   lineMarking(item);
 };
 
+watch(markedID, (newVal) => {
+  markedItem.value = organizationBills.value.find((el) => el.id === newVal[0]);
+});
+
+
 const openDialog = (item) => {
   dialog.value = true;
 
@@ -331,12 +338,14 @@ const addBasedOnorganizationBill = () => {
     if (markedID.value[0] === item.id) {
       nameRef.value = item.name;
       organizationAdd.value = item.organization.id;
-      currencyAdd.value = item.organization.id;
+      currencyAdd.value = item.currency.id;
       comment.value = item.comment;
       dateRef.value = item.date.split(".").reverse().join("-");
       bill_number.value = item.bill_number;
     }
   });
+  isExistsOrganizationBill.value = false
+
 };
 
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
@@ -386,10 +395,36 @@ const lineMarking = (item) => {
 onMounted(async () => {
   await getCurrencies();
   await getOrganizations();
+  currenciesCopy.value = [...currencies.value];
 });
+
+const searchCurrency = () => {
+console.log(searchSelect.value)
+
+    console.log(currencies.value.length)
+
+    console.log(currencies.value)
+    
+      if (!searchSelect.value) {
+        currencies.value = currenciesCopy.value
+      }
+
+    currencies.value = currenciesCopy.value.filter((c) => {
+    
+    return c.name.indexOf(searchSelect.value) > -1
+});
+
+
+};
+
+
 </script>
 
 <template>
+
+
+
+
   <div>
     <v-col>
       <div class="d-flex justify-space-between text-uppercase">
@@ -454,6 +489,8 @@ onMounted(async () => {
           :search="search"
           @update:options="getOrganizationBillData"
           page-text="{0}-{1} от {2}"
+          show-select
+          v-model="markedID"
           :items-per-page-options="[
             { value: 25, title: '25' },
             { value: 50, title: '50' },
@@ -462,6 +499,7 @@ onMounted(async () => {
           fixed-header
           hover
         >
+        
           <template v-slot:item="{ item, index }">
             <tr
               @mouseenter="hoveredRowIndex = index"
@@ -611,6 +649,9 @@ onMounted(async () => {
                       @click:append-inner="bill_number = null"
                       hide-details
                     />
+
+                    
+
                     <v-select
                       style="max-width: 40%; min-width: 40%"
                       v-model="currencyAdd"
@@ -623,7 +664,9 @@ onMounted(async () => {
                       variant="outlined"
                       density="compact"
                       hide-details
-                    />
+                    >
+                   
+                     </v-select>
                   </div>
                   <v-select
                     v-model="organizationAdd"
@@ -635,7 +678,16 @@ onMounted(async () => {
                     label="Организация"
                     variant="outlined"
                     density="compact"
-                  />
+                  >
+                  <template v-slot:prepend-item>
+          <v-list-item>
+          
+              <v-text-field  variant="outlined" v-model="searchSelect" placeholder="Поиск" @input="searchCurrency"></v-text-field>
+           
+          </v-list-item>
+          <v-divider class="mt-2"></v-divider>
+        </template>
+                </v-select>
                   <v-textarea
                     variant="outlined"
                     :base-color="FIELD_COLOR"

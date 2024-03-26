@@ -8,8 +8,8 @@ export default {
     const params = buildParams(page, itemsPerPage, sortBy, search);
     return api.get(`/group/employees-group`, { params });
   },
-  getEmployees({page = 1, itemsPerPage = 10, sortBy}, search, id) {
-    const params = buildParams(page, itemsPerPage, sortBy, search);
+  getEmployees({page = 1, itemsPerPage = 10, sortBy}, search, id, filterData) {
+    const params = buildParams(page, itemsPerPage, sortBy, search, filterData);
     return api.get(`/group/get-employees/${id}`, { params });
   },
   update(id, body) {
