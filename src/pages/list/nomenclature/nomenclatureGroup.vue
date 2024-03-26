@@ -83,10 +83,7 @@ const openFilter = () => {
 function countFilter() {
   for (const key in filterForm.value) {
     if (
-      filterForm.value[key] !== null &&
-      (!Array.isArray(filterForm.value[key]) ||
-        filterForm.value[key].length !== 0)
-    ) {
+      filterForm.value[key] !== null && filterForm.value[key] !== false) {
       count.value++;
     }
   }
@@ -147,12 +144,10 @@ const getGroupById = async ({ page, itemsPerPage, sortBy, search }) => {
 };
 const getGroups = async ({ page, itemsPerPage, sortBy, search }) => {
   try {
+    count.value = 0
     countFilter();
-    const filterData = {
-      name: filterForm.value.name,
-      is_good: filterForm.value.is_good ? 1 : 0,
-      is_service: filterForm.value.is_service ? 1 : 0,
-    };
+    const filterData = filterForm.value
+    console.log(filterData);
     loading.value = true;
     const { data } = await groupApi.get(
       { page, itemsPerPage, sortBy },
@@ -205,6 +200,11 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
   } else {
     return massDel({ page, itemsPerPage, sortBy, search });
   }
+};
+
+const closeFilterModal = () => {
+  isFilter.value = false;
+  filterForm.value = {}
 };
 
 const filterGroup = async (filterData) => {
@@ -276,7 +276,7 @@ onMounted(() => {
               class="mt-1"
             />
 
-            <!-- <span v-if="count !== 0" class="countFilter">{{ count }}</span> -->
+            <span v-if="count !== 0" class="countFilter">{{ count }}</span>
           </div>
         </v-card>
       </div>
@@ -356,8 +356,11 @@ onMounted(() => {
             isCreateGroup = false;
             createGroupOnBase = false;
             isFilter = false;
+            filterForm = {}
+
           "
           @filter="filterGroup"
+         
           :createGroupOnBase="createGroupOnBase"
           :groupData="groupData"
           :isFilter="isFilter"

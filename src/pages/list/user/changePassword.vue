@@ -29,6 +29,12 @@ const change = async () => {
       showToast("Поле Подтверждение пароя не может быть пустым", "warning");
       return
     }
+    if (password.value !== confirmPassword.value) {
+      showToast("Пароли не совпадают", "warning");
+      return
+    }
+
+
     const body = {
       password: password.value,
       password_confirmation: confirmPassword.value
@@ -83,6 +89,7 @@ const rules = {
                   placeholder="Новый пароль"
                   label="Новый пароль"
                   clear-icon="close"
+                  type="password"
                   :append-inner-icon="password ? 'close' : ''"
                   @click:append-inner="password = null"
                   hide-details
@@ -98,6 +105,7 @@ const rules = {
                   placeholder="Подтвердите пароль"
                   label="Подтвердите пароль"
                   clear-icon="close"
+                  type="password"
                   :append-inner-icon="confirmPassword ? 'close' : ''"
                   @click:append-inner="confirmPassword = null"
                   hide-details

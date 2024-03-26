@@ -107,6 +107,7 @@ const rules = {
               <v-btn
                 @click="$emit('toggleDialog')"
                 variant="text"
+                title="Закрыть"
                 :size="32"
                 class="pt-2 pl-1"
               >

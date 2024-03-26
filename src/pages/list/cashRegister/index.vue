@@ -99,6 +99,8 @@ const isDataChanged = () => {
 };
 
 const checkAndClose = () => {
+  
+  
   if (
     nameRef.value ||
     currencyAdd.value ||
@@ -634,8 +636,8 @@ watch(dialog, newVal => {
                         hide-details
                         :base-color="FIELD_COLOR"
                         label="Валюта"
+                        no-data-text="нет данных"
                         v-model="currencyAdd"
-                      
                         :items="currencies"
                         item-title="name"
                         item-value="id"
@@ -644,6 +646,7 @@ watch(dialog, newVal => {
                       style="max-width: 47%; min-width: 46%;"
                         variant="outlined"
                         hide-details
+                        no-data-text="нет данных"
                         :base-color="FIELD_COLOR"
                         label="Ответственное лицо"
                         v-model="employeeAdd"
