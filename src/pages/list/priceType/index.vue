@@ -60,7 +60,6 @@ const filterForm = ref({
 
 
 const headers = ref([
-  {title: '№', key: 'id', align: 'start'},
   {title: 'Наименование', key: 'name'},
   {title: 'Валюта', key: 'currency.name'}
 ])
@@ -363,6 +362,11 @@ watch((dialog), newVal => {
   }
 })
 
+watch(markedID, (newVal) => {
+  markedItem.value = priceTypes.value.find((el) => el.id === newVal[0]);
+});
+
+
 onMounted(async () => {
   await getCurrencies()
 })
@@ -430,6 +434,8 @@ onMounted(async () => {
             :items="priceTypes"
             :item-value="headers.title"
             :search="search"
+            show-select
+            v-model="markedID"
             @update:options="getPriceTypeData"
             page-text =  '{0}-{1} от {2}'
             :items-per-page-options="[
@@ -447,13 +453,13 @@ onMounted(async () => {
                 <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
                   <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)"
                                   @change="handleCheckboxClick(item)">
-                    <span>{{ index + 1 }}</span>
+                    <span>{{ index.id }}</span>
                   </CustomCheckbox>
                 </template>
                 <template v-else>
                  <div  class="d-flex">
                    <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
-                   <span>{{ index + 1 }}</span>
+                   <span>{{ index.id }}</span>
                  </div>
                 </template>
               </td>

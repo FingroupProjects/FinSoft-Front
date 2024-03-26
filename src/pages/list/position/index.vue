@@ -49,7 +49,6 @@ const toggleModal = () => {
 };
 
 const headers = ref([
-  { title: '№', key: 'id', align: 'start'},
   { title: 'Наименование', key: 'name'}
 ])
 
@@ -299,6 +298,12 @@ const checkUpdate = () => {
 
 };
 
+
+watch(markedID, (newVal) => {
+  markedItem.value = positions.value.find((el) => el.id === newVal[0]);
+});
+
+
 const cleanForm = () => {
   nameRef.value = null
 }
@@ -373,6 +378,8 @@ watch(dialog, newVal => {
             :items="positions"
             :item-value="headers.title"
             @update:options="getPositionData"
+            show-select
+            v-model="markedID"
             page-text =  '{0}-{1} от {2}'
             :items-per-page-options="[
                 {value: 25, title: '25'},
@@ -388,12 +395,12 @@ watch(dialog, newVal => {
               <td class="">
                 <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
                   <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)" @change="handleCheckboxClick(item)">
-                    <span>{{ index + 1 }}</span>
+                    <span>{{ index.id }}</span>
                   </CustomCheckbox>
                 </template>
                 <template v-else>
                   <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
-                  <span>{{ index + 1 }}</span>
+                  <span>{{ index.id }}</span>
                 </template>
               </td>
               <td>{{ item.name }}</td>

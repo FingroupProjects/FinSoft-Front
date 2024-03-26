@@ -461,10 +461,10 @@ const validateCurrency = () => {
 onMounted(async () => {
   dateRef.value = currentDate()
 })
+
 watch(markedID, (newVal) => {
   markedItem.value = currencies.value.find((el) => el.id === newVal[0]);
 });
-
 
 watch(dialog, newVal => {
   if (!newVal) {
@@ -546,9 +546,9 @@ watch(rateDialog, newVal => {
             :items="currencies"
             :item-value="headers.title"
             :search="search"
-            @update:options="getCurrencyData"
             show-select
             v-model="markedID"
+            @update:options="getCurrencyData"
             page-text='{0}-{1} от {2}'
             :items-per-page-options="[
                 {value: 25, title: '25'},
@@ -558,34 +558,28 @@ watch(rateDialog, newVal => {
             fixed-header
             hover
         >
-          <template v-slot:item="{ item, index }">
-            <tr 
-            @mouseenter="hoveredRowIndex = index" 
-            @mouseleave="hoveredRowIndex = null" 
-            @dblclick="openDialog(item)"
-            @click="lineMarking(item)" :class="{'bg-grey-lighten-2': markedID.includes(item.id)}">
-              <td>
-                <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
-                  <CustomCheckbox v-model="markedID" 
-                  :checked="markedID.includes(item.id)"
-                  @change="handleCheckboxClick(item)">
-                    <span>{{ item.id }}</span>
-                  </CustomCheckbox>
-                </template>
-                <template v-else>
-                  <div>
-                    <Icons style="margin-right: 10px;"
-                     :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
-                    <span>{{ item.id }}</span>
-                  </div>
-                </template>
-              </td>
-              <td>{{ item.name }}</td>
-              <td>{{ item.symbol_code }}</td>
-              <td>{{ item.digital_code }}</td>
-              <td>{{ item.last_exchange_rate === null ? '' : item.last_exchange_rate.value }}</td>
-            </tr>
-          </template>
+        <template v-slot:item="{ item, index }">
+              <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)"
+                  @dblclick="openDialog(item)"
+                  :class="{'bg-grey-lighten-2': markedID.includes(item.id) }">
+                <td>
+                  <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
+                    <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)"
+                                    @change="handleCheckboxClick(item)">
+                      <span>{{ index.id }}</span>
+                    </CustomCheckbox>
+                  </template>
+                  <template v-else>
+                    <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
+                    <span>{{ index.id }}</span>
+                  </template>
+                </td>
+                <td>{{ item.name }}</td>
+                <td>{{ item.symbol_code }}</td>
+                <td>{{ item.digital_code }}</td>
+                <td>{{ item.last_exchange_rate === null ? '' : item.last_exchange_rate.value }}</td>
+              </tr>
+            </template>
         </v-data-table-server>
       </v-card>
 

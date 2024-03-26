@@ -575,7 +575,7 @@ watch(dialog, newVal => {
                   <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)"
                                   @change="handleCheckboxClick(item)">
 
-                    <span>{{ item.id }}</span>
+                    <span>{{ index.id }}</span>
 
                   </CustomCheckbox>
                 </template>
