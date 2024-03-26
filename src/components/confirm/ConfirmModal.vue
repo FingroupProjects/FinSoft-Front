@@ -43,6 +43,7 @@
 
 <script setup>
 import { defineProps, defineEmits } from 'vue';
+import Icons from '../../composables/Icons/Icons.vue';
 
 const props = defineProps({
   showModal: Boolean

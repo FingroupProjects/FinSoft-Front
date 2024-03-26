@@ -453,13 +453,13 @@ onMounted(async () => {
                 <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
                   <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)"
                                   @change="handleCheckboxClick(item)">
-                    <span>{{ index.id }}</span>
+                    <span>{{ index + 1 }}</span>
                   </CustomCheckbox>
                 </template>
                 <template v-else>
                  <div  class="d-flex">
                    <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
-                   <span>{{ index.id }}</span>
+                   <span>{{ index + 1 }}</span>
                  </div>
                 </template>
               </td>
