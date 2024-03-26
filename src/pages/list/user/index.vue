@@ -349,8 +349,6 @@ const closeFilterModal = async ({
 };
 
 
-
-
 const handleCheckboxClick = item => {
   lineMarking(item)
 }
@@ -399,7 +397,6 @@ const openDialog = item => {
 
     emailRef.value = item.email
     userDialogTitle.value = item.name
-    console.log(userDialogTitle.value)
   }
 
 }
@@ -457,10 +454,7 @@ const lineMarking = item => {
     }
   }
 
-  const index = markedID.value.indexOf(item.id)
-  if (index !== -1) {
-    markedID.value.splice(index, 1)
-  } else {
+  if (!markedID.value.includes(item.id)) {
     markedID.value.push(item.id);
   }
   markedItem.value = item;
@@ -492,9 +486,6 @@ const getUser = async ({page, itemsPerPage, sortBy, search}) => {
   }
 }
 
-watch(markedID, (newVal) => {
-  markedItem.value = users.value.find((el) => el.id === newVal[0]);
-});
 
 const closeFilterDialog = () => {
   showModalDialog.value = false
@@ -507,6 +498,9 @@ const toggleGroup = async () => {
   await getGroup({})
 }
 
+watch(markedID, (newVal) => {
+  markedItem.value = users.value.find((el) => el.id === newVal[0]);
+});
 
 watch(dialog, newVal => {
   if (!newVal) {
@@ -517,6 +511,8 @@ watch(dialog, newVal => {
     loginRef.value = null
     phoneRef.value = null
     emailRef.value = null
+  } else {
+    markedID.value = [markedID.value[markedID.value.length - 1]];
   }
 })
 

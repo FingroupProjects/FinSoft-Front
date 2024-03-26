@@ -557,7 +557,7 @@ watch(dialog, newVal => {
             :search="search"
             page-text='{0}-{1} от {2}'
             show-select
-          v-model="markedID"
+            v-model="markedID"
             :items-per-page-options="[
                 {value: 25, title: '25'},
                 {value: 50, title: '50'},
@@ -574,12 +574,14 @@ watch(dialog, newVal => {
                 <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
                   <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)"
                                   @change="handleCheckboxClick(item)">
+
                     <span>{{ item.id }}</span>
+
                   </CustomCheckbox>
                 </template>
                 <template v-else>
                   <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
-                  <span>{{ index + 1 }}</span>
+                  <span>{{ index.id }}</span>
                 </template>
               </td>
               <td>{{ item.name }}</td>
