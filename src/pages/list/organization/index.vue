@@ -67,7 +67,6 @@ const rules = {
 };
 
 const headers = ref([
-  { title: "№", key: "id" },
   { title: "Наименование", key: "name" },
 ]);
 
@@ -365,6 +364,13 @@ function countFilter() {
    return count;
 }
 
+const destroy = async () => {
+  markedID.value.push(idOrganizations.value);
+  compute({ page: 1, itemsPerPage: 10, sortBy: 'id' })
+  addDialog.value = false
+}
+
+
 const checkAndClose = () => {
   if (
     nameRef.value ||
@@ -408,6 +414,10 @@ watch(addDialog, (newVal) => {
     isExistsOrganization.value = false;
     organization.value = [];
   }
+});
+
+watch(markedID, (newVal) => {
+  markedItem.value = organizations.value.find((el) => el.id === newVal[0]);
 });
 
 watch(addDialog, (newVal) => {
@@ -486,13 +496,15 @@ onMounted(async () => {
           :items="organizations"
           :item-value="headers.title"
           @update:options="getOrganizationData"
+          show-select
+          v-model="markedID"
           page-text="{0}-{1} от {2}"
           :items-per-page-options="[
             { value: 25, title: '25' },
             { value: 50, title: '50' },
             { value: 100, title: '100' },
           ]"
-          fixed-footer
+          fixed-header
           :search="search"
           hover
         >
@@ -513,7 +525,7 @@ onMounted(async () => {
                     :checked="markedID.includes(item.id)"
                     @change="handleCheckboxClick(item)"
                   >
-                    <span>{{ index + 1 }}</span>
+                    <span>{{ index.id }}</span>
                   </CustomCheckbox>
                 </template>
                 <template v-else>
@@ -521,18 +533,16 @@ onMounted(async () => {
                     style="margin-right: 10px"
                     :name="item.deleted_at === null ? 'valid' : 'inValid'"
                   />
-                  <span>{{ index + 1 }}</span>
+                  <span>{{ index.id }}</span>
                 </template>
               </td>
-              <td>
-                <span>{{ item.name }}</span>
-              </td>
+              <td>{{ item.name }}</td>
             </tr>
           </template>
         </v-data-table-server>
       </v-card>
 
-    </v-col>
+    
 
     <!-- modal -->
     <v-card>
@@ -551,7 +561,7 @@ onMounted(async () => {
             }}</span>
             <div class="d-flex align-center justify-space-between">
               <div class="d-flex ga-3 align-center mt-2 me-4">
-                <Icons @click="compute" name="delete" />
+                <Icons  v-if="isExistsOrganization"  @click="destroy" name="delete"/>
                 <Icons
                   v-if="isExistsOrganization"
                   @click="update"
@@ -762,7 +772,7 @@ onMounted(async () => {
       </div>
       </v-card>
     </v-card>
-    
+  </v-col>
   </div>
 </template>
 
