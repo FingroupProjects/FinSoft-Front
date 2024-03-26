@@ -84,7 +84,6 @@ const toggleModal = () => {
 
 
 const headers = ref([
-  {title: '№', key: 'id', align: 'start'},
   {title: 'Наименование', key: 'name'},
 ])
 
@@ -708,6 +707,10 @@ const checkUpdate = () => {
 
 };
 
+watch(markedID, (newVal) => {
+  markedItem.value = storages.value.find((el) => el.id === newVal[0]);
+});
+
 watch(dialog, newVal => {
   if (!newVal) {
     nameRef.value = null
@@ -840,6 +843,8 @@ onMounted(async () => {
               :item-value="headers.title"
               :search="search"
               @update:options="getStorage"
+              show-select
+              v-model="markedID"
               page-text='{0}-{1} от {2}'
               :items-per-page-options="[
                 {value: 25, title: '25'},
@@ -860,12 +865,12 @@ onMounted(async () => {
                   <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
                     <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)"
                                     @change="handleCheckboxClick(item)">
-                      <span>{{ index + 1 }}</span>
+                      <span>{{ index.id }}</span>
                     </CustomCheckbox>
                   </template>
                   <template v-else>
                     <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
-                    <span>{{ index + 1 }}</span>
+                    <span>{{ index.id }}</span>
                   </template>
                 </td>
                 <td>{{ item.name }}</td>
