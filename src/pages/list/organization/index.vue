@@ -353,24 +353,6 @@ const isDataChanged = () => {
   return isChanged;
 };
 
-function countFilter() {
-   
-   for (const key in filterForm.value) {
-       if (filterForm.value[key] !== null) {
-           count.value++;
-       }
-   }
-   
-   return count;
-}
-
-const destroy = async () => {
-  markedID.value.push(idOrganizations.value);
-  compute({ page: 1, itemsPerPage: 10, sortBy: 'id' })
-  addDialog.value = false
-}
-
-
 const checkAndClose = () => {
   if (
     nameRef.value ||
@@ -402,6 +384,23 @@ const checkUpdate = () => {
   }
 
 };
+
+function countFilter() {
+   
+   for (const key in filterForm.value) {
+       if (filterForm.value[key] !== null) {
+           count.value++;
+       }
+   }
+   
+   return count;
+}
+
+const destroy = async () => {
+  markedID.value.push(idOrganizations.value);
+  compute({ page: 1, itemsPerPage: 10, sortBy: 'id' })
+  addDialog.value = false
+}
 
 watch(addDialog, (newVal) => {
   if (!newVal) {

@@ -10,6 +10,7 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showDate from "../../../composables/date/showDate.js";
 import validate from "./validate.js";
 import { FIELD_COLOR } from "../../../composables/constant/colors.js";
+import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import {
   addMessage,
   editMessage,
@@ -21,7 +22,7 @@ import {
 } from "../../../composables/constant/buttons.js";
 
 const loading = ref(true);
-
+const showConfirmDialog = ref(false);
 const dialog = ref(false);
 const idOrganizationBill = ref(null);
 const hoveredRowIndex = ref(null);
@@ -50,6 +51,8 @@ const paginations = ref([]);
 
 const currenciesCopy = ref([])
 const organizationCopy = ref([])
+const showModal = ref(false);
+
 
 const count = ref(0);
 const searchSelect = ref(null)
@@ -64,7 +67,10 @@ const filterForm = ref({
   comment: null,
 });
 
-const showConfirmDialog = ref(false);
+const toggleModal = () => {
+  showModal.value = !showModal.value;
+};
+
 
 const headers = ref([
   { title: "Наименование", key: "name" },
@@ -87,50 +93,54 @@ function countFilter() {
 }
 
 
-const closeDialogWithoutSaving = () => {
-  dialog.value = false;
-  showConfirmDialog.value = false;
-};
-const checkUpdate = () => {
-  if (isDataChanged() === true) {
-    showConfirmDialog.value = true;
-  } else {
-    dialog.value = false;
-  }
-};
-const checkAndClose = () => {
-  if (
-    nameRef.value ||
-    organizationBill.value ||
-    currencyAdd.value ||
-    organizationAdd.value ||
-    dateRef.value ||
-    descriptionRef.value
-  ) {
-    showConfirmDialog.value = true;
-  } else {
-    dialog.value = false;
-  }
-};
-watch(dialog, (newVal) => {
-  if (!newVal) {
-    cleanForm();
-  }
-});
-
 const isDataChanged = () => {
   const item = organizationBills.value.find(
     (item) => item.id === idOrganizationBill.value
   );
+
   const isChanged =
-    nameRef.value !== item.name ||
-    bill_number.value !== item.bill_number ||
-    currencyAdd.value !== item.currency.id ||
-    organizationAdd.value !== item.organization.id ||
-    comment.value !== item.comment ||
-    showDate(dateRef.value) !== item.date;
+  nameRef.value !== item.name ||
+  organizationAdd.value !== item.organization_id ||
+  currencyAdd.value.id !== item.currency.id ||
+  bill_number.value.id !== item.bill_number ||
+  dateRef.value !== item.date ||
+  comment.value !== item.comment;
+
   return isChanged;
 };
+
+const checkAndClose = () => {
+  if (
+    nameRef.value ||
+    organizationAdd.value ||
+    currencyAdd.value ||
+    bill_number.value ||
+    dateRef.value ||
+    comment.value
+  ) {
+    showModal.value = true;
+  } else {
+    dialog.value = false;
+    showModal.value = false;
+  }
+};
+
+const closeDialogWithoutSaving = () => {
+  dialog.value = false;
+  showModal.value = false
+  showConfirmDialog.value = false;
+  cleanForm();
+};
+
+const checkUpdate = () => {
+  if (isDataChanged()) {
+    showModal.value = true;
+  } else {
+    dialog.value = false;
+  }
+
+};
+
 
 const rules = {
   required: (v) => !!v,
@@ -399,6 +409,11 @@ onMounted(async () => {
   currenciesCopy.value = [...currencies.value];
   organizationCopy.value = [...organizations.value]
 });
+watch(dialog, (newVal) => {
+  if (!newVal) {
+    cleanForm();
+  }
+});
 
 const searchOrganization = () => {
 
@@ -575,17 +590,14 @@ const searchOrganization = () => {
                   />
                 </div>
                 <v-btn
-                  @click="
-                    isExistsOrganizationBill
-                      ? checkUpdate()
-                      : checkAndClose({ page, itemsPerPage, sortBy, search })
-                  "
-                  variant="text"
-                  :size="32"
-                  class="pt-2 pl-1"
-                >
-                  <Icons name="close" title="Закрыть" />
-                </v-btn>
+                @click="isExistsOrganizationBill ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
+                
+                variant="text"
+                :size="32"
+                class="pt-2 pl-1"
+              >
+                <Icons name="close" title="Закрыть" />
+              </v-btn>
               </div>
             </div>
             <v-form class="d-flex w-100">
@@ -692,47 +704,6 @@ const searchOrganization = () => {
           </v-card>
         </v-dialog>
       </v-card>
-
-      <v-dialog style="min-width: 300px" v-model="showConfirmDialog" persistent>
-        <v-card
-          style="max-width: 400px; border-radius: 16px"
-          class="mx-auto flex flex-col"
-        >
-          <v-card-title
-            class="d-flex justify-space-between align-center text-h6"
-          >
-            <span>Подтверждение</span>
-            <v-btn
-              @click="showConfirmDialog = false"
-              variant="text"
-              :size="32"
-              class="pt-2 pl-1"
-            >
-              <Icons name="close" title="Закрыть" />
-            </v-btn>
-          </v-card-title>
-          <v-card-text class="text-subtitle-1"
-            >Точно хотите закрыть? Введенные данные не будут
-            сохранены.</v-card-text
-          >
-          <v-card-actions class="d-flex justify-end align-end">
-            <v-btn
-              @click="showConfirmDialog = false"
-              class="text-none w-[200px] h-[20px]"
-              color="red"
-              variant="flat"
-              >Нет</v-btn
-            >
-            <v-btn
-              @click="closeDialogWithoutSaving"
-              class="text-none w-[200px] h-[20px]"
-              color="green"
-              variant="flat"
-              >Да</v-btn
-            >
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
       <v-card>
         <v-dialog class="mt-2 pa-2" v-model="filterModal">
           <v-card
@@ -848,6 +819,9 @@ const searchOrganization = () => {
             </v-form>
           </v-card>
         </v-dialog>
+        <div v-if="showModal">
+        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" />
+      </div>
       </v-card>
     </v-col>
   </div>

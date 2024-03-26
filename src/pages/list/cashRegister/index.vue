@@ -66,12 +66,7 @@ const count = ref(0)
 
 const toggleModal = () => {
   showModal.value = !showModal.value;
-  // console.log('openModal');
 };
-
-
-
-
 
 const filterForm = ref({
     name: null,
@@ -89,52 +84,33 @@ const headers = ref([
 
 ])
 
-
-
 const isDataChanged = () => {
   const item = cashRegisters.value.find(
     (item) => item.id === idCashRegister.value
   );
 
-  console.log(item)
-  
-
   const isChanged =
     nameRef.value !== item.name ||
-    currencyAdd.value !== item.currency.id ||
-    organizationAdd.value !== item.organization.id ||
-    employeeAdd.value !== item.responsiblePerson.id
-  
-
+    currencyAdd.value.id !== item.currency.id ||
+    organizationAdd.value.id !== item.organization.id ||
+    employeeAdd.value.id !== item.responsible_person.id 
 
   return isChanged;
 };
 
 const checkAndClose = () => {
-  
   if (
     nameRef.value ||
     currencyAdd.value ||
     organizationAdd.value ||
     employeeAdd.value 
   ) {
-    showConfirmDialog.value = true;
+    showModal.value = true;
   } else {
     dialog.value = false;
     showModal.value = false;
   }
 };
-
-function countFilter() {
-   
-   for (const key in filterForm.value) {
-       if (filterForm.value[key] !== null) {
-           count.value++;
-       }
-   }
-   
-   return count;
-}
 
 const closeDialogWithoutSaving = () => {
   dialog.value = false;
@@ -149,14 +125,26 @@ const checkUpdate = () => {
   } else {
     dialog.value = false;
   }
-
 };
+
 const cleanForm = () => {
   nameRef.value = null;
   currencyAdd.value = null;
   organizationAdd.value = null;
   employeeAdd.value = null;
 };
+
+
+function countFilter() {
+   
+   for (const key in filterForm.value) {
+       if (filterForm.value[key] !== null) {
+           count.value++;
+       }
+   }
+   
+   return count;
+}
 
 
 
@@ -477,6 +465,11 @@ watch(markedID, (newVal) => {
   markedItem.value = cashRegisters.value.find((el) => el.id === newVal[0]);
 });
 
+watch(dialog, (newVal) => {
+  if (!newVal) {
+    cleanForm();
+  }
+});
 
 watch(dialog, newVal => {
   if (!newVal) {
@@ -606,7 +599,7 @@ watch(dialog, newVal => {
                   <Icons title="Сохранить" v-else @click="addcashRegister" name="save"/>
                 </div>
                 <v-btn
-                @click="isExistsCashRegister ? checkUpdate : checkAndClose"
+                @click="isExistsCashRegister ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
                 
                 variant="text"
                 :size="32"
@@ -755,11 +748,11 @@ watch(dialog, newVal => {
           </v-card>
         </v-dialog>
         
-        <div v-if="showModal">
+        
+      </v-card>
+      <div v-if="showModal">
         <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" />
       </div>
-
-      </v-card>
     </v-col>
   </div>
 
