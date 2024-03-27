@@ -107,7 +107,10 @@ const rules = {
         >
           <div class="d-flex justify-space-between align-center mb-2">
             <span>{{ isFilter ? "Фильтр" : "Создать группу" }}</span>
-            <div class="d-flex align-center justify-space-between">
+            <div
+              v-if="!isFilter"
+              class="d-flex align-center justify-space-between"
+            >
               <div class="d-flex ga-3 align-center mt-2 me-4">
                 <!-- <Icons name="delete" /> -->
                 <Icons
@@ -159,6 +162,10 @@ const rules = {
                     Услуги
                   </CustomCheckbox>
                 </div>
+                <div class="d-flex justify-end ga-2 mt-2">
+                  <v-btn color="red" class="btn">сбросить</v-btn>
+                  <v-btn color="green" class="btn">применить</v-btn>
+                </div>
               </v-col>
             </v-row>
           </v-form>
@@ -167,3 +174,8 @@ const rules = {
     </v-col>
   </div>
 </template>
+<style>
+.btn {
+  font-size: 10px;
+}
+</style>
