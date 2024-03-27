@@ -21,7 +21,7 @@ import Icons from "@/composables/Icons/Icons.vue";
 
 import {restoreMessage} from "../../../composables/constant/buttons.js";
 import storageGroup from "../../../api/storageGroup.js";
-import {FIELD_COLOR} from "../../../composables/constant/colors.js";
+import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 import validate from "./validate.js";
 
 const router = useRouter()
@@ -123,10 +123,9 @@ const getGroup = async ({page, itemsPerPage, sortBy}) => {
       name: item.name
     }))
   } catch (e) {
-    console.log(e)
+
   } finally {
     loadingGroup.value = false
-
   }
 }
 
@@ -139,19 +138,6 @@ function countFilter() {
    }
    
    return count;
-}
-
-const getStorageData = async ({page, itemsPerPage, sortBy, search}) => {
-
-  loading.value = true
-  try {
-    const {data} = await storage.get({page, itemsPerPage, sortBy}, search)
-    paginations.value = data.result.pagination
-    storages.value = data.result.data
-    loading.value = false
-  } catch (e) {
-
-  }
 }
 
 const getStorageEmployeeData = async ({page, itemsPerPage, sortBy, search}) => {
@@ -254,7 +240,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
 
       dialog.value = null
       cleanForm()
-      await getStorageData({page, itemsPerPage, sortBy})
+      await getStorage({page, itemsPerPage, sortBy})
       markedID.value = []
       showToast(editMessage)
 
@@ -678,7 +664,6 @@ const cleanForm = () => {
 
 
 const checkAndClose = () => {
-
   if (
     nameRef.value ||
     organizationAdd.value ||
@@ -709,7 +694,7 @@ const checkUpdate = () => {
 
 watch(markedID, (newVal) => {
   markedItem.value = storages.value.find((el) => el.id === newVal[0]);
-});
+})
 
 watch(dialog, newVal => {
   if (!newVal) {
@@ -767,8 +752,7 @@ onMounted(async () => {
                   density="default"
                   placeholder="Поиск..."
                   variant="outlined"
-                  color="info"
-                  :base-color="FIELD_COLOR"
+                  :base-color="FIELD_OF_SEARCH"
                   rounded="lg"
                   hide-details
                   single-line
