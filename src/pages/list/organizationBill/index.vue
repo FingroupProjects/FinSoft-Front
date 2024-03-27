@@ -9,7 +9,7 @@ import organizationApi from "../../../api/organizations.js";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showDate from "../../../composables/date/showDate.js";
 import validate from "./validate.js";
-import { FIELD_COLOR } from "../../../composables/constant/colors.js";
+import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import {
   addMessage,
@@ -420,25 +420,18 @@ watch(dialog, (newVal) => {
 
 const searchOrganization = () => {
 
-       if (!searchSelect.value) {
-        organizations.value = organizationCopy.value
-      }
+  if (!searchSelect.value) {
+    organizations.value = organizationCopy.value
+  }
 
-
-
-    organizations.value = organizationCopy.value.filter((c) => c.name.indexOf(searchSelect.value) > -1);
-
-};
+  organizations.value = organizationCopy.value.filter((c) => c.name.indexOf(searchSelect.value) > -1);
+}
 
 
 
 </script>
 
 <template>
-
-
-
-
   <div>
     <v-col>
       <div class="d-flex justify-space-between text-uppercase">
@@ -460,12 +453,12 @@ const searchOrganization = () => {
             <div class="w-100">
               <v-text-field
                 v-model="search"
-                :base-color="FIELD_COLOR"
+                :base-color="FIELD_OF_SEARCH"
                 prepend-inner-icon="search"
                 density="compact"
                 label="Поиск..."
                 variant="outlined"
-                color="green"
+                color="info"
                 rounded="lg"
                 clear-icon="close"
                 hide-details
@@ -535,9 +528,9 @@ const searchOrganization = () => {
                   </CustomCheckbox>
                 </template>
                 <template v-else>
-                  <div class="d-flex">
+                  <div class="d-flex align-center">
                     <Icons
-                      style="margin-right: 10px"
+                      style="margin-right: 10px; margin-top: 4px"
                       :name="item.deleted_at === null ? 'valid' : 'inValid'"
                     />
                     <span>{{ item.id }}</span>

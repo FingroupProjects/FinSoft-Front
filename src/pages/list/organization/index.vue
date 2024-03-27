@@ -16,7 +16,7 @@ import Icons from "../../../composables/Icons/Icons.vue";
 import employee from "../../../api/employee";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import validate from "./validate.js";
-import {FIELD_COLOR} from "../../../composables/constant/colors.js";
+import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 
 const showConfirmDialog = ref(false);
 const router = useRouter();
@@ -48,7 +48,6 @@ const showModal = ref(false);
 
 const toggleModal = () => {
   showModal.value = !showModal.value;
-  // console.log('openModal');
 };
 
 const filterForm = ref({
@@ -280,7 +279,9 @@ const lineMarking = (item) => {
   if (index !== -1) {
     markedID.value.splice(index, 1);
   } else {
-    markedID.value.push(item.id);
+    if (item.id !== null) {
+      markedID.value.push(item.id);
+    }
   }
   markedItem.value = item;
 };
@@ -338,19 +339,14 @@ const  closeFilterModal = async ({page, itemsPerPage, sortBy, search, filterData
 
 
 const isDataChanged = () => {
-  const item = organizations.value.find(
-    (item) => item.id === idOrganizations.value
-  );
+  const item = organizations.value.find(elem => elem.id === idOrganizations.value);
 
-  const isChanged =
-    nameRef.value !== item.name ||
+  return    nameRef.value !== item.name ||
     innRef.value !== item.INN ||
     directorRef.value.id !== item.director.id ||
     accountantRef.value.id !== item.chief_accountant.id ||
     addressRef.value !== item.address ||
     descriptionRef.value !== item.description;
-
-  return isChanged;
 };
 
 const checkAndClose = () => {
@@ -411,7 +407,7 @@ watch(addDialog, (newVal) => {
     addressRef.value = null;
     descriptionRef.value = null;
     isExistsOrganization.value = false;
-    organization.value = [];
+    organizations.value = [];
   }
 });
 
@@ -452,7 +448,7 @@ onMounted(async () => {
             <div class="w-100">
               <v-text-field
                 v-model="search"
-                :base-color="FIELD_COLOR"
+                :base-color="FIELD_OF_SEARCH"
                 prepend-inner-icon="search"
                 density="compact"
                 label="Поиск..."
@@ -528,8 +524,8 @@ onMounted(async () => {
                   </CustomCheckbox>
                 </template>
                 <template v-else>
-                  <div class="d-flex">
-                      <Icons style="margin-right: 10px" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
+                  <div class="d-flex align-center">
+                      <Icons style="margin-right: 10px; margin-top: 4px" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
                       <span>{{ index + 1 }}</span>
                     </div>
                 </template>

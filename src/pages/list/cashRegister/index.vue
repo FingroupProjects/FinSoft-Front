@@ -9,7 +9,7 @@ import organization from '../../../api/organizations.js';
 import employee from '../../../api/employee.js';
 import validate from "./validate.js"
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
-import {FIELD_COLOR} from "../../../composables/constant/colors.js";
+import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 import {
   addMessage,
   editMessage,
@@ -230,17 +230,13 @@ const massDel = async ({page, itemsPerPage, sortBy, search}) => {
 }
 
 
-const massRestore = async ({page, itemsPerPage, sortBy, search}) => {
-  const body = {
-    ids: markedID.value
-  }
-
+const massRestore = async ({page, itemsPerPage, sortBy}) => {
   try {
-    const {status} = await cashRegister.massRestore(body)
+    const {status} = await cashRegister.massRestore({ids: markedID.value})
 
     if (status === 200) {
       showToast(restoreMessage, 'red')
-      await getcashRegisterData({page, itemsPerPage, sortBy}, search)
+      await getcashRegisterData({page, itemsPerPage, sortBy})
       markedID.value = []
       dialog.value = false
     }
@@ -277,84 +273,35 @@ const update = async ({page, itemsPerPage, sortBy}) => {
   }
 }
 
-
-const destroy = async ({page, itemsPerPage, sortBy}) => {
-  if (markedID.value === null) return showToast(warningMessage, 'warning')
-  try {
-    const {status} = await cashRegister.delete(markedID.value)
-    if (status === 200) {
-      showToast(removeMessage, 'red')
-      await getcashRegisterData({page, itemsPerPage, sortBy})
-      dialog.value = false
-      markedID.value = []
-    }
-  } catch (e) {
-
-  }
-}
-
-const restore = async ({page, itemsPerPage, sortBy}) => {
-  try {
-    const {status} = await cashRegister.restore(markedID.value)
-    if (status === 200) {
-      showToast(restoreMessage, 'green')
-      await getcashRegisterData({page, itemsPerPage, sortBy})
-      markedID.value = []
-    }
-  } catch (e) {
-
-  }
-}
-
 const getEmployee = async () => {
   try {
     const {data} = await employee.get({page: 1, itemsPerPage: 100000})
-    employees.value = data.result.data.map(item => {
-      return {
-        id: item.id,
-        name: item.name
-      }
-    })
-  } catch (e) {
-
-  }
+    employees.value = data.result.data.map(item => ({
+      id: item.id,
+      name: item.name
+    }))
+  } catch (e) {}
 }
 
 const getCurrencies = async () => {
   try {
     const {data} = await currency.get({page: 1, itemsPerPage: 100000})
-
-
-    currencies.value = data.result.data.map(item => {
-      return {
-        id: item.id,
-        name: item.name
-      }
-    })
-
-  } catch (e) {
-
-  }
+    currencies.value = data.result.data.map(item => ({
+      id: item.id,
+      name: item.name
+    }))
+  } catch (e) {}
 }
 const getOrganizations = async () => {
 
   try {
     const {data} = await organization.get({page: 1, itemsPerPage: 100000})
-
-    organizations.value = data.result.data.map(item => {
-      return {
-        id: item.id,
-        name: item.name
-      }
-    })
-
-
-  } catch (e) {
-
-  }
+    organizations.value = data.result.data.map(item => ({
+      id: item.id,
+      name: item.name
+    }))
+  } catch (e) {}
 }
-
-
 
 onMounted(async () => {
   await getEmployee()
@@ -368,8 +315,6 @@ const handleCheckboxClick = function (item) {
 }
 
 const openDialog = (item) => {
-
-
   dialog.value = true
 
   if (item === 0) {
@@ -444,33 +389,22 @@ const lineMarking = (item) => {
   if (index !== -1) {
     markedID.value.splice(index, 1);
   } else {
-    markedID.value.push(item.id);
+    if (item.id !== null) {
+      markedID.value.push(item.id)
+    }
   }
   markedItem.value = item;
 }
 
-
-
-const cleanFilterForm = () => {
-  filterForm.value = {}
-}
-
 const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
   showFilterModal.value = false
-  cleanFilterForm()
+  filterForm.value = {}
   await getcashRegisterData({page, itemsPerPage, sortBy, search})
-  
 
 }
 
 watch(markedID, (newVal) => {
   markedItem.value = cashRegisters.value.find((el) => el.id === newVal[0]);
-});
-
-watch(dialog, (newVal) => {
-  if (!newVal) {
-    cleanForm();
-  }
 });
 
 watch(dialog, newVal => {
@@ -482,8 +416,8 @@ watch(dialog, newVal => {
     organizationAdd.value = null
     employeeAdd.value = null
     employeeUpdate.value = null;
-
     loadingRate.value = true
+    cleanForm()
   }
 })
 
@@ -515,7 +449,7 @@ watch(dialog, newVal => {
                   color="info"
                   rounded="lg"
                   clear-icon="close"
-                  :base-color="FIELD_COLOR"
+                  :base-color="FIELD_OF_SEARCH"
                   hide-details
                   single-line
                   clearable
@@ -575,8 +509,8 @@ watch(dialog, newVal => {
                   </CustomCheckbox>
                 </template>
                 <template v-else>
-                  <div class="d-flex">
-                      <Icons style="margin-right: 10px" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
+                  <div class="d-flex align-center">
+                      <Icons style="margin-right: 10px; margin-top: 4px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
                       <span>{{ index + 1 }}</span>
                     </div>
                 </template>

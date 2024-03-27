@@ -352,8 +352,13 @@ const lineMarking = item => {
     }
   }
 
-  if (!markedID.value.includes(item.id)) {
-    markedID.value.push(item.id);
+  const index = markedID.value.indexOf(item.id);
+  if (index !== -1) {
+    markedID.value.splice(index, 1);
+  } else {
+    if (item.id !== null) {
+      markedID.value.push(item.id);
+    }
   }
   markedItem.value = item
 }
@@ -575,8 +580,8 @@ watch(dialog, newVal => {
                     </CustomCheckbox>
                   </template>
                   <template v-else>
-                    <div class="d-flex">
-                      <Icons style="margin-right: 10px" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
+                    <div class="d-flex align-center">
+                      <Icons style="margin-right: 10px; margin-top: 4px" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
                       <span>{{ index + 1 }}</span>
                     </div>
                   </template>
