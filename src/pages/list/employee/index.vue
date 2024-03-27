@@ -63,13 +63,19 @@ const filterForm = ref({
 
 const count = ref(0)
 
-const headers = ref([
+const headersGroup = ref([
   {title: '№', key: 'id', align: 'start'},
+  {title: 'Название группы', key: 'name'},
+])
+
+const headers = ref([
   {title: 'Наименование', key: 'name'},
 ])
 
 const rules = {
   required: v => !!v,
+  email: (v) => /.+@.+\..+/.test(v),
+  phone: (v) => v.length === 13,
 }
 
 function countFilter() {
@@ -124,7 +130,8 @@ const selectAvatar = event => {
 }
 
 const addEmployee = async ({page, itemsPerPage, sortBy}) => {
- if (!validate(nameRef, phoneRef, emailRef, addressRef, group) !== true) return
+ if (validate(nameRef, phoneRef, emailRef, addressRef, group) !== true) return
+
   const formData = new FormData()
 
   function appendIfNotNull(key, value) {
@@ -133,7 +140,7 @@ const addEmployee = async ({page, itemsPerPage, sortBy}) => {
     }
   }
 
-  let groupValue
+  let groupValue;
   if (typeof group.value === 'object') {
     groupValue = group.value.id
   } else {
@@ -147,10 +154,7 @@ const addEmployee = async ({page, itemsPerPage, sortBy}) => {
   appendIfNotNull('image', imageRef.value)
   appendIfNotNull('group_id', groupValue)
 
-  if (validate(nameRef,phoneRef,emailRef,addressRef) !== true) return
-
   try {
-
     const res = await employee.add(formData)
 
     if (res.status === 201) {
@@ -162,17 +166,25 @@ const addEmployee = async ({page, itemsPerPage, sortBy}) => {
       dialog.value = false
       markedID.value = []
       markedItem.value = []
-
     }
 
-  } catch (error) {
-
+  } catch (e) {
+    if (e.response.status === 422) {
+      if (e.response.data.errors.email) {
+        showToast(e.response.data.errors.email[0], 'warning')
+      }
+      if (e.response.data.errors.phone) {
+        showToast(e.response.data.errors.phone[0], 'warning')
+      }
+    }
   }
 
 }
 
 
 const update = async ({page, itemsPerPage, sortBy}) => {
+  if (validate(nameRef, phoneRef, emailRef, addressRef, group) !== true) return
+
   const formData = new FormData()
 
   function appendIfNotNull(key, value) {
@@ -195,7 +207,6 @@ const update = async ({page, itemsPerPage, sortBy}) => {
   appendIfNotNull('image', imageRef.value)
   appendIfNotNull('group_id', groupValue)
 
-  if (validate(nameRef, phoneRef, emailRef, addressRef) !== true) return
 
   try {
     const {status} = await employee.update(idEmployee.value, formData)
@@ -207,7 +218,14 @@ const update = async ({page, itemsPerPage, sortBy}) => {
       cleanForm()
     }
   } catch (e) {
-
+    if (e.response.status === 422) {
+      if (e.response.data.errors.email) {
+        showToast(e.response.data.errors.email[0], 'warning')
+      }
+      if (e.response.data.errors.phone) {
+        showToast(e.response.data.errors.phone[0], 'warning')
+      }
+    }
   }
 }
 
@@ -274,6 +292,7 @@ const openDialog = (item) => {
     emailRef.value = item.email
     addressRef.value = item.address
     employeeDialogTitle.value = nameRef.value
+
     group.value = {
       id: item.group.id,
       name: item.group.name
@@ -304,6 +323,7 @@ const addBasedOnEmployee = () => {
       }
     }
   })
+  isExistsEmployee.value = false
 }
 
 const compute = ({page, itemsPerPage, sortBy, search}) => {
@@ -332,8 +352,13 @@ const lineMarking = item => {
     }
   }
 
-  if (!markedID.value.includes(item.id)) {
-    markedID.value.push(item.id);
+  const index = markedID.value.indexOf(item.id);
+  if (index !== -1) {
+    markedID.value.splice(index, 1);
+  } else {
+    if (item.id !== null) {
+      markedID.value.push(item.id);
+    }
   }
   markedItem.value = item
 }
@@ -384,13 +409,14 @@ const isDataChanged = () => {
 }
 
 const checkAndClose = () => {
+ 
   if (
     nameRef.value ||
     phoneRef.value ||
     emailRef.value ||
     addressRef.value
   ) {
-    showConfirmDialog.value = true
+    showModal.value = true
   } else {
     dialog.value = false
     showModal.value = false
@@ -412,6 +438,9 @@ const checkUpdate = () => {
   }
 }
 
+watch(markedID, newVal => {
+  markedItem.value = employees.value.find((el) => el.id === newVal[0]);
+})
 
 watch(dialog, newVal => {
   if (!newVal) {
@@ -484,7 +513,7 @@ watch(dialog, newVal => {
               no-data-text="Нет данных"
               v-model:items-per-page="paginationsGroup.per_page"
               :loading="loadingGroup"
-              :headers="headers"
+              :headers="headersGroup"
               :items-length="paginationsGroup.total || 0"
               :items="groups"
               :item-value="headers.title"
@@ -533,6 +562,8 @@ watch(dialog, newVal => {
                 {value: 100, title: '100'},
               ]"
               :search="search"
+              show-select
+              v-model="markedID"
               @update:options="getEmployee"
               fixed-header
               hover
@@ -549,8 +580,8 @@ watch(dialog, newVal => {
                     </CustomCheckbox>
                   </template>
                   <template v-else>
-                    <div class="d-flex">
-                      <Icons style="margin-right: 10px" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
+                    <div class="d-flex align-center">
+                      <Icons style="margin-right: 10px; margin-top: 4px" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
                       <span>{{ index + 1 }}</span>
                     </div>
                   </template>
@@ -580,7 +611,7 @@ watch(dialog, newVal => {
                   :size="32"
                   class="pt-2 pl-1"
                 >
-                  <Icons name="close" title="Закрыть" />
+                  <Icons name="close"  title="Закрыть" />
                 </v-btn>
               </div>
             </div>
@@ -632,7 +663,7 @@ watch(dialog, newVal => {
                           />
                           <v-text-field
                               v-model="emailRef"
-                              :rules="[rules.required]"
+                              :rules="[rules.required, rules.email]"
                               color="green"
                               :base-color="FIELD_COLOR"
                               variant="outlined"
@@ -736,33 +767,37 @@ watch(dialog, newVal => {
                 
                 <div class="d-flex ga-4 mb-3">
                   <v-text-field
-                    variant="outlined"
-                    :base-color="FIELD_COLOR"
-                    label="Тел номер"
-                    v-model.trim="filterForm.phone"
-                    density="compact"
-                    v-mask="'+992#########'"
-                    rounded="md"
+                    v-model="filterForm.phone"
+                    :rules="[rules.required, rules.phone]"
                     color="green"
-                    hide-details
-                    :append-inner-icon="
-                      filterForm.phone !== null ? 'close' : ''
-                    "
+                    :base-color="FIELD_COLOR"
+                    variant="outlined"
+                    class="w-auto text-sm-body-1"
+                    density="compact"
+                    type="tel"
+                    placeholder="+992119111881"
+                    label="Номер телефона"
+                    v-mask="'+############'"
+                    clear-icon="close"
+                    :append-inner-icon="filterForm.phone ? 'close' : ''"
                     @click:append-inner="filterForm.phone = null"
+                    hide-details
                   />
                   <v-text-field
-                    variant="outlined"
-                    :base-color="FIELD_COLOR"
-                    label="Почта"
                     v-model="filterForm.email"
-                    density="compact"
-                    rounded="md"
+                    :rules="[rules.required, rules.email]"
                     color="green"
-                    hide-details
-                    :append-inner-icon="
-                      filterForm.email !== null ? 'close' : ''
-                    "
+                    :base-color="FIELD_COLOR"
+                    variant="outlined"
+                    class="w-auto text-sm-body-1"
+                    density="compact"
+                    placeholder="ivan@gmail.com"
+                    type="email"
+                    label="Почта"
+                    clear-icon="close"
+                    :append-inner-icon="filterForm.email ? 'close' : ''"
                     @click:append-inner="filterForm.email = null"
+                    hide-details
                   />
                 </div>
                 <v-text-field

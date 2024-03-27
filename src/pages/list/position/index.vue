@@ -5,13 +5,13 @@ import showToast from '../../../composables/toast'
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import position from '../../../api/position.js'
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
-import {FIELD_COLOR} from "../../../composables/constant/colors.js";
+import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 import {
   addMessage,
   editMessage,
   removeMessage,
   warningMessage,
-  selectOneItemMessage
+  selectOneItemMessage, ErrorSelectMessage
 } from "../../../composables/constant/buttons.js";
 import Icons from "../../../composables/Icons/Icons.vue";
 import binarySearch from "../../../composables/binarySearch/binarySearch.js";
@@ -49,7 +49,6 @@ const toggleModal = () => {
 };
 
 const headers = ref([
-  { title: '№', key: 'id', align: 'start'},
   { title: 'Наименование', key: 'name'}
 ])
 
@@ -186,7 +185,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
       showToast(editMessage)
 
       dialog.value = false
-      cleanForm()
+      nameRef.value = null
     }
   } catch (e) {
     console.log(e)
@@ -198,11 +197,8 @@ const handleCheckboxClick = function (item) {
 }
 
 const openDialog = (item) => {
-  if(markedID.value.length > 0) {
-    return showToast(selectOneItemMessage, 'warning');
-  }
-
   dialog.value = true
+
   if (item === 0) {
     idPosition.value = 0
     isExistsPosition.value = false
@@ -221,21 +217,21 @@ const openDialog = (item) => {
   }
 
 }
-
-
-
 const addBasedOnPosition = () => {
-  if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
-  if (markedID.value.length > 1) return showToast(selectOneItemMessage, 'warning')
+  if (markedID.value.length !== 1 && !isExistsPosition.value)
+    return showToast(selectOneItemMessage, "warning");
+  dialog.value = true;
 
-  dialog.value = true
-
-  positions.value.forEach(item => {
+  positions.value.forEach((item) => {
     if (markedID.value[0] === item.id) {
-      nameRef.value = item.name
+      idPosition.value = item.id;
+      nameRef.value = item.name;
     }
   })
+
+  isExistsPosition.value = false
 }
+
 
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
   if(markedItem.value.deleted_at) {
@@ -246,30 +242,42 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
   }
 }
 
-const lineMarking = (item) => {
+const lineMarking = item => {
+  if (markedID.value.length > 0) {
+    const firstMarkedItem = positions.value.find(el => el.id === markedID.value[0])
+    if (firstMarkedItem && firstMarkedItem.deleted_at) {
+      if (item.deleted_at === null) {
+        showToast(ErrorSelectMessage, 'warning')
+        return
+      }
+    }
+    if (firstMarkedItem && firstMarkedItem.deleted_at === null) {
+      if (item.deleted_at !== null) {
+        showToast(ErrorSelectMessage, 'warning')
+        return
+      }
+    }
+  }
+
   const index = markedID.value.indexOf(item.id);
   if (index !== -1) {
     markedID.value.splice(index, 1);
   } else {
-    markedID.value.push(item.id);
+    if (item.id !== null) {
+      markedID.value.push(item.id)
+    }
   }
-  markedItem.value = item;
+  markedItem.value = item
 }
 
 const isDataChanged = () => {
-  const item = positions.value.find(
-    (item) => item.id === idPosition.value
-  );
+  const item = positions.value.find(elem => elem.id === idPosition.value)
 
-  const isChanged =
-    nameRef.value !== item.name 
-  return isChanged;
-};
+  return nameRef.value !== item.name
+}
 
 const checkAndClose = () => {
-  if (
-    nameRef.value 
-  ) {
+  if (nameRef.value) {
     showModal.value = true;
   } else {
     dialog.value = false;
@@ -281,7 +289,7 @@ const closeDialogWithoutSaving = () => {
   dialog.value = false;
   showModal.value = false
   showConfirmDialog.value = false;
-  cleanForm();
+  nameRef.value = null
 };
 
 const destroy = async () => {
@@ -296,17 +304,20 @@ const checkUpdate = () => {
   } else {
     dialog.value = false;
   }
-
 };
 
-const cleanForm = () => {
-  nameRef.value = null
-}
+
+watch(markedID, (newVal) => {
+  markedItem.value = positions.value.find((el) => el.id === newVal[0]);
+});
+
 
 
 watch(dialog, newVal => {
   if (!newVal) {
     nameRef.value = null
+  } else {
+    markedID.value = [markedID.value[markedID.value.length - 1]];
   }
 })
 
@@ -339,7 +350,7 @@ watch(dialog, newVal => {
                   color="info"
                   rounded="lg"
                   clear-icon="close"
-                  :base-color="FIELD_COLOR"
+                  :base-color="FIELD_OF_SEARCH"
                   hide-details
                   single-line
                   clearable
@@ -373,6 +384,8 @@ watch(dialog, newVal => {
             :items="positions"
             :item-value="headers.title"
             @update:options="getPositionData"
+            show-select
+            v-model="markedID"
             page-text =  '{0}-{1} от {2}'
             :items-per-page-options="[
                 {value: 25, title: '25'},
@@ -388,12 +401,17 @@ watch(dialog, newVal => {
               <td class="">
                 <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
                   <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)" @change="handleCheckboxClick(item)">
-                    <span>{{ index + 1 }}</span>
+                    <span>{{ item.id }}</span>
                   </CustomCheckbox>
                 </template>
                 <template v-else>
-                  <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
-                  <span>{{ index + 1 }}</span>
+                  <div class="d-flex align-center">
+                    <Icons
+                        style="margin-right: 10px; margin-top: 4px"
+                        :name="item.deleted_at === null ? 'valid' : 'inValid'"
+                    />
+                    <span>{{ item.id }}</span>
+                  </div>
                 </template>
               </td>
               <td>{{ item.name }}</td>
@@ -417,8 +435,7 @@ watch(dialog, newVal => {
                   <Icons title="Сохранить" v-else @click="addPosition" name="save"/>
                 </div>
                 <v-btn
-                @click="isExistsPosition ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
-                
+                @click="isExistsPosition ? checkUpdate() : checkAndClose()"
                 variant="text"
                 :size="32"
                 class="pt-2 pl-1"
@@ -449,10 +466,7 @@ watch(dialog, newVal => {
             </v-form>
           </v-card>
         </v-dialog>
-
       </v-card>
-
-
 
       <v-card>
         <v-dialog class="mt-2 pa-2"  v-model="filterModal">

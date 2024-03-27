@@ -16,7 +16,7 @@ import Icons from "../../../composables/Icons/Icons.vue";
 import employee from "../../../api/employee";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import validate from "./validate.js";
-import {FIELD_COLOR} from "../../../composables/constant/colors.js";
+import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 
 const showConfirmDialog = ref(false);
 const router = useRouter();
@@ -48,7 +48,6 @@ const showModal = ref(false);
 
 const toggleModal = () => {
   showModal.value = !showModal.value;
-  // console.log('openModal');
 };
 
 const filterForm = ref({
@@ -280,7 +279,9 @@ const lineMarking = (item) => {
   if (index !== -1) {
     markedID.value.splice(index, 1);
   } else {
-    markedID.value.push(item.id);
+    if (item.id !== null) {
+      markedID.value.push(item.id);
+    }
   }
   markedItem.value = item;
 };
@@ -338,38 +339,15 @@ const  closeFilterModal = async ({page, itemsPerPage, sortBy, search, filterData
 
 
 const isDataChanged = () => {
-  const item = organizations.value.find(
-    (item) => item.id === idOrganizations.value
-  );
+  const item = organizations.value.find(elem => elem.id === idOrganizations.value);
 
-  const isChanged =
-    nameRef.value !== item.name ||
+  return    nameRef.value !== item.name ||
     innRef.value !== item.INN ||
     directorRef.value.id !== item.director.id ||
     accountantRef.value.id !== item.chief_accountant.id ||
     addressRef.value !== item.address ||
     descriptionRef.value !== item.description;
-
-  return isChanged;
 };
-
-function countFilter() {
-   
-   for (const key in filterForm.value) {
-       if (filterForm.value[key] !== null) {
-           count.value++;
-       }
-   }
-   
-   return count;
-}
-
-const destroy = async () => {
-  markedID.value.push(idOrganizations.value);
-  compute({ page: 1, itemsPerPage: 10, sortBy: 'id' })
-  addDialog.value = false
-}
-
 
 const checkAndClose = () => {
   if (
@@ -403,6 +381,23 @@ const checkUpdate = () => {
 
 };
 
+function countFilter() {
+   
+   for (const key in filterForm.value) {
+       if (filterForm.value[key] !== null) {
+           count.value++;
+       }
+   }
+   
+   return count;
+}
+
+const destroy = async () => {
+  markedID.value.push(idOrganizations.value);
+  compute({ page: 1, itemsPerPage: 10, sortBy: 'id' })
+  addDialog.value = false
+}
+
 watch(addDialog, (newVal) => {
   if (!newVal) {
     nameRef.value = null;
@@ -412,7 +407,7 @@ watch(addDialog, (newVal) => {
     addressRef.value = null;
     descriptionRef.value = null;
     isExistsOrganization.value = false;
-    organization.value = [];
+    organizations.value = [];
   }
 });
 
@@ -453,7 +448,7 @@ onMounted(async () => {
             <div class="w-100">
               <v-text-field
                 v-model="search"
-                :base-color="FIELD_COLOR"
+                :base-color="FIELD_OF_SEARCH"
                 prepend-inner-icon="search"
                 density="compact"
                 label="Поиск..."
@@ -525,15 +520,14 @@ onMounted(async () => {
                     :checked="markedID.includes(item.id)"
                     @change="handleCheckboxClick(item)"
                   >
-                    <span>{{ index.id }}</span>
+                    <span>{{ index + 1 }}</span>
                   </CustomCheckbox>
                 </template>
                 <template v-else>
-                  <Icons
-                    style="margin-right: 10px"
-                    :name="item.deleted_at === null ? 'valid' : 'inValid'"
-                  />
-                  <span>{{ index.id }}</span>
+                  <div class="d-flex align-center">
+                      <Icons style="margin-right: 10px; margin-top: 4px" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
+                      <span>{{ index + 1 }}</span>
+                    </div>
                 </template>
               </td>
               <td>{{ item.name }}</td>

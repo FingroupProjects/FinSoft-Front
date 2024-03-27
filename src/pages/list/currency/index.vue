@@ -14,7 +14,7 @@ import showDate from "../../../composables/date/showDate.js";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import validate from "./validate.js";
-import {FIELD_COLOR} from "../../../composables/constant/colors.js";
+import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 import {tr} from "vuetify/locale";
 
 
@@ -50,11 +50,17 @@ const digitalRef = ref(null)
 const dateRef = ref(null)
 const valueRef = ref(null)
 const showModal = ref(false);
+const showRateModal = ref(false);
 
 const toggleModal = () => {
+  console.log(1)
   showModal.value = !showModal.value;
-  // console.log('openModal');
 };
+const toggleRateModal = () => {
+  console.log(1)
+  showRateModal.value = !showRateModal.value;
+};
+
 
 
 const filterForm = ref({
@@ -100,6 +106,7 @@ const countFilter = () => {
 
 const getCurrencyData = async ({page, itemsPerPage, sortBy, search}) => {
 
+
   filterModal.value = false
   const filterData = filterForm.value
   count.value = 0
@@ -121,8 +128,15 @@ const getCurrencyData = async ({page, itemsPerPage, sortBy, search}) => {
 const isDataChanged = () => {
   const item = currencies.value.find(elem => elem.id === idCurrency.value)
 
+  console.log(item)
+
+  console.log(nameRef.value !== item.name,
+  digitalRef.value !== item.digital_code,
+  symbolRef.value !== item.symbol_code 
+  )
+
   return nameRef.value !== item.name ||
-  digitalRef.value !== item.digital_code ||
+  digitalRef.value != item.digital_code ||
   symbolRef.value !== item.symbol_code 
 }
 
@@ -132,10 +146,30 @@ const checkAndClose = () => {
     digitalRef.value ||
     symbolRef.value 
   ) {
-    showConfirmDialog.value = true;
+    showModal.value = true;
   } else {
     dialog.value = false;
     showModal.value = false;
+  }
+};
+
+
+const isDataRateChanged = () => {
+  const item = rates.value.find(elem => elem.id === idCurrencyRate.value)
+
+  console.log(item)
+  return valueRef.value !== item.value
+ 
+}
+
+const checkRateAndClose = () => {
+  if (
+    valueRef.value
+  ) {
+    showRateModal.value = true;
+  } else {
+    rateDialog.value = false;
+    showRateModal.value = false;
   }
 };
 
@@ -146,11 +180,30 @@ const closeDialogWithoutSaving = () => {
   cleanForm();
 };
 
+
+const closeRateDialogWithoutSaving = () => {
+  rateDialog.value = false
+  showRateModal.value = false
+  showConfirmDialog.value = false;
+ 
+  valueRef.value = false
+};
+
 const checkUpdate = () => {
+  console.log(1)
   if (isDataChanged()) {
-    showConfirmDialog.value = true;
+    showModal.value = true;
   } else {
     dialog.value = false;
+  }
+
+};
+const checkRateUpdate = () => {
+  console.log(1)
+  if (isDataRateChanged()) {
+    showRateModal.value = true;
+  } else {
+    rateDialog.value = false;
   }
 
 };
@@ -161,10 +214,14 @@ const cleanForm = () => {
 };
 
 const getCurrencyRateData = async ({page, itemsPerPage, sortBy, search}) => {
-  if (idCurrency.value === 0) {
+  
+  if (idCurrency.value === 0 || !isExistsCurrency.value) {
+   
     loadingRate.value = false
     return
   }
+
+  
 
   try {
     const response = await currency.show(idCurrency.value)
@@ -233,6 +290,7 @@ const update = async ({page, itemsPerPage, sortBy, search}) => {
       await getCurrencyData({page, itemsPerPage, sortBy, search})
       showToast(editMessage)
       cleanForm()
+      dialog.value = false
     }
   } catch (e) {
     console.log(e)
@@ -347,6 +405,7 @@ const removeCurrencyRate = async ({page, itemsPerPage, sortBy}) => {
       showToast(removeMessage, 'red')
       await getCurrencyRateData({page, itemsPerPage, sortBy})
       markedIDRate.value = []
+      rateDialog.value = false
     }
   } catch (e) {
     console.log(e)
@@ -361,6 +420,7 @@ const restoreCurrencyRate = async ({page, itemsPerPage, sortBy}) => {
       showToast(restoreMessage)
       await getCurrencyRateData({page, itemsPerPage, sortBy})
       markedIDRate.value = []
+      rateDialog.value = false
     }
   } catch (e) {
     console.log(e)
@@ -380,6 +440,8 @@ const addBasedOnCurrency = () => {
       digitalRef.value = item.digital_code
     }
   })
+
+ 
 }
 
 const lineMarking = (item) => {
@@ -399,8 +461,13 @@ const lineMarking = (item) => {
     }
   }
 
-  if (!markedID.value.includes(item.id)) {
-    markedID.value.push(item.id);
+  const index = markedID.value.indexOf(item.id);
+  if (index !== -1) {
+    markedID.value.splice(index, 1);
+  } else {
+    if (item.id !== null) {
+      markedID.value.push(item.id);
+    }
   }
   markedItem.value = item;
 }
@@ -446,6 +513,7 @@ const handleCheckboxClickRate = (item) => {
 }
 
 const computeRate = ({page, itemsPerPage, sortBy}) => {
+  
   if (markedItemRate.value.deleted_at !== null) {
     return restoreCurrencyRate({page, itemsPerPage, sortBy})
   } else {
@@ -461,10 +529,10 @@ const validateCurrency = () => {
 onMounted(async () => {
   dateRef.value = currentDate()
 })
+
 watch(markedID, (newVal) => {
   markedItem.value = currencies.value.find((el) => el.id === newVal[0]);
 });
-
 
 watch(dialog, newVal => {
   if (!newVal) {
@@ -510,8 +578,8 @@ watch(rateDialog, newVal => {
                   density="compact"
                   label="Поиск..."
                   variant="outlined"
-                  color="green"
-                  :base-color="FIELD_COLOR"
+                  color="info"
+                  :base-color="FIELD_OF_SEARCH"
                   rounded="lg"
                   clear-icon="close"
                   hide-details
@@ -546,9 +614,9 @@ watch(rateDialog, newVal => {
             :items="currencies"
             :item-value="headers.title"
             :search="search"
-            @update:options="getCurrencyData"
             show-select
             v-model="markedID"
+            @update:options="getCurrencyData"
             page-text='{0}-{1} от {2}'
             :items-per-page-options="[
                 {value: 25, title: '25'},
@@ -558,34 +626,30 @@ watch(rateDialog, newVal => {
             fixed-header
             hover
         >
-          <template v-slot:item="{ item, index }">
-            <tr 
-            @mouseenter="hoveredRowIndex = index" 
-            @mouseleave="hoveredRowIndex = null" 
-            @dblclick="openDialog(item)"
-            @click="lineMarking(item)" :class="{'bg-grey-lighten-2': markedID.includes(item.id)}">
-              <td>
-                <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
-                  <CustomCheckbox v-model="markedID" 
-                  :checked="markedID.includes(item.id)"
-                  @change="handleCheckboxClick(item)">
-                    <span>{{ item.id }}</span>
-                  </CustomCheckbox>
-                </template>
-                <template v-else>
-                  <div>
-                    <Icons style="margin-right: 10px;"
-                     :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
-                    <span>{{ item.id }}</span>
-                  </div>
-                </template>
-              </td>
-              <td>{{ item.name }}</td>
-              <td>{{ item.symbol_code }}</td>
-              <td>{{ item.digital_code }}</td>
-              <td>{{ item.last_exchange_rate === null ? '' : item.last_exchange_rate.value }}</td>
-            </tr>
-          </template>
+        <template v-slot:item="{ item, index }">
+              <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)"
+                  @dblclick="openDialog(item)"
+                  :class="{'bg-grey-lighten-2': markedID.includes(item.id) }">
+                <td>
+                  <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
+                    <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)"
+                                    @change="handleCheckboxClick(item)">
+                      <span>{{ index + 1 }}</span>
+                    </CustomCheckbox>
+                  </template>
+                  <template v-else>
+                    <div class="d-flex align-center">
+                      <Icons style="margin-right: 10px; margin-top: 4px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
+                      <span>{{ index + 1 }}</span>
+                    </div>
+                  </template>
+                </td>
+                <td>{{ item.name }}</td>
+                <td>{{ item.symbol_code }}</td>
+                <td>{{ item.digital_code }}</td>
+                <td>{{ item.last_exchange_rate === null ? '' : item.last_exchange_rate.value }}</td>
+              </tr>
+            </template>
         </v-data-table-server>
       </v-card>
 
@@ -603,7 +667,7 @@ watch(rateDialog, newVal => {
                   <Icons title="Сохранить"  v-else @click="addCurrency" name="save"/>
                 </div>
                 <v-btn
-                @click="toggleModal() ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
+                @click="isExistsCurrency ? checkUpdate() : checkAndClose()"
                 
                 variant="text"
                 :size="32"
@@ -728,11 +792,12 @@ watch(rateDialog, newVal => {
               <span class="pl-5">{{ isExistsCurrencyRate ? 'Изменить' : 'Добавить' }} курс</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons title="Удалить "  v-show="isExistsCurrencyRate" @click="removeCurrencyRate" name="delete"/>
+                  <Icons title="Удалить "  v-show="isExistsCurrencyRate" @click="computeRate" name="delete"/>
+                  
                   <Icons title="Сохранить"  v-if="isExistsCurrencyRate" @click="updateRate" name="save"/>
                   <Icons  title="Сохранить" v-else @click="addRate" name="save"/>
                 </div>
-                <v-btn @click="isExistsCurrencyRate ? checkRateUpdate() : checkRateAndClose({ page, itemsPerPage, sortBy, search, filterData }) "
+                <v-btn @click="isExistsCurrencyRate ? checkRateUpdate() : checkRateAndClose() "
                   variant="text" :size="32" class="pt-2 pl-1">
                   <Icons name="close"   title="Закрыть"/>
                 </v-btn>
@@ -740,7 +805,7 @@ watch(rateDialog, newVal => {
             </div>
             <v-form class="d-flex w-100 pa-5">
               <v-row class="w-100">
-                <v-col class="d-flex flex-column justify-between w-100 ga-5">
+                <v-col class="d-flex flex-column justify-between w-100 ">
                   <v-text-field
                       v-model="dateRef"
                       :rules="[rules.required]"
@@ -852,6 +917,9 @@ watch(rateDialog, newVal => {
 
       <div v-if="showModal">
         <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" />
+      </div>
+      <div v-if="showRateModal">
+        <ConfirmModal :showModal="true" @close="toggleRateModal()" @closeClear="closeRateDialogWithoutSaving()" />
       </div>
 
     </v-col>

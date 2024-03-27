@@ -5,6 +5,7 @@ import Icons from "@/composables/Icons/Icons.vue";
 import CustomCheckbox from "@/components/checkbox/CustomCheckbox.vue";
 import counterpartyAgreement from "@/api/counterpartyAgreement.js";
 import showDate from "@/composables/date/showDate.js";
+import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import {
   ErrorSelectMessage,
   removeMessage,
@@ -18,8 +19,9 @@ import priceTypeApi from "@/api/priceType.js";
 import validate from "./validate.js";
 import { FIELD_COLOR } from "../../../composables/constant/colors.js";
 
-const props = defineProps(["isOpen", "isEdit", "item", "createOnBase"]);
-const emits = defineEmits();
+const props = defineProps(["isOpen", "isEdit", "item", "createOnBase", "counterparty"]);
+const emits = defineEmits(['toggleIsOpen']);
+
 
 const form = ref({
   name: "",
@@ -40,6 +42,8 @@ const address = ref("");
 const email = ref("");
 const search = ref("");
 const modalTitle = ref("");
+
+const showModal = ref(false);
 
 const pagination = ref([]);
 const roles = ref([]);
@@ -132,7 +136,10 @@ const computeRoles = computed(() => {
   });
 });
 
+
+
 const lineMarking = (item) => {
+  
   if (markedID.value.length > 0) {
     const firstMarkedItem = result.value.find(
       (el) => el.id === markedID.value[0]
@@ -171,6 +178,10 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
 const openAgreementDialog = () => {
   getDated();
 };
+
+const toggleModal = () => {
+  showModal.value = !showModal.value
+}
 
 const getDated = () => {
   agreementDialog.value = true;
@@ -229,7 +240,7 @@ const cpAgreementGetById = async (id) => {
 
 const getOrganization = async (page, items) => {
   try {
-    const { data } = await organizationApi.get(page, items);
+    const { data } = await organizationApi.get({page, items});
     organizations.value = data.result.data;
     console.log(data);
   } catch (e) {
@@ -315,8 +326,16 @@ const CreateCounterparty = async () => {
 };
 
 const getDocuments = async ({ page, itemsPerPage, sortBy, search }) => {
+
+  if(props.isEdit === false) {
+    loading.value = false
+    result.value = []
+    return
+  }
+
   try {
     loading.value = true;
+    
     if (props.isEdit === true) {
       const { data } = await counterpartyAgreement.getCounterpartyById(
         props.item,
@@ -407,6 +426,58 @@ const handleCheckboxChange = (index) => {
   }
 };
 
+
+const isDataChanged = () => {
+  
+  const item = props.counterparty.find(
+    (item) => item.id === props.item
+  );
+
+
+    console.log(
+      name.value !== item.name,
+      address.value !== item.address,
+      phone.value !== item.phone,
+      email.value !== item.email
+    )
+
+  const isChanged =
+    name.value !== item.name ||
+    address.value !== item.address  ||
+    phone.value !== item.phone ||
+    email.value !== item.email
+
+  return isChanged;
+};
+
+const checkUpdate = () => {
+  if (isDataChanged()) {
+    
+    showModal.value = true;
+  } else {
+    
+    dialog.value = false;
+  }
+
+};
+
+const checkAndClose = () => {
+
+  if (
+    name.value || phone.value || email.value || address.value || roles.value.length > 0
+  ) {
+    showModal.value = true;
+  } else {
+    dialog.value = false
+  }
+};
+
+const closeDialogWithoutSaving = () => {
+  dialog.value = false;
+  showModal.value = false
+  clearForm()
+};
+
 const createCpAgreement = async () => {
   try {
     const body = {
@@ -422,6 +493,9 @@ const createCpAgreement = async () => {
     await counterpartyAgreement.create(body);
     showToast("Успешно добавлена", "green");
     agreementDialog.value = false;
+    getDocuments({})
+
+
     clearInputs();
   } catch (error) {
     isValid.value = true;
@@ -501,7 +575,7 @@ const currencyProps = (item) => {
           }}</span>
           <div class="d-flex align-center justify-space-between">
             <div class="d-flex align-center mt-2 me-4">
-              <Icons
+              <Icons title="Сохранить"
                 @click="
                   isEdit && !createOnBase
                     ? updateCounterparty()
@@ -511,8 +585,9 @@ const currencyProps = (item) => {
               />
             </div>
             <v-btn
-              @click="dialog = false"
+              @click="isEdit ? checkUpdate() : checkAndClose() "
               variant="text"
+              title="Закрыть"
               :size="32"
               class="pt-2 pl-1"
             >
@@ -625,8 +700,8 @@ const currencyProps = (item) => {
             >
               <span>Договоры</span>
               <span>
-                <Icons @click="compute" class="mr-3" name="delete" />
-                <Icons @click="openAgreementDialog" name="add" />
+                <Icons v-show="isEdit" @click="compute" class="mr-3" name="delete" />
+                <Icons v-show="isEdit" @click="openAgreementDialog" name="add" />
               </span>
             </div>
           </div>
@@ -855,4 +930,9 @@ const currencyProps = (item) => {
       </v-card>
     </v-dialog>
   </div>
+
+
+  <div v-if="showModal">
+        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" />
+      </div>
 </template>

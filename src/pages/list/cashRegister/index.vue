@@ -9,7 +9,7 @@ import organization from '../../../api/organizations.js';
 import employee from '../../../api/employee.js';
 import validate from "./validate.js"
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
-import {FIELD_COLOR} from "../../../composables/constant/colors.js";
+import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 import {
   addMessage,
   editMessage,
@@ -66,12 +66,7 @@ const count = ref(0)
 
 const toggleModal = () => {
   showModal.value = !showModal.value;
-  // console.log('openModal');
 };
-
-
-
-
 
 const filterForm = ref({
     name: null,
@@ -89,28 +84,22 @@ const headers = ref([
 
 ])
 
-
-
 const isDataChanged = () => {
   const item = cashRegisters.value.find(
     (item) => item.id === idCashRegister.value
   );
 
-  console.log(item)
-  
-
   const isChanged =
     nameRef.value !== item.name ||
-    currencyAdd.value !== item.currency.id ||
-    organizationAdd.value !== item.organization.id ||
-    employeeAdd.value !== item.responsiblePerson.id
-  
-
+    currencyAdd.value.id !== item.currency.id ||
+    organizationAdd.value.id !== item.organization.id ||
+    employeeAdd.value.id !== item.responsible_person.id 
 
   return isChanged;
 };
 
 const checkAndClose = () => {
+  
   
   if (
     nameRef.value ||
@@ -118,23 +107,12 @@ const checkAndClose = () => {
     organizationAdd.value ||
     employeeAdd.value 
   ) {
-    showConfirmDialog.value = true;
+    showModal.value = true;
   } else {
     dialog.value = false;
     showModal.value = false;
   }
 };
-
-function countFilter() {
-   
-   for (const key in filterForm.value) {
-       if (filterForm.value[key] !== null) {
-           count.value++;
-       }
-   }
-   
-   return count;
-}
 
 const closeDialogWithoutSaving = () => {
   dialog.value = false;
@@ -149,14 +127,26 @@ const checkUpdate = () => {
   } else {
     dialog.value = false;
   }
-
 };
+
 const cleanForm = () => {
   nameRef.value = null;
   currencyAdd.value = null;
   organizationAdd.value = null;
   employeeAdd.value = null;
 };
+
+
+function countFilter() {
+   
+   for (const key in filterForm.value) {
+       if (filterForm.value[key] !== null) {
+           count.value++;
+       }
+   }
+   
+   return count;
+}
 
 
 
@@ -240,17 +230,13 @@ const massDel = async ({page, itemsPerPage, sortBy, search}) => {
 }
 
 
-const massRestore = async ({page, itemsPerPage, sortBy, search}) => {
-  const body = {
-    ids: markedID.value
-  }
-
+const massRestore = async ({page, itemsPerPage, sortBy}) => {
   try {
-    const {status} = await cashRegister.massRestore(body)
+    const {status} = await cashRegister.massRestore({ids: markedID.value})
 
     if (status === 200) {
       showToast(restoreMessage, 'red')
-      await getcashRegisterData({page, itemsPerPage, sortBy}, search)
+      await getcashRegisterData({page, itemsPerPage, sortBy})
       markedID.value = []
       dialog.value = false
     }
@@ -287,84 +273,35 @@ const update = async ({page, itemsPerPage, sortBy}) => {
   }
 }
 
-
-const destroy = async ({page, itemsPerPage, sortBy}) => {
-  if (markedID.value === null) return showToast(warningMessage, 'warning')
-  try {
-    const {status} = await cashRegister.delete(markedID.value)
-    if (status === 200) {
-      showToast(removeMessage, 'red')
-      await getcashRegisterData({page, itemsPerPage, sortBy})
-      dialog.value = false
-      markedID.value = []
-    }
-  } catch (e) {
-
-  }
-}
-
-const restore = async ({page, itemsPerPage, sortBy}) => {
-  try {
-    const {status} = await cashRegister.restore(markedID.value)
-    if (status === 200) {
-      showToast(restoreMessage, 'green')
-      await getcashRegisterData({page, itemsPerPage, sortBy})
-      markedID.value = []
-    }
-  } catch (e) {
-
-  }
-}
-
 const getEmployee = async () => {
   try {
     const {data} = await employee.get({page: 1, itemsPerPage: 100000})
-    employees.value = data.result.data.map(item => {
-      return {
-        id: item.id,
-        name: item.name
-      }
-    })
-  } catch (e) {
-
-  }
+    employees.value = data.result.data.map(item => ({
+      id: item.id,
+      name: item.name
+    }))
+  } catch (e) {}
 }
 
 const getCurrencies = async () => {
   try {
     const {data} = await currency.get({page: 1, itemsPerPage: 100000})
-
-
-    currencies.value = data.result.data.map(item => {
-      return {
-        id: item.id,
-        name: item.name
-      }
-    })
-
-  } catch (e) {
-
-  }
+    currencies.value = data.result.data.map(item => ({
+      id: item.id,
+      name: item.name
+    }))
+  } catch (e) {}
 }
 const getOrganizations = async () => {
 
   try {
     const {data} = await organization.get({page: 1, itemsPerPage: 100000})
-
-    organizations.value = data.result.data.map(item => {
-      return {
-        id: item.id,
-        name: item.name
-      }
-    })
-
-
-  } catch (e) {
-
-  }
+    organizations.value = data.result.data.map(item => ({
+      id: item.id,
+      name: item.name
+    }))
+  } catch (e) {}
 }
-
-
 
 onMounted(async () => {
   await getEmployee()
@@ -378,8 +315,6 @@ const handleCheckboxClick = function (item) {
 }
 
 const openDialog = (item) => {
-
-
   dialog.value = true
 
   if (item === 0) {
@@ -454,29 +389,23 @@ const lineMarking = (item) => {
   if (index !== -1) {
     markedID.value.splice(index, 1);
   } else {
-    markedID.value.push(item.id);
+    if (item.id !== null) {
+      markedID.value.push(item.id)
+    }
   }
   markedItem.value = item;
 }
 
-
-
-const cleanFilterForm = () => {
-  filterForm.value = {}
-}
-
 const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
   showFilterModal.value = false
-  cleanFilterForm()
+  filterForm.value = {}
   await getcashRegisterData({page, itemsPerPage, sortBy, search})
-  
 
 }
 
 watch(markedID, (newVal) => {
   markedItem.value = cashRegisters.value.find((el) => el.id === newVal[0]);
 });
-
 
 watch(dialog, newVal => {
   if (!newVal) {
@@ -487,8 +416,8 @@ watch(dialog, newVal => {
     organizationAdd.value = null
     employeeAdd.value = null
     employeeUpdate.value = null;
-
     loadingRate.value = true
+    cleanForm()
   }
 })
 
@@ -520,7 +449,7 @@ watch(dialog, newVal => {
                   color="info"
                   rounded="lg"
                   clear-icon="close"
-                  :base-color="FIELD_COLOR"
+                  :base-color="FIELD_OF_SEARCH"
                   hide-details
                   single-line
                   clearable
@@ -575,13 +504,15 @@ watch(dialog, newVal => {
                   <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)"
                                   @change="handleCheckboxClick(item)">
 
-                    <span>{{ item.id }}</span>
+                    <span>{{ index + 1 }}</span>
 
                   </CustomCheckbox>
                 </template>
                 <template v-else>
-                  <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
-                  <span>{{ index.id }}</span>
+                  <div class="d-flex align-center">
+                      <Icons style="margin-right: 10px; margin-top: 4px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
+                      <span>{{ index + 1 }}</span>
+                    </div>
                 </template>
               </td>
               <td>{{ item.name }}</td>
@@ -606,7 +537,7 @@ watch(dialog, newVal => {
                   <Icons title="Сохранить" v-else @click="addcashRegister" name="save"/>
                 </div>
                 <v-btn
-                @click="isExistsCashRegister ? checkUpdate : checkAndClose"
+                @click="isExistsCashRegister ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
                 
                 variant="text"
                 :size="32"
@@ -641,8 +572,8 @@ watch(dialog, newVal => {
                         hide-details
                         :base-color="FIELD_COLOR"
                         label="Валюта"
+                        no-data-text="нет данных"
                         v-model="currencyAdd"
-                      
                         :items="currencies"
                         item-title="name"
                         item-value="id"
@@ -651,6 +582,7 @@ watch(dialog, newVal => {
                       style="max-width: 47%; min-width: 46%;"
                         variant="outlined"
                         hide-details
+                        no-data-text="нет данных"
                         :base-color="FIELD_COLOR"
                         label="Ответственное лицо"
                         v-model="employeeAdd"
@@ -755,11 +687,11 @@ watch(dialog, newVal => {
           </v-card>
         </v-dialog>
         
-        <div v-if="showModal">
+        
+      </v-card>
+      <div v-if="showModal">
         <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" />
       </div>
-
-      </v-card>
     </v-col>
   </div>
 

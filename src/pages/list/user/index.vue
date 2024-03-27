@@ -19,7 +19,7 @@ import organizationApi from "../../../api/organizations.js";
 import user from "../../../api/user.js";
 import validate from "./validate.js";
 import groupApi from "../../../api/userGroup.js";
-import {FIELD_COLOR} from "../../../composables/constant/colors.js";
+import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 const showModal = ref(false);
 const showConfirmDialog = ref(false);
 const toggleModal = () => {
@@ -224,9 +224,6 @@ const addUser = async ({page, itemsPerPage, sortBy}) => {
     formData.append('image', imageRef.value);
   }
 
-  for(let pair of formData.entries()) {
-    console.log(pair[0]+ ', '+ pair[1]);
-  }
 
   try {
     const res = await user.add(formData)
@@ -454,8 +451,13 @@ const lineMarking = item => {
     }
   }
 
-  if (!markedID.value.includes(item.id)) {
-    markedID.value.push(item.id);
+  const index = markedID.value.indexOf(item.id);
+  if (index !== -1) {
+    markedID.value.splice(index, 1);
+  } else {
+    if (item.id !== null) {
+      markedID.value.push(item.id);
+    }
   }
   markedItem.value = item;
 }
@@ -548,8 +550,8 @@ onMounted(async () =>  {
                 density="compact"
                 label="Поиск..."
                 variant="outlined"
-                color="green"
-                :base-color="FIELD_COLOR"
+                color="info"
+                :base-color="FIELD_OF_SEARCH"
                 rounded="lg"
                 clear-icon="close"
                 hide-details
@@ -650,8 +652,8 @@ onMounted(async () =>  {
                     </CustomCheckbox>
                   </template>
                   <template v-else>
-                    <div  class="d-flex">
-                      <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
+                    <div  class="d-flex align-center">
+                      <Icons style="margin-right: 10px; margin-top: 4px" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
                       <span>{{ item.id }}</span>
                     </div>
                   </template>
