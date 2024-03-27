@@ -117,6 +117,7 @@ const editItem = (item) => {
   markedItem.value = item;
 };
 
+
 function countFilter() {
   for (const key in filterForm.value) {
     if (
@@ -136,7 +137,12 @@ const toggleModal = () => {
   setTimeout(() => {
     isEdit.value = false;
   }, 100);
-};
+
+  getCounterparty({})
+}
+
+
+
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
   if (markedItem.value.deleted_at) {
     return massRestoreCounterparty({ page, itemsPerPage, sortBy });
@@ -292,9 +298,9 @@ onMounted(async () => {
         <v-card variant="text" min-width="500" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-2 me-3">
-              <Icons @click="isCreate = true" name="add" />
-              <Icons @click="createBase()" name="copy" />
-              <Icons
+              <Icons title="Добавить" @click="isCreate = true" name="add" />
+              <Icons title="Скопировать" @click="createBase()" name="copy" />
+              <Icons title="Удалить"
                 @click="compute({ page, itemsPerPage, sortBy, search })"
                 name="delete"
               />
@@ -414,6 +420,7 @@ onMounted(async () => {
         @toggleIsOpen="toggleModal()"
         :item="markedItem"
         :createOnBase="createOnBase"
+        :counterparty="counterparty"
       />
 
       <v-dialog v-model="filterDialog" class="mt-2 pa-2">

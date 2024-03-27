@@ -18,7 +18,7 @@ import priceTypeApi from "@/api/priceType.js";
 import validate from "./validate.js";
 import { FIELD_COLOR } from "../../../composables/constant/colors.js";
 
-const props = defineProps(["isOpen", "isEdit", "item", "createOnBase"]);
+const props = defineProps(["isOpen", "isEdit", "item", "createOnBase", "counterparty"]);
 const emits = defineEmits();
 
 const form = ref({
@@ -229,7 +229,7 @@ const cpAgreementGetById = async (id) => {
 
 const getOrganization = async (page, items) => {
   try {
-    const { data } = await organizationApi.get(page, items);
+    const { data } = await organizationApi.get({page, items});
     organizations.value = data.result.data;
     console.log(data);
   } catch (e) {
@@ -315,8 +315,16 @@ const CreateCounterparty = async () => {
 };
 
 const getDocuments = async ({ page, itemsPerPage, sortBy, search }) => {
+
+  if(props.isEdit === false) {
+    loading.value = false
+    result.value = []
+    return
+  }
+
   try {
     loading.value = true;
+    
     if (props.isEdit === true) {
       const { data } = await counterpartyAgreement.getCounterpartyById(
         props.item,
@@ -407,6 +415,35 @@ const handleCheckboxChange = (index) => {
   }
 };
 
+
+const isDataChanged = () => {
+  const item = positions.value.find(
+    (item) => item.id === idPosition.value
+  );
+
+  const isChanged =
+    nameRef.value !== item.name 
+  return isChanged;
+};
+
+const checkAndClose = () => {
+  if (
+    nameRef.value 
+  ) {
+    showModal.value = true;
+  } else {
+    dialog.value = false;
+    showModal.value = false;
+  }
+};
+
+const closeDialogWithoutSaving = () => {
+  dialog.value = false;
+  showModal.value = false
+  showConfirmDialog.value = false;
+  cleanForm();
+};
+
 const createCpAgreement = async () => {
   try {
     const body = {
@@ -422,6 +459,9 @@ const createCpAgreement = async () => {
     await counterpartyAgreement.create(body);
     showToast("Успешно добавлена", "green");
     agreementDialog.value = false;
+    getDocuments({})
+
+
     clearInputs();
   } catch (error) {
     isValid.value = true;
@@ -501,7 +541,7 @@ const currencyProps = (item) => {
           }}</span>
           <div class="d-flex align-center justify-space-between">
             <div class="d-flex align-center mt-2 me-4">
-              <Icons
+              <Icons title="Сохранить"
                 @click="
                   isEdit && !createOnBase
                     ? updateCounterparty()
@@ -513,6 +553,7 @@ const currencyProps = (item) => {
             <v-btn
               @click="dialog = false"
               variant="text"
+              title="Закрыть"
               :size="32"
               class="pt-2 pl-1"
             >
@@ -625,8 +666,8 @@ const currencyProps = (item) => {
             >
               <span>Договоры</span>
               <span>
-                <Icons @click="compute" class="mr-3" name="delete" />
-                <Icons @click="openAgreementDialog" name="add" />
+                <Icons v-show="isEdit" @click="compute" class="mr-3" name="delete" />
+                <Icons v-show="isEdit" @click="openAgreementDialog" name="add" />
               </span>
             </div>
           </div>
