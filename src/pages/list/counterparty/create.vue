@@ -5,6 +5,7 @@ import Icons from "@/composables/Icons/Icons.vue";
 import CustomCheckbox from "@/components/checkbox/CustomCheckbox.vue";
 import counterpartyAgreement from "@/api/counterpartyAgreement.js";
 import showDate from "@/composables/date/showDate.js";
+import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import {
   ErrorSelectMessage,
   removeMessage,
@@ -19,7 +20,8 @@ import validate from "./validate.js";
 import { FIELD_COLOR } from "../../../composables/constant/colors.js";
 
 const props = defineProps(["isOpen", "isEdit", "item", "createOnBase", "counterparty"]);
-const emits = defineEmits();
+const emits = defineEmits(['toggleIsOpen']);
+
 
 const form = ref({
   name: "",
@@ -40,6 +42,8 @@ const address = ref("");
 const email = ref("");
 const search = ref("");
 const modalTitle = ref("");
+
+const showModal = ref(false);
 
 const pagination = ref([]);
 const roles = ref([]);
@@ -132,7 +136,10 @@ const computeRoles = computed(() => {
   });
 });
 
+
+
 const lineMarking = (item) => {
+  
   if (markedID.value.length > 0) {
     const firstMarkedItem = result.value.find(
       (el) => el.id === markedID.value[0]
@@ -171,6 +178,10 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
 const openAgreementDialog = () => {
   getDated();
 };
+
+const toggleModal = () => {
+  showModal.value = !showModal.value
+}
 
 const getDated = () => {
   agreementDialog.value = true;
@@ -417,31 +428,54 @@ const handleCheckboxChange = (index) => {
 
 
 const isDataChanged = () => {
-  const item = positions.value.find(
-    (item) => item.id === idPosition.value
+  
+  const item = props.counterparty.find(
+    (item) => item.id === props.item
   );
 
+
+    console.log(
+      name.value !== item.name,
+      address.value !== item.address,
+      phone.value !== item.phone,
+      email.value !== item.email
+    )
+
   const isChanged =
-    nameRef.value !== item.name 
+    name.value !== item.name ||
+    address.value !== item.address  ||
+    phone.value !== item.phone ||
+    email.value !== item.email
+
   return isChanged;
 };
 
+const checkUpdate = () => {
+  if (isDataChanged()) {
+    
+    showModal.value = true;
+  } else {
+    
+    dialog.value = false;
+  }
+
+};
+
 const checkAndClose = () => {
+
   if (
-    nameRef.value 
+    name.value || phone.value || email.value || address.value || roles.value.length > 0
   ) {
     showModal.value = true;
   } else {
-    dialog.value = false;
-    showModal.value = false;
+    dialog.value = false
   }
 };
 
 const closeDialogWithoutSaving = () => {
   dialog.value = false;
   showModal.value = false
-  showConfirmDialog.value = false;
-  cleanForm();
+  clearForm()
 };
 
 const createCpAgreement = async () => {
@@ -551,7 +585,7 @@ const currencyProps = (item) => {
               />
             </div>
             <v-btn
-              @click="dialog = false"
+              @click="isEdit ? checkUpdate() : checkAndClose() "
               variant="text"
               title="Закрыть"
               :size="32"
@@ -896,4 +930,9 @@ const currencyProps = (item) => {
       </v-card>
     </v-dialog>
   </div>
+
+
+  <div v-if="showModal">
+        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" />
+      </div>
 </template>
