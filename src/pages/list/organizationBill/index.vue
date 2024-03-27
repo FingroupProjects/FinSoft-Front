@@ -98,12 +98,15 @@ const isDataChanged = () => {
     (item) => item.id === idOrganizationBill.value
   );
 
+  console.log(item)
+
+
   const isChanged =
   nameRef.value !== item.name ||
-  organizationAdd.value !== item.organization_id ||
-  currencyAdd.value.id !== item.currency.id ||
-  bill_number.value.id !== item.bill_number ||
-  dateRef.value !== item.date ||
+  organizationAdd.value !== item.organization.id ||
+  currencyAdd.value !== item.currency.id ||
+  bill_number.value !== item.bill_number ||
+  showDate(dateRef.value) !== item.date ||
   comment.value !== item.comment;
 
   return isChanged;

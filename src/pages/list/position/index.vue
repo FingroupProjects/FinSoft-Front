@@ -217,23 +217,21 @@ const openDialog = (item) => {
   }
 
 }
-
-
-
 const addBasedOnPosition = () => {
-  if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
-  if (markedID.value.length > 1) return showToast(selectOneItemMessage, 'warning')
+  if (markedID.value.length !== 1 && !isExistsPosition.value)
+    return showToast(selectOneItemMessage, "warning");
+  dialog.value = true;
 
-  dialog.value = true
-
-  positions.value.forEach(item => {
+  positions.value.forEach((item) => {
     if (markedID.value[0] === item.id) {
-      nameRef.value = item.name
+      idPosition.value = item.id;
+      nameRef.value = item.name;
     }
   })
 
   isExistsPosition.value = false
 }
+
 
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
   if(markedItem.value.deleted_at) {

@@ -723,7 +723,6 @@ onMounted(async () => {
                   density="default"
                   placeholder="Поиск..."
                   variant="outlined"
-                  color="info"
                   :base-color="FIELD_OF_SEARCH"
                   rounded="lg"
                   hide-details
