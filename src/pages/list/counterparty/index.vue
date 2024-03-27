@@ -295,7 +295,7 @@ onMounted(async () => {
         <div class="d-flex align-center ga-2 pe-2 ms-4">
           <span>Контрагенты</span>
         </div>
-        <v-card variant="text" min-width="500" class="d-flex align-center ga-2">
+        <v-card variant="text" min-width="320" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-2 me-3">
               <Icons title="Добавить" @click="isCreate = true" name="add" />

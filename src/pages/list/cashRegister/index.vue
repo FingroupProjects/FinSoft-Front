@@ -208,18 +208,14 @@ const addcashRegister = async ({page, itemsPerPage, sortBy}) => {
 
 }
 
-const massDel = async ({page, itemsPerPage, sortBy, search}) => {
-  const body = {
-    ids: markedID.value
-  }
+const massDel = async ({page, itemsPerPage, sortBy}) => {
 
   try {
-    const {status} = await cashRegister.massDeletion(body)
+    const {status} = await cashRegister.massDeletion({ids: markedID.value})
 
     if (status === 200) {
-
       showToast(removeMessage, 'red')
-      await getcashRegisterData({page, itemsPerPage, sortBy}, search)
+      await getcashRegisterData({page, itemsPerPage, sortBy})
       markedID.value = []
       dialog.value = false
     }
@@ -235,7 +231,7 @@ const massRestore = async ({page, itemsPerPage, sortBy}) => {
     const {status} = await cashRegister.massRestore({ids: markedID.value})
 
     if (status === 200) {
-      showToast(restoreMessage, 'red')
+      showToast(restoreMessage)
       await getcashRegisterData({page, itemsPerPage, sortBy})
       markedID.value = []
       dialog.value = false

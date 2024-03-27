@@ -28,7 +28,6 @@ const valueRef = ref(null);
 const hoveredRowIndex = ref(null);
 const isExistsOrganization = ref(false);
 const organizationInDialogTitle = ref(null);
-const isDataSaved = ref(true);
 const filterModal = ref(false);
 
 
@@ -82,9 +81,7 @@ const getOrganizationData = async ({ page, itemsPerPage, sortBy, search}) => {
       search,
       filterData
     );
-    organizations.value = data.result.data.map((item) => ({
-      ...item,
-    }));
+    organizations.value = data.result.data
     paginations.value = data.result.pagination;
     loading.value = false;
   } catch (error) {
@@ -92,7 +89,7 @@ const getOrganizationData = async ({ page, itemsPerPage, sortBy, search}) => {
   }
 };
 
-const addOrganization = async ({ page, itemsPerPage, sortBy, search }) => {
+const addOrganization = async ({ page, itemsPerPage, sortBy }) => {
   if (
     validate(
       nameRef,
@@ -131,15 +128,9 @@ const addOrganization = async ({ page, itemsPerPage, sortBy, search }) => {
 
     const res = await organization.add(body);
     if (res.status === 201) {
-      await getOrganizationData({ page, itemsPerPage, sortBy, search });
+      await getOrganizationData({ page, itemsPerPage, sortBy});
       showToast(addMessage);
-      valueRef.value = null;
-      idOrganizations.value = res.data.result.id;
-      organizationInDialogTitle.value = res.data.result.name;
-      markedID.value.push(res.data.result.id);
-      isExistsOrganization.value = true;
-
-      isDataSaved.value = true;
+      cleanForm()
     }
     addDialog.value = false;
   } catch (error) {}
@@ -147,7 +138,8 @@ const addOrganization = async ({ page, itemsPerPage, sortBy, search }) => {
 
 const addBasedOnOrganization = () => {
   if (markedID.value.length !== 1 && !isExistsOrganization.value)
-    return showToast(selectOneItemMessage, "warning");
+    return showToast(selectOneItemMessage, "warning")
+
   addDialog.value = true;
 
   organizations.value.forEach((item) => {
@@ -242,7 +234,6 @@ const openDialog = (item) => {
     organizationInDialogTitle.value = nameRef.value;
   }
 
-  isDataSaved.value = true;
 };
 
 const getEmployees = async ({ page, itemsPerPage, sortBy, search }) => {
@@ -407,7 +398,8 @@ watch(addDialog, (newVal) => {
     addressRef.value = null;
     descriptionRef.value = null;
     isExistsOrganization.value = false;
-    organizations.value = [];
+  } else {
+    markedID.value = [markedID.value[markedID.value.length - 1]];
   }
 });
 
@@ -564,7 +556,7 @@ onMounted(async () => {
                 <Icons v-else @click="addOrganization" name="save" />
               </div>
               <v-btn
-                @click="isExistsOrganization ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
+                @click="isExistsOrganization ? checkUpdate() : checkAndClose()"
                 
                 variant="text"
                 :size="32"

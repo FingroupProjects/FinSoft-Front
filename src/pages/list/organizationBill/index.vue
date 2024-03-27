@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, watch, computed } from "vue";
+import {onMounted, ref, watch, computed} from "vue";
 
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
@@ -73,53 +73,51 @@ const toggleModal = () => {
 
 
 const headers = ref([
-  { title: "Наименование", key: "name" },
-  { title: "Баланс", key: "name", sortable: false },
-  { title: "Организация", key: "organization.name" },
-  { title: "Валюта", key: "currency.name" },
+  {title: "Наименование", key: "name"},
+  {title: "Баланс", key: "name", sortable: false},
+  {title: "Организация", key: "organization.name"},
+  {title: "Валюта", key: "currency.name"},
 ]);
 
 
-
-
 function countFilter() {
-   
-    for (const key in filterForm.value) {
-        if (filterForm.value[key] !== null) {
-            count.value++;
-        }
+
+  for (const key in filterForm.value) {
+    if (filterForm.value[key] !== null) {
+      count.value++;
     }
-    return count;
+  }
+  return count;
 }
 
 
 const isDataChanged = () => {
   const item = organizationBills.value.find(
-    (item) => item.id === idOrganizationBill.value
+      (item) => item.id === idOrganizationBill.value
   );
 
   console.log(item)
 
 
   const isChanged =
-  nameRef.value !== item.name ||
-  organizationAdd.value !== item.organization.id ||
-  currencyAdd.value !== item.currency.id ||
-  bill_number.value !== item.bill_number ||
-  showDate(dateRef.value) !== item.date ||
-  comment.value !== item.comment;
+      nameRef.value !== item.name ||
+      organizationAdd.value !== item.organization.id ||
+      currencyAdd.value !== item.currency.id ||
+      bill_number.value !== item.bill_number ||
+      showDate(dateRef.value) !== item.date ||
+      comment.value !== item.comment;
 
   return isChanged;
 };
 
 const checkAndClose = () => {
   if (
-    nameRef.value ||
-    organizationAdd.value ||
-    currencyAdd.value ||
-    bill_number.value ||
-    dateRef.value ||
-    comment.value
+      nameRef.value ||
+      organizationAdd.value ||
+      currencyAdd.value ||
+      bill_number.value ||
+      dateRef.value ||
+      comment.value
   ) {
     showModal.value = true;
   } else {
@@ -150,11 +148,11 @@ const rules = {
 };
 
 const getOrganizationBillData = async ({
-  page,
-  itemsPerPage,
-  sortBy,
-  search,
-}) => {
+                                         page,
+                                         itemsPerPage,
+                                         sortBy,
+                                         search,
+                                       }) => {
   const filterData = filterForm.value;
   filterModal.value = false;
   count.value = 0;
@@ -162,23 +160,24 @@ const getOrganizationBillData = async ({
 
   loading.value = true;
   try {
-    const { data } = await organizationBill.getAll(
-      { page, itemsPerPage, sortBy },
-      search,
-      filterData
+    const {data} = await organizationBill.getAll(
+        {page, itemsPerPage, sortBy},
+        search,
+        filterData
     );
 
     paginations.value = data.result.pagination;
     organizationBills.value =
-      data.result.data.map((item) => ({
-        ...item,
-        date: showDate(item.date),
-      })) || [];
+        data.result.data.map((item) => ({
+          ...item,
+          date: showDate(item.date),
+        })) || [];
     loading.value = false;
-  } catch (e) {}
+  } catch (e) {
+  }
 };
 
-const addOrganizationBill = async ({ page, itemsPerPage, sortBy }) => {
+const addOrganizationBill = async ({page, itemsPerPage, sortBy}) => {
   const body = {
     name: nameRef.value,
     organization_id: organizationAdd.value,
@@ -189,15 +188,15 @@ const addOrganizationBill = async ({ page, itemsPerPage, sortBy }) => {
   };
 
   if (
-    validate(nameRef, bill_number, dateRef, organizationAdd, currencyAdd) !==
-    true
+      validate(nameRef, bill_number, dateRef, organizationAdd, currencyAdd) !==
+      true
   )
     return;
 
   const res = await organizationBill.create(body);
 
   if (res.status === 201) {
-    await getOrganizationBillData({ page, itemsPerPage, sortBy });
+    await getOrganizationBillData({page, itemsPerPage, sortBy});
     showToast(addMessage);
 
     idOrganizationBill.value = res.data.result.id;
@@ -208,37 +207,39 @@ const addOrganizationBill = async ({ page, itemsPerPage, sortBy }) => {
   }
 };
 
-const remove = async ({ page, itemsPerPage, sortBy, search }) => {
+const remove = async ({page, itemsPerPage, sortBy, search}) => {
   try {
-    const { status } = await organizationBill.remove({ ids: markedID.value });
+    const {status} = await organizationBill.remove({ids: markedID.value});
 
     if (status === 200) {
       showToast(removeMessage, "red");
-      await getOrganizationBillData({ page, itemsPerPage, sortBy }, search);
+      await getOrganizationBillData({page, itemsPerPage, sortBy}, search);
       markedID.value = [];
       dialog.value = false;
     }
-  } catch (e) {}
+  } catch (e) {
+  }
 };
 
-const restore = async ({ page, itemsPerPage, sortBy, search }) => {
+const restore = async ({page, itemsPerPage, sortBy, search}) => {
   const body = {
     ids: markedID.value,
   };
 
   try {
-    const { status } = await organizationBill.restore(body);
+    const {status} = await organizationBill.restore(body);
 
     if (status === 200) {
       showToast(restoreMessage);
-      await getOrganizationBillData({ page, itemsPerPage, sortBy }, search);
+      await getOrganizationBillData({page, itemsPerPage, sortBy}, search);
       markedID.value = [];
       dialog.value = false;
     }
-  } catch (e) {}
+  } catch (e) {
+  }
 };
 
-const update = async ({ page, itemsPerPage, sortBy }) => {
+const update = async ({page, itemsPerPage, sortBy}) => {
   const body = {
     name: nameRef.value,
     organization_id: organizationAdd.value,
@@ -249,15 +250,15 @@ const update = async ({ page, itemsPerPage, sortBy }) => {
   };
 
   try {
-    const { status } = await organizationBill.update(
-      idOrganizationBill.value,
-      body
+    const {status} = await organizationBill.update(
+        idOrganizationBill.value,
+        body
     );
     if (status === 200) {
       cleanForm();
 
       dialog.value = false;
-      await getOrganizationBillData({ page, itemsPerPage, sortBy });
+      await getOrganizationBillData({page, itemsPerPage, sortBy});
       showToast(editMessage);
     }
   } catch (e) {
@@ -267,7 +268,7 @@ const update = async ({ page, itemsPerPage, sortBy }) => {
 
 const getCurrencies = async () => {
   try {
-    const { data } = await currencyApi.get({ page: 1, itemsPerPage: 100000 });
+    const {data} = await currencyApi.get({page: 1, itemsPerPage: 100000});
 
     currencies.value = data.result.data.map((item) => {
       return {
@@ -275,12 +276,13 @@ const getCurrencies = async () => {
         name: item.name,
       };
     });
-  } catch (e) {}
+  } catch (e) {
+  }
 };
 
 const getOrganizations = async () => {
   try {
-    const { data } = await organizationApi.get({
+    const {data} = await organizationApi.get({
       page: 1,
       itemsPerPage: 100000,
     });
@@ -291,7 +293,8 @@ const getOrganizations = async () => {
         name: item.name,
       };
     });
-  } catch (e) {}
+  } catch (e) {
+  }
 };
 
 const handleCheckboxClick = (item) => {
@@ -335,8 +338,6 @@ const cleanForm = () => {
 };
 
 
-
-
 const cleanFilterForm = () => {
   filterForm.value = {};
   count.value = 0
@@ -362,26 +363,26 @@ const addBasedOnorganizationBill = () => {
 
 };
 
-const compute = ({ page, itemsPerPage, sortBy, search }) => {
+const compute = ({page, itemsPerPage, sortBy, search}) => {
   if (markedID.value.length === 0) return showToast(warningMessage, "warning");
 
   if (markedItem.value.deleted_at) {
-    return restore({ page, itemsPerPage, sortBy });
+    return restore({page, itemsPerPage, sortBy});
   } else {
-    return remove({ page, itemsPerPage, sortBy, search });
+    return remove({page, itemsPerPage, sortBy, search});
   }
 };
 
-const closeFilterModal = async ({ page, itemsPerPage, sortBy, search }) => {
+const closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
   filterModal.value = false;
   cleanFilterForm();
-  await getOrganizationBillData({ page, itemsPerPage, sortBy, search });
+  await getOrganizationBillData({page, itemsPerPage, sortBy, search});
 };
 
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
     const firstMarkedItem = organizationBills.value.find(
-      (el) => el.id === markedID.value[0]
+        (el) => el.id === markedID.value[0]
     );
     if (firstMarkedItem && firstMarkedItem.deleted_at) {
       if (item.deleted_at === null) {
@@ -428,7 +429,6 @@ const searchOrganization = () => {
 }
 
 
-
 </script>
 
 <template>
@@ -441,39 +441,39 @@ const searchOrganization = () => {
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons @click="openDialog(0)" name="add" title="Создать" />
+              <Icons @click="openDialog(0)" name="add" title="Создать"/>
               <Icons
-                @click="addBasedOnorganizationBill"
-                title="Скопировать"
-                name="copy"
+                  @click="addBasedOnorganizationBill"
+                  title="Скопировать"
+                  name="copy"
               />
-              <Icons @click="compute" title="Удалить" name="delete" />
+              <Icons @click="compute" title="Удалить" name="delete"/>
             </div>
 
             <div class="w-100">
               <v-text-field
-                v-model="search"
-                :base-color="FIELD_OF_SEARCH"
-                prepend-inner-icon="search"
-                density="compact"
-                label="Поиск..."
-                variant="outlined"
-                color="info"
-                rounded="lg"
-                clear-icon="close"
-                hide-details
-                single-line
-                clearable
-                flat
+                  v-model="search"
+                  :base-color="FIELD_OF_SEARCH"
+                  prepend-inner-icon="search"
+                  density="compact"
+                  label="Поиск..."
+                  variant="outlined"
+                  color="info"
+                  rounded="lg"
+                  clear-icon="close"
+                  hide-details
+                  single-line
+                  clearable
+                  flat
               ></v-text-field>
             </div>
           </div>
           <div class="filterElement">
             <Icons
-              name="filter"
-              title="фильтр"
-              @click="filterModal = true"
-              class="mt-1"
+                name="filter"
+                title="фильтр"
+                @click="filterModal = true"
+                class="mt-1"
             />
 
             <span v-if="count !== 0" class="countFilter">{{ count }}</span>
@@ -483,46 +483,46 @@ const searchOrganization = () => {
 
       <v-card class="mt-2 table">
         <v-data-table-server
-          style="height: 78vh"
-          items-per-page-text="Элементов на странице:"
-          loading-text="Загрузка"
-          no-data-text="Нет данных"
-          v-model:items-per-page="paginations.per_page"
-          :loading="loading"
-          :headers="headers"
-          :items-length="paginations.total || 0"
-          :items="organizationBills"
-          :item-value="headers.title"
-          :search="search"
-          @update:options="getOrganizationBillData"
-          page-text="{0}-{1} от {2}"
-          show-select
-          v-model="markedID"
-          :items-per-page-options="[
+            style="height: 78vh"
+            items-per-page-text="Элементов на странице:"
+            loading-text="Загрузка"
+            no-data-text="Нет данных"
+            v-model:items-per-page="paginations.per_page"
+            :loading="loading"
+            :headers="headers"
+            :items-length="paginations.total || 0"
+            :items="organizationBills"
+            :item-value="headers.title"
+            :search="search"
+            @update:options="getOrganizationBillData"
+            page-text="{0}-{1} от {2}"
+            show-select
+            v-model="markedID"
+            :items-per-page-options="[
             { value: 25, title: '25' },
             { value: 50, title: '50' },
             { value: 100, title: '100' },
           ]"
-          fixed-header
-          hover
+            fixed-header
+            hover
         >
-        
+
           <template v-slot:item="{ item, index }">
             <tr
-              @mouseenter="hoveredRowIndex = index"
-              @mouseleave="hoveredRowIndex = null"
-              @click="lineMarking(item)"
-              @dblclick="openDialog(item)"
-              :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
+                @mouseenter="hoveredRowIndex = index"
+                @mouseleave="hoveredRowIndex = null"
+                @click="lineMarking(item)"
+                @dblclick="openDialog(item)"
+                :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
               <td>
                 <template
-                  v-if="hoveredRowIndex === index || markedID.includes(item.id)"
+                    v-if="hoveredRowIndex === index || markedID.includes(item.id)"
                 >
                   <CustomCheckbox
-                    v-model="markedID"
-                    :checked="markedID.includes(item.id)"
-                    @change="handleCheckboxClick(item)"
+                      v-model="markedID"
+                      :checked="markedID.includes(item.id)"
+                      @change="handleCheckboxClick(item)"
                   >
                     <span>{{ item.id }}</span>
                   </CustomCheckbox>
@@ -530,8 +530,8 @@ const searchOrganization = () => {
                 <template v-else>
                   <div class="d-flex align-center">
                     <Icons
-                      style="margin-right: 10px; margin-top: 4px"
-                      :name="item.deleted_at === null ? 'valid' : 'inValid'"
+                        style="margin-right: 10px; margin-top: 4px"
+                        :name="item.deleted_at === null ? 'valid' : 'inValid'"
                     />
                     <span>{{ item.id }}</span>
                   </div>
@@ -550,50 +550,50 @@ const searchOrganization = () => {
       <v-card>
         <v-dialog class="mt-2 pa-2" v-model="dialog">
           <v-card
-            style="border: 2px solid #3ab700"
-            min-width="600"
-            class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
-            rounded="xl"
+              style="border: 2px solid #3ab700"
+              min-width="600"
+              class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
+              rounded="xl"
           >
             <div class="d-flex justify-space-between align-center mb-2">
               <span
-                >Банковский счет:
+              >Банковский счет:
                 {{
                   isExistsOrganizationBill
-                    ? organizationBillInDialogTitle
-                    : "Добавление"
+                      ? organizationBillInDialogTitle
+                      : "Добавление"
                 }}</span
               >
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
                   <Icons
-                    v-if="isExistsOrganizationBill"
-                    title="Удалить"
-                    @click="compute"
-                    name="delete"
+                      v-if="isExistsOrganizationBill"
+                      title="Удалить"
+                      @click="compute"
+                      name="delete"
                   />
                   <Icons
-                    v-if="isExistsOrganizationBill"
-                    title="Сохранить"
-                    @click="update"
-                    name="save"
+                      v-if="isExistsOrganizationBill"
+                      title="Сохранить"
+                      @click="update"
+                      name="save"
                   />
                   <Icons
-                    v-else
-                    @click="addOrganizationBill"
-                    title="Сохранить"
-                    name="save"
+                      v-else
+                      @click="addOrganizationBill"
+                      title="Сохранить"
+                      name="save"
                   />
                 </div>
                 <v-btn
-                @click="isExistsOrganizationBill ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
-                
-                variant="text"
-                :size="32"
-                class="pt-2 pl-1"
-              >
-                <Icons name="close" title="Закрыть" />
-              </v-btn>
+                    @click="isExistsOrganizationBill ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
+
+                    variant="text"
+                    :size="32"
+                    class="pt-2 pl-1"
+                >
+                  <Icons name="close" title="Закрыть"/>
+                </v-btn>
               </div>
             </div>
             <v-form class="d-flex w-100">
@@ -601,98 +601,102 @@ const searchOrganization = () => {
                 <v-col class="d-flex flex-column w-100">
                   <div class="d-flex justify-space-between ga-6 mb-3">
                     <v-text-field
-                      v-model="nameRef"
-                      :rules="[rules.required]"
-                      color="green"
-                      rounded="md"
-                      variant="outlined"
-                      class="w-auto text-sm-body-1"
-                      density="compact"
-                      :base-color="FIELD_COLOR"
-                      basecolor=""
-                      placeholder="Наименование"
-                      label="Наименование"
-                      clear-icon="close"
-                      clearable
-                      hide-details
+                        v-model="nameRef"
+                        :rules="[rules.required]"
+                        color="green"
+                        rounded="md"
+                        variant="outlined"
+                        class="w-auto text-sm-body-1"
+                        density="compact"
+                        :base-color="FIELD_COLOR"
+                        basecolor=""
+                        placeholder="Наименование"
+                        label="Наименование"
+                        clear-icon="close"
+                        clearable
+                        hide-details
                     />
 
                     <span
-                      v-if="isExistsOrganizationBill"
-                      style="color: red; font-weight: bolder"
-                      class="mr-4 mt-1"
-                      >2500,00</span
+                        v-if="isExistsOrganizationBill"
+                        style="color: red; font-weight: bolder"
+                        class="mr-4 mt-1"
+                    >2500,00</span
                     >
                   </div>
                   <div class="d-flex ga-2 mb-3">
                     <v-text-field
-                      style="max-width: 30%"
-                      variant="outlined"
-                      :rules="[rules.required]"
-                      label="Дата создания"
-                      type="date"
-                      v-model="dateRef"
-                      density="compact"
-                      :base-color="FIELD_COLOR"
-                      rounded="md"
-                      color="green"
-                      :append-inner-icon="dateRef ? 'close' : ''"
-                      @click:append-inner="dateRef = null"
-                      hide-details
+                        style="max-width: 30%"
+                        variant="outlined"
+                        :rules="[rules.required]"
+                        label="Дата создания"
+                        type="date"
+                        v-model="dateRef"
+                        density="compact"
+                        :base-color="FIELD_COLOR"
+                        rounded="md"
+                        color="green"
+                        :append-inner-icon="dateRef ? 'close' : ''"
+                        @click:append-inner="dateRef = null"
+                        hide-details
                     />
                     <v-text-field
-                      v-model="bill_number"
+                        v-model="bill_number"
+                        :rules="[rules.required]"
+                        variant="outlined"
+                        :base-color="FIELD_COLOR"
+                        label="Номер счёта"
+                        density="compact"
+                        rounded="md"
+                        color="green"
+                        :append-inner-icon="bill_number ? 'close' : ''"
+                        @click:append-inner="bill_number = null"
+                        hide-details
+                    />
+                    <v-autocomplete
+                        style="max-width: 40%; min-width: 40%"
+                        v-model="currencyAdd"
+                        no-data-text="Валюта не найдена"
+                        color="green"
+                        :items="currencies"
+                        :base-color="FIELD_COLOR"
+                        item-title="name"
+                        item-value="id"
+
+                        :rules="[rules.required]"
+                        label="Валюта"
+                        variant="outlined"
+                        density="compact"
+                        hide-details
+                    />
+
+                  </div>
+                  <v-autocomplete
+                      no-data-text="Организация не найдена"
+                      color="green"
+                      v-model="organizationAdd"
+                      :items="organizations"
+                      item-title="name"
+
+                      :base-color="FIELD_COLOR"
+                      item-value="id"
                       :rules="[rules.required]"
+                      label="Организация"
+                      variant="outlined"
+                      density="compact"
+                  />
+
+                  <v-textarea
                       variant="outlined"
                       :base-color="FIELD_COLOR"
-                      label="Номер счёта"
+                      label="Комментарий"
+                      v-model="comment"
                       density="compact"
                       rounded="md"
                       color="green"
-                      :append-inner-icon="bill_number ? 'close' : ''"
-                      @click:append-inner="bill_number = null"
                       hide-details
-                    />
-                    <v-autocomplete
-                      style="max-width: 40%; min-width: 40%"
-                      v-model="currencyAdd"
-                      :items="currencies"
-                      :base-color="FIELD_COLOR"
-                      item-title="name"
-                      item-value="id"
-                      
-                      :rules="[rules.required]"
-                      label="Валюта"
-                      variant="outlined"
-                      density="compact"
-                      hide-details
-                    />
-                   
-                  </div>
-                  <v-autocomplete
-                    v-model="organizationAdd"
-                    :items="organizations"
-                    item-title="name"
-                    
-                    :base-color="FIELD_COLOR"
-                    item-value="id"
-                    :rules="[rules.required]"
-                    label="Организация"
-                    variant="outlined"
-                    density="compact"
-                  />
-                  
-                  <v-textarea
-                    variant="outlined"
-                    :base-color="FIELD_COLOR"
-                    label="Комментарий"
-                    v-model="comment"
-                    density="compact"
-                    rounded="md"
-                    color="green"
-                    hide-details
-                    :append-inner-icon="comment ? 'close' : ''"
-                    @click:append-inner="comment = null"
+                      :append-inner-icon="comment ? 'close' : ''"
+                      @click:append-inner="comment = null"
                   />
                 </v-col>
               </v-row>
@@ -703,24 +707,24 @@ const searchOrganization = () => {
       <v-card>
         <v-dialog class="mt-2 pa-2" v-model="filterModal">
           <v-card
-            style="border: 2px solid #3ab700"
-            min-width="600"
-            class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
-            rounded="xl"
+              style="border: 2px solid #3ab700"
+              min-width="600"
+              class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
+              rounded="xl"
           >
             <div class="d-flex justify-space-between align-center mb-2">
               <span>Фильтр</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons @click="getOrganizationBillData" name="save" />
+                  <Icons @click="getOrganizationBillData" name="save"/>
                 </div>
                 <v-btn
-                  @click="closeFilterModal"
-                  variant="text"
-                  :size="32"
-                  class="pt-2 pl-1"
+                    @click="closeFilterModal"
+                    variant="text"
+                    :size="32"
+                    class="pt-2 pl-1"
                 >
-                  <Icons name="close" />
+                  <Icons name="close"/>
                 </v-btn>
               </div>
             </div>
@@ -729,86 +733,88 @@ const searchOrganization = () => {
                 <v-col class="d-flex flex-column w-100">
                   <div class="d-flex justify-space-between ga-6 mb-3">
                     <v-text-field
-                      v-model="filterForm.name"
-                      color="green"
-                      :base-color="FIELD_COLOR"
-                      rounded="md"
-                      variant="outlined"
-                      class="w-auto text-sm-body-1"
-                      density="compact"
-                      placeholder="Наименование"
-                      label="Наименование"
-                      clear-icon="close"
-                      clearable
-                      hide-details
+                        v-model="filterForm.name"
+                        color="green"
+                        :base-color="FIELD_COLOR"
+                        rounded="md"
+                        variant="outlined"
+                        class="w-auto text-sm-body-1"
+                        density="compact"
+                        placeholder="Наименование"
+                        label="Наименование"
+                        clear-icon="close"
+                        clearable
+                        hide-details
                     />
                   </div>
                   <div class="d-flex ga-2 mb-3">
                     <v-text-field
-                      variant="outlined"
-                      label="Дата создания"
-                      type="date"
-                      :base-color="FIELD_COLOR"
-                      style="max-width: 30%"
-                      v-model="filterForm.date"
-                      density="compact"
-                      rounded="md"
-                      color="green"
-                      :append-inner-icon="filterForm.date ? 'close' : ''"
-                      @click:append-inner="filterForm.date = null"
-                      hide-details
+                        variant="outlined"
+                        label="Дата создания"
+                        type="date"
+                        :base-color="FIELD_COLOR"
+                        style="max-width: 30%"
+                        v-model="filterForm.date"
+                        density="compact"
+                        rounded="md"
+                        color="green"
+                        :append-inner-icon="filterForm.date ? 'close' : ''"
+                        @click:append-inner="filterForm.date = null"
+                        hide-details
                     />
                     <v-text-field
-                      v-model="filterForm.bill_number"
-                      variant="outlined"
-                      label="Номер счёта"
-                      density="compact"
-                      rounded="md"
-                      :base-color="FIELD_COLOR"
-                      color="green"
-                      :append-inner-icon="filterForm.bill_number ? 'close' : ''"
-                      @click:append-inner="filterForm.bill_number = null"
-                      hide-details
+                        v-model="filterForm.bill_number"
+                        variant="outlined"
+                        label="Номер счёта"
+                        density="compact"
+                        rounded="md"
+                        :base-color="FIELD_COLOR"
+                        color="green"
+                        :append-inner-icon="filterForm.bill_number ? 'close' : ''"
+                        @click:append-inner="filterForm.bill_number = null"
+                        hide-details
                     />
                     <v-select
-                      style="max-width: 40%; min-width: 40%"
-                      v-model="filterForm.currency_id"
-                      :items="currencies"
+                        style="max-width: 40%; min-width: 40%"
+                        v-model="filterForm.currency_id"
+                        :items="currencies"
+                        item-title="name"
+                        :base-color="FIELD_COLOR"
+                        item-value="id"
+                        label="Валюта"
+                        variant="outlined"
+                        density="compact"
+                        hide-details
+                    >
+                      <v-text-field density="compact" variant="outlined" v-model="searchSelect" placeholder="Поиск"
+                                    @input="searchCurrency"></v-text-field>
+                    </v-select>
+                  </div>
+                  <v-select
+                      v-model="filterForm.organization_id"
+                      :items="organizations"
                       item-title="name"
                       :base-color="FIELD_COLOR"
                       item-value="id"
-                      label="Валюта"
+                      label="Организация"
                       variant="outlined"
                       density="compact"
-                      hide-details
-                    > 
-                    <v-text-field  density="compact"  variant="outlined" v-model="searchSelect" placeholder="Поиск" @input="searchCurrency"></v-text-field>
-            </v-select>
-                  </div>
-                  <v-select
-                    v-model="filterForm.organization_id"
-                    :items="organizations"
-                    item-title="name"
-                    :base-color="FIELD_COLOR"
-                    item-value="id"
-                    label="Организация"
-                    variant="outlined"
-                    density="compact"
                   >
-                  <v-text-field  density="compact"  variant="outlined" v-model="searchSelect" placeholder="Поиск" @input="searchOrganization"></v-text-field>
-            
-                </v-select>
+                    <v-text-field density="compact" variant="outlined" v-model="searchSelect" placeholder="Поиск"
+                                  @input="searchOrganization"></v-text-field>
+
+                  </v-select>
                   <v-textarea
-                    variant="outlined"
-                    label="Комментарий"
-                    :base-color="FIELD_COLOR"
-                    v-model="filterForm.comment"
-                    density="compact"
-                    rounded="md"
-                    color="green"
-                    hide-details
-                    :append-inner-icon="filterForm.comment ? 'close' : ''"
-                    @click:append-inner="filterForm.comment = null"
+                      variant="outlined"
+                      label="Комментарий"
+                      :base-color="FIELD_COLOR"
+                      v-model="filterForm.comment"
+                      density="compact"
+                      rounded="md"
+                      color="green"
+                      hide-details
+                      :append-inner-icon="filterForm.comment ? 'close' : ''"
+                      @click:append-inner="filterForm.comment = null"
                   />
                 </v-col>
               </v-row>
@@ -816,8 +822,8 @@ const searchOrganization = () => {
           </v-card>
         </v-dialog>
         <div v-if="showModal">
-        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" />
-      </div>
+          <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()"/>
+        </div>
       </v-card>
     </v-col>
   </div>
@@ -827,6 +833,7 @@ const searchOrganization = () => {
 .filterElement {
   position: relative;
 }
+
 .countFilter {
   position: absolute;
   top: -5px;
