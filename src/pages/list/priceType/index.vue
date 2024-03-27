@@ -38,7 +38,6 @@ const markedID = ref([]);
 const markedItem = ref([])
 const priceTypeInDialogTitle = ref(null)
 const search = ref('')
-const selected = ref([])
 const nameRef = ref(null)
 const descriptionRef = ref(null)
 const priceTypes = ref([])
@@ -515,6 +514,8 @@ onMounted(async () => {
                   <v-autocomplete
                       variant="outlined"
                       hide-details
+                      no-data-text="Нет данных"
+                      color="green"
                       label="Выберите валюту"
                       :base-color="FIELD_COLOR"
                       v-model="currencyAdd"
