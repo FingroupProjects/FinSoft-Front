@@ -11,6 +11,7 @@ const props = defineProps([
   "createGroupOnBase",
   "groupData",
   "isFilter",
+  "filterForm",
 ]);
 
 const dialog = ref(true);
@@ -78,6 +79,16 @@ onMounted(() => {
     is_good.value = props.groupData.is_good;
     is_service.value = props.groupData.is_service;
   }
+  if (
+    props.filterForm &&
+    props.filterForm.name !== null &&
+    props.filterForm.is_good !== null &&
+    props.filterForm.is_service !== null
+  ) {
+    name.value = props.filterForm.name;
+    is_good.value = props.filterForm.is_good;
+    is_service.value = props.filterForm.is_service;
+  }
 });
 
 const rules = {
@@ -101,7 +112,8 @@ const rules = {
                 <!-- <Icons name="delete" /> -->
                 <Icons
                   @click="isFilter ? filter() : createGroup()"
-                  name="save" title="Сохранить"
+                  name="save"
+                  title="Сохранить"
                 />
               </div>
               <v-btn
@@ -111,7 +123,7 @@ const rules = {
                 :size="32"
                 class="pt-2 pl-1"
               >
-                <Icons name="close" title="Закрыть"/>
+                <Icons name="close" title="Закрыть" />
               </v-btn>
             </div>
           </div>
@@ -129,7 +141,7 @@ const rules = {
                   placeholder="Наименование"
                   label="Наименование"
                   clear-icon="close"
-                  :append-inner-icon="name.length > 1 ? 'close' : ''"
+                  clearable
                   @click:append-inner="name = ''"
                   hide-details
                 />

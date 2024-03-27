@@ -107,11 +107,9 @@ const selectAvatar = async (event, num) => {
       forthImage.value = fileReader.result;
     }
   });
-  console.log(firstImage.value);
   // add_images.value[1] = secondImage.value;
   // add_images.value[2] = thirdImage.value;
   // add_images.value[3] = forthImage.value;
-  console.log(add_images.value);
   fileReader.readAsDataURL(files[0]);
 };
 
@@ -217,7 +215,6 @@ const updateGood = async () => {
     appendIfNotNull("good_group_id", good_group_id.value);
     appendIfNotNull("unit_id", unit_id.value);
 
-    console.log(...formData.entries());
     await goodsApi.update(id.value, formData);
     showToast(editMessage);
   } catch (e) {

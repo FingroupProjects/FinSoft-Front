@@ -79,9 +79,7 @@ const itemsProps = (item) => {
 
 function countFilter() {
   for (const key in filterForm.value) {
-    if (
-      filterForm.value[key] !== null
-    ) {
+    if (filterForm.value[key] !== null) {
       count.value++;
     }
   }
@@ -166,6 +164,18 @@ const goToBack = () => {
   router.go(-1);
 };
 
+const closeFilter = () => {
+  isFilter.value = false;
+  filterForm.value = {
+    name: null,
+    vendor_code: null,
+    storage_id: null,
+    unit_id: null,
+    good_group_id: null,
+    description: null,
+  };
+  getGoods({ page: 1, itemsPerPage: 100 });
+};
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
     const firstMarkedItem = goods.value.find(
@@ -194,16 +204,15 @@ const lineMarking = (item) => {
 };
 
 const getGoods = async ({ page, itemsPerPage, sortBy, search }) => {
-  count.value = 0
+  count.value = 0;
   countFilter();
-  const filterData = filterForm.value;
   try {
     loading.value = true;
     const { data } = await groupApi.getById(
       route.params.id,
       { page, itemsPerPage, sortBy },
       search,
-      filterData
+      filterForm.value
     );
     goods.value = data.result.data;
     pagination.value = data.result.pagination;
@@ -406,118 +415,123 @@ onMounted(() => {
       </div>
 
       <v-dialog v-model="isFilter" class="mt-2 pa-2">
-        <v-card
-          style="border: 2px solid #3ab700"
-          min-width="550"
-          class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
-          rounded="xl"
-        >
-          <div class="d-flex justify-space-between align-center mb-2">
-            <span>Фильтр</span>
-            <div class="d-flex align-center justify-space-between">
-              <div class="d-flex ga-3 align-center mt-2 me-4">
-                <Icons @click="filterGoods()" name="save" />
+        <keep-alive>
+          <v-card
+            style="border: 2px solid #3ab700"
+            min-width="550"
+            class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
+            rounded="xl"
+          >
+            <div class="d-flex justify-space-between align-center mb-2">
+              <span>Фильтр</span>
+              <div class="d-flex align-center justify-space-between">
+                <div class="d-flex ga-3 align-center mt-2 me-4">
+                  <Icons @click="filterGoods()" name="save" title="Сохранить" />
+                </div>
+                <v-btn
+                  @click="closeFilter()"
+                  variant="text"
+                  :size="32"
+                  class="pt-2 pl-1"
+                >
+                  <Icons name="close" title="Закрыть" />
+                </v-btn>
               </div>
-              <v-btn
-                @click="isFilter = false"
-                variant="text"
-                :size="32"
-                class="pt-2 pl-1"
-              >
-                <Icons name="close" />
-              </v-btn>
             </div>
-          </div>
-          <v-form class="d-flex w-100">
-            <v-row class="w-100">
-              <v-col class="d-flex flex-column w-100 ga-3">
-                <div class="d-flex ga-3">
-                  <v-text-field
-                    v-model="filterForm.name"
-                    color="green"
-                    rounded="md"
-                    variant="outlined"
-                    class="w-50 text-sm-body-1"
-                    density="compact"
-                    placeholder="Наименование"
-                    label="Наименование"
-                    clear-icon="close"
-                    clearablehide-details
-                    clearable
-                    hide-details
-                    :base-color="FIELD_COLOR"
-                  />
-                  <v-text-field
-                    v-model="filterForm.vendor_code"
-                    color="green"
-                    rounded="md"
-                    variant="outlined"
-                    class="w-50 text-sm-body-1"
-                    density="compact"
-                    placeholder="Артикуль"
-                    maxlength="8"
-                    label="Артикуль"
-                    clear-icon="close"
-                    clearablehide-details
-                    clearable
-                    hide-details
-                    :base-color="FIELD_COLOR"
-                  />
-                </div>
-                <div class="d-flex ga-3">
+            <v-form class="d-flex w-100">
+              <v-row class="w-100">
+                <v-col class="d-flex flex-column w-100 ga-3">
+                  <div class="d-flex ga-3">
+                    <v-text-field
+                      v-model="filterForm.name"
+                      color="green"
+                      rounded="md"
+                      variant="outlined"
+                      class="w-50 text-sm-body-1"
+                      density="compact"
+                      placeholder="Наименование"
+                      label="Наименование"
+                      clear-icon="close"
+                      clearablehide-details
+                      clearable
+                      hide-details
+                      :base-color="FIELD_COLOR"
+                    />
+                    <v-text-field
+                      v-model="filterForm.vendor_code"
+                      color="green"
+                      rounded="md"
+                      variant="outlined"
+                      class="w-50 text-sm-body-1"
+                      density="compact"
+                      placeholder="Артикуль"
+                      maxlength="8"
+                      label="Артикуль"
+                      clear-icon="close"
+                      clearablehide-details
+                      clearable
+                      hide-details
+                      :base-color="FIELD_COLOR"
+                    />
+                  </div>
+                  <div class="d-flex ga-3">
+                    <v-autocomplete
+                      placeholder="Место расположения"
+                      label="Место расположения"
+                      :item-props="itemsProps"
+                      v-model="filterForm.storage_id"
+                      variant="outlined"
+                      item-title="name"
+                      item-value="id"
+                      :items="storages"
+                      color="green"
+                      class="w-50"
+                      hide-details
+                      :base-color="FIELD_COLOR"
+                      no-data-text="Нет данных"
+                    />
+                    <v-autocomplete
+                      placeholder="Ед измерения"
+                      :item-props="itemsProps"
+                      label="Ед измерения"
+                      v-model="filterForm.unit_id"
+                      variant="outlined"
+                      item-title="name"
+                      item-value="id"
+                      :items="units"
+                      color="green"
+                      class="w-50"
+                      hide-details
+                      :base-color="FIELD_COLOR"
+                      no-data-text="Нет данных"
+                    />
+                  </div>
                   <v-autocomplete
-                    placeholder="Место расположения"
-                    label="Место расположения"
+                    placeholder="Группа номенклатуры"
+                    label="Группа номенклатуры"
                     :item-props="itemsProps"
-                    v-model="filterForm.storage_id"
+                    v-model="filterForm.good_group_id"
                     variant="outlined"
                     item-title="name"
                     item-value="id"
-                    :items="storages"
+                    :items="groups"
                     color="green"
-                    class="w-50"
                     hide-details
                     :base-color="FIELD_COLOR"
+                    no-data-text="Нет данных"
                   />
-                  <v-autocomplete
-                    placeholder="Ед измерения"
-                    :item-props="itemsProps"
-                    label="Ед измерения"
-                    v-model="filterForm.unit_id"
+                  <v-textarea
+                    v-model="filterForm.description"
                     variant="outlined"
-                    item-title="name"
-                    item-value="id"
-                    :items="units"
+                    label="Описание"
                     color="green"
-                    class="w-50"
-                    hide-details
                     :base-color="FIELD_COLOR"
                   />
-                </div>
-                <v-autocomplete
-                  placeholder="Группа номенклатуры"
-                  label="Группа номенклатуры"
-                  :item-props="itemsProps"
-                  v-model="filterForm.good_group_id"
-                  variant="outlined"
-                  item-title="name"
-                  item-value="id"
-                  :items="groups"
-                  color="green"
-                  hide-details
-                  :base-color="FIELD_COLOR"
-                />
-                <v-textarea
-                  v-model="filterForm.description"
-                  variant="outlined"
-                  label="Описание"
-                  color="green"
-                  :base-color="FIELD_COLOR"
-                />
-              </v-col>
-            </v-row>
-          </v-form>
-        </v-card>
+                </v-col>
+              </v-row>
+            </v-form>
+          </v-card>
+        </keep-alive>
       </v-dialog>
     </v-col>
   </div>
