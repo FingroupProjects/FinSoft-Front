@@ -81,8 +81,7 @@ const openFilter = () => {
 
 function countFilter() {
   for (const key in filterForm.value) {
-    if (
-      filterForm.value[key] !== null && filterForm.value[key] !== false) {
+    if (filterForm.value[key] !== null && filterForm.value[key] !== false) {
       count.value++;
     }
   }
@@ -143,10 +142,9 @@ const getGroupById = async ({ page, itemsPerPage, sortBy, search }) => {
 };
 const getGroups = async ({ page, itemsPerPage, sortBy, search }) => {
   try {
-    count.value = 0
+    count.value = 0;
     countFilter();
-    const filterData = filterForm.value
-    console.log(filterData);
+    const filterData = filterForm.value;
     loading.value = true;
     const { data } = await groupApi.get(
       { page, itemsPerPage, sortBy },
@@ -199,11 +197,6 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
   } else {
     return massDel({ page, itemsPerPage, sortBy, search });
   }
-};
-
-const closeFilterModal = () => {
-  isFilter.value = false;
-  filterForm.value = {}
 };
 
 const filterGroup = async (filterData) => {
@@ -350,20 +343,21 @@ onMounted(() => {
         <createUpdate @toggleDialog="isCreate = false" />
       </div>
       <div v-if="isCreateGroup">
-        <createGroup
-          @toggleDialog="
-            isCreateGroup = false;
-            createGroupOnBase = false;
-            isFilter = false;
-            filterForm = {}
-
-          "
-          @filter="filterGroup"
-
-          :createGroupOnBase="createGroupOnBase"
-          :groupData="groupData"
-          :isFilter="isFilter"
-        />
+        <keep-alive>
+          <createGroup
+            @toggleDialog="
+              isCreateGroup = false;
+              createGroupOnBase = false;
+              isFilter = false;
+              filterForm = {};
+            "
+            @filter="filterGroup"
+            :createGroupOnBase="createGroupOnBase"
+            :filterForm="filterForm"
+            :groupData="groupData"
+            :isFilter="isFilter"
+          />
+        </keep-alive>
       </div>
     </v-col>
   </div>

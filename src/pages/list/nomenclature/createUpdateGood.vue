@@ -11,6 +11,7 @@ import { useRoute, useRouter } from "vue-router";
 import { addMessage, editMessage } from "../../../composables/constant/buttons";
 import validate from "./validate";
 import { FIELD_COLOR } from "../../../composables/constant/colors.js";
+import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 
 const { query, params: routeParams } = useRoute();
 const router = useRouter();
@@ -20,6 +21,7 @@ const isValid = ref(false);
 const isEdit = ref(false);
 const isCreated = ref(false);
 const isCreateOnBase = ref(false);
+const showModal = ref(false);
 
 const name = ref("");
 const vendor_code = ref("");
@@ -29,6 +31,7 @@ const id = ref(0);
 const storage_id = ref(null);
 const unit_id = ref(null);
 const good_group_id = ref(null);
+const main_image = ref(null);
 const firstImage = ref(null);
 const secondImage = ref(null);
 const thirdImage = ref(null);
@@ -57,36 +60,35 @@ const itemsProps = (item) => {
   };
 };
 
-const setImageByIndex = (index) => {
-  if (add_images.value.length > 1 && add_images.value[index]) {
-    const fileReader = new FileReader();
-    fileReader.addEventListener("load", () => {
-      firstImage.value = fileReader.result;
-    });
-    fileReader.readAsDataURL(add_images.value[index]);
-  }
+const toggleModal = () => {
+  showModal.value = !showModal.value;
 };
 
-const setImageByIndexInEdit = (index) => {
-  if (add_images.value.length > 1) {
-    firstImage.value =
-      import.meta.env.VITE_IMG_URL + add_images.value[index].image;
-  }
+const closeDialogWithoutSaving = () => {
+  showModal.value = false;
+  isImageDialog.value = false;
+  cleanImages();
+};
+
+const cleanImages = () => {
+  firstImage.value = null;
+  secondImage.value = null;
+  thirdImage.value = null;
+  forthImage.value = null;
+};
+
+const setImageByIndex = (index) => {
+  const selectedFile = add_images.value[index];
+  main_image.value = selectedFile;
 };
 
 const selectAvatar = async (event, num) => {
-  console.log(num);
-  (imageRef.value = []), (add_images.value = []), (firstImage.value = null);
   const files = event.target.files;
   imageRef.value = files[0];
   add_images.value.push(imageRef.value);
-  for (let i = 1; i < files.length; i++) {
-    add_images.value.push(files[i]);
-    if (i > 3) {
-      showToast("Максимум 4 изображений", "warning");
-      return;
-    }
-  }
+  // for (let i = 1; i < files.length; i++) {
+  //   add_images.value.push(files[i]);
+  // }
   let filename = files[0].name;
   if (filename.lastIndexOf(".") <= 0) {
     return showToast("Пожалуйста, добавьте заново!");
@@ -95,6 +97,8 @@ const selectAvatar = async (event, num) => {
   fileReader.addEventListener("load", () => {
     if (num === 1) {
       firstImage.value = fileReader.result;
+      main_image.value = firstImage.value;
+      // add_images.value[0] = firstImage.value;
     } else if (num === 2) {
       secondImage.value = fileReader.result;
     } else if (num === 3) {
@@ -103,33 +107,24 @@ const selectAvatar = async (event, num) => {
       forthImage.value = fileReader.result;
     }
   });
+  // add_images.value[1] = secondImage.value;
+  // add_images.value[2] = thirdImage.value;
+  // add_images.value[3] = forthImage.value;
   fileReader.readAsDataURL(files[0]);
 };
 
-const EditAvatar = async (event) => {
-  await Promise.all(
-    (imageRef.value = []),
-    (add_images.value = []),
-    (firstImage.value = null)
-  );
-  const files = event.target.files;
-  imageRef.value = files[0];
-  for (let i = 1; i < files.length; i++) {
-    add_images.value.push(files[i]);
-    if (i > 3) {
-      showToast("Максимум 4 изображений", "warning");
-      return;
-    }
+const setImages = (images) => {
+  if (images.length === 0) {
+    firstImage.value = null;
+    secondImage.value = null;
+    thirdImage.value = null;
+    forthImage.value = null;
+    return;
   }
-  let filename = files[0].name;
-  if (filename.lastIndexOf(".") <= 0) {
-    return showToast("Пожалуйста, добавьте заново!");
-  }
-  const fileReader = new FileReader();
-  fileReader.addEventListener("load", () => {
-    firstImage.value = fileReader.result;
-  });
-  fileReader.readAsDataURL(files[0]);
+  firstImage.value = import.meta.env.VITE_IMG_URL + images[0].image;
+  secondImage.value = import.meta.env.VITE_IMG_URL + images[1].image;
+  thirdImage.value = import.meta.env.VITE_IMG_URL + images[2].image;
+  forthImage.value = import.meta.env.VITE_IMG_URL + images[3].image;
 };
 
 const getUnits = async () => {
@@ -154,16 +149,17 @@ const getGoodByid = async () => {
       (unit_id.value = good.unit_id.id),
       (storage_id.value = good.storage.id),
       (good_group_id.value = good.good_group.id),
-      (firstImage.value =
+      (main_image.value =
         good.images.length > 0
           ? import.meta.env.VITE_IMG_URL + good.images[0].image
           : ""
           ? import.meta.env.VITE_IMG_URL + good.images[0].image
           : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsCAIAAAD2HxkiAAAABGdBTUEAALGOfPtRkwAAACBjSFJNAAB6JQAAgIMAAPn/AACA6AAAdTAAAOpgAAA6lwAAF2+XqZnUAAAepUlEQVR4nGL8//8/wygYBaNg4ABAADENtANGwSgY6QAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggFgG2gEjC/z4/v39+/d//vyBcAUFBXl4eQfWSaNgwAFAADH+//9/oN0wIsCXz5/v370LzIFo4sB8qKmjw8IyWhqOXAAQQKOZkB7g8aNHwBwIZAAzm6KyMpB88ewZPEMC86GugcGAOnAUDCQACKDRApjmAJj9gJmQAZwD9QwMIO1PUTGxyxcuQPIhZvU4CkYUAAig0YEZ2oLnz55BciAQqKqrI/cAga1QSSkpIANCjoIRCwACaLQ5SkPw4/v3c2fOQIZhRtucowAXAAig0eYopeDL58+/wdmMk4ODg5MTWQpYB8IHQoFdQQgDuStIR2eOgsELAAJoNBOSCYDtzA/v379+9QpZENjrA3b2BAQFgSSwGgSqgYgDucCMevvmTbgIXFxCSmo0N45wABBAo81RkgGwKgNmJ2AeYwB350TExCC5CCjy+vVr+CgoCysrRA0QAGtIOBsTAA0Bdhfp4vZRMBgBQACNZkLSAHyok4eXV0tbG639yQBunQL7gZgaZeXkgPUeZGAGWH8CDQGqhMuO5sORDAACaDQTEguAvbvrV65AenTAPAOZ7sOqErPZaWRigrky5vrVq8itWaCBwIxKbVePgiEAAAJodIqCKADMgZdg03rA7IQnBzKAG5/IXGCOxbo2DVj1IRsCrGPxNFlHwTAGAAE0mgmJAsAcAmk9ArMNsBVK0iozXPUbZPUMsgha/YkLAEuE92CA3KAlBgDV41oYADETVymAtuSVpo4cgQAggEZHRwkDYP8Nnj1k5eUx+4Fo4MO7d3A2sA7Eox7YSwS2XeHc169fo2VLZABM1kBnAFuwyMkaaLiikhLQHDzugWgEIkgeQ2v3Ak0DehDSMAaWC8CWM7KDgbnoycOHkKwLlNXU0cE/lku2I0cyAAig0UxIAEAWXkPYwBxFTLcNubbBn/KAyRpoJjy94mmOAvPJ44cPgUkcmKCB2eDz58+QegmoBdi3BJqAK/cC8wMwnyNXYhwcHHA2fJwJAoDKgCZDMuEf8JwKcq8VKPLi2TM8mZBsR45wABBAo5mQALiFVFMRk4bQWl8EdyrxImVCBnAGxkzlkJEeUEWkrQ3J1ZA+KlwjMPULCAmhaYTnIh5UKwSFhDBNwPTFtatXMQuFP79/4/IIeY4cBUAAEECjfUJ8AJiq4GkIUroT1IJcDQJTJEEtBBu38MStZ2AAr1chXLRxHWRd0JGkd++AzUsggosDMyRQF9BTp44fB+YxYLECzDPIGjk5OYGyQL3A/AaU1TUwQHYhLteS58hRAAEAATSaCfEB5KYakcusMescSgB8tgNt8TcDOIkjOwloL7ziguRABtjUCLKTgDkEkseA2QkoC5m9RDYTSAJlgfUzRBZYiHAiNV+xVuzkOXIUwAFAAI02R3ECYEMOOcWIiooSo+s96qgMhQ6AJG5B8Do4TAVo5sO7c0BnAxF8iAVtRBSYx4CmwWdZUKpuVlaILPLKAWQFmBU72Y4cBXAAEECjmRAn+ICU+PAPcsLBF9hQBAQQk2/Relm8sCQL6dFB2DLy8lj18qKm7x8/fsBda2ZpCW8HIhclwAYh2uoc5HoSqBJN9j3eQKDEkaMADgACaLQ5ihMgDwzyElenISdZYHolMt/C2SxgAGEDqxdIfsbTF8VjPnJPDK0qQ1sfh+wAYDZDk0WebsGs6Ch05CiAAIAAGs2E2AFanUZkSkJOskQOA35HqhngfUig1Y8fPoSwiWwG4wKQpimci7lCFbn9jDn8+/r1azgbzSVUdOQIBwABNJoJsYPfqKtDkOfW8AC0xhtB9cB0jJxD4FqAlTC8CCC+JsG6jucz6qgMmmnIZQ1mbYacgTErdio6coQDgAAazYTYAdoEGgsrK0EtaHsLiakJ0bTA65MPqM1aguZAANY2M7JHRDDqK5R1BRiyeKpB6jpyhAOAABrNhFQDaJ0rYtIlcjqWlJKCa0HOnHgyM1p/Emvdi3/5DrIJAhgTKsjOwNRLRUeOcAAQQKOZkGoA/1A+JgC25ZDTsQgslRN/+BpymxnX+jh4HsDqJHiHEHNdAbAhirxQAS3zUNeRIxwABNBoJiQKEJxiBuYotCXLBM1E3jMhiXTIBZ6lYWgApamJLX0jZxXMig7oKcRZ4Biy+FuqVHTkKAAIoNFMiB2gFfwEMyGpHULkoUW0PU3Ez6TBLRUEA0wFaC1kNFn8w0gf8MpS0ZGjACCARjMhdsBLYusLrRokWBNCdhtA2Gi7e9EArl18yM1FXCvLkadMMEdEUFbYYVsKA2cTbEZS4shRABBAo5kQO0DrI+HZDssA20QH5xIcAAQaBV+VCkya+JP4ZxwbHZBNwDXaAXczZN02LlnM8RJcwzlorW6qOHIUAATQaCbECdDWYT2BtR4xAdqOePypDXJWDYQN7ApiblBEm5NErs3gAH6eIrCkwLXFETm3YJYLyHOAmB1CrO1YyLpwyN4uajlyFAABQACNZkKcAG1FMuSkQ0xlwHSGtkMHz4EOkHQMabzhOmENLUvAl4Yhg2tXrzKAs4emjg4uu/B3+fDLYmZC+M4MPfA54tRy5CgAAoAAGs2E+ADa3hxgUrt84QK8swTJlpg5E6gAa9sVsocIkr6BzTNcZxyibf8BJm7kTA6qSMG71IFlBNpuPUzr4GzMLh/yUBOmLPLgJ9AcoMdPHT/OAM6BEBup5chRAAQAATQaOvgAZFsq8ikPkMOLroPLeAhAPtgXktqASRCYV0GdPVFRyAgNUPuH9+8hbTNgrlbD2HeHBoB6gb0seC4CagRygdUyMG9A6hxizkeE99OArsIcKCJ+hR0kd2Ge8kgVR44CIAAIoNFMSABAzmsQERVFvlEQAiCH2L959eo5LBMCkx0wscKzHFozFageaA4xE9aYmf8LLLkDtQNTNsFBDvxdPuTxFazTBiJiYsiexZqdKHfkKIAAgAAaPfyXNIB2nQswNR87fBgiAqxtzCwskBVDzk0CMljJXa4FOVofaj4HBzA70a1p9/jRow/v3gGdjbyeDisYQEcODwAQQKOZEB+ArCnBk3/gV/ACga6Bwehk9CggAwAE0GiJhRPAb5UAtqywTjQjr3qBHMdCV/eNguECAAJodHQUJ4C3PIHVHdbJCfiqF8igBV0dNwqGEQAIoNFMiBOgTU5cv3oVeSoMdNAteDnI6IVKo4BCABBAo31CfAC5y8cAuwOUg5MTcsz76Onuo4AqACCARjMhAQBslL4AX66ALAgZMyTyJNJRMArwA4AAGs2ExILRu+ZHAY0AQACNZsJRMAoGGAAE0OjAzCgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAKIypnwz58/78Hgy+fPxOsCKoZfRo3VwB/fv2OVBYoDZYFqSHUnRCMekyGuwiMLAfhNgJtDT98R47WBdRgxGqkV+GRYzUD3kAEIIBaSVOMCQFufP3v2+tUr5LzHwcmpqKQkKiaGXxcQQbykqKwsKycHlwUa9fjRI6CZIFeysBiZmAANhMsCvfrk4UNISAFlNXV0iLlKHmgRxEzkYAJqBFrNw8uLrOz2zZsQw3UNDLCaDDTh0oULEP+qqqtLSkkNrO+I9Br9HYZmHQQAbQTai8sjlAc+XNnjhw9fv36NbDWaf/E4lQ4JEgIAAvBSLikAwjAQ3VjoiaT3v4O4Cu6K+17AJ4FBGkEXpV31l2RmmukAE4IMqhAAE4Vba94HMNm3DeivckMGrZ8dk3PW/DAjrZZcI61zZk6ga6HTs9ZPziQkbdy/hTPjvTs6vqTWWkqMAo9+HEK6PpjM7ie1+cBUzq/JDFRZUopmGCK+D7wEnViaTUwSQ+Y3pMYlgCjNhEDrgb4FZX1tbUilh1xKMYDDSEBICNlBcEcDS2jkmlNQSAhTOxoAil+7ehWzMfDn9288jkQOJqClrCwsaI0NCBeo7PqVK2hSkBoGM7lwIsUQsnvo7DsivUZ/hzHAigZgqgBWVsAUAhQBFsrwxPrh3TvkUKVK4MMBJM8AfaqlrQ3MKmi++/D+PXImpH/IoAGAAMSWPQ6AIAyFWRndDIcwDNyfxIXEU/lJ9YXgYqKRDkb6E/ra0vbVI9QLXGLUzmPHrRQ1FSIypXQ6VyHhNNMckzVn4/OPIZCQuroJ0IfIme7y3rdS9Lld4NvF4E4WRKXEXYuHmi5ptkaI1CqGTqaCQI2cWRmJ0ITTbf//o3sCbYhjNojQpzuLOYfQTgzRJ8EXHeOUSVvr0Az5Egfhal/IkILsaBeA97JLARAEgnAX8Bp5/zMIPQvhffpqaBItiALDh3DLndl/vyehMnA6hvLm1qF27/atS7YLEjuap+vqQr0UJfYdT+YsUyINIaBOUsqhOTcAGpwKU7tkOr3CEgYOXFKq7wDgWXN2h4RpX4/5RhZw9A9m94Ya0vHAsBvYeJljfHDL9e/eA0v5afxatSZzDqxTl+n3VvX4gOyfTQCROToKLLogQQBsZ2IdekFzxGew94BOBCK4l9DaHkAvAY0CpidMWWAIQmR1YbJoCnC1vyH9bAZwakArTeHuhJR5QJPRYloVKQFBDEEDcJdAWkd09h2RXqO/wyANS4gsWjJAS+VQW6gR+GhWA2XRen3IVguA25kMA5EgsQKAACInE0La0BC2jLw8VjW8qKH/48cPBnCyMLO0hDsauSWN1nlgQA01oEqILFwE2cNAY7HW/kB3QgpFYHwQLJkwQw05IoEOwOwVwM2EMOjpO5K8Rudgh7eERVBLZ8hYJYQNzHLIzqY88NGsFhUVxWU10Edw6+gcMrgAQACRkwmBJRPEq5DhUKxqcDkCucxGKzlUUZsuyH7mAVf6yLLAbj2cjWsWBDI4xgBOqTi8QgAga8TamYEAuGfp5jtSvUY3h0GGUjAVQBp+cDfjmp9ABqQGPjFWY/qIngkSFwAIIJIzIUqhglrekAQgLQE4VxWj8/AeyVeYcfb69Ws4G6szgIbD+wwkNdCRAbxFh2Yj3AoIA7MkoqnvKPEarYMdng2AYQJP30Ab4QOMwDoQ01KsgNTAh1sNtBet1wexGtK2xNp0Z6B9yOABAAFE8sAM8nQw8XUups8/o3YP0Iz6AptsZMBW3yKHF1AWe6MIXihSUFIwwDrocEuR7YI3BzAdQFPfUeI1mjoMXjowIPW7kKf+IOONly9cAMpijnliAuIDH9lqQZjVwJoN2EUEqgQNVsnL45qjp0PI4AcAAURyJvyAVGUTbxkvRoGNXLmLYCQm5IYBZlIjWOoAwwvegIGnBvIAclUDdJUkkpchLRCsDqCd7yj0Gk2DHVkBBwcHaKbk0SNg6gTmAWCq/f7jB2RVF8QioEuQZy+wAuIDH9lqoC6gRffv3YMEFKT1SzDD0zRk8AOAACKnJoSz8QwBIXsJuXkAByi+wmhDYx3LwuoGrO1v5OqapHEqTICsHdlVkDWEDDgGo2nnOwq9RtNgRx7GhC+UAdY/8N4dfOIBYpqikhL+cpz4wEe2Gpg/4aNWQNuJrCpoGjL4AUAAkZYJca1qxQS/kSZSsToL7iusKQne/oYUoshSyGNluDpF8OqaYPlHDAA6AOJx5D4DfA0hnX1Hoddo5zC0PhVo5bCyMpohElJSyEkIWDcSzCHEBD6a1Z/BKyWBNRJJzUKaJkj8ACCASItI4hfjoFTuGMkUOSYwyxWgrxCFPYYs/oYBVA0syDCbwWQAYLDCG1FwwTewpg4W22npO0q8RluHoRbQRrA1UsgAecacSEBM4KNZbWZpSWoJResEiR8ABBBpo6OQ6T5iALyCFgQDNFm00V40WbQpFzTZD3hlGcBtFTI2N+EByEkHvjYd4kismZB2vqPQa7QOdjibmHYyZpWCXRkRgY9mNRltBJqGDEEAEEAU7SfElSCQK2isM0LIkyr4x2ww44lg+xt5mIsqADlkIYbDVwthbfDQzncUeo2mwU7MDlIyJtOICXwiN69CFplgVUzTkCEIAAKIokyIK03Ax9AxN7NBALxogSwZwyWLOaKDq/cMDF+sgYs/1SJP7+IByAujGGCrGRnAPRys6unjOzK8RlOHEdNVgY8iAq0gZr6egbjAJ8ZqoBfOnTmDa9KfbgkSKwAIINIyIQdqiCCXH3AAn7GBjIxhKkB2HGapg9zJxmx/Y202QCZkb8FW0iED+DAaJgCmUWCsYPUCGkCr7iALhoCCBCsEmvqOVK/RM9hxuQpiBfL+BoKApMBnwFY2QSrAyxcuAPMq8nYfOBjwkAEIINJaz2iOAC1vl5dHC81r4JXmoD0sOjpYDcHfwsYvi+ln+EJ4PdjWVbRwRN5IxQCbZ4MkCCLXTzGA0w2k7Q2MSMiCIVwzvzT1HSVeo3WwI3feMEsHyM4mBlgOJKnvRHzgM8CyHGRiEOhsyE4DoCDybi80QOuQIQgAAoi0TAjZowSfk4EsI4Yv8IG3uYF1IDAH4irq8LewkceaMWWRGx6QHVJABwBDFm0vD1AEbg5Q2akTJyCdeGDlANn4D1QA34VMDOCFjdG9gJXEuBZt0tR3lHiN1sEOTILIjT1gcCEvKIPkQKAaNYyNbwQBwcAXEBJCzirw/SVwANrbhVFbIPsIzqZFyBAEAAFE8jgSsIxBPlwA6FsgFxjlQNdAihw8Z3hAALzBAElSaLL4Cx5kAJ+QxVwPAXTAbaTGACRo4JYC1ROzZgorgDhPUUkJlwJa+45sr9HaYaAdpEgnU1y/cgXkElZWyJEtxCwcIwhwBb6oqCjW0z0YwK1ZYCWBfxiWDgkSPwAIIJITIqQ5gXyoxhdYngRmRbQtKpgAfwsbuTuLNeBExMSQAwVXhgcGBNActOIQUoKSnf3gANcWSga6+I48r9HBYZCEAd+vAFroDx4ZghQNpE6d4wJYAx+S026j9sGA6RASJvgNpE+CxA8AAojx////pOqBAKDT4YNdHBwcQA9QZXkKQQCMWmDTCxLE+OP1C+zgOqDDeJGW5JMBkNdbQc5BINso/IBI31HRa9R1GGi46N07yHwytdxGZODDEyRkBpIqeZ4YQHyCxAUAAoj8TDiiAPzoETxn9Y0CGoFhH/gAATR6Ajdh8AWpzyCL4ySBUUAjMBICHyCARjMhYQDvgKniOM1lFNAOjITABwig0UxIAIB6GuAhKFExMfIWJY0CssEICXyAABrNhATA/Xv3IHNTRB7KMAqoCEZI4AME0GgmxAcgF2wAGVra2sO1LTRowcgJfIAAGs2EOMGXz58h06+YpxuPAlqDERX4AAE0nAsYSgD8jCDk0xlGAX3ASAt8gAAazYToALJZBlIMD9eJqUELRmbgAwTQCM2EkKXn8NM7OTk4QBvJWFkhw3GQhVd4Lr4bBZSA0cBHAwABNEJXzOC60A8CIHeADPuuyECB0cBHAwABNEJrQlyjbZBlGZQv8h4FeMBo4KMBgAAaWb6FA2BMQ7bAwq9G4+XlFQCv0B9pKYD+YDTw0QBAAI3Q5ugoGAWDBwAE0Og84SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAIMAOrdVOIxsnZhAAAAAElFTkSuQmCC"),
-      (add_images.value = good.images),
-      // good.images.forEach((image) => {
-      //   images_id.value.push(image.id);}),
-      good.images.length > 0 ? (images_id.value = good.images[0].id) : "";
+      good.images.forEach((image) => {
+        add_images.value.push(import.meta.env.VITE_IMG_URL + image.image);
+        images_id.value.push(image.id);
+      }),
+      setImages(good.images);
   } catch (e) {
     console.log(e);
   }
@@ -219,7 +215,6 @@ const updateGood = async () => {
     appendIfNotNull("good_group_id", good_group_id.value);
     appendIfNotNull("unit_id", unit_id.value);
 
-    console.log(...formData.entries());
     await goodsApi.update(id.value, formData);
     showToast(editMessage);
   } catch (e) {
@@ -248,13 +243,15 @@ const createGood = async () => {
     appendIfNotNull("unit_id", unit_id.value);
     appendIfNotNull("storage_id", storage_id.value);
     appendIfNotNull("main_image", imageRef.value);
-    // for (const file of add_images.value) {
-    //   if (file !== imageRef.value) {
-    //     appendIfNotNull("add_images[]", file);
-    //   }
-    // }
+    for (const file of add_images.value) {
+      if (file !== imageRef.value) {
+        appendIfNotNull("add_images[]", file);
+      }
+    }
+    // console.log(file,'file');
     appendIfNotNull("good_group_id", good_group_id.value);
     await goodsApi.create(formData);
+    console.log(...formData.entries());
     router.push("/list/nomenclatureGroup");
     showToast(addMessage);
     isCreated.value = true;
@@ -276,6 +273,7 @@ const onPickFile = (num) => {
   } else if (num === 3) {
     fileInput3.value.click();
   } else if (num === 4) {
+    console.log(fileInput4.value);
     fileInput4.value.click();
   } else {
     fileInput.value.click();
@@ -394,7 +392,7 @@ onMounted(async () => {
                       border: 1px solid #3ab700;
                     "
                   >
-                    <div v-if="firstImage === null">
+                    <div v-if="main_image === null">
                       <v-btn @click="isImageDialog = true"
                         >Загрузить фото</v-btn
                       >
@@ -409,7 +407,7 @@ onMounted(async () => {
                     <img
                       v-else
                       class="image"
-                      :src="firstImage"
+                      :src="main_image"
                       width="200"
                       height="150"
                       alt=""
@@ -418,13 +416,9 @@ onMounted(async () => {
                   <div class="d-flex justify-center ga-4">
                     <span
                       class="photo_el"
-                      v-for="(img, index) in 1"
+                      v-for="(img, index) in add_images"
                       :key="index"
-                      @click="
-                        isEdit
-                          ? setImageByIndexInEdit(index)
-                          : setImageByIndex(index)
-                      "
+                      @click="setImageByIndex(index)"
                     >
                       Фото {{ index + 1 }}
                     </span>
@@ -435,13 +429,9 @@ onMounted(async () => {
                   >
                     <v-btn
                       style="width: 120px; height: 30px; font-size: 10px"
-                      @click="onPickFile"
-                      >{{
-                        isEdit && firstImage && add_images.length !== 0
-                          ? "Изменить фото"
-                          : "Загрузить фото"
-                      }}
-                    </v-btn>
+                      @click="isImageDialog = true"
+                      >Загрузить фото</v-btn
+                    >
                     <input
                       accept="image/*"
                       type="file"
@@ -449,11 +439,10 @@ onMounted(async () => {
                       ref="fileInput"
                       multiple
                     />
-                    <!-- @change="selectAvatar($event, 1)" -->
                   </div>
                 </div>
                 <div class="d-flex flex-column w-75 ga-3">
-                  <v-select
+                  <v-autocomplete
                     :rules="isValid ? [rules.required] : []"
                     placeholder="Место расположения"
                     label="Место расположения"
@@ -467,7 +456,7 @@ onMounted(async () => {
                     hide-details
                     :base-color="FIELD_COLOR"
                   />
-                  <v-select
+                  <v-autocomplete
                     :rules="isValid ? [rules.required] : []"
                     placeholder="Ед измерения"
                     :item-props="itemsProps"
@@ -481,7 +470,7 @@ onMounted(async () => {
                     hide-details
                     :base-color="FIELD_COLOR"
                   />
-                  <v-select
+                  <v-autocomplete
                     :rules="isValid ? [rules.required] : []"
                     placeholder="Группа номенклатуры"
                     label="Группа номенклатуры"
@@ -574,7 +563,21 @@ onMounted(async () => {
                 alt=""
               />
             </div>
-            <span class="d-flex justify-center">Фото 1</span>
+            <div class="d-flex flex-column justify-center align-center">
+              <span class="d-flex justify-center">Фото 1</span>
+              <div v-if="firstImage !== null">
+                <v-btn style="font-size: 10px" @click="onPickFile(1)"
+                  >Изменить фото</v-btn
+                >
+                <input
+                  accept="image/*"
+                  type="file"
+                  @change="selectAvatar($event, 1)"
+                  style="display: none"
+                  ref="fileInput1"
+                />
+              </div>
+            </div>
           </div>
           <div style="width: 220px">
             <div
@@ -606,7 +609,21 @@ onMounted(async () => {
                 alt=""
               />
             </div>
-            <span class="d-flex justify-center">Фото 2</span>
+            <div class="d-flex flex-column justify-center align-center">
+              <span class="d-flex justify-center">Фото 2</span>
+              <div class="d-flex justify-center" v-if="secondImage !== null">
+                <v-btn style="font-size: 10px" @click="onPickFile(2)"
+                  >Изменить фото</v-btn
+                >
+                <input
+                  accept="image/*"
+                  type="file"
+                  @change="selectAvatar($event, 2)"
+                  style="display: none"
+                  ref="fileInput2"
+                />
+              </div>
+            </div>
           </div>
         </div>
         <div class="d-flex w-100 ga-3">
@@ -621,7 +638,7 @@ onMounted(async () => {
             >
               <div v-if="thirdImage === null">
                 <v-btn style="font-size: 10px" @click="onPickFile(3)"
-                  >Загрузить фото</v-btn
+                  >Изменить фото</v-btn
                 >
                 <input
                   accept="image/*"
@@ -640,7 +657,21 @@ onMounted(async () => {
                 alt=""
               />
             </div>
-            <span class="d-flex justify-center">Фото 3</span>
+            <div class="d-flex flex-column justify-center align-center">
+              <span class="d-flex justify-center">Фото 3</span>
+              <div v-if="thirdImage !== null">
+                <v-btn style="font-size: 10px" @click="onPickFile(3)"
+                  >Загрузить фото</v-btn
+                >
+                <input
+                  accept="image/*"
+                  type="file"
+                  @change="selectAvatar($event, 3)"
+                  style="display: none"
+                  ref="fileInput3"
+                />
+              </div>
+            </div>
           </div>
           <div style="width: 220px">
             <div
@@ -672,8 +703,29 @@ onMounted(async () => {
                 alt=""
               />
             </div>
-            <span class="d-flex justify-center">Фото 4</span>
+            <div class="d-flex flex-column justify-center align-center">
+              <span class="d-flex justify-center">Фото 4</span>
+              <div v-if="forthImage !== null">
+                <v-btn style="font-size: 10px" @click="onPickFile(4)"
+                  >Изменить фото</v-btn
+                >
+                <input
+                  accept="image/*"
+                  type="file"
+                  @change="selectAvatar($event, 4)"
+                  style="display: none"
+                  ref="fileInput4"
+                />
+              </div>
+            </div>
           </div>
+        </div>
+        <div v-if="showModal">
+          <ConfirmModal
+            :showModal="showModal"
+            @close="toggleModal()"
+            @closeClear="closeDialogWithoutSaving()"
+          />
         </div>
       </v-card>
     </v-dialog>
