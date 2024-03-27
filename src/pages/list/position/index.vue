@@ -11,7 +11,7 @@ import {
   editMessage,
   removeMessage,
   warningMessage,
-  selectOneItemMessage
+  selectOneItemMessage, ErrorSelectMessage
 } from "../../../composables/constant/buttons.js";
 import Icons from "../../../composables/Icons/Icons.vue";
 import binarySearch from "../../../composables/binarySearch/binarySearch.js";
@@ -243,8 +243,29 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
 }
 
 const lineMarking = item => {
-  if (!markedID.value.includes(item.id)) {
-    markedID.value.push(item.id)
+  if (markedID.value.length > 0) {
+    const firstMarkedItem = positions.value.find(el => el.id === markedID.value[0])
+    if (firstMarkedItem && firstMarkedItem.deleted_at) {
+      if (item.deleted_at === null) {
+        showToast(ErrorSelectMessage, 'warning')
+        return
+      }
+    }
+    if (firstMarkedItem && firstMarkedItem.deleted_at === null) {
+      if (item.deleted_at !== null) {
+        showToast(ErrorSelectMessage, 'warning')
+        return
+      }
+    }
+  }
+
+  const index = markedID.value.indexOf(item.id);
+  if (index !== -1) {
+    markedID.value.splice(index, 1);
+  } else {
+    if (item.id !== null) {
+      markedID.value.push(item.id)
+    }
   }
   markedItem.value = item
 }

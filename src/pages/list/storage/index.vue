@@ -559,8 +559,13 @@ const lineMarking = (item) => {
     }
   }
 
-  if (!markedID.value.includes(item.id)) {
-    markedID.value.push(item.id)
+  const index = markedID.value.indexOf(item.id);
+  if (index !== -1) {
+    markedID.value.splice(index, 1);
+  } else {
+    if (item.id !== null) {
+      markedID.value.push(item.id);
+    }
   }
   markedItem.value = item;
 }
@@ -985,7 +990,7 @@ onMounted(async () => {
             </div>
             <v-form class="d-flex w-100 pa-5">
               <v-row class="w-100">
-                <v-col class="d-flex flex-column justify-between w-100 ga-5">
+                <v-col class="d-flex flex-column justify-between w-100">
                   <v-autocomplete
                       variant="outlined"
                       label="Выберите сотрудника"

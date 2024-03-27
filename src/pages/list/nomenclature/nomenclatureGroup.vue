@@ -7,7 +7,6 @@ import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import createGroup from "./createGroup.vue";
 import createUpdate from "./createUpdateGood.vue";
-import { FIELD_COLOR } from "../../../composables/constant/colors.js";
 import {
   ErrorSelectMessage,
   removeMessage,
@@ -227,7 +226,7 @@ onMounted(() => {
         <div class="d-flex align-center ga-2 pe-2 ms-4">
           <span>Номенклатура</span>
         </div>
-        <v-card variant="text" min-width="500" class="d-flex align-center ga-2">
+        <v-card variant="text" min-width="420" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-2 me-3">
               <button
@@ -360,7 +359,7 @@ onMounted(() => {
 
           "
           @filter="filterGroup"
-         
+
           :createGroupOnBase="createGroupOnBase"
           :groupData="groupData"
           :isFilter="isFilter"
