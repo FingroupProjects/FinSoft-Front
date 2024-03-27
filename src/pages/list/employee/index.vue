@@ -323,6 +323,7 @@ const addBasedOnEmployee = () => {
       }
     }
   })
+  isExistsEmployee.value = false
 }
 
 const compute = ({page, itemsPerPage, sortBy, search}) => {
@@ -403,13 +404,14 @@ const isDataChanged = () => {
 }
 
 const checkAndClose = () => {
+ 
   if (
     nameRef.value ||
     phoneRef.value ||
     emailRef.value ||
     addressRef.value
   ) {
-    showConfirmDialog.value = true
+    showModal.value = true
   } else {
     dialog.value = false
     showModal.value = false
@@ -604,7 +606,7 @@ watch(dialog, newVal => {
                   :size="32"
                   class="pt-2 pl-1"
                 >
-                  <Icons name="close" title="Закрыть" />
+                  <Icons name="close"  title="Закрыть" />
                 </v-btn>
               </div>
             </div>
