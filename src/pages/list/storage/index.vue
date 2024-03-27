@@ -627,8 +627,6 @@ const getStorage = async ({page, itemsPerPage, sortBy, search}) => {
 const isDataChanged = () => {
   const item = storages.value.find(elem => elem.id === idStorage.value);
 
-  console.log(organizationAdd.value !== item.organization.id)
-
   return  nameRef.value !== item.name ||
     organizationAdd.value !== item.organization.id
 };
@@ -728,6 +726,7 @@ onMounted(async () => {
                   density="default"
                   placeholder="Поиск..."
                   variant="outlined"
+                  color="info"
                   :base-color="FIELD_OF_SEARCH"
                   rounded="lg"
                   hide-details
@@ -751,7 +750,7 @@ onMounted(async () => {
       </div>
 
       <div class="d-flex ga-4 w-100">
-        <v-card class="mt-2 table">
+        <v-card class="mt-2 table w-100">
           <v-data-table-server
               style="height: 78vh"
               items-per-page-text="Элементов на странице:"
