@@ -75,6 +75,11 @@ const routes = [
     component: () => import("../pages/list/cashRegister/index.vue"),
   },
   {
+    path: "/list/unit",
+    name: "unit",
+    component: () => import("../pages/list/unit/index.vue"),
+  },
+  {
     path: "/list/employee",
     name: "employee",
     component: () => import("../pages/list/employee/index.vue"),

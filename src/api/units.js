@@ -1,13 +1,28 @@
-import { api, buildParams } from "./api.js";
+import {api, buildParams} from './api.js'
 
 export default {
-  create(data) {
-    return api.post("/counterparty", data);
+  add(data) {
+    return  api.post('/unit', data)
   },
-  update(id, data) {
-    return api.patch(`/counterparty/${id}`, data);
+  get({page = 1, itemsPerPage = 25, sortBy}, search, filterData) {
+    const params = buildParams(page, itemsPerPage, sortBy, search, filterData);
+    return api.get('/unit', { params });
   },
-  get() {
-    return api.get("/unit");
+  update(id, body) {
+    return api.patch(`/unit/${id}`, body)
   },
-};
+  delete(id) {
+    return api.delete(`/unit/${id}`)
+  },
+  massDeletion(data) {
+    return api.post(`/units/massDelete/`, data);
+  },
+
+  restore(id) {
+    return api.get(`/unit/restore/${id}`)
+  },
+
+  massRestore(data) {
+    return api.post('/unit/massRestore', data)
+  }
+}
