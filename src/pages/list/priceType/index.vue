@@ -6,7 +6,7 @@ import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import priceType from '../../../api/priceType.js';
 import currency from '../../../api/currency.js';
-import {FIELD_COLOR} from "../../../composables/constant/colors.js";
+import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 import validate from "./validate.js";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import {
@@ -251,6 +251,7 @@ const addBasedOnPriceType = () => {
     }
   })
 
+  isExistsPriceType.value = false
 }
 
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
@@ -295,7 +296,6 @@ const  closeFilterModal = async ({page, itemsPerPage, sortBy, search, filterData
   cleanFilterForm()
   await getPriceTypeData({page, itemsPerPage, sortBy, search})
   
-
 }
 
 const cleanFilterForm = () => {
@@ -303,16 +303,11 @@ const cleanFilterForm = () => {
 }
 
 const isDataChanged = () => {
-  const item = priceTypes.value.find(
-    (item) => item.id === idPriceType.value
-  );
+  const item = priceTypes.value.find(elem => elem.id === idPriceType.value);
 
-  const isChanged =
-    nameRef.value !== item.name ||
+  return nameRef.value !== item.name ||
     currencyAdd.value !== item.currency.id ||
     descriptionRef.value.id !== item.descriptionRef
-
-  return isChanged;
 };
 
 
@@ -351,14 +346,15 @@ const cleanForm = () => {
   descriptionRef.value = null
 };
 
-watch((dialog), newVal => {
+watch(dialog, newVal => {
   if (!newVal) {
     nameRef.value = null
     currencyUpdate.value = null
     currencyAdd.value = null
     descriptionRef.value = null
-
     loadingRate.value = true
+  } else {
+    markedID.value = [markedID.value[markedID.value.length - 1]];
   }
 })
 
@@ -398,6 +394,7 @@ onMounted(async () => {
                   variant="outlined"
                   color="info"
                   rounded="lg"
+                  :base-color="FIELD_OF_SEARCH"
                   clear-icon="close"
                   hide-details
                   single-line
@@ -453,14 +450,17 @@ onMounted(async () => {
                 <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
                   <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)"
                                   @change="handleCheckboxClick(item)">
-                    <span>{{ index + 1 }}</span>
+                    <span>{{ item.id }}</span>
                   </CustomCheckbox>
                 </template>
                 <template v-else>
-                 <div  class="d-flex">
-                   <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
-                   <span>{{ index + 1 }}</span>
-                 </div>
+                  <div class="d-flex align-center">
+                    <Icons
+                        style="margin-right: 10px; margin-top: 4px"
+                        :name="item.deleted_at === null ? 'valid' : 'inValid'"
+                    />
+                    <span>{{ item.id }}</span>
+                  </div>
                 </template>
               </td>
               <td>{{ item.name }}</td>
@@ -541,7 +541,8 @@ onMounted(async () => {
           </v-card>
         </v-dialog>
       </v-card>
-<v-card>
+
+      <v-card>
         <v-dialog class="mt-2 pa-2" v-model="filterModal">
           <v-card style="border: 2px solid #3AB700" min-width="450"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
