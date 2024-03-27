@@ -200,15 +200,12 @@ const addStorage = async () => {
     }
   } catch (error) {
 
-    let showToastFlag = true;
-
     if (error.response && error.response.status === 422) {
-      if (error.response.data.errors.name && showToastFlag) {
+      if (error.response.data.errors.name) {
         showToast(error.response.data.errors.name[0], "warning")
-        showToastFlag = false;
       }
 
-      if (error.response.data.errors.organization_id && showToastFlag) {
+      if (error.response.data.errors.organization_id) {
         showToast(error.response.data.errors.organization_id[0], "warning")
       }
     }
@@ -294,25 +291,17 @@ const addStorageEmployee = async ({page, itemsPerPage, sortBy}) => {
 
     }
   } catch (error) {
-
-    let showToastFlag = true;
-
     if (error.response && error.response.status === 422) {
-      if (error.response.data.errors.employee_id && showToastFlag) {
+      if (error.response.data.errors.employee_id) {
         showToast(error.response.data.errors.employee_id[0], "warning")
-        showToastFlag = false;
       }
-      if (error.response.data.errors.from && showToastFlag) {
+      if (error.response.data.errors.from) {
         showToast(error.response.data.errors.from[0], "warning")
-        showToastFlag = false;
       }
-      if (error.response.data.errors.to && showToastFlag) {
+      if (error.response.data.errors.to) {
         showToast(error.response.data.errors.to[0], "warning")
-        showToastFlag = false;
       }
-
     }
-
   }
 
 }
@@ -362,7 +351,6 @@ const massDelEmployee = async ({page, itemsPerPage, sortBy, search}) => {
     const {status} = await storage.massDeletionEmployee({ids: markedEmployeeID.value})
 
     if (status === 200) {
-
       showToast(removeMessage, 'red')
       await getStorageEmployeeData({page, itemsPerPage, sortBy}, search)
       markedEmployeeID.value = []
@@ -375,14 +363,14 @@ const massDelEmployee = async ({page, itemsPerPage, sortBy, search}) => {
 }
 
 
-const massRestoreEmployee = async ({page, itemsPerPage, sortBy, search}) => {
+const massRestoreEmployee = async ({page, itemsPerPage, sortBy}) => {
 
   try {
     const {status} = await storage.massRestoreEmployee({ids: markedEmployeeID.value})
 
     if (status === 200) {
       showToast(restoreMessage, 'red')
-      await getStorageEmployeeData({page, itemsPerPage, sortBy}, search)
+      await getStorageEmployeeData({page, itemsPerPage, sortBy})
       markedEmployeeID.value = []
       dataDialog.value = false
     }
@@ -421,12 +409,10 @@ const updateEmployee = async ({page, itemsPerPage, sortBy}) => {
 const getEmployee = async () => {
   try {
     const {data} = await employee.get({page: 1, itemsPerPage: 100})
-    employees.value = data.result.data.map(item => {
-      return {
-        id: item.id,
-        name: item.name
-      }
-    })
+    employees.value = data.result.data.map(item => ({
+      id: item.id,
+      name: item.name
+    }))
   } catch (e) {
 
   }
@@ -437,12 +423,10 @@ const getOrganizations = async () => {
   try {
     const {data} = await organization.get({page: 1, itemsPerPage: 1000})
 
-    organizations.value = data.result.data.map(item => {
-      return {
-        id: item.id,
-        name: item.name
-      }
-    })
+    organizations.value = data.result.data.map(item => ({
+      id: item.id,
+      name: item.name
+    }))
   } catch (e) {
 
   }
@@ -456,10 +440,8 @@ const handleEmployeeCheckboxClick = function (item) {
 }
 
 const openDialog = (item) => {
-  if (markedID.value.length > 1) {
-    return showToast(selectOneItemMessage, 'warning');
-  }
   dialog.value = true
+
   const groupValue = groups.value.find(item => item.id === groupIdRef.value)
 
   if (groupIdRef.value !== 0) {
@@ -577,11 +559,8 @@ const lineMarking = (item) => {
     }
   }
 
-  const index = markedID.value.indexOf(item.id);
-  if (index !== -1) {
-    markedID.value.splice(index, 1);
-  } else {
-    markedID.value.push(item.id);
+  if (!markedID.value.includes(item.id)) {
+    markedID.value.push(item.id)
   }
   markedItem.value = item;
 }
@@ -641,18 +620,12 @@ const getStorage = async ({page, itemsPerPage, sortBy, search}) => {
   }
 }
 const isDataChanged = () => {
-  const item = storages.value.find(
-    (item) => item.id === idStorage.value
-  );
+  const item = storages.value.find(elem => elem.id === idStorage.value);
 
-  console.log(item)
+  console.log(organizationAdd.value !== item.organization.id)
 
-
-  const isChanged =
-    nameRef.value !== item.name ||
+  return  nameRef.value !== item.name ||
     organizationAdd.value !== item.organization.id
-
-  return isChanged;
 };
 
 const cleanForm = () => {
@@ -663,13 +636,14 @@ const cleanForm = () => {
 
 
 const checkAndClose = () => {
-  if (nameRef.value) {
-    showConfirmDialog.value = true;
+  if (nameRef.value || (organizationAdd.value && organizationAdd.value.length > 0) || (group.value && group.value.length > 0)) {
+    showConfirmDialog.value = true
   } else {
-    dialog.value = false;
-    showModal.value = false;
+    dialog.value = false
+    showModal.value = false
   }
-};
+}
+
 
 const closeDialogWithoutSaving = () => {
   dialog.value = false;
@@ -699,6 +673,8 @@ watch(dialog, newVal => {
     employeeUpdate.value = null;
     startDateRef.value = null;
     endDateRef.value = null;
+  } else {
+    markedID.value = [markedID.value[markedID.value.length - 1]];
   }
 })
 
@@ -845,12 +821,17 @@ onMounted(async () => {
                   <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
                     <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)"
                                     @change="handleCheckboxClick(item)">
-                      <span>{{ index.id }}</span>
+                      <span>{{ item.id }}</span>
                     </CustomCheckbox>
                   </template>
                   <template v-else>
-                    <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
-                    <span>{{ index.id }}</span>
+                    <div class="d-flex align-center">
+                      <Icons
+                          style="margin-right: 10px; margin-top: 4px"
+                          :name="item.deleted_at === null ? 'valid' : 'inValid'"
+                      />
+                      <span>{{ item.id }}</span>
+                    </div>
                   </template>
                 </td>
                 <td>{{ item.name }}</td>
@@ -863,7 +844,7 @@ onMounted(async () => {
 
       <v-card>
         <v-dialog class="mt-2 pa-2" v-model="dialog">
-          <v-card style="border: 2px solid #3AB700" min-width="300"
+          <v-card style="border: 2px solid #3AB700" max-width="600"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
               <span>{{ isExistsStorage ? 'Склад: ' + storageInDialogTitle : 'Добавление' }}</span>
@@ -874,14 +855,13 @@ onMounted(async () => {
                   <Icons v-else @click="addStorage" name="save"/>
                 </div>
                 <v-btn
-                @click="isExistsStorage ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
-                
-                variant="text"
-                :size="32"
-                class="pt-2 pl-1"
-              >
-                <Icons name="close" title="Закрыть" />
-              </v-btn>
+                  @click="isExistsStorage ? checkUpdate() : checkAndClose()"
+                  variant="text"
+                  :size="32"
+                  class="pt-2 pl-1"
+                >
+                  <Icons name="close" title="Закрыть" />
+                </v-btn>
               </div>
             </div>
             <v-form class="d-flex w-100" @submit.prevent="addStorage">
