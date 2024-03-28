@@ -539,6 +539,7 @@ watch(dialog, newVal => {
     loginRef.value = null
     phoneRef.value = null
     emailRef.value = null
+    isExistsUser.value = false
   } else {
     markedID.value = [markedID.value[markedID.value.length - 1]];
   }

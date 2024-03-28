@@ -18,7 +18,7 @@ import {
   selectOneItemMessage,
   restoreMessage
 } from "../../../composables/constant/buttons.js";
-import { tr } from "vuetify/lib/locale/index.mjs";
+import debounce from "lodash.debounce";
 
 const router = useRouter()
 
@@ -38,6 +38,7 @@ const markedID = ref([]);
 const markedItem = ref([])
 const priceTypeInDialogTitle = ref(null)
 const search = ref('')
+const debounceSearch = ref('')
 const nameRef = ref(null)
 const descriptionRef = ref(null)
 const priceTypes = ref([])
@@ -45,7 +46,6 @@ const paginations = ref([])
 const showConfirmDialog = ref(false);
 const showModal = ref(false);
 const count = ref(0);
-
 
 const toggleModal = () => {
   showModal.value = !showModal.value;
@@ -77,7 +77,7 @@ const getPriceTypeData = async ({page, itemsPerPage, sortBy, search}) => {
   try {
     
     const { data } = await priceType.get({page, itemsPerPage, sortBy}, search, filterData)
-    
+    console.log(1)
     paginations.value = data.result.pagination
     priceTypes.value = data.result.data
     loading.value = false
@@ -86,14 +86,14 @@ const getPriceTypeData = async ({page, itemsPerPage, sortBy, search}) => {
 }
 
 function countFilter() {
-   
-   for (const key in filterForm.value) {
-       if (filterForm.value[key] !== null) {
-           count.value++;
-       }
-   }
-   
-   return count;
+
+  for (const key in filterForm.value) {
+    if (filterForm.value[key] !== null) {
+      count.value++;
+    }
+  }
+
+  return count;
 }
 
 
@@ -381,6 +381,9 @@ watch(markedID, (newVal) => {
   markedItem.value = priceTypes.value.find((el) => el.id === newVal[0]);
 });
 
+watch(search, debounce((newValue) => {
+  debounceSearch.value = newValue
+}, 500))
 
 onMounted(async () => {
   await getCurrencies()
@@ -417,10 +420,10 @@ onMounted(async () => {
                   clear-icon="close"
                   hide-details
                   single-line
-                  clearable
+                  :append-inner-icon="search ? 'close' : ''"
+                  @click:append-inner="search = ''"
                   flat
               ></v-text-field>
-
             </div>
           </div>
           <div class="filterElement">
@@ -430,13 +433,10 @@ onMounted(async () => {
               @click="filterModal = true"
               class="mt-1"
             />
-
             <span v-if="count !== 0" class="countFilter">{{ count }}</span>
           </div>
-
         </v-card>
       </div>
-
       <v-card class="mt-2 table">
         <v-data-table-server
             style="height: 78vh"
@@ -449,7 +449,7 @@ onMounted(async () => {
             :items-length="paginations.total || 0"
             :items="priceTypes"
             :item-value="headers.title"
-            :search="search"
+            :search="debounceSearch"
             show-select
             v-model="markedID"
             @update:options="getPriceTypeData"
@@ -496,7 +496,6 @@ onMounted(async () => {
           </template>
         </v-data-table-server>
       </v-card>
-
       <!-- Modal -->
       <v-card>
         <v-dialog persistent class="mt-2 pa-2" v-model="dialog">

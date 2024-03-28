@@ -19,6 +19,7 @@ import {
 import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js"
 import employee from "../../../api/employee.js"
 import employeeGroup from "../../../api/employeeGroup.js"
+import debounce from "lodash.debounce";
 
 const router = useRouter()
 
@@ -38,6 +39,7 @@ const employees = ref([])
 const groups = ref([])
 const group = ref(null)
 const search = ref('')
+const debounceSearch = ref('')
 
 const nameRef = ref(null)
 const phoneRef = ref(null)
@@ -473,6 +475,10 @@ watch(dialog, newVal => {
   }
 })
 
+watch(search, debounce((newValue) => {
+  debounceSearch.value = newValue
+}, 500))
+
 </script>
 
 <template>
@@ -584,7 +590,7 @@ watch(dialog, newVal => {
                 {value: 50, title: '50'},
                 {value: 100, title: '100'},
               ]"
-              :search="search"
+              :search="debounceSearch"
               show-select
               v-model="markedID"
               @update:options="getEmployee"

@@ -16,6 +16,7 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import validate from "./validate.js";
 import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 import {tr} from "vuetify/locale";
+import debounce from "lodash.debounce";
 
 
 const router = useRouter()
@@ -32,6 +33,7 @@ const isExistsCurrencyRate = ref(false)
 const idCurrency = ref(null)
 const currencyInDialogTitle = ref(null)
 const search = ref('')
+const debounceSearch = ref('')
 const filterModal = ref(null)
 const count = ref(0)
 
@@ -591,6 +593,10 @@ watch(rateDialog, newVal => {
   }
 })
 
+watch(search, debounce((newValue) => {
+  debounceSearch.value = newValue
+}, 500))
+
 </script>
 
 <template>
@@ -650,7 +656,7 @@ watch(rateDialog, newVal => {
             :items-length="paginations.total || 0"
             :items="currencies"
             :item-value="headers.title"
-            :search="search"
+            :search="debounceSearch"
             show-select
             v-model="markedID"
             @update:options="getCurrencyData"
@@ -782,7 +788,6 @@ watch(rateDialog, newVal => {
                   :items-length="paginationsRate.total || 0"
                   :items="rates"
                   :item-value="headersRate.title"
-                  :search="search"
                   @update:options="getCurrencyRateData"
                   page-text='{0}-{1} от {2}'
                   :items-per-page-options="[
