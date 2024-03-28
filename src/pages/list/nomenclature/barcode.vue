@@ -79,8 +79,8 @@ const getBarcodeById = async (id, { page, itemsPerPage, sortBy, search }) => {
 
 const createBarcode = async () => {
   isValid.value = true;
-  if (!barcode.value) {
-    showToast("Поле Наименование не может быть пустым", "warning");
+  if (barcode.value.length != 12) {
+    showToast("Штрих-код должен состоять из 12 символов", "warning");
     return;
   }
   try {
@@ -267,7 +267,6 @@ onMounted(async () => {
             <tr
               @mouseenter="hoveredRowIndex = index"
               @mouseleave="hoveredRowIndex = null"
-              @click="lineMarking(item)"
               @dblclick="editItem(item.id)"
               :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
@@ -277,6 +276,7 @@ onMounted(async () => {
                 >
                   <CustomCheckbox
                     :checked="markedID.includes(item.id)"
+                    @click="lineMarking(item)"
                     @change="lineMarking(item)"
                   >
                     <span>{{ item.id }}</span>
@@ -337,14 +337,14 @@ onMounted(async () => {
             <v-col class="d-flex flex-column w-100"
               ><v-text-field
                 v-model="barcode"
-                maxlength="12"
                 :rules="isValid ? [rules.required] : []"
                 color="green"
                 rounded="md"
                 variant="outlined"
                 class="w-auto text-sm-body-1"
                 density="compact"
-                placeholder="Штрих-код"
+                placeholder="42562453452"
+                v-mask="'############'"
                 label="Наименование"
                 clear-icon="close"
                 clearable

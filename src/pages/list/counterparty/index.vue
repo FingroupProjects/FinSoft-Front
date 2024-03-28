@@ -112,6 +112,7 @@ const createBase = () => {
 const editItem = (item) => {
   isCreate.value = true;
   isEdit.value = true;
+  markedID.value.push(item.id);
   markedItem.value = item;
 };
 
@@ -139,9 +140,8 @@ const toggleModal = () => {
 };
 
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
-  console.log(markedID.value);
   if (markedItem.value.deleted_at) {
-    return massRestoreCounterparty({ page, itemsPerPage, sortBy });
+    return massRestoreCounterparty({ page, itemsPerPage, sortBy, search });
   } else {
     return massDel({ page, itemsPerPage, sortBy, search });
   }
@@ -206,7 +206,7 @@ const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
   }
 };
 
-const massRestoreCounterparty = async () => {
+const massRestoreCounterparty = async ({ page, itemsPerPage, sortBy, search }) => {
   if (markedID.value.length === 0) {
     showToast(warningMessage, "warning");
     return;
@@ -218,7 +218,7 @@ const massRestoreCounterparty = async () => {
     const { status } = await counterpartyApi.massRestore(body);
     if (status === 200) {
       showToast(restoreMessage, "green");
-      await getCounterparty({ page: 1, itemsPerPage: 100000 });
+      await getCounterparty({ page, itemsPerPage, sortBy });
       markedID.value = [];
     }
   } catch (e) {
@@ -297,11 +297,7 @@ onMounted(async () => {
             <div class="d-flex ga-2 mt-2 me-3">
               <Icons title="Добавить" @click="isCreate = true" name="add" />
               <Icons title="Скопировать" @click="createBase()" name="copy" />
-              <Icons
-                title="Удалить"
-                @click="compute({ page, itemsPerPage, sortBy, search })"
-                name="delete"
-              />
+              <Icons title="Удалить" @click="compute({ page, itemsPerPage, sortBy, search })" name="delete" />
             </div>
             <div class="w-100">
               <v-text-field
@@ -374,6 +370,7 @@ onMounted(async () => {
                 >
                   <CustomCheckbox
                     :checked="markedID.includes(item.id)"
+                    @click="lineMarking(item)"
                     @change="lineMarking(item)"
                   >
                     <span>{{ item.id }}</span>
@@ -413,7 +410,10 @@ onMounted(async () => {
         :item="markedItem"
         :createOnBase="createOnBase"
         :counterparty="counterparty"
-        @computeCounterparty="compute({ page, itemsPerPage, sortBy, search })"
+        @computeCounterparty="
+          compute({ page, itemsPerPage, sortBy, search });
+          toggleModal();
+        "
       />
 
       <v-dialog v-model="filterDialog" class="mt-2 pa-2">

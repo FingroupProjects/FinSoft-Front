@@ -374,7 +374,6 @@ onMounted(() => {
             <tr
               @mouseenter="hoveredRowIndex = index"
               @mouseleave="hoveredRowIndex = null"
-              @click="lineMarking(item)"
               @dblclick="editItem(item.id)"
               :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
@@ -383,6 +382,7 @@ onMounted(() => {
                   v-if="hoveredRowIndex === index || markedID.includes(item.id)"
                 >
                   <CustomCheckbox
+                    @click="lineMarking(item)"
                     :checked="markedID.includes(item.id)"
                     @change="lineMarking(item)"
                   >
