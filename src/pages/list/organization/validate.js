@@ -1,5 +1,8 @@
 import showToast from "../../../composables/toast/index.js";
-
+const rules = {
+  required: (value) => !!value,
+  inn: (value) => value.length === 9
+};
 export default function validate(
   nameRef,
   innRef,
@@ -13,6 +16,9 @@ export default function validate(
   }
   if (!innRef.value) {
     return showToast("Поле инн не может быть пустым", "warning")
+  }
+  if (innRef.value && !rules.inn(innRef.value)) {
+    return showToast("Поле инн должен состоят из 9 цифр", "warning")
   }
   if (!directorRef.value) {
     return showToast("Поле директор не может быть пустым", "warning")

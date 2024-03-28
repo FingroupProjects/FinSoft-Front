@@ -303,7 +303,7 @@ onMounted(async () => {
     </v-col>
 
     <!-- Creata barcode -->
-    <v-dialog v-model="addBarcode" max-width="400px">
+    <v-dialog persistent v-model="addBarcode" max-width="400px">
       <v-card
         style="border: 2px solid #3ab700"
         min-width="350"

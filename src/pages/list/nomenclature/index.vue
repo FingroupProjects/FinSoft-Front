@@ -414,7 +414,7 @@ onMounted(() => {
         <createGroup @toggleDialog="isCreateGroup = false" />
       </div>
 
-      <v-dialog v-model="isFilter" class="mt-2 pa-2">
+      <v-dialog persistent v-model="isFilter" class="mt-2 pa-2">
         <keep-alive>
           <v-card
             style="border: 2px solid #3ab700"

@@ -857,7 +857,7 @@ onMounted(async () => {
       </div>
 
       <v-card>
-        <v-dialog class="mt-2 pa-2" v-model="dialog">
+        <v-dialog persistent class="mt-2 pa-2" v-model="dialog">
           <v-card style="border: 2px solid #3AB700" max-width="600"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
@@ -896,6 +896,7 @@ onMounted(async () => {
                   />
                   <v-autocomplete
                       variant="outlined"
+                      no-data-text="Нет данных"
                       label="Выберите организацию"
                       :base-color="FIELD_COLOR"
                       color="green"
@@ -907,6 +908,7 @@ onMounted(async () => {
                   />
                   <v-autocomplete
                       v-model="group"
+                      no-data-text="нет данных"
                       :items="groups"
                       item-title="name"
                       item-value="id"
@@ -982,7 +984,7 @@ onMounted(async () => {
         </v-dialog>
 
         <!--  addStorageData    -->
-        <v-dialog v-model="dataDialog" activator="parent">
+        <v-dialog persistent v-model="dataDialog" activator="parent">
           <v-card style="border: 2px solid #3AB700" min-width="400"
                   class="d-flex  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center pr-5 pt-3">
@@ -1004,6 +1006,7 @@ onMounted(async () => {
                   <v-autocomplete
                       variant="outlined"
                       label="Выберите сотрудника"
+                      no-data-text="нет данных"
                       color="green"
                       :base-color="FIELD_COLOR"
                       v-model="employeeAdd"
@@ -1040,7 +1043,7 @@ onMounted(async () => {
         </v-dialog>
       </v-card>
       <v-card>
-        <v-dialog class="mt-2 pa-2" v-model="groupDialog">
+        <v-dialog persistent class="mt-2 pa-2" v-model="groupDialog">
           <v-card style="border: 2px solid #3AB700" min-width="300"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
@@ -1079,7 +1082,7 @@ onMounted(async () => {
 
       </v-card>
 
-      <v-dialog class="mt-2 pa-2" v-model="filterDialog">
+      <v-dialog persistent class="mt-2 pa-2" v-model="filterDialog">
         <v-card style="border: 2px solid #3AB700" min-width="450"
                 class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
           <div class="d-flex justify-space-between align-center mb-2">
@@ -1103,6 +1106,7 @@ onMounted(async () => {
                 <v-autocomplete
                     variant="outlined"
                     label="Выберите организацию"
+                    no-data-text="Нет данных"
                     :base-color="FIELD_COLOR"
                     color="green"
                     item-color="green"
@@ -1113,6 +1117,7 @@ onMounted(async () => {
                 />
                 <v-autocomplete
                     v-model="filterForm.employee_id"
+                    no-data-text="нет данных"
                     :items="employees"
                     item-title="name"
                     item-value="id"

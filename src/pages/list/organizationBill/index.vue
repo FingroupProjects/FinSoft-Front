@@ -1,5 +1,5 @@
 <script setup>
-import {onMounted, ref, watch, computed} from "vue";
+import {onMounted, ref, watch, onUnmounted} from "vue";
 
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
@@ -20,6 +20,45 @@ import {
   selectOneItemMessage,
   restoreMessage,
 } from "../../../composables/constant/buttons.js";
+
+const handleOnlineStatus = () => {
+      console.log('Online');
+      // You can perform actions when the user goes online
+    };
+
+    const handleOfflineStatus = () => {
+      console.log('Offline');
+      
+    };
+
+    onMounted(() => {
+      console.log(22)
+      window.addEventListener("online", (event) => {
+  console.log("You are now connected to the network.");
+});
+      window.addEventListener('offline', handleOfflineStatus);
+    });
+
+    onUnmounted(() => {
+      console.log(2)
+      window.removeEventListener('online', handleOnlineStatus);
+      window.removeEventListener('offline', handleOfflineStatus);
+    });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const loading = ref(true);
 const showConfirmDialog = ref(false);
@@ -416,10 +455,13 @@ onMounted(async () => {
   await getOrganizations();
   currenciesCopy.value = [...currencies.value];
   organizationCopy.value = [...organizations.value]
-});
+})
+
 watch(dialog, (newVal) => {
   if (!newVal) {
     cleanForm();
+  } else {
+    markedID.value = [markedID.value[markedID.value.length - 1]];
   }
 });
 
@@ -552,7 +594,7 @@ const searchOrganization = () => {
 
       <!-- Modal -->
       <v-card>
-        <v-dialog class="mt-2 pa-2" v-model="dialog">
+        <v-dialog persistent class="mt-2 pa-2" v-model="dialog">
           <v-card
               style="border: 2px solid #3ab700"
               min-width="600"
@@ -660,6 +702,7 @@ const searchOrganization = () => {
                     <v-autocomplete
                         style="max-width: 40%; min-width: 40%"
                         v-model="currencyAdd"
+                        
                         no-data-text="Валюта не найдена"
                         color="green"
                         :items="currencies"
@@ -709,7 +752,7 @@ const searchOrganization = () => {
         </v-dialog>
       </v-card>
       <v-card>
-        <v-dialog class="mt-2 pa-2" v-model="filterModal">
+        <v-dialog persistent class="mt-2 pa-2" v-model="filterModal">
           <v-card
               style="border: 2px solid #3ab700"
               min-width="600"
@@ -769,7 +812,7 @@ const searchOrganization = () => {
                         @click:append-inner="filterForm.bill_number = null"
                         hide-details
                     />
-                    <v-select
+                    <v-autocomplete
                         style="max-width: 40%; min-width: 40%"
                         v-model="filterForm.currency_id"
                         :items="currencies"
@@ -778,27 +821,22 @@ const searchOrganization = () => {
                         item-value="id"
                         label="Валюта"
                         variant="outlined"
+                        color="green"
                         density="compact"
                         hide-details
-                    >
-                      <v-text-field density="compact" variant="outlined" v-model="searchSelect" placeholder="Поиск"
-                                    @input="searchCurrency"></v-text-field>
-                    </v-select>
+                    />
                   </div>
-                  <v-select
+                  <v-autocomplete
                       v-model="filterForm.organization_id"
                       :items="organizations"
                       item-title="name"
                       :base-color="FIELD_COLOR"
                       item-value="id"
                       label="Организация"
+                      color="green"
                       variant="outlined"
                       density="compact"
-                  >
-                    <v-text-field density="compact" variant="outlined" v-model="searchSelect" placeholder="Поиск"
-                                  @input="searchOrganization"></v-text-field>
-
-                  </v-select>
+                  />
                   <v-textarea
                       variant="outlined"
                       label="Комментарий"
