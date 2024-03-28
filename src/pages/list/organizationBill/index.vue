@@ -248,6 +248,11 @@ const update = async ({page, itemsPerPage, sortBy}) => {
     date: dateRef.value,
     comment: comment.value,
   };
+  if (
+      validate(nameRef, bill_number, dateRef, organizationAdd, currencyAdd) !==
+      true
+  )
+    return;
 
   try {
     const {status} = await organizationBill.update(
