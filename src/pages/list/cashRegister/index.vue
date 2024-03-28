@@ -22,6 +22,7 @@ import Icons from "@/composables/Icons/Icons.vue";
 import binarySearch from "@/composables/binarySearch/binarySearch.js";
 
 import {restoreMessage} from "../../../composables/constant/buttons.js";
+import debounce from "lodash.debounce";
 
 const router = useRouter()
 
@@ -53,7 +54,7 @@ const markedID = ref([]);
 const markedItem = ref([])
 const cashRegisterInDialogTitle = ref(null)
 const search = ref('')
-const selected = ref([])
+const debounceSearch = ref('')
 
 const nameRef = ref(null)
 
@@ -419,6 +420,9 @@ watch(dialog, newVal => {
   }
 })
 
+watch(search, debounce((newValue) => {
+  debounceSearch.value = newValue
+}, 500))
 
 </script>
 
@@ -481,7 +485,7 @@ watch(dialog, newVal => {
             :items-length="paginations.total || 0"
             :items="cashRegisters"
             :item-value="headers.title"
-            :search="search"
+            :search="debounceSearch"
             page-text='{0}-{1} от {2}'
             show-select
             v-model="markedID"

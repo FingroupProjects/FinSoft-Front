@@ -14,6 +14,7 @@ import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import createCounterparty from "./create.vue";
 import { FIELD_COLOR } from "../../../composables/constant/colors.js";
+import debounce from "lodash.debounce";
 
 const loading = ref(true);
 const isCreate = ref(false);
@@ -46,6 +47,7 @@ const b = ref(false);
 const c = ref(false);
 
 const search = ref("");
+const debounceSearch = ref("");
 
 const headers = ref([
   { title: "Наименование", key: "name" },
@@ -74,6 +76,10 @@ watch(
     }
   }
 );
+
+watch(search, debounce((newValue) => {
+  debounceSearch.value = newValue
+}, 500))
 
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
@@ -342,7 +348,7 @@ onMounted(async () => {
           items-per-page-text="Элементов на странице:"
           loading-text="Загрузка"
           no-data-text="Нет данных"
-          :search="search"
+          :search="debounceSearch"
           @update:options="getCounterparty"
           v-model:items-per-page="pagination.per_page"
           :items-length="pagination.total || 0"

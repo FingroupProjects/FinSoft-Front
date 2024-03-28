@@ -23,6 +23,7 @@ import {restoreMessage} from "../../../composables/constant/buttons.js";
 import storageGroup from "../../../api/storageGroup.js";
 import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 import validate from "./validate.js";
+import debounce from "lodash.debounce";
 
 const router = useRouter()
 const showConfirmDialog = ref(false);
@@ -60,6 +61,7 @@ const markedEmployeeID = ref([]);
 const markedItem = ref([])
 const storageInDialogTitle = ref(null)
 const search = ref('')
+const debounceSearch = ref('')
 const group = ref(null)
 
 const nameRef = ref(null)
@@ -681,6 +683,10 @@ watch(dialog, newVal => {
   }
 })
 
+watch(search, debounce((newValue) => {
+  debounceSearch.value = newValue
+}, 500))
+
 
 onMounted(async () => {
   await getEmployee()
@@ -804,7 +810,7 @@ onMounted(async () => {
               :items-length="paginations.total || 0"
               :items="storages"
               :item-value="headers.title"
-              :search="search"
+              :search="debounceSearch"
               @update:options="getStorage"
               show-select
               v-model="markedID"
