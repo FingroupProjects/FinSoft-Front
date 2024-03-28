@@ -306,7 +306,6 @@ onMounted(() => {
             <tr
               @mouseenter="hoveredRowIndex = index"
               @mouseleave="hoveredRowIndex = null"
-              @click="lineMarking(item)"
               @dblclick="detail(item)"
               :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
@@ -316,6 +315,7 @@ onMounted(() => {
                 >
                   <CustomCheckbox
                     :checked="markedID.includes(item.id)"
+                    @click="lineMarking(item)"
                     @change="lineMarking(item)"
                   >
                     <span>{{ item.id }}</span>

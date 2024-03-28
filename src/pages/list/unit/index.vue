@@ -33,7 +33,6 @@ const paginations = ref([])
 const markedItem = ref([])
 const unitInDialogTitle = ref(null)
 const search = ref('')
-const selected = ref([])
 
 const nameRef = ref(null)
 const valueRef = ref(null)
@@ -49,11 +48,11 @@ const toggleModal = () => {
 };
 
 const headers = ref([
-  { title: 'Наименование', key: 'name'}
+  {title: 'Наименование', key: 'name'}
 ])
 
 const filterForm = ref({
-    name: null,
+  name: null,
 })
 
 
@@ -66,27 +65,26 @@ const rules = {
 
 
 function countFilter() {
-   
-   for (const key in filterForm.value) {
-       if (filterForm.value[key] !== null) {
-           count.value++;
-       }
-   }
-   
-   return count;
+
+  for (const key in filterForm.value) {
+    if (filterForm.value[key] !== null) {
+      count.value++;
+    }
+  }
+
+  return count;
 }
 
-const getUnitData = async ({ page, itemsPerPage, sortBy, search }) => {
+const getUnitData = async ({page, itemsPerPage, sortBy, search}) => {
   count.value = 0;
   countFilter()
   const filterData = filterForm.value
   filterModal.value = false
-  
-  
+
 
   loading.value = true
   try {
-    const { data } = await unit.get({page, itemsPerPage, sortBy}, search, filterData)
+    const {data} = await unit.get({page, itemsPerPage, sortBy}, search, filterData)
     console.log(data.result)
     paginations.value = data.result.pagination
     units.value = data.result.data
@@ -95,12 +93,12 @@ const getUnitData = async ({ page, itemsPerPage, sortBy, search }) => {
   }
 }
 
-const cleanFilterForm =  () => {
+const cleanFilterForm = () => {
   filterForm.value = {}
 }
 
 
-const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
+const closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
   filterModal.value = false
   cleanFilterForm()
   await getUnitData({page, itemsPerPage, sortBy, search})
@@ -108,37 +106,36 @@ const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
 
 }
 
-const addUnit = async ({ page, itemsPerPage, sortBy }) => {
-  if (validate(nameRef) !== true) return 
-try{
-  const body = {
-    name: nameRef.value
-  }
+const addUnit = async ({page, itemsPerPage, sortBy}) => {
+  if (validate(nameRef) !== true) return
+  try {
+    const body = {
+      name: nameRef.value
+    }
 
-  const res = await unit.add(body)
-  if (res.status === 201) {
-    await getUnitData({ page, itemsPerPage, sortBy })
-    showToast(addMessage)
-    valueRef.value = null
-    idUnit.value = res.data.result.id
-    dialog.value = false
-    markedID.value = []
-    markedItem.value = []
+    const res = await unit.add(body)
+    if (res.status === 201) {
+      await getUnitData({page, itemsPerPage, sortBy})
+      showToast(addMessage)
+      valueRef.value = null
+      idUnit.value = res.data.result.id
+      dialog.value = false
+      markedID.value = []
+      markedItem.value = []
+    }
+  } catch (error) {
+    console.log(error);
   }
 }
-catch (error) {
-  console.log(error);
- }
-}
 
 
-const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
+const massDel = async ({page, itemsPerPage, sortBy, search}) => {
   const body = {
     ids: markedID.value
   }
   console.log(body)
-  try{
-    const { status } = await unit.massDeletion(body)
+  try {
+    const {status} = await unit.massDeletion(body)
 
     if (status === 200) {
 
@@ -147,39 +144,39 @@ const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
       markedID.value = []
     }
 
-  }catch(e){
+  } catch (e) {
     console.log(e)
   }
 }
 
 
-const massRestore = async ({ page, itemsPerPage, sortBy, search }) => {
+const massRestore = async ({page, itemsPerPage, sortBy, search}) => {
   const body = {
     ids: markedID.value
   }
 
-  try{
-    const { status } = await unit.massRestore(body)
+  try {
+    const {status} = await unit.massRestore(body)
 
     if (status === 200) {
       showToast(restoreMessage, 'red')
       await getUnitData({page, itemsPerPage, sortBy}, search)
       markedID.value = []
     }
-  }catch(e){
+  } catch (e) {
     console.log(e)
   }
 }
 
 
 const update = async ({page, itemsPerPage, sortBy}) => {
-  if (validate(nameRef) !== true) return 
+  if (validate(nameRef) !== true) return
   const body = {
     name: nameRef.value
   }
 
   try {
-    const { status } = await unit.update(idUnit.value, body)
+    const {status} = await unit.update(idUnit.value, body)
     if (status === 200) {
       await getUnitData({page, itemsPerPage, sortBy})
       showToast(editMessage)
@@ -204,7 +201,7 @@ const openDialog = (item) => {
     isExistsUnit.value = false
   } else {
     idUnit.value = item.id
-
+    markedID.value.push(item.id)
     const index = binarySearch(units.value, item.id)
 
     if (index !== 1) {
@@ -218,8 +215,10 @@ const openDialog = (item) => {
 
 }
 const addBasedOnUnit = () => {
-  if (markedID.value.length !== 1 && !isExistsUnit.value)
+  if (markedID.value.length !== 1 && !isExistsUnit.value) {
     return showToast(selectOneItemMessage, "warning");
+  }
+
   dialog.value = true;
 
   units.value.forEach((item) => {
@@ -233,12 +232,11 @@ const addBasedOnUnit = () => {
 }
 
 
-const compute = ({ page, itemsPerPage, sortBy, search }) => {
-  if(markedItem.value.deleted_at) {
-    return massRestore({ page, itemsPerPage, sortBy })
-  }
-  else{
-    return massDel({ page, itemsPerPage, sortBy, search })
+const compute = ({page, itemsPerPage, sortBy, search}) => {
+  if (markedItem.value.deleted_at) {
+    return massRestore({page, itemsPerPage, sortBy})
+  } else {
+    return massDel({page, itemsPerPage, sortBy, search})
   }
 }
 
@@ -294,7 +292,7 @@ const closeDialogWithoutSaving = () => {
 
 const destroy = async () => {
   markedID.value.push(idUnit.value);
-  compute({ page: 1, itemsPerPage: 10, sortBy: 'id' })
+  compute({page: 1, itemsPerPage: 10, sortBy: 'id'})
   dialog.value = false
 }
 
@@ -312,7 +310,6 @@ watch(markedID, (newVal) => {
 });
 
 
-
 watch(dialog, newVal => {
   if (!newVal) {
     nameRef.value = null
@@ -320,7 +317,6 @@ watch(dialog, newVal => {
     markedID.value = [markedID.value[markedID.value.length - 1]];
   }
 })
-
 
 
 </script>
@@ -335,9 +331,9 @@ watch(dialog, newVal => {
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Сохранить" @click="openDialog(0)" name="add" />
-              <Icons title="Скопировать" @click="addBasedOnUnit" name="copy" />
-              <Icons title="Удалить" @click="compute" name="delete" />
+              <Icons title="Сохранить" @click="openDialog(0)" name="add"/>
+              <Icons title="Скопировать" @click="addBasedOnUnit" name="copy"/>
+              <Icons title="Удалить" @click="compute" name="delete"/>
             </div>
 
             <div class="w-100">
@@ -360,10 +356,10 @@ watch(dialog, newVal => {
           </div>
           <div class="filterElement">
             <Icons
-              name="filter"
-              title="фильтр"
-              @click="filterModal = true"
-              class="mt-1"
+                name="filter"
+                title="фильтр"
+                @click="filterModal = true"
+                class="mt-1"
             />
 
             <span v-if="count !== 0" class="countFilter">{{ count }}</span>
@@ -386,7 +382,7 @@ watch(dialog, newVal => {
             @update:options="getUnitData"
             show-select
             v-model="markedID"
-            page-text =  '{0}-{1} от {2}'
+            page-text='{0}-{1} от {2}'
             :items-per-page-options="[
                 {value: 25, title: '25'},
                 {value: 50, title: '50'},
@@ -397,10 +393,20 @@ watch(dialog, newVal => {
             hover
         >
           <template v-slot:item="{ item, index }">
-            <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)" :class="{'bg-grey-lighten-2': markedID.includes(item.id) }" @dblclick="openDialog(item)">
-              <td class="">
+            <tr
+                @mouseenter="hoveredRowIndex = index"
+                @mouseleave="hoveredRowIndex = null"
+                :class="{'bg-grey-lighten-2': markedID.includes(item.id) }"
+                @dblclick="openDialog(item)"
+            >
+              <td>
                 <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
-                  <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)" @change="handleCheckboxClick(item)">
+                  <CustomCheckbox
+                      v-model="markedID"
+                      :checked="markedID.includes(item.id)"
+                      @click="lineMarking(item)"
+                      @change="handleCheckboxClick(item)"
+                  >
                     <span>{{ item.id }}</span>
                   </CustomCheckbox>
                 </template>
@@ -415,8 +421,6 @@ watch(dialog, newVal => {
                 </template>
               </td>
               <td>{{ item.name }}</td>
-
-
             </tr>
           </template>
         </v-data-table-server>
@@ -424,24 +428,25 @@ watch(dialog, newVal => {
 
       <!-- Modal -->
       <v-card>
-        <v-dialog class="mt-2 pa-2"  v-model="dialog">
-          <v-card style="border: 2px solid #3AB700" min-width="400" min-height="150" class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
+        <v-dialog class="mt-2 pa-2" v-model="dialog">
+          <v-card style="border: 2px solid #3AB700" min-width="400" min-height="150"
+                  class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
               <span>{{ isExistsUnit ? unitInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons title="Удалить"  v-if="isExistsUnit"  @click="destroy" name="delete"/>
+                  <Icons title="Удалить" v-if="isExistsUnit" @click="destroy" name="delete"/>
                   <Icons title="Сохранить" v-if="isExistsUnit" @click="update" name="save"/>
                   <Icons title="Сохранить" v-else @click="addUnit" name="save"/>
                 </div>
                 <v-btn
-                @click="isExistsUnit ? checkUpdate() : checkAndClose()"
-                variant="text"
-                :size="32"
-                class="pt-2 pl-1"
-              >
-                <Icons name="close" title="Закрыть" />
-              </v-btn>
+                    @click="isExistsUnit ? checkUpdate() : checkAndClose()"
+                    variant="text"
+                    :size="32"
+                    class="pt-2 pl-1"
+                >
+                  <Icons name="close" title="Закрыть"/>
+                </v-btn>
               </div>
             </div>
             <v-form class="d-flex w-100" @submit.prevent="addUnit">
@@ -469,16 +474,17 @@ watch(dialog, newVal => {
       </v-card>
 
       <v-card>
-        <v-dialog class="mt-2 pa-2"  v-model="filterModal">
-          <v-card style="border: 2px solid #3AB700" min-width="400" min-height="150" class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
+        <v-dialog class="mt-2 pa-2" v-model="filterModal">
+          <v-card style="border: 2px solid #3AB700" min-width="400" min-height="150"
+                  class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
               <span>Фильтр</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons  @click="getUnitData" title="Сохранить" name="save"/>
+                  <Icons @click="getUnitData" title="Сохранить" name="save"/>
                 </div>
-                <v-btn @click="closeFilterModal"  name="Закрыть" variant="text" :size="32" class="pt-2 pl-1">
-                  <Icons title="Закрыть" name="close" />
+                <v-btn @click="closeFilterModal" name="Закрыть" variant="text" :size="32" class="pt-2 pl-1">
+                  <Icons title="Закрыть" name="close"/>
                 </v-btn>
               </div>
             </div>
@@ -506,9 +512,9 @@ watch(dialog, newVal => {
 
       </v-card>
       <div v-if="showModal">
-        <ConfirmModal :showModal="true" @close="toggleModal" @closeClear="closeDialogWithoutSaving" />
+        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()"/>
       </div>
-    </v-col>  
+    </v-col>
   </div>
 
 
@@ -516,10 +522,11 @@ watch(dialog, newVal => {
 
 <style scoped>
 .filterElement {
-  unit: relative;
+  position: relative;
 }
+
 .countFilter {
-  unit: absolute;
+  position: absolute;
   top: -5px;
   right: -5px;
   width: 16px;

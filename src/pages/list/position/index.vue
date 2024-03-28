@@ -204,15 +204,13 @@ const openDialog = (item) => {
     isExistsPosition.value = false
   } else {
     idPosition.value = item.id
-
+    markedID.value.push(item.id)
     const index = binarySearch(positions.value, item.id)
 
     if (index !== 1) {
       isExistsPosition.value = true
       nameRef.value = item.name
       positionInDialogTitle.value = nameRef.value
-    } else {
-
     }
   }
 
@@ -397,10 +395,20 @@ watch(dialog, newVal => {
             hover
         >
           <template v-slot:item="{ item, index }">
-            <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)" :class="{'bg-grey-lighten-2': markedID.includes(item.id) }" @dblclick="openDialog(item)">
-              <td class="">
+            <tr
+                @mouseenter="hoveredRowIndex = index"
+                @mouseleave="hoveredRowIndex = null"
+                :class="{'bg-grey-lighten-2': markedID.includes(item.id) }"
+                @dblclick="openDialog(item)"
+            >
+              <td>
                 <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
-                  <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)" @change="handleCheckboxClick(item)">
+                  <CustomCheckbox
+                      v-model="markedID"
+                      :checked="markedID.includes(item.id)"
+                      @click="lineMarking(item)"
+                      @change="handleCheckboxClick(item)"
+                  >
                     <span>{{ item.id }}</span>
                   </CustomCheckbox>
                 </template>

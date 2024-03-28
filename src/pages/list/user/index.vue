@@ -639,13 +639,14 @@ onMounted(async () =>  {
               <v-skeleton-loader type="table-row@9"></v-skeleton-loader>
             </template>
             <template v-slot:item="{ item, index }">
-              <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)" @dblclick="openDialog(item)"
+              <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null"  @dblclick="openDialog(item)"
                   :class="{'bg-grey-lighten-2': markedID.includes(item.id) }">
                 <td>
                   <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
                     <CustomCheckbox
                         v-model="markedID"
                         :checked="markedID.includes(item.id)"
+                        @click="lineMarking(item)"
                         @change="handleCheckboxClick(item)"
                     >
                       <span>{{ item.id }}</span>
