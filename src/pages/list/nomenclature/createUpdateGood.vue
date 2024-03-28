@@ -127,10 +127,10 @@ const setImages = (images) => {
   forthImage.value = import.meta.env.VITE_IMG_URL + images[3].image;
 };
 
-const getUnits = async () => {
+const getUnits = async ({ page, itemsPerPage, sortBy, search }) => {
   try {
-    const { data } = await unitsApi.get();
-    units.value = data.result;
+    const { data } = await unitsApi.get({ page, itemsPerPage, sortBy }, search);
+    units.value = data.result.data;
   } catch (e) {
     console.log(e);
   }
@@ -302,7 +302,7 @@ onMounted(async () => {
   await check();
   await Promise.all([
     getGoodByid(),
-    getUnits(),
+    getUnits({ page: 1, itemsPerPage: 1000 }),
     getStorage({ page: 1, itemsPerPage: 1000 }),
     getGroups({ page: 1, itemsPerPage: 1000 }),
   ]);

@@ -1,39 +1,45 @@
 <script setup>
-import { ref, defineProps, defineEmits, computed } from 'vue'
-import { useRouter } from 'vue-router';
+import { ref, defineProps, defineEmits, computed } from "vue";
+import { useRouter } from "vue-router";
 
-const props = defineProps(['rale'])
+const props = defineProps(["rale"]);
 const router = useRouter();
 const emit = defineEmits();
 
 const admins = ref([
-  { id: 1, title: 'Настройки программы', link: '/programSettings', icon: 'settings' },
-  { id: 2, title: 'Настройка разделов', link: '', icon: 'settings' },
+  {
+    id: 1,
+    title: "Настройки программы",
+    link: "/programSettings",
+    icon: "settings",
+  },
+  { id: 2, title: "Настройка разделов", link: "", icon: "settings" },
 ]);
 
 const lists = ref([
   {
-    id: 1, title: 'Справочники', child: [
-      { id: 1, title: 'Банковские счета', link: '/list/organizationBill' },
-      { id: 2, title: 'Номенклатура', link: '/list/nomenclatureGroup'},
-      { id: 3, title: 'Пользователи', link: '/list/user' },
-      { id: 4, title: 'Контрагенты', link: '/list/counterparty',},
-      { id: 5, title: 'Организации', link: '/list/organization',},
-      { id: 6, title: 'Сотрудники', link: '/list/employee',},
-      { id: 7, title: 'Должность', link: '/list/position',},
-      { id: 8, title: 'Виды цен', link: '/list/priceType',},
-      { id: 9, title: 'Валюты', link: '/list/currency',},
-      { id: 10,title: 'Склады', link: '/list/storage',},
-      { id: 11,title: 'Кассы', link: '/list/cashRegister',},
-      {id: 12, title: 'Единица измерения', link: '/list/unit',},
-    ]
-  }
+    id: 1,
+    title: "Справочники",
+    child: [
+      { id: 1, title: "Единица измерения", link: "/list/unit" },
+      { id: 2, title: "Банковские счета", link: "/list/organizationBill" },
+      { id: 3, title: "Номенклатура", link: "/list/nomenclatureGroup" },
+      { id: 4, title: "Пользователи", link: "/list/user" },
+      { id: 5, title: "Контрагенты", link: "/list/counterparty" },
+      { id: 6, title: "Организации", link: "/list/organization" },
+      { id: 7, title: "Сотрудники", link: "/list/employee" },
+      { id: 8, title: "Должность", link: "/list/position" },
+      { id: 9, title: "Виды цен", link: "/list/priceType" },
+      { id: 10, title: "Валюты", link: "/list/currency" },
+      { id: 11, title: "Склады", link: "/list/storage" },
+      { id: 12, title: "Кассы", link: "/list/cashRegister" },
+    ],
+  },
 ]);
 
 function push(item) {
-  router.push(item.link)
+  router.push(item.link);
 }
-
 </script>
 
 <template>
@@ -42,8 +48,12 @@ function push(item) {
       <div v-for="list in lists" :key="list.id">
         <h3 class="text-uppercase mb-4">{{ list.title }}</h3>
         <ul class="list">
-          <li class="d-flex align-center ga-4 cursor-pointer" v-for="child in list.child" :key="child.id"
-            @click="push(child)">
+          <li
+            class="d-flex align-center ga-4 cursor-pointer"
+            v-for="child in list.child"
+            :key="child.id"
+            @click="push(child)"
+          >
             <span>
               {{ child.title }}
             </span>
@@ -54,7 +64,10 @@ function push(item) {
         <div class="mb-10" nav v-for="admin in admins" :key="admin.id">
           <h3 class="text-uppercase mb-4">{{ admin.title }}</h3>
           <ul class="list">
-            <li class="d-flex align-center ga-4 cursor-pointer" @click="push(admin)">
+            <li
+              class="d-flex align-center ga-4 cursor-pointer"
+              @click="push(admin)"
+            >
               <span>
                 {{ admin.title }}
               </span>
@@ -77,9 +90,9 @@ function push(item) {
   border-radius: 50px;
 }
 
-.panel{
+.panel {
   display: grid;
-  grid-template-columns: repeat(3, 2fr) ;
+  grid-template-columns: repeat(3, 2fr);
 }
 
 ul {
@@ -97,7 +110,6 @@ li {
 }
 
 span:hover {
-  color: #3AB700;
+  color: #3ab700;
 }
-
 </style>

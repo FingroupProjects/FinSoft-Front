@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, watch, computed } from "vue";
+import { onMounted, ref, watch } from "vue";
 import counterpartyApi from "../../../api/counterparty";
 import showDate from "../../../composables/date/showDate";
 import {
@@ -49,11 +49,9 @@ const search = ref("");
 
 const headers = ref([
   { title: "Наименование", key: "name" },
+  { title: "Баланс", key: "balance" },
   { title: "Адрес", key: "address" },
-  { title: "Тип контрагента", key: "roles", sortable: false },
   { title: "Телефон", key: "phone" },
-  { title: "Эл. почта", key: "email" },
-  { title: "Дата создания", key: "created_at" },
 ]);
 
 const formatRole = (roles) => {
@@ -63,7 +61,7 @@ const formatRole = (roles) => {
     3: "Прочие",
   };
 
-  return roles.map((role) => roleMap[role] || "Неизвестная роль").join(", ");
+  return roles.map((role) => roleMap[role] || "Неизвестная роль");
 };
 
 const count = ref(0);
@@ -107,17 +105,16 @@ const lineMarking = (item) => {
 const createBase = () => {
   if (markedID.value.length !== 1)
     return showToast(selectOneItemMessage, "warning");
-  isCreate.value = true;
   createOnBase.value = true;
-  editItem(markedID.value[0]);
+  editItem(markedItem.value);
 };
+
 const editItem = (item) => {
   isCreate.value = true;
   isEdit.value = true;
-  markedID.value.push(item)
+  markedID.value.push(item.id);
   markedItem.value = item;
 };
-
 
 function countFilter() {
   for (const key in filterForm.value) {
@@ -139,14 +136,12 @@ const toggleModal = () => {
     isEdit.value = false;
   }, 100);
 
-  getCounterparty({})
-}
-
-
+  getCounterparty({});
+};
 
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
   if (markedItem.value.deleted_at) {
-    return massRestoreCounterparty({ page, itemsPerPage, sortBy });
+    return massRestoreCounterparty({ page, itemsPerPage, sortBy, search });
   } else {
     return massDel({ page, itemsPerPage, sortBy, search });
   }
@@ -173,6 +168,7 @@ const getCounterparty = async ({ page, itemsPerPage, sortBy, search }) => {
       ...item,
       created_at: showDate(item.created_at),
       roles: formatRole(item.roles),
+      balance: 2500,
     }));
     pagination.value = data.result.pagination;
     loading.value = false;
@@ -210,7 +206,7 @@ const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
   }
 };
 
-const massRestoreCounterparty = async () => {
+const massRestoreCounterparty = async ({ page, itemsPerPage, sortBy, search }) => {
   if (markedID.value.length === 0) {
     showToast(warningMessage, "warning");
     return;
@@ -222,7 +218,7 @@ const massRestoreCounterparty = async () => {
     const { status } = await counterpartyApi.massRestore(body);
     if (status === 200) {
       showToast(restoreMessage, "green");
-      await getCounterparty({ page: 1, itemsPerPage: 100000 });
+      await getCounterparty({ page, itemsPerPage, sortBy });
       markedID.value = [];
     }
   } catch (e) {
@@ -297,14 +293,11 @@ onMounted(async () => {
           <span>Контрагенты</span>
         </div>
         <v-card variant="text" min-width="320" class="d-flex align-center ga-2">
-          <div class="d-flex w-100">
+          <div class="d-flex w-100 align-center">
             <div class="d-flex ga-2 mt-2 me-3">
               <Icons title="Добавить" @click="isCreate = true" name="add" />
               <Icons title="Скопировать" @click="createBase()" name="copy" />
-              <Icons title="Удалить"
-                @click="compute({ page, itemsPerPage, sortBy, search })"
-                name="delete"
-              />
+              <Icons title="Удалить" @click="compute({ page, itemsPerPage, sortBy, search })" name="delete" />
             </div>
             <div class="w-100">
               <v-text-field
@@ -367,7 +360,8 @@ onMounted(async () => {
             <tr
               @mouseenter="hoveredRowIndex = index"
               @mouseleave="hoveredRowIndex = null"
-              @dblclick="editItem(item.id)"
+              @click="lineMarking(item)"
+              @dblclick="editItem(item)"
               :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
               <td>
@@ -397,19 +391,13 @@ onMounted(async () => {
                 <span>{{ item.name }}</span>
               </td>
               <td>
+                <span>{{ item.balance }}</span>
+              </td>
+              <td>
                 <span>{{ item.address }}</span>
               </td>
               <td>
-                <span>{{ item.roles }}</span>
-              </td>
-              <td>
                 <span>{{ item.phone }}</span>
-              </td>
-              <td>
-                <span>{{ item.email }}</span>
-              </td>
-              <td>
-                <span>{{ item.created_at }}</span>
               </td>
             </tr>
           </template>
@@ -422,6 +410,10 @@ onMounted(async () => {
         :item="markedItem"
         :createOnBase="createOnBase"
         :counterparty="counterparty"
+        @computeCounterparty="
+          compute({ page, itemsPerPage, sortBy, search });
+          toggleModal();
+        "
       />
 
       <v-dialog persistent v-model="filterDialog" class="mt-2 pa-2">

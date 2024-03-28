@@ -79,8 +79,8 @@ const getBarcodeById = async (id, { page, itemsPerPage, sortBy, search }) => {
 
 const createBarcode = async () => {
   isValid.value = true;
-  if (!barcode.value) {
-    showToast("Поле Наименование не может быть пустым", "warning");
+  if (barcode.value.length != 12) {
+    showToast("Штрих-код должен состоять из 12 символов", "warning");
     return;
   }
   try {
@@ -343,7 +343,8 @@ onMounted(async () => {
                 variant="outlined"
                 class="w-auto text-sm-body-1"
                 density="compact"
-                placeholder="Штрих-код"
+                placeholder="42562453452"
+                v-mask="'############'"
                 label="Наименование"
                 clear-icon="close"
                 clearable
