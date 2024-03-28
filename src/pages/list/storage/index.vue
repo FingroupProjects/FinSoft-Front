@@ -637,6 +637,25 @@ const cleanForm = () => {
   group.value = null;
 };
 
+const closingWithSaving = async () => {
+  if (isExistsStorage.value) {
+    await update({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+    showModal.value = false
+  } else {
+    const isValid = validate(
+      nameRef,
+      organizationAdd,
+      group
+      );
+      showModal.value = false
+    if (isValid === true) {
+      await addStorage({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      dialog.value = false;
+      showModal.value = false;
+      showConfirmDialog.value = false;
+    }
+  }
+};
 
 const checkAndClose = () => {
   if (nameRef.value || (organizationAdd.value && organizationAdd.value.length > 0) || (group.value && group.value.length > 0)) {
@@ -1137,7 +1156,7 @@ onMounted(async () => {
         </v-card>
       </v-dialog>
       <div v-if="showConfirmDialog">
-        <ConfirmModal :showModal="true" @close="toggleModal" @closeClear="closeDialogWithoutSaving" />
+        <ConfirmModal :showModal="true" @close="toggleModal" @closeClear="closeDialogWithoutSaving" @closeWithSaving="closingWithSaving()"/>
       </div>
     </v-col>
   </div>

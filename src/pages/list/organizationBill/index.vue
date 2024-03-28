@@ -172,6 +172,31 @@ const closeDialogWithoutSaving = () => {
   cleanForm();
 };
 
+const closingWithSaving = async () => {
+  if (isExistsOrganizationBill.value) {
+    await update({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+    showModal.value = false
+  } else {
+    const isValid = validate(
+      nameRef,
+      organizationAdd,
+      currencyAdd,
+      bill_number,
+      dateRef,
+      comment
+      );
+      showModal.value = false
+    if (isValid === true) {
+      await addOrganizationBill({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      dialog.value = false;
+      showModal.value = false;
+      showConfirmDialog.value = false;
+      cleanForm();
+    }
+  }
+};
+
+
 const checkUpdate = () => {
   if (isDataChanged()) {
     showModal.value = true;
@@ -859,7 +884,7 @@ const searchOrganization = () => {
           </v-card>
         </v-dialog>
         <div v-if="showModal">
-          <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()"/>
+          <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" @closeWithSaving="closingWithSaving()"/>
         </div>
       </v-card>
     </v-col>

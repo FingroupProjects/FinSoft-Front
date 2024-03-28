@@ -116,6 +116,27 @@ const checkAndClose = () => {
   }
 };
 
+const closingWithSaving = async () => {
+  if (isExistsCashRegister.value) {
+    await update({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+    showModal.value = false
+  } else {
+    const isValid = validate(
+      nameRef,
+      currencyAdd,
+      organizationAdd,
+      employeeAdd
+      );
+      showModal.value = false
+    if (isValid === true) {
+      await addcashRegister({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      dialog.value = false;
+      showModal.value = false;
+      showConfirmDialog.value = false;
+    }
+  }
+};
+
 const closeDialogWithoutSaving = () => {
   dialog.value = false;
   showModal.value = false
@@ -700,7 +721,7 @@ watch(dialog, newVal => {
         
       </v-card>
       <div v-if="showModal">
-        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" />
+        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" @closeWithSaving="closingWithSaving()"/>
       </div>
     </v-col>
   </div>

@@ -423,6 +423,29 @@ const checkAndClose = () => {
   }
 }
 
+const closingWithSaving = async () => {
+  if (isExistsEmployee.value) {
+    await update({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+    showModal.value = false
+  } else {
+    const isValid = validate(
+      nameRef,
+      phoneRef,
+      emailRef,
+      addressRef,
+      group
+      );
+      showModal.value = false
+    if (isValid === true) {
+      await addEmployee({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      dialog.value = false;
+      showModal.value = false;
+      showConfirmDialog.value = false;
+      cleanForm();
+    }
+  }
+};
+
 const closeDialogWithoutSaving = () => {
   dialog.value = false
   showModal.value = false
@@ -728,7 +751,7 @@ watch(dialog, newVal => {
           <create-group @toggleDialog="toggleGroup" />
         </div>
         <div v-if="showModal">
-        <ConfirmModal :showModal="true" @close="showModal = !showModal" @closeClear="closeDialogWithoutSaving()" />
+        <ConfirmModal :showModal="true" @close="showModal = !showModal" @closeClear="closeDialogWithoutSaving()" @closeWithSaving="closingWithSaving()" />
         </div>
 
         <v-dialog persistent v-model="filterDialog" class="mt-2 pa-2">
