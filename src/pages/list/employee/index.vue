@@ -569,13 +569,20 @@ watch(dialog, newVal => {
               hover
           >
             <template v-slot:item="{ item, index }">
-              <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)"
+              <tr
+                  @mouseenter="hoveredRowIndex = index"
+                  @mouseleave="hoveredRowIndex = null"
                   @dblclick="openDialog(item)"
-                  :class="{'bg-grey-lighten-2': markedID.includes(item.id) }">
+                  :class="{'bg-grey-lighten-2': markedID.includes(item.id) }"
+              >
                 <td>
                   <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
-                    <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)"
-                                    @change="handleCheckboxClick(item)">
+                    <CustomCheckbox
+                        v-model="markedID"
+                        :checked="markedID.includes(item.id)"
+                        @click="lineMarking(item)"
+                        @change="handleCheckboxClick(item)"
+                    >
                       <span>{{ index + 1 }}</span>
                     </CustomCheckbox>
                   </template>

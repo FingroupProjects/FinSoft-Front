@@ -333,6 +333,7 @@ const openDialog = (item) => {
     idCurrency.value = 0
     isExistsCurrency.value = false
   } else {
+    markedID.value.push(item.id)
     idCurrency.value = item.id
     isExistsCurrency.value = true
     nameRef.value = item.name

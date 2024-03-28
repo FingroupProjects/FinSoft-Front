@@ -776,8 +776,12 @@ onMounted(async () => {
               <v-skeleton-loader type="table-row@9"></v-skeleton-loader>
             </template>
             <template v-slot:item="{ item, index }">
-              <tr :class="{'bg-grey-lighten-2': item.id === groupIdRef }" @mouseenter="hoveredRowIndex = index + 100000"
-                  @mouseleave="hoveredRowIndex = null" @click="lineMarkingGroup(item.id)">
+              <tr
+                  :class="{'bg-grey-lighten-2': item.id === groupIdRef }"
+                  @mouseenter="hoveredRowIndex = index + 100000"
+                  @mouseleave="hoveredRowIndex = null"
+                  @click="lineMarkingGroup(item.id)"
+              >
                 <td>
                   <div class="d-flex">
                     <span>{{ item.id }}</span>
@@ -817,13 +821,20 @@ onMounted(async () => {
               <v-skeleton-loader type="table-row@9"></v-skeleton-loader>
             </template>
             <template v-slot:item="{ item, index }">
-              <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)"
+              <tr
+                  @mouseenter="hoveredRowIndex = index"
+                  @mouseleave="hoveredRowIndex = null"
                   @dblclick="openDialog(item)"
-                  :class="{'bg-grey-lighten-2': markedID.includes(item.id) }">
+                  :class="{'bg-grey-lighten-2': markedID.includes(item.id) }"
+              >
                 <td class="">
                   <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
-                    <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)"
-                                    @change="handleCheckboxClick(item)">
+                    <CustomCheckbox
+                        v-model="markedID"
+                        :checked="markedID.includes(item.id)"
+                        @click="lineMarking(item)"
+                        @change="handleCheckboxClick(item)"
+                    >
                       <span>{{ item.id }}</span>
                     </CustomCheckbox>
                   </template>
