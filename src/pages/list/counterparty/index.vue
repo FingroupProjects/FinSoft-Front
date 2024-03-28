@@ -117,7 +117,6 @@ const editItem = (item) => {
   markedItem.value = item;
 };
 
-
 function countFilter() {
   for (const key in filterForm.value) {
     if (
@@ -138,10 +137,8 @@ const toggleModal = () => {
     isEdit.value = false;
   }, 100);
 
-  getCounterparty({})
-}
-
-
+  getCounterparty({});
+};
 
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
   if (markedItem.value.deleted_at) {
@@ -300,7 +297,8 @@ onMounted(async () => {
             <div class="d-flex ga-2 mt-2 me-3">
               <Icons title="Добавить" @click="isCreate = true" name="add" />
               <Icons title="Скопировать" @click="createBase()" name="copy" />
-              <Icons title="Удалить"
+              <Icons
+                title="Удалить"
                 @click="compute({ page, itemsPerPage, sortBy, search })"
                 name="delete"
               />
