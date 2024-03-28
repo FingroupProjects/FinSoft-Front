@@ -219,7 +219,7 @@ const openDialog = (item) => {
     isExistsOrganization.value = true;
     nameRef.value = item.name;
     innRef.value = item.INN;
-
+    markedID.value.push(item.id)
     directorRef.value = {
       id: item.director.id,
       name: item.director.name,
@@ -500,7 +500,6 @@ onMounted(async () => {
               @mouseenter="hoveredRowIndex = index"
               @mouseleave="hoveredRowIndex = null"
               @dblclick="openDialog(item)"
-              @click="lineMarking(item)"
               :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
               <td>
@@ -510,6 +509,7 @@ onMounted(async () => {
                   <CustomCheckbox
                     v-model="markedID"
                     :checked="markedID.includes(item.id)"
+                    @click="lineMarking(item)"
                     @change="handleCheckboxClick(item)"
                   >
                     <span>{{ index + 1 }}</span>

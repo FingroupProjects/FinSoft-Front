@@ -267,7 +267,6 @@ onMounted(async () => {
             <tr
               @mouseenter="hoveredRowIndex = index"
               @mouseleave="hoveredRowIndex = null"
-              @click="lineMarking(item)"
               @dblclick="editItem(item.id)"
               :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
@@ -277,6 +276,7 @@ onMounted(async () => {
                 >
                   <CustomCheckbox
                     :checked="markedID.includes(item.id)"
+                    @click="lineMarking(item)"
                     @change="lineMarking(item)"
                   >
                     <span>{{ item.id }}</span>

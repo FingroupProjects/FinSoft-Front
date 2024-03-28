@@ -256,7 +256,6 @@ const update = async ({page, itemsPerPage, sortBy}) => {
     );
     if (status === 200) {
       cleanForm();
-
       dialog.value = false;
       await getOrganizationBillData({page, itemsPerPage, sortBy});
       showToast(editMessage);
@@ -511,7 +510,6 @@ const searchOrganization = () => {
             <tr
                 @mouseenter="hoveredRowIndex = index"
                 @mouseleave="hoveredRowIndex = null"
-                @click="lineMarking(item)"
                 @dblclick="openDialog(item)"
                 :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
@@ -521,6 +519,7 @@ const searchOrganization = () => {
                 >
                   <CustomCheckbox
                       v-model="markedID"
+                      @click="lineMarking(item)"
                       :checked="markedID.includes(item.id)"
                       @change="handleCheckboxClick(item)"
                   >
