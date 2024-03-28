@@ -25,6 +25,7 @@ const lists = ref([
       { id: 9, title: 'Валюты', link: '/list/currency',},
       { id: 10,title: 'Склады', link: '/list/storage',},
       { id: 11,title: 'Кассы', link: '/list/cashRegister',},
+      {id: 12, title: 'Единица измерения', link: '/list/unit',},
     ]
   }
 ]);
