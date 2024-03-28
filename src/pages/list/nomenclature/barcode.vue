@@ -337,6 +337,7 @@ onMounted(async () => {
             <v-col class="d-flex flex-column w-100"
               ><v-text-field
                 v-model="barcode"
+                maxlength="12"
                 :rules="isValid ? [rules.required] : []"
                 color="green"
                 rounded="md"

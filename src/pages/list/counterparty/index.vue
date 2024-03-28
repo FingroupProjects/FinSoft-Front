@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, watch, computed } from "vue";
+import { onMounted, ref, watch } from "vue";
 import counterpartyApi from "../../../api/counterparty";
 import showDate from "../../../composables/date/showDate";
 import {
@@ -49,11 +49,9 @@ const search = ref("");
 
 const headers = ref([
   { title: "Наименование", key: "name" },
+  { title: "Баланс", key: "balance" },
   { title: "Адрес", key: "address" },
-  { title: "Тип контрагента", key: "roles", sortable: false },
   { title: "Телефон", key: "phone" },
-  { title: "Эл. почта", key: "email" },
-  { title: "Дата создания", key: "created_at" },
 ]);
 
 const formatRole = (roles) => {
@@ -63,7 +61,7 @@ const formatRole = (roles) => {
     3: "Прочие",
   };
 
-  return roles.map((role) => roleMap[role] || "Неизвестная роль").join(", ");
+  return roles.map((role) => roleMap[role] || "Неизвестная роль");
 };
 
 const count = ref(0);
@@ -107,10 +105,10 @@ const lineMarking = (item) => {
 const createBase = () => {
   if (markedID.value.length !== 1)
     return showToast(selectOneItemMessage, "warning");
-  isCreate.value = true;
   createOnBase.value = true;
-  editItem(markedID.value[0]);
+  editItem(markedItem.value);
 };
+
 const editItem = (item) => {
   isCreate.value = true;
   isEdit.value = true;
@@ -141,6 +139,7 @@ const toggleModal = () => {
 };
 
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
+  console.log(markedID.value);
   if (markedItem.value.deleted_at) {
     return massRestoreCounterparty({ page, itemsPerPage, sortBy });
   } else {
@@ -169,6 +168,7 @@ const getCounterparty = async ({ page, itemsPerPage, sortBy, search }) => {
       ...item,
       created_at: showDate(item.created_at),
       roles: formatRole(item.roles),
+      balance: 2500,
     }));
     pagination.value = data.result.pagination;
     loading.value = false;
@@ -293,7 +293,7 @@ onMounted(async () => {
           <span>Контрагенты</span>
         </div>
         <v-card variant="text" min-width="320" class="d-flex align-center ga-2">
-          <div class="d-flex w-100">
+          <div class="d-flex w-100 align-center">
             <div class="d-flex ga-2 mt-2 me-3">
               <Icons title="Добавить" @click="isCreate = true" name="add" />
               <Icons title="Скопировать" @click="createBase()" name="copy" />
@@ -365,7 +365,7 @@ onMounted(async () => {
               @mouseenter="hoveredRowIndex = index"
               @mouseleave="hoveredRowIndex = null"
               @click="lineMarking(item)"
-              @dblclick="editItem(item.id)"
+              @dblclick="editItem(item)"
               :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
               <td>
@@ -394,19 +394,13 @@ onMounted(async () => {
                 <span>{{ item.name }}</span>
               </td>
               <td>
+                <span>{{ item.balance }}</span>
+              </td>
+              <td>
                 <span>{{ item.address }}</span>
               </td>
               <td>
-                <span>{{ item.roles }}</span>
-              </td>
-              <td>
                 <span>{{ item.phone }}</span>
-              </td>
-              <td>
-                <span>{{ item.email }}</span>
-              </td>
-              <td>
-                <span>{{ item.created_at }}</span>
               </td>
             </tr>
           </template>
@@ -419,6 +413,7 @@ onMounted(async () => {
         :item="markedItem"
         :createOnBase="createOnBase"
         :counterparty="counterparty"
+        @computeCounterparty="compute({ page, itemsPerPage, sortBy, search })"
       />
 
       <v-dialog v-model="filterDialog" class="mt-2 pa-2">
