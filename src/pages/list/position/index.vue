@@ -18,6 +18,7 @@ import binarySearch from "../../../composables/binarySearch/binarySearch.js";
 import validate from "./validate.js";
 
 import {restoreMessage} from "../../../composables/constant/buttons.js";
+import debounce from "lodash.debounce";
 
 const router = useRouter()
 
@@ -32,7 +33,7 @@ const markedID = ref([]);
 const markedItem = ref([])
 const positionInDialogTitle = ref(null)
 const search = ref('')
-const selected = ref([])
+const debounceSearch = ref('')
 
 const nameRef = ref(null)
 const valueRef = ref(null)
@@ -319,6 +320,10 @@ watch(dialog, newVal => {
   }
 })
 
+watch(search, debounce((newValue) => {
+  debounceSearch.value = newValue
+}, 500))
+
 
 
 </script>
@@ -390,7 +395,7 @@ watch(dialog, newVal => {
                 {value: 50, title: '50'},
                 {value: 100, title: '100'},
             ]"
-            :search="search"
+            :search="debounceSearch"
             fixed-header
             hover
         >
