@@ -433,19 +433,6 @@ onMounted(async () => {
         >
           <div class="d-flex justify-space-between align-center mb-2">
             <span>Фильтр</span>
-            <div class="d-flex align-center justify-space-between">
-              <div class="d-flex ga-3 align-center mt-2 me-4">
-                <Icons @click="getCounterparty" name="save" title="Сохранить" />
-              </div>
-              <v-btn
-                @click="closeFilterDialog"
-                variant="text"
-                :size="32"
-                class="pt-2 pl-1"
-              >
-                <Icons name="close" title="Закрыть" />
-              </v-btn>
-            </div>
           </div>
           <v-form class="d-flex w-100">
             <v-row class="w-100">
@@ -537,6 +524,10 @@ onMounted(async () => {
                   "
                   @click:append-inner="filterForm.address = null"
                 />
+                <div class="d-flex justify-end ga-2 mt-2">
+                  <v-btn color="red" class="btn" @click="closeFilterDialog">сбросить</v-btn>
+                  <v-btn color="green" class="btn"  @click="getCounterparty">применить</v-btn>
+                </div>
               </v-col>
             </v-row>
           </v-form>

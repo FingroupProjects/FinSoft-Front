@@ -720,16 +720,7 @@ const searchOrganization = () => {
               <span>Фильтр</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons @click="getOrganizationBillData" name="save"/>
                 </div>
-                <v-btn
-                    @click="closeFilterModal"
-                    variant="text"
-                    :size="32"
-                    class="pt-2 pl-1"
-                >
-                  <Icons name="close"/>
-                </v-btn>
               </div>
             </div>
             <v-form class="d-flex w-100">
@@ -783,7 +774,7 @@ const searchOrganization = () => {
                         v-model="filterForm.currency_id"
                         :items="currencies"
                         item-title="name"
-                        :base-color="FIELD_COLOR"
+                        :base-color="FIELD_COLOR" 
                         item-value="id"
                         label="Валюта"
                         variant="outlined"
@@ -820,6 +811,10 @@ const searchOrganization = () => {
                       :append-inner-icon="filterForm.comment ? 'close' : ''"
                       @click:append-inner="filterForm.comment = null"
                   />
+                  <div class="d-flex justify-end ga-2 mt-2">
+                  <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
+                  <v-btn color="green" class="btn"  @click="getOrganizationBillData">применить</v-btn>
+                </div>
                 </v-col>
               </v-row>
             </v-form>
