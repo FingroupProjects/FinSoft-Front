@@ -855,11 +855,7 @@ onMounted(async () =>  {
               <span>Фильтр</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                <Icons @click="getUser" title="Сохранить" name="save"/>
                 </div>
-                <v-btn @click="closeFilterDialog" variant="text" :size="32" class="pt-2 pl-1">
-                  <Icons title="Закрыть" name="close"/>
-                </v-btn>
               </div>
             </div>
             <v-form class="d-flex w-100" >
@@ -952,6 +948,10 @@ onMounted(async () =>  {
                         hide-details
                     />
                   </div>
+                  <div class="d-flex justify-end ga-2 mt-2">
+                <v-btn color="red" class="btn" @click="closeFilterDialog">сбросить</v-btn>
+                <v-btn color="green" class="btn"  @click="getUser">применить</v-btn>
+              </div>
                 </v-col>
               </v-row>
             </v-form>

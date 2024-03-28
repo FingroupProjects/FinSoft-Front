@@ -481,14 +481,7 @@ watch(dialog, newVal => {
           <v-card style="border: 2px solid #3AB700" min-width="400" min-height="150" class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
               <span>Фильтр</span>
-              <div class="d-flex align-center justify-space-between">
-                <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons  @click="getPositionData" title="Сохранить" name="save"/>
-                </div>
-                <v-btn @click="closeFilterModal"  name="Закрыть" variant="text" :size="32" class="pt-2 pl-1">
-                  <Icons title="Закрыть" name="close" />
-                </v-btn>
-              </div>
+              
             </div>
             <v-form class="d-flex w-100" @submit.prevent="addPosition">
               <v-row class="w-100">
@@ -506,6 +499,10 @@ watch(dialog, newVal => {
                       clear-icon="close"
                       clearable
                   />
+                  <div class="d-flex justify-end ga-2">
+                  <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
+                  <v-btn color="green" class="btn"  @click="getPositionData">применить</v-btn>
+                </div>
                 </v-col>
               </v-row>
             </v-form>

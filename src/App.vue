@@ -3,7 +3,10 @@ import { useRoute } from 'vue-router'
 
 import Header from "./components/header/Header.vue";
 import Sidebar from "./components/sidebar/Sidebar.vue";
-import { ref, watch, onMounted, onUnmounted } from "vue"
+
+import { ref, watch } from "vue"
+import showToast from "./composables/toast/index.js";
+
 
 const rale = ref(false)
 const route = useRoute()
@@ -15,6 +18,17 @@ const toggleSidebar = () => {
 
 watch(route, (newVal) => {
   isLayout.value = !!newVal.meta.hideSideBarAndHeader;
+})
+
+window.addEventListener('load', () => {
+
+  window.addEventListener('online', () => {
+    showToast('Подключение восстановлена!', 'green', 3500)
+  })
+
+  window.addEventListener('offline', () => {
+    showToast('Отсутствует интернет соединение!', 'red', 600000)
+  })
 })
 
 </script>
