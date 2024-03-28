@@ -505,7 +505,7 @@ onMounted(async () => {
       </v-card>
     </v-col>
 
-    <v-dialog v-model="isImageDialog" class="mt-2 pa-2">
+    <v-dialog persistent v-model="isImageDialog" class="mt-2 pa-2">
       <v-card
         style="border: 2px solid #3ab700"
         min-width="350"

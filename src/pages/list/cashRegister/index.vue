@@ -87,13 +87,15 @@ const headers = ref([
 const isDataChanged = () => {
   const item = cashRegisters.value.find(
     (item) => item.id === idCashRegister.value
-  );
+  );    
+
 
   const isChanged =
     nameRef.value !== item.name ||
-    currencyAdd.value.id !== item.currency.id ||
-    organizationAdd.value.id !== item.organization.id ||
-    employeeAdd.value.id !== item.responsible_person.id 
+    currencyAdd.value !== item.currency.id ||
+    organizationAdd.value !== item.organization.id ||
+    employeeAdd.value !== item.responsiblePerson
+.id 
 
   return isChanged;
 };
@@ -527,7 +529,7 @@ watch(dialog, newVal => {
 
       <!-- Modal -->
       <v-card>
-        <v-dialog class="mt-2 pa-2" v-model="dialog">
+        <v-dialog persistent class="mt-2 pa-2" v-model="dialog">
           <v-card style="border: 2px solid #3AB700" min-width="500"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
@@ -571,6 +573,8 @@ watch(dialog, newVal => {
                     <v-autocomplete
                         style="max-width: 50%; min-width: 50%;"
                         variant="outlined"
+                        color="green"
+                        
                         hide-details
                         :base-color="FIELD_COLOR"
                         label="Валюта"
@@ -585,6 +589,7 @@ watch(dialog, newVal => {
                         variant="outlined"
                         hide-details
                         no-data-text="нет данных"
+                        color="green"
                         :base-color="FIELD_COLOR"
                         label="Ответственное лицо"
                         v-model="employeeAdd"
@@ -596,6 +601,8 @@ watch(dialog, newVal => {
                   </div>
                   <v-autocomplete
                       variant="outlined"
+                      color="green"
+                      no-data-text="нет данных"
                       label="Организация"
                       hide-details
                       v-model="organizationAdd"
@@ -615,7 +622,7 @@ watch(dialog, newVal => {
         <!--  Filter    -->
       </v-card>
       <v-card>
-        <v-dialog class="mt-2 pa-2" v-model="showFilterModal">
+        <v-dialog persistent class="mt-2 pa-2" v-model="showFilterModal">
           <v-card style="border: 2px solid #3AB700" min-width="500"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
@@ -649,6 +656,8 @@ watch(dialog, newVal => {
                   />
                   <div class="d-flex ga-4">
                     <v-autocomplete
+                        no-data-text="Нет данных"
+                        color="green"
                         style="max-width: 50%; min-width: 50%;"
                         variant="outlined"
                         hide-details
@@ -662,6 +671,8 @@ watch(dialog, newVal => {
                     <v-autocomplete
                       style="max-width: 47%; min-width: 46%;"
                         variant="outlined"
+                        color="green"
+                        no-data-text="нет данных"
                         :base-color="FIELD_COLOR"
                         hide-details
                         label="Ответственное лицо"
@@ -674,6 +685,8 @@ watch(dialog, newVal => {
                   </div>
                   <v-autocomplete
                       variant="outlined"
+                      color="green"
+                      no-data-text="нет данных"
                       label="Организация"
                       hide-details
                       v-model="filterForm.organization_id"

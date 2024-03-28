@@ -562,7 +562,7 @@ const currencyProps = (item) => {
 
 <template>
   <div>
-    <v-dialog v-model="dialog" class="mt-2 pa-2">
+    <v-dialog persistent v-model="dialog" class="mt-2 pa-2">
       <v-card
         style="border: 2px solid #3ab700"
         min-width="350"
@@ -754,7 +754,7 @@ const currencyProps = (item) => {
     </v-dialog>
 
     <!--Create Agreement-->
-    <v-dialog v-model="agreementDialog" class="mt-2 pa-2">
+    <v-dialog persistent v-model="agreementDialog" class="mt-2 pa-2">
       <v-card
         style="border: 2px solid #3ab700"
         min-width="650"
@@ -849,7 +849,7 @@ const currencyProps = (item) => {
                   type="date"
                   hide-details
                 />
-                <v-select
+                <v-autocomplete
                   color="green"
                   class="w-75"
                   variant="outlined"
@@ -863,7 +863,7 @@ const currencyProps = (item) => {
                   :item-props="currencyProps"
                 />
               </div>
-              <v-select
+              <v-autocomplete
                 color="green"
                 variant="outlined"
                 label="Организация"
@@ -876,7 +876,7 @@ const currencyProps = (item) => {
                 hide-details
               />
               <div class="d-flex ga-4 my-3">
-                <v-select
+                <v-autocomplete
                   color="green"
                   class="w-50"
                   variant="outlined"
@@ -889,7 +889,7 @@ const currencyProps = (item) => {
                   hide-details
                   :item-props="counterpartyProps"
                 />
-                <v-select
+                <v-autocomplete
                   color="green"
                   :item-props="price_typeProps"
                   v-model="form.price_type_id"

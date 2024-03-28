@@ -601,7 +601,7 @@ watch(dialog, newVal => {
       </div>
       <!-- Modal -->
       <v-card>
-        <v-dialog class="mt-2 pa-2" v-model="dialog">
+        <v-dialog persistent class="mt-2 pa-2" v-model="dialog">
           <v-card style="border: 2px solid #3AB700" min-width="540"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
@@ -704,8 +704,10 @@ watch(dialog, newVal => {
 
                   </div>
                   <v-autocomplete
+                      no-data-text="Нет данных"
                       v-model="group"
                       class="mt-5"
+      
                       :items="groups"
                       item-title="name"
                       item-value="id"
@@ -729,7 +731,7 @@ watch(dialog, newVal => {
         <ConfirmModal :showModal="true" @close="showModal = !showModal" @closeClear="closeDialogWithoutSaving()" />
         </div>
 
-        <v-dialog v-model="filterDialog" class="mt-2 pa-2">
+        <v-dialog persistent v-model="filterDialog" class="mt-2 pa-2">
         <v-card
           style="border: 2px solid #3ab700"
           min-width="650"
