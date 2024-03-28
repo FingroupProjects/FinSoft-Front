@@ -479,7 +479,7 @@ onMounted(async () => {
 
       <!-- Modal -->
       <v-card>
-        <v-dialog class="mt-2 pa-2" v-model="dialog">
+        <v-dialog persistent class="mt-2 pa-2" v-model="dialog">
           <v-card style="border: 2px solid #3AB700" min-width="500"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
@@ -552,19 +552,11 @@ onMounted(async () => {
       </v-card>
 
       <v-card>
-        <v-dialog class="mt-2 pa-2" v-model="filterModal">
+        <v-dialog persistent class="mt-2 pa-2" v-model="filterModal">
           <v-card style="border: 2px solid #3AB700" min-width="450"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
               <span>Фильтр</span>
-              <div class="d-flex align-center justify-space-between">
-                <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons @click="getPriceTypeData" title="Сохранить" name="save"/>
-                </div>
-                <v-btn @click="filterModal = false" variant="text" :size="32" class="pt-2 pl-1">
-                  <Icons title="Закрыть" @click="closeFilterModal" name="close"/>
-                </v-btn>
-              </div>
             </div>
             <v-form class="d-flex w-100" @submit.prevent="addPriceType">
               <v-row class="w-100">
@@ -584,6 +576,8 @@ onMounted(async () => {
                   />
                   <v-autocomplete
                       variant="outlined"
+                      color="green"
+                      no-data-text="Нет данных"
                       label="Валюта"
                       v-model="filterForm.currency_id"
                       :items="currencies"
@@ -602,6 +596,10 @@ onMounted(async () => {
                       placeholder="Описание"
                       label="Описание"
                   />
+                  <div class="d-flex justify-end ga-2">
+                  <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
+                  <v-btn color="green" class="btn"  @click="getPriceTypeData">применить</v-btn>
+                </div>
                 </v-col>
               </v-row>
             </v-form>

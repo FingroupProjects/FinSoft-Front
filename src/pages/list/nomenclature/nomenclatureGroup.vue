@@ -267,7 +267,6 @@ onMounted(() => {
               @click="openFilter()"
               class="mt-1"
             />
-
             <span v-if="count !== 0" class="countFilter">{{ count }}</span>
           </div>
         </v-card>

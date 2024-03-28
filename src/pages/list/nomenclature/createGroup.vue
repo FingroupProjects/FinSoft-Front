@@ -98,7 +98,7 @@ const rules = {
 <template>
   <div>
     <v-col>
-      <v-dialog v-model="dialog" class="mt-2 pa-2">
+      <v-dialog persistent v-model="dialog" class="mt-2 pa-2">
         <v-card
           style="border: 2px solid #3ab700"
           min-width="350"

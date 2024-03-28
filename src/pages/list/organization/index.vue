@@ -61,7 +61,8 @@ const filterForm = ref({
 const count = ref(0)
 
 const rules = {
-  required: (value) => !!value || "Поле обязательно для заполнения",
+  required: (value) => !!value,
+  inn: (value) => value.length === 9
 };
 
 const headers = ref([
@@ -532,7 +533,7 @@ onMounted(async () => {
 
     <!-- modal -->
     <v-card>
-      <v-dialog class="mt-2 pa-2" v-model="addDialog">
+      <v-dialog persistent class="mt-2 pa-2" v-model="addDialog">
         <v-card
           style="border: 2px solid #3ab700"
           min-width="500"
@@ -585,19 +586,22 @@ onMounted(async () => {
                 />
                 <v-text-field
                   v-model="innRef"
-                  :rules="[rules.required]"
+                  :rules="[rules.required, rules.inn]"
                   color="green"
                   :base-color="FIELD_COLOR"
                   rounded="lg"
                   variant="outlined"
                   class="w-auto text-sm-body-1"
                   density="compact"
+                  v-mask="'#########'"
                   placeholder="ИНН"
                   label="ИНН"
                   clear-icon="close"
                   clearable
                 />
                 <v-autocomplete
+                color="green"
+                no-data-text="Нет данных"
                   v-model="directorRef"
                   :rules="[rules.required]"
                   :items="employees"
@@ -609,6 +613,8 @@ onMounted(async () => {
                   variant="outlined"
                 />
                 <v-autocomplete
+                  color="green"
+                  no-data-text="Нет данных"
                   v-model="accountantRef"
                   :rules="[rules.required]"
                   :items="employees"
@@ -654,7 +660,7 @@ onMounted(async () => {
       </v-dialog>
 
       <v-card>
-        <v-dialog class="mt-2 pa-2" v-model="filterModal">
+        <v-dialog persistent class="mt-2 pa-2" v-model="filterModal">
           <v-card
             style="border: 2px solid #3ab700"
             min-width="600"
@@ -662,15 +668,7 @@ onMounted(async () => {
             rounded="xl"
           >
             <div class="d-flex justify-space-between align-center mb-2">
-              <span>Фильтр</span>
-              <div class="d-flex align-center justify-space-between">
-                <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons title="Фильтр" @click="getOrganizationData" name="save"/>
-                </div>
-                <v-btn @click="closeFilterModal" variant="text" :size="32" class="pt-2 pl-1">
-                  <Icons title="Закрыть" name="close"/>
-                </v-btn>
-              </div>
+              <span>Фильтр</span> 
             </div>
             <v-form class="d-flex w-100">
               <v-row class="w-100">
@@ -701,7 +699,8 @@ onMounted(async () => {
                   clear-icon="close"
                   clearable
                 />
-                <v-select
+                <v-autocomplete
+                  color="green"
                   v-model="filterForm.director_id"
                   :base-color="FIELD_COLOR"
                   :items="employees"
@@ -709,18 +708,21 @@ onMounted(async () => {
                   item-title="name"
                   item-value="id"
                   label="Директор"
+                  no-data-text="Нет данных"
                   variant="outlined"
-                ></v-select>
-                <v-select
+                />
+                <v-autocomplete
+                color="green"
                   v-model="filterForm.chief_accountant_id"
                   :base-color="FIELD_COLOR"
                   :items="employees"
                   rounded="lg"
                   item-title="name"
+                  no-data-text="Нет данных"
                   item-value="id"
                   label="Гл. бухгалтер"
                   variant="outlined"
-                ></v-select>
+                />
                 <v-text-field
                   v-model="filterForm.address"
                   :base-color="FIELD_COLOR"
@@ -734,21 +736,22 @@ onMounted(async () => {
                   clear-icon="close"
                   clearable
                 />
-                <v-text-field
-                  v-model="filterForm.description"
-                  color="green"
-                  rounded="lg"
-                  variant="outlined"
-                  class="w-auto text-sm-body-1"
-                  :base-color="FIELD_COLOR"
-                  density="compact"
-                  placeholder="Описание"
-                  label="Описание"
-                  clear-icon="close"
-                  style="height: 120px; margin-bottom: -20px"
-                  clearable
-                />
-                </v-col>
+                <v-textarea
+                      v-model="filterForm.description"
+                      color="green"
+                      rounded="md"
+                      variant="outlined"
+                      :base-color="FIELD_COLOR"
+                      class="w-auto text-sm-body-1"
+                      density="compact"
+                      placeholder="Описание"
+                      label="Описание"
+                  />
+                <div class="d-flex justify-end ga-2 mt-2">
+                  <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
+                  <v-btn color="green" class="btn"  @click="getOrganizationData">применить</v-btn>
+                </div>
+              </v-col>
               </v-row>
             </v-form>
           </v-card>

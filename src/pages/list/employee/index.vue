@@ -601,7 +601,7 @@ watch(dialog, newVal => {
       </div>
       <!-- Modal -->
       <v-card>
-        <v-dialog class="mt-2 pa-2" v-model="dialog">
+        <v-dialog persistent class="mt-2 pa-2" v-model="dialog">
           <v-card style="border: 2px solid #3AB700" min-width="540"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
@@ -704,8 +704,10 @@ watch(dialog, newVal => {
 
                   </div>
                   <v-autocomplete
+                      no-data-text="Нет данных"
                       v-model="group"
                       class="mt-5"
+      
                       :items="groups"
                       item-title="name"
                       item-value="id"
@@ -729,7 +731,7 @@ watch(dialog, newVal => {
         <ConfirmModal :showModal="true" @close="showModal = !showModal" @closeClear="closeDialogWithoutSaving()" />
         </div>
 
-        <v-dialog v-model="filterDialog" class="mt-2 pa-2">
+        <v-dialog persistent v-model="filterDialog" class="mt-2 pa-2">
         <v-card
           style="border: 2px solid #3ab700"
           min-width="650"
@@ -738,19 +740,6 @@ watch(dialog, newVal => {
         >
           <div class="d-flex justify-space-between align-center mb-2">
             <span>Фильтр</span>
-            <div class="d-flex align-center justify-space-between">
-              <div class="d-flex ga-3 align-center mt-2 me-4">
-                <Icons @click="getEmployee" name="save" title="Сохранить" />
-              </div>
-              <v-btn
-                @click="closeFilterModal"
-                variant="text"
-                :size="32"
-                class="pt-2 pl-1"
-              >
-                <Icons name="close" title="Закрыть" />
-              </v-btn>
-            </div>
           </div>
           <v-form class="d-flex w-100">
             <v-row class="w-100">
@@ -821,6 +810,10 @@ watch(dialog, newVal => {
                   "
                   @click:append-inner="filterForm.address = null"
                 />
+                <div class="d-flex justify-end ga-2 mt-2">
+                  <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
+                  <v-btn color="green" class="btn"  @click="getEmployee">применить</v-btn>
+                </div>
               </v-col>
             </v-row>
           </v-form>

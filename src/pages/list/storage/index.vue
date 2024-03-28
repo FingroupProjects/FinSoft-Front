@@ -857,7 +857,7 @@ onMounted(async () => {
       </div>
 
       <v-card>
-        <v-dialog class="mt-2 pa-2" v-model="dialog">
+        <v-dialog persistent class="mt-2 pa-2" v-model="dialog">
           <v-card style="border: 2px solid #3AB700" max-width="600"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
@@ -896,6 +896,7 @@ onMounted(async () => {
                   />
                   <v-autocomplete
                       variant="outlined"
+                      no-data-text="Нет данных"
                       label="Выберите организацию"
                       :base-color="FIELD_COLOR"
                       color="green"
@@ -907,6 +908,7 @@ onMounted(async () => {
                   />
                   <v-autocomplete
                       v-model="group"
+                      no-data-text="нет данных"
                       :items="groups"
                       item-title="name"
                       item-value="id"
@@ -982,7 +984,7 @@ onMounted(async () => {
         </v-dialog>
 
         <!--  addStorageData    -->
-        <v-dialog v-model="dataDialog" activator="parent">
+        <v-dialog persistent v-model="dataDialog" activator="parent">
           <v-card style="border: 2px solid #3AB700" min-width="400"
                   class="d-flex  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center pr-5 pt-3">
@@ -1004,6 +1006,7 @@ onMounted(async () => {
                   <v-autocomplete
                       variant="outlined"
                       label="Выберите сотрудника"
+                      no-data-text="нет данных"
                       color="green"
                       :base-color="FIELD_COLOR"
                       v-model="employeeAdd"
@@ -1040,7 +1043,7 @@ onMounted(async () => {
         </v-dialog>
       </v-card>
       <v-card>
-        <v-dialog class="mt-2 pa-2" v-model="groupDialog">
+        <v-dialog persistent class="mt-2 pa-2" v-model="groupDialog">
           <v-card style="border: 2px solid #3AB700" min-width="300"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
@@ -1079,19 +1082,11 @@ onMounted(async () => {
 
       </v-card>
 
-      <v-dialog class="mt-2 pa-2" v-model="filterDialog">
+      <v-dialog persistent class="mt-2 pa-2" v-model="filterDialog">
         <v-card style="border: 2px solid #3AB700" min-width="450"
                 class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
           <div class="d-flex justify-space-between align-center mb-2">
             <span>Фильтр</span>
-            <div class="d-flex align-center justify-space-between">
-              <div class="d-flex ga-3 align-center mt-2 me-4">
-                <Icons title="Сохранить" @click="getStorage" name="save"/>
-              </div>
-              <v-btn @click="closeFilterDialog" variant="text" :size="32" class="pt-2 pl-1">
-                <Icons title="Закрыть" name="close"/>
-              </v-btn>
-            </div>
           </div>
           <v-form class="d-flex w-100">
             <v-row class="w-100">
@@ -1111,6 +1106,7 @@ onMounted(async () => {
                 <v-autocomplete
                     variant="outlined"
                     label="Выберите организацию"
+                    no-data-text="Нет данных"
                     :base-color="FIELD_COLOR"
                     color="green"
                     item-color="green"
@@ -1121,6 +1117,7 @@ onMounted(async () => {
                 />
                 <v-autocomplete
                     v-model="filterForm.employee_id"
+                    no-data-text="нет данных"
                     :items="employees"
                     item-title="name"
                     item-value="id"
@@ -1130,6 +1127,10 @@ onMounted(async () => {
                     variant="outlined"
                     label="Сотрудник"
                 />
+                <div class="d-flex justify-end ga-2">
+                  <v-btn color="red" class="btn" @click="closeFilterDialog">сбросить</v-btn>
+                  <v-btn color="green" class="btn"  @click="getStorage">применить</v-btn>
+                </div>
               </v-col>
             </v-row>
           </v-form>
