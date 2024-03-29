@@ -441,6 +441,31 @@ const handleEmployeeCheckboxClick = function (item) {
   employeeLineMarking(item)
 }
 
+const openGroupDialog = (item) => {
+  groupDialog.value = true
+  isExistsGroup.value = true
+  groupName.value = item.name
+  group.value = item
+}
+
+const deleteGroup = async () => {
+  
+  console.log(group.value.id)
+  try {
+    const res = await storageGroup.delete(group.value.id)
+    if (res.status === 200) {
+      await getGroup({})
+      showToast(removeMessage)
+     
+    }
+    
+  } catch (error) {
+    console.log(error);
+  }
+  isExistsGroup.value = false
+  groupDialog.value = false
+}
+
 const openDialog = (item) => {
   dialog.value = true
 
@@ -685,6 +710,25 @@ const checkUpdate = () => {
 
 };
 
+const updateGroup = async () => {
+  if (!groupName.value) {
+    return showToast("Поле наименования не может быть пустым", "warning")
+  }
+  console.log(group.value.id)
+  try {
+    const res = await storageGroup.update(group.value.id, {name: groupName.value})
+    if (res.status === 200) {
+      await getGroup({})
+      showToast(editMessage)
+      groupName.value = null
+      groupDialog.value = false
+      isExistsGroup.value = false
+    }
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 watch(markedID, (newVal) => {
   markedItem.value = storages.value.find((el) => el.id === newVal[0]);
 })
@@ -806,9 +850,14 @@ onMounted(async () => {
                   @mouseenter="hoveredRowIndex = index + 100000"
                   @mouseleave="hoveredRowIndex = null"
                   @click="lineMarkingGroup(item.id)"
+                  @dblclick="openGroupDialog(item)"
               >
                 <td>
                   <div class="d-flex">
+                    <Icons
+                          style="margin-right: 10px; margin-top: 4px"
+                          :name="item.deleted_at === null ? 'valid' : 'inValid'"
+                      />
                     <span>{{ item.id }}</span>
                   </div>
                 </td>
@@ -1069,14 +1118,15 @@ onMounted(async () => {
       </v-card>
       <v-card>
         <v-dialog persistent class="mt-2 pa-2" v-model="groupDialog">
-          <v-card style="border: 2px solid #3AB700" min-width="300"
+          <v-card style="border: 2px solid #3AB700" min-width="350"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
-              <span>Добавление</span>
+              <span>{{isExistsGroup ? 'Изменить' : 'Создать'}} группу</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-
-                  <Icons v-if="isExistsGroup" @click="update" name="save"/>
+                   <Icons v-if="isExistsGroup"  @click="deleteGroup" name="delete"/>
+            
+                  <Icons v-if="isExistsGroup" @click="updateGroup" name="save"/>
                   <Icons v-else @click="addGroup" name="save"/>
                 </div>
                 <v-btn @click="groupDialog = false" variant="text" :size="32" class="pt-2 pl-1">
