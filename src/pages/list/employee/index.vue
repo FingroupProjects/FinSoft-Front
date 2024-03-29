@@ -53,6 +53,7 @@ const paginations = ref([])
 const paginationsGroup = ref([])
 const showConfirmDialog = ref(false)
 const showModal = ref(false)
+const isEditGroup = ref(false)
 
 const filterDialog = ref(false)
 
@@ -277,6 +278,14 @@ const massRestore = async ({page, itemsPerPage, sortBy}) => {
 
 const handleCheckboxClick = (item) => {
   lineMarking(item)
+}
+
+const openGroupDialog = (item) => {
+  isCreateGroup.value = true
+  isEditGroup.value = true
+
+  group.value = item
+  
 }
 
 const openDialog = (item) => {
@@ -561,9 +570,14 @@ watch(search, debounce((newValue) => {
             </template>
             <template v-slot:item="{ item, index }">
               <tr :class="{'bg-grey-lighten-2': item.id === groupIdRef }" @mouseenter="hoveredRowIndex = index + 100000"
-                  @mouseleave="hoveredRowIndex = null" @click="lineMarkingGroup(item.id)">
+                  @mouseleave="hoveredRowIndex = null" @click="lineMarkingGroup(item.id)" @dblclick="openGroupDialog(item)">
                 <td>
+                  
                   <div class="d-flex">
+                    <Icons
+                          style="margin-right: 10px; margin-top: 4px"
+                          :name="item.deleted_at === null ? 'valid' : 'inValid'"
+                      />
                     <span>{{ item.id }}</span>
                   </div>
                 </td>
@@ -754,7 +768,7 @@ watch(search, debounce((newValue) => {
           </v-card>
         </v-dialog>
         <div v-if="isCreateGroup">
-          <create-group @toggleDialog="toggleGroup" />
+          <create-group @toggleDialog="toggleGroup" :isEdit="isEditGroup" :item="group" />
         </div>
         <div v-if="showModal">
         <ConfirmModal :showModal="true" @close="showModal = !showModal" @closeClear="closeDialogWithoutSaving()" @closeWithSaving="closingWithSaving()" />
