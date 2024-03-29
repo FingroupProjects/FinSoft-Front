@@ -153,6 +153,32 @@ const checkUpdate = () => {
   }
 }
 
+
+const closingWithSaving = async () => {
+  if (isExistsUser.value) {
+    await update({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+    showModal.value = false
+  } else {
+    const isValid = validate(
+      fioRef,
+      organization,
+      loginRef,
+      passwordRef,
+      phoneRef,
+      emailRef,
+      group
+      );
+      showModal.value = false
+    if (isValid === true) {
+      await addUser({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      dialog.value = false;
+      showModal.value = false;
+      showConfirmDialog.value = false;
+      cleanForm();
+    }
+  }
+};
+
 const cleanForm = () => {
   fioRef.value = null
   statusRef.value = null
@@ -960,7 +986,7 @@ onMounted(async () =>  {
         </v-dialog>
 
         <div v-if="showModal">
-        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" />
+        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" @closeWithSaving="closingWithSaving()"/>
       </div>
 
       </v-card>

@@ -121,8 +121,8 @@ const addOrganization = async ({ page, itemsPerPage, sortBy }) => {
     const body = {
       name: nameRef.value,
       INN: innRef.value,
-      director_id: director,
-      chief_accountant_id: accountant,
+      director_id: directorRef,
+      chief_accountant_id: accountantRef,
       address: addressRef.value,
       description: descriptionRef.value,
     };
@@ -333,12 +333,14 @@ const  closeFilterModal = async ({page, itemsPerPage, sortBy, search, filterData
 const isDataChanged = () => {
   const item = organizations.value.find(elem => elem.id === idOrganizations.value);
 
-  return    nameRef.value !== item.name ||
+    return nameRef.value !== item.name ||
     innRef.value !== item.INN ||
     directorRef.value.id !== item.director.id ||
     accountantRef.value.id !== item.chief_accountant.id ||
     addressRef.value !== item.address ||
     descriptionRef.value !== item.description;
+
+
 };
 
 const checkAndClose = () => {
@@ -363,6 +365,34 @@ const closeDialogWithoutSaving = () => {
   showConfirmDialog.value = false;
   cleanForm();
 };
+
+const closingWithSaving = async () => {
+  if (isExistsOrganization.value) {
+    await update({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+    showModal.value = false
+  } else {
+    const isValid = validate(
+      nameRef,
+      innRef,
+      directorRef,
+      accountantRef,
+      addressRef,
+      descriptionRef
+      );
+      showModal.value = false
+    if (isValid === true) {
+      await addOrganization({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      addDialog.value = false;
+      showModal.value = false;
+      showConfirmDialog.value = false;
+      cleanForm();
+    }
+  }
+};
+
+
+
+
 
 const checkUpdate = () => {
   if (isDataChanged()) {
@@ -757,7 +787,7 @@ onMounted(async () => {
           </v-card>
         </v-dialog>
         <div v-if="showModal">
-        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" />
+        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" @closeWithSaving="closingWithSaving()" />
       </div>
       </v-card>
     </v-card>
