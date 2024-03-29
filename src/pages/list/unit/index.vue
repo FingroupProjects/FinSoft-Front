@@ -285,6 +285,25 @@ const checkAndClose = () => {
   }
 };
 
+const closingWithSaving = async () => {
+  if (isExistsUnit.value) {
+    await update({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+    showModal.value = false
+  } else {
+    const isValid = validate(
+      nameRef,
+      );
+      showModal.value = false
+    if (isValid === true) {
+      await addUnit({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      dialog.value = false;
+      showModal.value = false;
+      showConfirmDialog.value = false;
+    }
+  }
+};
+
+
 const closeDialogWithoutSaving = () => {
   dialog.value = false;
   showModal.value = false
@@ -513,7 +532,7 @@ watch(search, debounce((newValue) => {
 
       </v-card>
       <div v-if="showModal">
-        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()"/>
+        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()"  @closeWithSaving="closingWithSaving()"/>
       </div>
     </v-col>
   </div>

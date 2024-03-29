@@ -17,7 +17,7 @@ export default function validate(
   if (!fioRef.value) {
     return showToast("Поле ФИО не может быть пустым", "warning")
   }
-  if (organization.value.length === 0) {
+  if (organization.value) {
     return showToast("Поле Организации не может быть пустым", "warning")
   }
   if (!loginRef.value) {

@@ -182,6 +182,42 @@ const closeDialogWithoutSaving = () => {
   cleanForm();
 };
 
+const closingWithSaving = async () => {
+  if (isExistsCurrency.value) {
+    await update({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+    showModal.value = false
+  } else {
+    const isValid = validate(
+      nameRef,
+      digitalRef,
+      symbolRef
+      );
+      showModal.value = false
+    if (isValid === true) {
+      await addCurrency({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      dialog.value = false;
+      showModal.value = false;
+      showConfirmDialog.value = false;
+    }
+  }
+};
+const closingRateWithSaving = async () => {
+  if (isExistsCurrencyRate.value) {
+    await update({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+    showModal.value = false
+  } else {
+    const isValid = validate(
+      valueRef
+      );
+      showModal.value = false
+    if (isValid === true) {
+      await addDialogRate({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      dialog.value = false;
+      showModal.value = false;
+      showConfirmDialog.value = false;
+    }
+  }
+};
 
 const closeRateDialogWithoutSaving = () => {
   rateDialog.value = false
@@ -918,10 +954,10 @@ watch(search, debounce((newValue) => {
     
 
       <div v-if="showModal">
-        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" />
+        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()"   @closeWithSaving="closingWithSaving()"/>
       </div>
       <div v-if="showRateModal">
-        <ConfirmModal :showModal="true" @close="toggleRateModal()" @closeClear="closeRateDialogWithoutSaving()" />
+        <ConfirmModal :showModal="true" @close="toggleRateModal()" @closeClear="closeRateDialogWithoutSaving()"  @closeWithSaving="closingRateWithSaving()"/>
       </div>
 
     </v-col>

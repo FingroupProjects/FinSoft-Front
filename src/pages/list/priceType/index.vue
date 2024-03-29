@@ -323,6 +323,26 @@ const checkAndClose = () => {
   }
 };
 
+const closingWithSaving = async () => {
+  if (isExistsPriceType.value) {
+    await update({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+    showModal.value = false
+  } else {
+    const isValid = validate(
+      nameRef,
+      currencyAdd,
+      descriptionRef
+      );
+      showModal.value = false
+    if (isValid === true) {
+      await addPriceType({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      dialog.value = false;
+      showModal.value = false;
+      showConfirmDialog.value = false;
+    }
+  }
+};
+
 const closeDialogWithoutSaving = () => {
   dialog.value = false;
   showModal.value = false
@@ -606,7 +626,7 @@ onMounted(async () => {
         </v-dialog>
       </v-card>
       <div v-if="showModal">
-        <ConfirmModal :showModal="true" @close="toggleModal" @closeClear="closeDialogWithoutSaving" />
+        <ConfirmModal :showModal="true" @close="toggleModal" @closeClear="closeDialogWithoutSaving"  @closeWithSaving="closingWithSaving()"/>
       </div>
     </v-col>
   </div>
