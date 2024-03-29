@@ -105,14 +105,9 @@ const routes = [
     component: () => import("../pages/programSettings/index.vue"),
   },
   {
-    path: "/list/nomenclature/:id",
+    path: "/list/nomenclature",
     name: "nomenclature",
     component: () => import("../pages/list/nomenclature/index.vue"),
-  },
-  {
-    path: "/list/nomenclatureGroup",
-    name: "nomenclatureGroup",
-    component: () => import("../pages/list/nomenclature/nomenclatureGroup.vue"),
   },
   {
     path: "/list/createUpdateGood/:id",

@@ -7,7 +7,7 @@ defineProps({
 </script>
 
 <template>
-  <span class="flex justify-center items-center cursor-pointer">
+  <span class="flex justify-center align-center cursor-pointer">
     <svg
       v-if="name === 'planning'"
       width="24"

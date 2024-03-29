@@ -74,11 +74,6 @@ const goToCreate = () => {
   });
 };
 
-const openFilter = () => {
-  isFilter.value = true;
-  isCreateGroup.value = true;
-};
-
 function countFilter() {
   for (const key in filterForm.value) {
     if (filterForm.value[key] !== null && filterForm.value[key] !== false) {
@@ -140,6 +135,7 @@ const getGroupById = async ({ page, itemsPerPage, sortBy, search }) => {
     console.log(e);
   }
 };
+
 const getGroups = async ({ page, itemsPerPage, sortBy, search }) => {
   try {
     count.value = 0;
@@ -219,27 +215,34 @@ onMounted(() => {
         <div class="d-flex align-center ga-2 pe-2 ms-4">
           <span>Номенклатура</span>
         </div>
-        <v-card variant="text" min-width="420" class="d-flex align-center ga-2">
+        <v-card variant="text" min-width="488" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-2 me-3">
+            <div class="d-flex align-center ga-2 me-3">
               <button
                 style="
-                  background-color: #4ecb71;
-                  border-radius: 12px;
+                  background-color: #6bd68a;
+                  border-radius: 8px;
                   white-space: nowrap;
-                  height: 25px;
+                  height: 32px;
+                  padding: 0px 4px;
                   font-size: 12px;
-                  border: 1px solid red;
+                  color: white;
+                  text-transform: uppercase;
                 "
                 @click="isCreateGroup = true"
               >
                 <span class="px-2 py-0">создать группу</span>
               </button>
-              <Icons @click="goToCreate()" name="add" />
-              <Icons @click="createOnBase()" name="copy" />
+              <Icons @click="goToCreate()" name="add" title="Создать" />
+              <Icons
+                @click="createOnBase()"
+                name="copy"
+                title="Создать на основе"
+              />
               <Icons
                 @click="compute({ page, itemsPerPage, sortBy, search })"
                 name="delete"
+                title="Удалить"
               />
             </div>
             <div class="w-100">
@@ -264,9 +267,10 @@ onMounted(() => {
             <Icons
               name="filter"
               title="фильтр"
-              @click="openFilter()"
+              @click="isFilter = true"
               class="mt-1"
             />
+
             <span v-if="count !== 0" class="countFilter">{{ count }}</span>
           </div>
         </v-card>
