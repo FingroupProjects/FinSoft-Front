@@ -1,5 +1,5 @@
 <script setup>
-import { ref, defineProps, defineEmits, watch, computed } from "vue";
+import { ref, defineProps, defineEmits, watch } from "vue";
 import showToast from "../../../composables/toast";
 import Icons from "@/composables/Icons/Icons.vue";
 import CustomCheckbox from "@/components/checkbox/CustomCheckbox.vue";
@@ -74,7 +74,6 @@ const idAgreement = ref(null);
 const hoveredRowIndex = ref(null);
 
 const headers = ref([
-  { title: "№", key: "id", align: "start" },
   { title: "Номер договора", key: "contract_number" },
   { title: "Валюта", key: "currency_id.name" },
   { title: "Баланс", key: "balance" },
@@ -115,6 +114,7 @@ watch(
       clearInputs();
       isValid.value = false;
       editAgreementDialog.value = false;
+      isDocumentEdit.value = false;
     }
   }
 );
@@ -181,6 +181,7 @@ const getDated = () => {
   agreementDialog.value = true;
   const page = 1;
   const Items = 100;
+  form.value.counterparty_id = editID.value.id;
   getOrganization(page, Items);
   getPriceType({ page, Items });
   getCounterparties({ page, Items });
@@ -208,22 +209,20 @@ const clearInputs = () => {
   };
 };
 const editDialog = (item) => {
-  console.log(item);
   editID.value = item;
+  isDocumentEdit.value = true;
   editAgreementDialog.value = true;
   agreementDialog.value = true;
   getDated();
   cpAgreementGetById(item);
 };
 
-const cpAgreementGetById = async (id) => {
-  console.log(id);
+const cpAgreementGetById = async (item) => {
   try {
-    const { data } = await counterpartyAgreement.getById(id);
-    const item = data.result;
+    // const { data } = await counterpartyAgreement.getById(id);
     form.value = {
       ...item,
-      date: showDate(item.date, "-", true),
+      date: item.date,
       currency_id: item.currency_id.id,
       organization_id: item.organization_id.id,
       counterparty_id: item.counterparty_id.id,
@@ -238,7 +237,6 @@ const getOrganization = async (page, items) => {
   try {
     const { data } = await organizationApi.get({ page, items });
     organizations.value = data.result.data;
-    console.log(data);
   } catch (e) {
     console.log(e);
   }
@@ -519,8 +517,9 @@ const updateCpAgreement = async () => {
       contract_number: form.value.contract_number,
       payment_id: 2,
     };
-    const res = await counterpartyAgreement.update(editID.value, body);
-    showToast("Успешно изменено", "#");
+
+    await counterpartyAgreement.update(editID.value.id, body);
+    showToast("Успешно изменено", "green");
     agreementDialog.value = false;
     editAgreementDialog.value = false;
   } catch (e) {
@@ -663,6 +662,7 @@ const currencyProps = (item) => {
                   v-mask="'+992#########'"
                   rounded="md"
                   color="green"
+                  clear-icon="close"
                   hide-details
                   clearable
                   @click:append-inner="phone = ''"
@@ -676,6 +676,7 @@ const currencyProps = (item) => {
                   density="compact"
                   rounded="md"
                   color="green"
+                  clear-icon="close"
                   hide-details
                   clearable
                   @click:append-inner="email = ''"
@@ -688,6 +689,7 @@ const currencyProps = (item) => {
                 label="Адрес"
                 v-model="address"
                 density="compact"
+                clear-icon="close"
                 rounded="md"
                 color="green"
                 hide-details
@@ -713,11 +715,13 @@ const currencyProps = (item) => {
                   @click="compute"
                   class="mr-3"
                   name="delete"
+                  title="Удалить"
                 />
                 <Icons
                   v-show="isEdit"
                   @click="openAgreementDialog"
                   name="add"
+                  title="Добавить"
                 />
               </span>
             </div>
@@ -738,6 +742,8 @@ const currencyProps = (item) => {
             @update:options="getDocuments({}, idAgreement)"
             fixed-footer
             hover
+            show-select
+            v-model="markedID"
             page-text="{0}-{1} от {2}"
             :items-per-page-options="[
               { value: 25, title: '25' },
@@ -753,12 +759,30 @@ const currencyProps = (item) => {
                 @dblclick="editDialog(item)"
                 :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
               >
-                <td class="d-flex align-center">
-                  <Icons
-                    class="mt-2 me-2"
-                    :name="item.deleted_at === null ? 'valid' : 'inValid'"
-                  />
-                  <span>{{ index + 1 }}</span>
+                <td>
+                  <template
+                    v-if="
+                      hoveredRowIndex === index || markedID.includes(item.id)
+                    "
+                  >
+                    <CustomCheckbox
+                      :checked="markedID.includes(item.id)"
+                      @click="lineMarking(item)"
+                      @change="lineMarking(item)"
+                    >
+                      <span>{{ item.id }}</span>
+                    </CustomCheckbox>
+                  </template>
+
+                  <template v-else>
+                    <span class="d-flex align-center">
+                      <Icons
+                        style="margin-right: 10px; margin-top: 4px"
+                        :name="item.deleted_at === null ? 'valid' : 'inValid'"
+                      />
+                      <span>{{ item.id }}</span>
+                    </span>
+                  </template>
                 </td>
                 <td>{{ item.contract_number }}</td>
                 <td>{{ item.currency_id.name }}</td>
@@ -817,6 +841,7 @@ const currencyProps = (item) => {
                   placeholder="Наименование"
                   label="Наименование"
                   lear-icon="close"
+                  clear-icon="close"
                   clearable
                   hide-details
                 />
@@ -827,31 +852,19 @@ const currencyProps = (item) => {
               <div class="d-flex justify-space-between ga-5 align-center my-3">
                 <div
                   v-if="isDocumentEdit"
-                  class="w-25"
                   style="
                     border: 1.5px solid #cbc8c8;
                     border-radius: 4px;
-                    padding: 2px 12px;
+                    padding: 6px 12px;
+                    width: 110px;
+                    height: 40px;
                   "
                 >
                   <span>
                     {{ date }}
                   </span>
                 </div>
-                <div
-                  v-if="isDocumentEdit"
-                  class="w-25"
-                  style="
-                    border: 1.5px solid #cbc8c8;
-                    border-radius: 4px;
-                    padding: 2px 12px;
-                  "
-                >
-                  <span>
-                    {{ date }}
-                  </span>
-                </div>
-                <v-text-field
+                <!-- <v-text-field
                   v-model="form.date"
                   :rules="[rules.required]"
                   :base-color="FIELD_COLOR"
@@ -865,7 +878,7 @@ const currencyProps = (item) => {
                   lear-icon="close"
                   type="date"
                   hide-details
-                />
+                /> -->
                 <v-autocomplete
                   color="green"
                   class="w-75"
@@ -876,6 +889,8 @@ const currencyProps = (item) => {
                   :items="currencies"
                   item-title="name"
                   item-value="id"
+                  clear-icon="close"
+                  clearable
                   hide-details
                   :item-props="currencyProps"
                 />
@@ -889,6 +904,8 @@ const currencyProps = (item) => {
                 :items="organizations"
                 item-title="name"
                 item-value="id"
+                clearable
+                clear-icon="close"
                 :item-props="organizationProps"
                 hide-details
               />
@@ -903,6 +920,8 @@ const currencyProps = (item) => {
                   :items="counterparties"
                   item-title="name"
                   item-value="id"
+                  clearable
+                  clear-icon="close"
                   hide-details
                   :item-props="counterpartyProps"
                 />
@@ -916,6 +935,8 @@ const currencyProps = (item) => {
                   item-title="name"
                   label="Вид цены"
                   item-value="id"
+                  clearable
+                  clear-icon="close"
                   hide-details
                   class="w-25"
                 />
@@ -928,6 +949,8 @@ const currencyProps = (item) => {
                 label="Контактное лицо"
                 density="compact"
                 rounded="md"
+                clear-icon="close"
+                clearable
                 color="green"
                 hide-details
               />
@@ -938,6 +961,8 @@ const currencyProps = (item) => {
                   :base-color="FIELD_COLOR"
                   color="green"
                   label="Комментарий"
+                  clear-icon="close"
+                  clearable
                   :rules="isValid ? [rules.required] : []"
                 />
               </v-container>
