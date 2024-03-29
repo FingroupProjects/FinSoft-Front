@@ -23,7 +23,7 @@ const lists = ref([
     child: [
       { id: 1, title: "Единица измерения", link: "/list/unit" },
       { id: 2, title: "Банковские счета", link: "/list/organizationBill" },
-      { id: 3, title: "Номенклатура", link: "/list/nomenclatureGroup" },
+      { id: 3, title: "Номенклатура", link: "/list/nomenclature" },
       { id: 4, title: "Пользователи", link: "/list/user" },
       { id: 5, title: "Контрагенты", link: "/list/counterparty" },
       { id: 6, title: "Организации", link: "/list/organization" },

@@ -112,7 +112,7 @@ const rules = {
               class="d-flex align-center justify-space-between"
             >
               <div class="d-flex ga-3 align-center mt-2 me-4">
-                <!-- <Icons name="delete" /> -->
+                <Icons name="delete" title="Удалить" />
                 <Icons
                   @click="isFilter ? filter() : createGroup()"
                   name="save"
@@ -162,7 +162,7 @@ const rules = {
                     Услуги
                   </CustomCheckbox>
                 </div>
-                <div class="d-flex justify-end ga-2 mt-2">
+                <div v-if="isFilter" class="d-flex justify-end ga-2 mt-2">
                   <v-btn color="red" class="btn">сбросить</v-btn>
                   <v-btn color="green" class="btn">применить</v-btn>
                 </div>
