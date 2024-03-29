@@ -252,7 +252,7 @@ const createGood = async () => {
     appendIfNotNull("good_group_id", good_group_id.value);
     await goodsApi.create(formData);
     console.log(...formData.entries());
-    router.push("/list/nomenclatureGroup");
+    router.push("/list/nomenclature");
     showToast(addMessage);
     isCreated.value = true;
   } catch (e) {

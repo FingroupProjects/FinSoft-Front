@@ -25,6 +25,7 @@ const hoveredRowIndex = ref(null);
 
 const loading = ref(true);
 const isFilter = ref(false);
+const isEditGroup = ref(false);
 const loadingGroup = ref(true);
 const isCreateGroup = ref(false);
 
@@ -33,6 +34,7 @@ const search = ref("");
 const count = ref(0);
 const groupIdRef = ref(0);
 
+const groupData = ref([]);
 const goods = ref([]);
 const groups = ref([]);
 const markedID = ref([]);
@@ -41,7 +43,10 @@ const pagination = ref([]);
 const Grouppagination = ref([]);
 
 const headers = ref([{ title: "Товар", key: "name" }]);
-const Groupheaders = ref([{ title: "Наименование", key: "name" }]);
+const Groupheaders = ref([
+  { title: "№", key: "id" },
+  { title: "Наименование", key: "name" },
+]);
 
 const filterForm = ref({
   name: null,
@@ -67,12 +72,29 @@ const goToCreate = () => {
   });
 };
 
+const createOnBase = () => {
+  if (markedID.value.length > 1) {
+    showToast(selectOneItemMessage, "warning");
+    return;
+  } else if (markedID.value.length === 0) {
+    showToast(warningMessage, "warning");
+    return;
+  }
+  editItem(markedItem.value.id, 1);
+};
+
 const editItem = (id, createOnBaseParam) => {
   router.push({
     name: "createUpdateGood",
     params: { id: id },
     query: { createOnBase: createOnBaseParam },
   });
+};
+
+const editGroup = (group) => {
+  isEditGroup.value = true;
+  isCreateGroup.value = true;
+  groupData.value = group;
 };
 
 function countFilter() {
@@ -94,7 +116,7 @@ const filterGroup = async (filterData) => {
 
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
-    const firstMarkedItem = users.value.find(
+    const firstMarkedItem = goods.value.find(
       (el) => el.id === markedID.value[0]
     );
 
@@ -171,6 +193,46 @@ const getGoods = async ({ page, itemsPerPage, sortBy, search }) => {
     console.log(e);
   }
 };
+
+const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
+  const body = {
+    ids: markedID.value,
+  };
+  try {
+    const { status } = await goodsApi.massDeletion(body);
+    if (status === 200) {
+      showToast(removeMessage, "red");
+      markedID.value = [];
+      await getGoods({ page, itemsPerPage, sortBy }, search);
+    }
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+const massRestore = async ({ page, itemsPerPage, sortBy }) => {
+  try {
+    const body = {
+      ids: markedID.value,
+    };
+    const { status } = await goodsApi.massRestore(body);
+    if (status === 200) {
+      showToast(restoreMessage, "green");
+      markedID.value = [];
+      await getGoods({ page, itemsPerPage, sortBy });
+    }
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+const compute = ({ page, itemsPerPage, sortBy, search }) => {
+  if (markedItem.value.deleted_at) {
+    return massRestore({ page, itemsPerPage, sortBy });
+  } else {
+    return massDel({ page, itemsPerPage, sortBy, search });
+  }
+};
 </script>
 
 <template>
@@ -178,12 +240,6 @@ const getGoods = async ({ page, itemsPerPage, sortBy, search }) => {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <div
-            style="cursor: pointer"
-            class="pa-1 bg-green rounded-circle d-inline-block"
-          >
-            <v-icon icon="keyboard_backspace" size="x-small" />
-          </div>
           <span>Номенклатура</span>
         </div>
         <v-card variant="text" min-width="488" class="d-flex align-center ga-2">
@@ -205,8 +261,12 @@ const getGoods = async ({ page, itemsPerPage, sortBy, search }) => {
                 <span class="px-2 pb-0">создать группу</span>
               </button>
               <Icons @click="goToCreate()" name="add" title="Создать" />
-              <Icons name="copy" title="Создать на основе" />
-              <Icons name="delete" title="Удалить" />
+              <Icons @click="createOnBase()" name="copy" title="Скопировать" />
+              <Icons
+                @click="compute({ page, itemsPerPage, sortBy, search })"
+                name="delete"
+                title="Удалить"
+              />
             </div>
             <div class="w-100">
               <v-text-field
@@ -254,8 +314,6 @@ const getGoods = async ({ page, itemsPerPage, sortBy, search }) => {
             v-model:items-per-page="Grouppagination.per_page"
             :items-length="Grouppagination.total || 0"
             :item-value="headers.title"
-            show-select
-            v-model="markedID"
             hover
             fixed-footer
             page-text="{0}-{1} от {2}"
@@ -272,7 +330,7 @@ const getGoods = async ({ page, itemsPerPage, sortBy, search }) => {
               <tr
                 @mouseenter="hoveredRowIndex = index + 100000"
                 @mouseleave="hoveredRowIndex = null"
-                @dblclick="editItem(item.id)"
+                @dblclick="editGroup(item)"
                 @click="lineMarkingGroup(item.id)"
                 :class="{ 'bg-grey-lighten-2': item.id === groupIdRef }"
               >
@@ -366,12 +424,12 @@ const getGoods = async ({ page, itemsPerPage, sortBy, search }) => {
           <createGroup
             @toggleDialog="
               isCreateGroup = false;
-              createGroupOnBase = false;
+              isEditGroup = false;
               isFilter = false;
               filterForm = {};
             "
             @filter="filterGroup"
-            :createGroupOnBase="createGroupOnBase"
+            :isEditGroup="isEditGroup"
             :filterForm="filterForm"
             :groupData="groupData"
             :isFilter="isFilter"
