@@ -77,9 +77,12 @@ watch(
   }
 );
 
-watch(search, debounce((newValue) => {
-  debounceSearch.value = newValue
-}, 500))
+watch(
+  search,
+  debounce((newValue) => {
+    debounceSearch.value = newValue;
+  }, 500)
+);
 
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
@@ -138,6 +141,7 @@ function countFilter() {
 
 const toggleModal = () => {
   isCreate.value = false;
+  createOnBase.value = false;
   setTimeout(() => {
     isEdit.value = false;
   }, 100);
@@ -212,7 +216,12 @@ const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
   }
 };
 
-const massRestoreCounterparty = async ({ page, itemsPerPage, sortBy, search }) => {
+const massRestoreCounterparty = async ({
+  page,
+  itemsPerPage,
+  sortBy,
+  search,
+}) => {
   if (markedID.value.length === 0) {
     showToast(warningMessage, "warning");
     return;
@@ -298,12 +307,16 @@ onMounted(async () => {
         <div class="d-flex align-center ga-2 pe-2 ms-4">
           <span>Контрагенты</span>
         </div>
-        <v-card variant="text" min-width="320" class="d-flex align-center ga-2">
+        <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100 align-center">
             <div class="d-flex ga-2 mt-2 me-3">
               <Icons title="Добавить" @click="isCreate = true" name="add" />
               <Icons title="Скопировать" @click="createBase()" name="copy" />
-              <Icons title="Удалить" @click="compute({ page, itemsPerPage, sortBy, search })" name="delete" />
+              <Icons
+                title="Удалить"
+                @click="compute({ page, itemsPerPage, sortBy, search })"
+                name="delete"
+              />
             </div>
             <div class="w-100">
               <v-text-field
@@ -523,8 +536,12 @@ onMounted(async () => {
                   @click:append-inner="filterForm.address = null"
                 />
                 <div class="d-flex justify-end ga-2 mt-2">
-                  <v-btn color="red" class="btn" @click="closeFilterDialog">сбросить</v-btn>
-                  <v-btn color="green" class="btn"  @click="getCounterparty">применить</v-btn>
+                  <v-btn color="red" class="btn" @click="closeFilterDialog"
+                    >сбросить</v-btn
+                  >
+                  <v-btn color="green" class="btn" @click="getCounterparty"
+                    >применить</v-btn
+                  >
                 </div>
               </v-col>
             </v-row>
