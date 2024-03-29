@@ -34,6 +34,7 @@ const isDialogPassword = ref(false)
 const idUser = ref(null)
 const hoveredRowIndex = ref(null)
 const isCreateGroup = ref(false)
+const isEditGroup = ref(false)
 
 const isExistsUser = ref(false)
 const markedID = ref([])
@@ -424,6 +425,13 @@ const openDialog = item => {
 
 }
 
+const openGroupDialog = (item) => {
+  isEditGroup.value = true
+  isCreateGroup.value = true
+  group.value = item
+  
+}
+
 const addBasedOnUser = () => {
   if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
   if (markedID.value.length > 1) return showToast(selectOneItemMessage, 'warning')
@@ -626,9 +634,13 @@ onMounted(async () =>  {
               <v-skeleton-loader type="table-row@9"></v-skeleton-loader>
             </template>
             <template v-slot:item="{ item, index }">
-              <tr :class="{'bg-grey-lighten-2': item.id === groupIdRef }" @mouseenter="hoveredRowIndex = index + 100000" @mouseleave="hoveredRowIndex = null" @click="lineMarkingGroup(item.id)" >
+              <tr :class="{'bg-grey-lighten-2': item.id === groupIdRef }" @mouseenter="hoveredRowIndex = index + 100000" @mouseleave="hoveredRowIndex = null" @click="lineMarkingGroup(item.id)" @dblclick="openGroupDialog(item)" >
                 <td>
                  <div class="d-flex">
+                  <Icons
+                          style="margin-right: 10px; margin-top: 4px"
+                          :name="item.deleted_at === null ? 'valid' : 'inValid'"
+                      />
                    <span>{{ item.id }}</span>
                  </div>
                 </td>
@@ -869,8 +881,9 @@ onMounted(async () =>  {
           </v-card>
         </v-dialog>
         <div v-if="isCreateGroup">
-          <create-group @toggleDialog="toggleGroup" />
+          <create-group @toggleDialog="toggleGroup" :isEdit="isEditGroup" :item="group" />
         </div>
+      
         <div v-if="isDialogPassword">
           <change-password @toggleDialogPassword="isDialogPassword = false" :id="idUser" />
         </div>
