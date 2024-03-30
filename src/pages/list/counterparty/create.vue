@@ -448,6 +448,26 @@ const isDataChanged = () => {
   return isChanged;
 };
 
+const closingWithSaving = async () => {
+  if (props.isEdit) {
+    await updateCounterparty({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+    showModal.value = false
+  } else {
+    const isValid = validate(
+      name,
+      address,
+      phone,
+      email,
+      );
+      showModal.value = false
+    if (isValid === true) {
+      await CreateCounterparty({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      dialog.value = false;
+      showModal.value = false;
+      showConfirmDialog.value = false;
+    }
+  }
+};
 const checkUpdate = () => {
   if (isDataChanged()) {
     showModal.value = true;
@@ -808,7 +828,7 @@ const currencyProps = (item) => {
             <div class="d-flex ga-3 align-center mt-2 me-4">
               <Icons
                 @click="
-                  editAgreementDialog
+                  editAgreementDialog   
                     ? updateCpAgreement()
                     : createCpAgreement()
                 "
@@ -816,7 +836,7 @@ const currencyProps = (item) => {
               />
             </div>
             <v-btn
-              @click="agreementDialog = false"
+              @click="agreementDialog "
               variant="text"
               :size="32"
               class="pt-2 pl-1"
@@ -978,6 +998,7 @@ const currencyProps = (item) => {
       :showModal="true"
       @close="toggleModal()"
       @closeClear="closeDialogWithoutSaving()"
+      @closeWithSaving="closingWithSaving()"
     />
   </div>
 </template>
