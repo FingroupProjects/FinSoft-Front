@@ -20,4 +20,15 @@ export default {
   massRestore(data) {
     return api.post(`/goods/massRestore/`, data);
   },
+  // good-image
+  getImages(id, { page = 1, itemsPerPage = 10, sortBy }, search = ""){
+    const params = buildParams(page, itemsPerPage, sortBy, search);
+    return api.get(`/good/${id}/images`, { params });
+  },
+  deleteImage(data) {
+    return api.post(`/goods/massDelete/`, data);
+  },
+  restoreImage(data) {
+    return api.post(`/goods/massRestore/`, data);
+  },
 };

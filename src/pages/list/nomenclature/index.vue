@@ -63,6 +63,12 @@ watch(isCreateGroup, (newVal) => {
   }
 });
 
+watch(search, (newVal) => {
+  if (newVal) {
+    getAllGoods({ page: 1, itemsPerPage: 25 });
+  }
+});
+
 const goToCreate = () => {
   router.push({
     name: "createUpdateGood",
@@ -194,6 +200,24 @@ const getGoods = async ({ page, itemsPerPage, sortBy, search }) => {
   }
 };
 
+const getAllGoods = async ({ page, itemsPerPage, sortBy, search }) => {
+  count.value = 0;
+  countFilter();
+  try {
+    loading.value = true;
+    const { data } = await goodsApi.get(
+      { page, itemsPerPage, sortBy },
+      search,
+      filterForm.value
+    );
+    goods.value = data.result.data;
+    console.log(data);
+    pagination.value = data.result.pagination;
+    loading.value = false;
+  } catch (e) {
+    console.log(e);
+  }
+};
 const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
   const body = {
     ids: markedID.value,
