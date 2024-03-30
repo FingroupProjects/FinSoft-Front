@@ -77,6 +77,15 @@ const cleanImages = () => {
   forthImage.value = null;
 };
 
+const goToImages = () => {
+  router.push({
+    name: "goodImages",
+    params: {
+      id: id.value,
+    },
+  });
+};
+
 const setImageByIndex = (index) => {
   const selectedFile = add_images.value[index];
   main_image.value = selectedFile;
@@ -312,14 +321,12 @@ onMounted(async () => {
 <template>
   <div class="modal">
     <v-col>
-      <div
-        class="d-flex justify-space-between align-center mb-2 text-uppercase ms-4"
-      >
+      <div class="d-flex justify-space-between align-center mb-2 ms-4">
         <div>
           <div
             style="cursor: pointer"
             @click="$router.go(-1)"
-            class="pa-1 bg-green rounded-circle d-inline-block mr-4"
+            class="pa-1 bg-green rounded-circle d-inline-block mr-4 text-uppercase"
           >
             <v-icon icon="keyboard_backspace" size="x-small" />
           </div>
@@ -329,6 +336,11 @@ onMounted(async () => {
         </div>
         <div class="d-flex align-center justify-space-between">
           <div class="d-flex ga-3 align-center mt-2 me-4">
+            <v-btn
+              color="green"
+              @click="goToImages()"
+              >ФОТО</v-btn
+            >
             <Icons
               @click="isEdit && !isCreateOnBase ? updateGood() : createGood()"
               name="save"
@@ -392,20 +404,7 @@ onMounted(async () => {
                       border: 1px solid #3ab700;
                     "
                   >
-                    <div v-if="main_image === null">
-                      <v-btn @click="isImageDialog = true"
-                        >Загрузить фото</v-btn
-                      >
-                      <input
-                        accept="image/*"
-                        type="file"
-                        @change="selectAvatar($event, 1)"
-                        style="display: none"
-                        ref="fileInput"
-                      />
-                    </div>
                     <img
-                      v-else
                       class="image"
                       :src="main_image"
                       width="200"
@@ -422,23 +421,6 @@ onMounted(async () => {
                     >
                       Фото {{ index + 1 }}
                     </span>
-                  </div>
-                  <div
-                    v-if="add_images.length > 0 || firstImage || isEdit"
-                    class="d-flex justify-center my-1"
-                  >
-                    <v-btn
-                      style="width: 120px; height: 30px; font-size: 10px"
-                      @click="isImageDialog = true"
-                      >Загрузить фото</v-btn
-                    >
-                    <input
-                      accept="image/*"
-                      type="file"
-                      style="display: none"
-                      ref="fileInput"
-                      multiple
-                    />
                   </div>
                 </div>
                 <div class="d-flex flex-column w-75 ga-3">
