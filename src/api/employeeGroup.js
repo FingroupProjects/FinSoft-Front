@@ -18,4 +18,8 @@ export default {
   delete(id) {
     return api.delete(`/group/${id}`)
   },
+
+  restore (id) {
+    return api.get('/group/restore/' + id)
+  }
 }

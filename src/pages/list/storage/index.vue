@@ -510,7 +510,6 @@ const restoreGroup = async () => {
       await getGroup({})
       showToast(restoreMessage);
     }
-    
 }
 
 
