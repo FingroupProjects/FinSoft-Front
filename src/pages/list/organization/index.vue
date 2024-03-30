@@ -17,6 +17,7 @@ import employee from "../../../api/employee";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import validate from "./validate.js";
 import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
+import debounce from "lodash.debounce";
 
 const showConfirmDialog = ref(false);
 const router = useRouter();
@@ -24,12 +25,10 @@ const addDialog = ref(false);
 const loading = ref(true);
 const markedID = ref([]);
 const markedItem = ref([]);
-const valueRef = ref(null);
 const hoveredRowIndex = ref(null);
 const isExistsOrganization = ref(false);
 const organizationInDialogTitle = ref(null);
 const filterModal = ref(false);
-
 
 const organizations = ref([]);
 const paginations = ref([]);
@@ -43,6 +42,7 @@ const accountantRef = ref(null);
 const addressRef = ref(null);
 const descriptionRef = ref(null);
 const search = ref(null);
+const debounceSearch = ref(null);
 const showModal = ref(false);
 
 const toggleModal = () => {
@@ -121,8 +121,8 @@ const addOrganization = async ({ page, itemsPerPage, sortBy }) => {
     const body = {
       name: nameRef.value,
       INN: innRef.value,
-      director_id: directorRef,
-      chief_accountant_id: accountantRef,
+      director_id: director,
+      chief_accountant_id: accountant,
       address: addressRef.value,
       description: descriptionRef.value,
     };
@@ -213,26 +213,25 @@ const update = async ({ page, itemsPerPage, sortBy, search }) => {
 const openDialog = (item) => {
   addDialog.value = true;
   if (item === 0) {
-    idOrganizations.value = 0;
-    isExistsOrganization.value = false;
+    idOrganizations.value = 0
+    isExistsOrganization.value = false
   } else {
-    idOrganizations.value = item.id;
-    isExistsOrganization.value = true;
-    nameRef.value = item.name;
-    innRef.value = item.INN;
+    idOrganizations.value = item.id
+    isExistsOrganization.value = true
+    nameRef.value = item.name
+    innRef.value = item.INN
     markedID.value.push(item.id)
     directorRef.value = {
       id: item.director.id,
       name: item.director.name,
-    };
+    }
     accountantRef.value = {
       id: item.chief_accountant.id,
       name: item.chief_accountant.name,
-    };
-
-    addressRef.value = item.address;
-    descriptionRef.value = item.description;
-    organizationInDialogTitle.value = nameRef.value;
+    }
+    addressRef.value = item.address
+    descriptionRef.value = item.description
+    organizationInDialogTitle.value = nameRef.value
   }
 
 };
@@ -244,8 +243,8 @@ const getEmployees = async ({ page, itemsPerPage, sortBy, search }) => {
       id: item.id,
       name: item.name,
     }));
-  } catch (error) {
-    console.error(error);
+  } catch (e) {
+    console.error(e)
   }
 };
 
@@ -444,6 +443,10 @@ watch(addDialog, (newVal) => {
   }
 });
 
+watch(search, debounce((newValue) => {
+  debounceSearch.value = newValue
+}, 500))
+
 onMounted(async () => {
   await getEmployees({ page: 1, itemsPerPage: 10000 });
 });
@@ -514,6 +517,7 @@ onMounted(async () => {
           :items="organizations"
           :item-value="headers.title"
           @update:options="getOrganizationData"
+          :search="debounceSearch"
           show-select
           v-model="markedID"
           page-text="{0}-{1} от {2}"
@@ -523,7 +527,6 @@ onMounted(async () => {
             { value: 100, title: '100' },
           ]"
           fixed-header
-          :search="search"
           hover
         >
           <template v-slot:item="{ item, index }">
