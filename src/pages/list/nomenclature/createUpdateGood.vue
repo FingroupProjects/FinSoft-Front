@@ -737,7 +737,7 @@ onMounted(async () => {
 }
 .image {
   object-fit: contain;
-  max-height: 160px;
-  max-width: 280px;
+  max-height: 180px;
+  /* max-width: 280px; */
 }
 </style>
