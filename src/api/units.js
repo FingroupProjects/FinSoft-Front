@@ -23,6 +23,6 @@ export default {
   },
 
   massRestore(data) {
-    return api.post('/unit/massRestore', data)
+    return api.post('/units/massRestore', data)
   }
 }
