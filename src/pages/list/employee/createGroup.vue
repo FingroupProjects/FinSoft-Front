@@ -2,7 +2,7 @@
 import { ref, defineEmits, onMounted } from "vue";
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
-import { addMessage, removeMessage, editMessage } from "../../../composables/constant/buttons";
+import { addMessage, removeMessage, editMessage, restoreMessage } from "../../../composables/constant/buttons";
 import userGroup from "../../../api/userGroup.js";
 import {USER_GROUP} from "../../../composables/constant/paramsApi.js";
 import {FIELD_COLOR} from "../../../composables/constant/colors.js";
@@ -68,13 +68,33 @@ const update = async () => {
   }
 };
 
-const compute = async () => {
+const restore = async () => {
+  const response = await employeeGroup.restore(props.item.id);
+    if (response.status === 200) {
+      showToast(restoreMessage);
+    }
+    emit("toggleDialog");
+}
+
+const destroy  = async () => {
   const response = await employeeGroup.delete(props.item.id);
     if (response.status === 200) {
       showToast(removeMessage);
     }
     emit("toggleDialog");
 }
+
+const compute = async () => {
+  if(props.item.deleted_at !== null) {
+      restore()
+  }
+  else {
+    destroy()
+  }
+}
+
+
+
 
 </script>
 <template>
