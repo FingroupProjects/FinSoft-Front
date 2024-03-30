@@ -102,7 +102,8 @@ const getGroup = async ({page, itemsPerPage, sortBy}) => {
     paginationsGroup.value = data.result.pagination
     groups.value = data.result.data.map(item => ({
       id: item.id,
-      name: item.name
+      name: item.name,
+      deleted_at: item.deleted_at
     }))
   } catch (e) {
     console.log(e)
@@ -464,6 +465,8 @@ const addBasedOnUser = () => {
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
   if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
 
+
+
   if (markedItem.value.deleted_at) {
     return restore({ page, itemsPerPage, sortBy })
   } else {
@@ -550,6 +553,12 @@ watch(dialog, newVal => {
     isExistsUser.value = false
   } else {
     markedID.value = [markedID.value[markedID.value.length - 1]];
+  }
+})
+watch(isCreateGroup, newVal => {
+  if (!newVal) {
+    isCreateGroup.value = false
+  } else {
   }
 })
 
@@ -640,7 +649,7 @@ onMounted(async () =>  {
                   <Icons
                           style="margin-right: 10px; margin-top: 4px"
                           :name="item.deleted_at === null ? 'valid' : 'inValid'"
-                      />
+                  />
                    <span>{{ item.id }}</span>
                  </div>
                 </td>
