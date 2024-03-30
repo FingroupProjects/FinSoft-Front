@@ -131,6 +131,43 @@ const getGroup = async ({page, itemsPerPage, sortBy}) => {
   }
 }
 
+const getStorage = async ({page, itemsPerPage, sortBy, search}) => {
+  loading.value = true
+  try {
+    const {data} = await storage.get({page, itemsPerPage, sortBy}, search, filterForm.value)
+    paginations.value = data.result.pagination
+    storages.value = data.result.data.map(item => ({
+      id: item.id,
+      name: item.name
+    }))
+  } catch (e) {
+
+  } finally {
+    loading.value = false
+  }
+}
+
+const getStoragesFromTheGroup = async ({page, itemsPerPage, sortBy, search}) => {
+  try {
+    count.value = 0
+    countFilter()
+    const filterData = filterForm.value
+    filterDialog.value = false
+    if (groupIdRef.value === 0) return
+
+    loading.value = true
+
+    const { data } = await storageGroup.getStorages({page, itemsPerPage, sortBy}, search, groupIdRef.value, filterData)
+    paginations.value = data.result.pagination
+    storages.value = data.result.data
+
+  } catch (e) {
+
+  } finally {
+    loading.value = false
+  }
+}
+
 function countFilter() {
    
    for (const key in filterForm.value) {
@@ -151,7 +188,7 @@ const getStorageEmployeeData = async ({page, itemsPerPage, sortBy, search}) => {
 
   loadingStorageData.value = true
   try {
-    const {data} = await storage.getStorageEmployee({page, itemsPerPage, sortBy}, search, idStorage.value)
+    const { data } = await storage.getStoragesFromTheGroupEmployee({page, itemsPerPage, sortBy}, search, idStorage.value)
 
     paginationsStorageData.value = data.result.pagination
     storageData.value = data.result.data.map(item => ({
@@ -160,6 +197,7 @@ const getStorageEmployeeData = async ({page, itemsPerPage, sortBy, search}) => {
       to: showDate(item.to),
     })) || [];
     loadingStorageData.value = false
+
   } catch (e) {
   }
 }
@@ -185,7 +223,7 @@ const addStorage = async () => {
 
     const res = await storage.add(body)
     if (res.status === 201) {
-      await getStorage({})
+      await getStoragesFromTheGroup({})
       showToast(addMessage)
       valueRef.value = null
       organizationAdd.value = null
@@ -239,7 +277,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
 
       dialog.value = null
       cleanForm()
-      await getStorage({page, itemsPerPage, sortBy})
+      await getStoragesFromTheGroup({page, itemsPerPage, sortBy})
       markedID.value = []
       showToast(editMessage)
 
@@ -311,7 +349,7 @@ const closeFilterDialog = () => {
   filterDialog.value = false
   filterForm.value = {}
 
-  getStorage({})
+  getStoragesFromTheGroup({})
 }
 
 const massDel = async ({page, itemsPerPage, sortBy, search}) => {
@@ -321,7 +359,7 @@ const massDel = async ({page, itemsPerPage, sortBy, search}) => {
 
     if (status === 200) {
       showToast(removeMessage, 'red')
-      await getStorage({page, itemsPerPage, sortBy, search})
+      await getStoragesFromTheGroup({page, itemsPerPage, sortBy, search})
       markedID.value = []
       dialog.value = false
     }
@@ -338,7 +376,7 @@ const massRestore = async ({page, itemsPerPage, sortBy, search}) => {
 
     if (status === 200) {
       showToast(restoreMessage)
-      await getStorage({page, itemsPerPage, sortBy, search})
+      await getStoragesFromTheGroup({page, itemsPerPage, sortBy, search})
       markedID.value = []
       dialog.value = false
     }
@@ -450,7 +488,6 @@ const openGroupDialog = (item) => {
 
 const deleteGroup = async () => {
   
-  console.log(group.value.id)
   try {
     const res = await storageGroup.delete(group.value.id)
     if (res.status === 200) {
@@ -628,29 +665,9 @@ const employeeLineMarking = (item) => {
 const lineMarkingGroup = group_id => {
   markedID.value = []
   groupIdRef.value = group_id
-  getStorage({})
+  getStoragesFromTheGroup({})
 }
 
-const getStorage = async ({page, itemsPerPage, sortBy, search}) => {
-  try {
-    count.value = 0
-    countFilter()
-    const filterData = filterForm.value
-    filterDialog.value = false
-    if (groupIdRef.value === 0) return
-
-    loading.value = true
-
-    const { data } = await storageGroup.getStorages({page, itemsPerPage, sortBy}, search, groupIdRef.value, filterData)
-    paginations.value = data.result.pagination
-    storages.value = data.result.data
-
-  } catch (e) {
-
-  } finally {
-    loading.value = false
-  }
-}
 const isDataChanged = () => {
   const item = storages.value.find(elem => elem.id === idStorage.value);
 
@@ -879,7 +896,7 @@ onMounted(async () => {
               :items="storages"
               :item-value="headers.title"
               :search="debounceSearch"
-              @update:options="getStorage"
+              @update:options="getStoragesFromTheGroup"
               show-select
               v-model="markedID"
               page-text='{0}-{1} от {2}'
@@ -1204,7 +1221,7 @@ onMounted(async () => {
                 />
                 <div class="d-flex justify-end ga-2">
                   <v-btn color="red" class="btn" @click="closeFilterDialog">сбросить</v-btn>
-                  <v-btn color="green" class="btn"  @click="getStorage">применить</v-btn>
+                  <v-btn color="green" class="btn"  @click="getStoragesFromTheGroup">применить</v-btn>
                 </div>
               </v-col>
             </v-row>
