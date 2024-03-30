@@ -23,8 +23,5 @@ export default {
   password(id, body) {
     return api.post(`/users/change-password/${id}`, body)
   },
-  filter(body) 
-  {
-    return api.get(`/users/filter`, body)
-  }
+
 }
