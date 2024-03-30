@@ -19,6 +19,6 @@ export default {
     return api.delete(`/group/${id}`)
   },
   restore(id) {
-    return api.patch(`/group/restore/${id}`)
+    return api.get(`/group/restore/${id}`)
   }
 }
