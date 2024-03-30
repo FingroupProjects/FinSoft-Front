@@ -12,7 +12,6 @@ export default {
     return api.get(`/employee/${id}`)
   },
   update(id, body) {
-    console.log(...body.entries())
     return api.post(`/employee/${id}`, body)
   },
   massDeletion(data) {
