@@ -34,6 +34,7 @@ const isDialogPassword = ref(false)
 const idUser = ref(null)
 const hoveredRowIndex = ref(null)
 const isCreateGroup = ref(false)
+const isEditGroup = ref(false)
 
 const isExistsUser = ref(false)
 const markedID = ref([])
@@ -101,7 +102,8 @@ const getGroup = async ({page, itemsPerPage, sortBy}) => {
     paginationsGroup.value = data.result.pagination
     groups.value = data.result.data.map(item => ({
       id: item.id,
-      name: item.name
+      name: item.name,
+      deleted_at: item.deleted_at
     }))
   } catch (e) {
     console.log(e)
@@ -424,6 +426,13 @@ const openDialog = item => {
 
 }
 
+const openGroupDialog = (item) => {
+  isEditGroup.value = true
+  isCreateGroup.value = true
+  group.value = item
+  
+}
+
 const addBasedOnUser = () => {
   if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
   if (markedID.value.length > 1) return showToast(selectOneItemMessage, 'warning')
@@ -455,6 +464,8 @@ const addBasedOnUser = () => {
 }
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
   if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
+
+
 
   if (markedItem.value.deleted_at) {
     return restore({ page, itemsPerPage, sortBy })
@@ -544,6 +555,12 @@ watch(dialog, newVal => {
     markedID.value = [markedID.value[markedID.value.length - 1]];
   }
 })
+watch(isCreateGroup, newVal => {
+  if (!newVal) {
+    isCreateGroup.value = false
+  } else {
+  }
+})
 
 onMounted(async () =>  {
   await getOrganization()
@@ -626,9 +643,13 @@ onMounted(async () =>  {
               <v-skeleton-loader type="table-row@9"></v-skeleton-loader>
             </template>
             <template v-slot:item="{ item, index }">
-              <tr :class="{'bg-grey-lighten-2': item.id === groupIdRef }" @mouseenter="hoveredRowIndex = index + 100000" @mouseleave="hoveredRowIndex = null" @click="lineMarkingGroup(item.id)" >
+              <tr :class="{'bg-grey-lighten-2': item.id === groupIdRef }" @mouseenter="hoveredRowIndex = index + 100000" @mouseleave="hoveredRowIndex = null" @click="lineMarkingGroup(item.id)" @dblclick="openGroupDialog(item)" >
                 <td>
                  <div class="d-flex">
+                  <Icons
+                          style="margin-right: 10px; margin-top: 4px"
+                          :name="item.deleted_at === null ? 'valid' : 'inValid'"
+                  />
                    <span>{{ item.id }}</span>
                  </div>
                 </td>
@@ -869,8 +890,9 @@ onMounted(async () =>  {
           </v-card>
         </v-dialog>
         <div v-if="isCreateGroup">
-          <create-group @toggleDialog="toggleGroup" />
+          <create-group @toggleDialog="toggleGroup" :isEdit="isEditGroup" :item="group" />
         </div>
+      
         <div v-if="isDialogPassword">
           <change-password @toggleDialogPassword="isDialogPassword = false" :id="idUser" />
         </div>

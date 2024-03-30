@@ -4,11 +4,16 @@ import groupApi from "../../../api/goodGroup";
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import { addMessage } from "../../../composables/constant/buttons";
+import {
+  addMessage,
+  editMessage,
+  removeMessage,
+  restoreMessage,
+} from "../../../composables/constant/buttons";
 
 const emit = defineEmits();
 const props = defineProps([
-  "createGroupOnBase",
+  "isEditGroup",
   "groupData",
   "isFilter",
   "filterForm",
@@ -47,6 +52,54 @@ const createGroup = async () => {
   }
 };
 
+const editGroup = async () => {
+  try {
+    const body = {
+      name: name.value,
+      is_good: is_good.value,
+      is_service: is_service.value,
+    };
+    await groupApi.update(props.groupData.id, body);
+    showToast(editMessage, "green");
+    emit("toggleDialog");
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+const delGroup = async () => {
+  try {
+    const body = {
+      ids: [props.groupData.id],
+    };
+    await groupApi.massDeletion(body);
+    showToast(removeMessage, "red");
+    emit("toggleDialog");
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+const restoreGroup = async () => {
+  try {
+    const body = {
+      ids: [props.groupData.id],
+    };
+    await groupApi.massRestore(body);
+    showToast(restoreMessage, "green");
+    emit("toggleDialog");
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+const compute = () => {
+  if (props.groupData.deleted_at === null) {
+    return delGroup();
+  } else {
+    return restoreGroup();
+  }
+};
 const filter = async () => {
   try {
     const filterData = {
@@ -74,7 +127,7 @@ watch(
 );
 
 onMounted(() => {
-  if (props.createGroupOnBase) {
+  if (props.groupData) {
     name.value = props.groupData.name;
     is_good.value = props.groupData.is_good;
     is_service.value = props.groupData.is_service;
@@ -106,15 +159,27 @@ const rules = {
           rounded="xl"
         >
           <div class="d-flex justify-space-between align-center mb-2">
-            <span>{{ isFilter ? "Фильтр" : "Создать группу" }}</span>
+            <span>{{
+              isFilter
+                ? "Фильтр"
+                : props.isEditGroup
+                ? `Изменить ${props.groupData.name}`
+                : "Создать группу"
+            }}</span>
             <div
               v-if="!isFilter"
               class="d-flex align-center justify-space-between"
             >
               <div class="d-flex ga-3 align-center mt-2 me-4">
-                <!-- <Icons name="delete" /> -->
+                <Icons @click="compute()" name="delete" title="Удалить" />
                 <Icons
-                  @click="isFilter ? filter() : createGroup()"
+                  @click="
+                    isFilter
+                      ? filter()
+                      : props.isEditGroup
+                      ? editGroup()
+                      : createGroup()
+                  "
                   name="save"
                   title="Сохранить"
                 />
@@ -145,7 +210,6 @@ const rules = {
                   label="Наименование"
                   clear-icon="close"
                   clearable
-                  @click:append-inner="name = ''"
                   hide-details
                 />
                 <div class="d-flex justify-space-around">
@@ -162,7 +226,7 @@ const rules = {
                     Услуги
                   </CustomCheckbox>
                 </div>
-                <div class="d-flex justify-end ga-2 mt-2">
+                <div v-if="isFilter" class="d-flex justify-end ga-2 mt-2">
                   <v-btn color="red" class="btn">сбросить</v-btn>
                   <v-btn color="green" class="btn">применить</v-btn>
                 </div>

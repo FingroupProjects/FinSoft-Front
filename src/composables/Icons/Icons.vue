@@ -7,7 +7,7 @@ defineProps({
 </script>
 
 <template>
-  <span class="flex justify-center items-center cursor-pointer">
+  <span class="d-flex justify-center align-center cursor-pointer">
     <svg
       v-if="name === 'planning'"
       width="24"
@@ -139,8 +139,8 @@ defineProps({
     </svg>
     <svg
       v-if="name === 'add'"
-      width="32"
-      height="32"
+      width="28"
+      height="28"
       viewBox="0 0 18 18"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -156,8 +156,8 @@ defineProps({
 
     <svg
       v-if="name === 'copy'"
-      width="32"
-      height="32"
+      width="28"
+      height="28"
       viewBox="0 0 18 18"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -173,8 +173,8 @@ defineProps({
 
     <svg
       v-if="name === 'delete'"
-      width="32"
-      height="32"
+      width="28"
+      height="28"
       viewBox="0 0 18 18"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"

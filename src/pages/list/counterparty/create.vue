@@ -640,6 +640,7 @@ const currencyProps = (item) => {
                   hide-details
                 />
                 <span
+                  v-if="isEdit"
                   style="color: red; font-weight: bolder"
                   class="mr-4 mt-1"
                   >{{ props.item.balance }}</span

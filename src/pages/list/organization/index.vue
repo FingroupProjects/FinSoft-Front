@@ -776,7 +776,7 @@ onMounted(async () => {
                       density="compact"
                       placeholder="Описание"
                       label="Описание"
-                  />
+                />
                 <div class="d-flex justify-end ga-2 mt-2">
                   <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
                   <v-btn color="green" class="btn"  @click="getOrganizationData">применить</v-btn>

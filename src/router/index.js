@@ -4,6 +4,7 @@ import programSettingsApi from "../api/programSettingsApi.js";
 import {getToken} from "../composables/auth/index.js";
 import {ca} from "vuetify/locale";
 import {api} from "../api/api.js";
+import showToast from "../composables/toast/index.js";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -11,10 +12,12 @@ const router = createRouter({
 })
 
 api.interceptors.response.use(
-  response => {
-    return response;
-  },
+  response => response,
   error => {
+    // if (error.response && error.response.status === 429) {
+    //   showToast('Слишком много запроса', 'red')
+    // }
+
     if (error.response && error.response.status === 401) {
 
       setTimeout(() => {

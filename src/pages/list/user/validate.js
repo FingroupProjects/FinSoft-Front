@@ -14,10 +14,11 @@ export default function validate(
   emailRef,
   group
 ) {
+
   if (!fioRef.value) {
     return showToast("Поле ФИО не может быть пустым", "warning")
   }
-  if (organization.value) {
+  if (!organization.value) {
     return showToast("Поле Организации не может быть пустым", "warning")
   }
   if (!loginRef.value) {
