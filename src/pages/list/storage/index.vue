@@ -122,7 +122,8 @@ const getGroup = async ({page, itemsPerPage, sortBy}) => {
     paginationsGroup.value = data.result.pagination
     groups.value = data.result.data.map(item => ({
       id: item.id,
-      name: item.name
+      name: item.name,
+      deleted_at: item.deleted_at
     }))
   } catch (e) {
 
@@ -465,6 +466,29 @@ const deleteGroup = async () => {
   isExistsGroup.value = false
   groupDialog.value = false
 }
+
+const restoreGroup = async () => {
+  const response = await storageGroup.restore(group.value.id);
+    if (response.status === 200) {
+      await getGroup({})
+      showToast(restoreMessage);
+    }
+    
+}
+
+
+
+const computeGroup = async () => {
+  if(group.value.deleted_at !== null) {
+      restoreGroup()
+  }
+  else {
+    deleteGroup()
+  }
+}
+
+
+
 
 const openDialog = (item) => {
   dialog.value = true
@@ -1124,7 +1148,7 @@ onMounted(async () => {
               <span>{{isExistsGroup ? 'Изменить' : 'Создать'}} группу</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                   <Icons v-if="isExistsGroup"  @click="deleteGroup" name="delete"/>
+                   <Icons v-if="isExistsGroup"  @click="computeGroup" name="delete"/>
             
                   <Icons v-if="isExistsGroup" @click="updateGroup" name="save"/>
                   <Icons v-else @click="addGroup" name="save"/>

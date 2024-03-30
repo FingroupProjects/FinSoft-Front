@@ -241,6 +241,13 @@ const cleanForm = () => {
   imagePreview.value = null
 }
 
+watch(isCreateGroup, newVal => {
+  if (!newVal) {
+    isEditGroup.value = false
+  } else {
+  }
+})
+
 const massDel = async ({page, itemsPerPage, sortBy, search}) => {
 
   try {

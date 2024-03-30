@@ -61,12 +61,29 @@ const update = async () => {
   }
 };
 
-const compute = async () => {
+const restore = async () => {
+  const response = await userGroup.restore(props.item.id);
+    if (response.status === 200) {
+      showToast(restoreMessage);
+    }
+    emit("toggleDialog");
+}
+
+const destroy  = async () => {
   const response = await userGroup.delete(props.item.id);
     if (response.status === 200) {
       showToast(removeMessage);
     }
     emit("toggleDialog");
+}
+
+const compute = async () => {
+  if(props.item.deleted_at !== null) {
+      restore()
+  }
+  else {
+    destroy()
+  }
 }
 
 onMounted(() => {
