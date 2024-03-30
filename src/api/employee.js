@@ -20,5 +20,8 @@ export default {
   },
   massRestore(data) {
     return api.post('/employees/massRestore', data)
-  }
+  },
+  deleteImage(id) {
+    return api.post(`/employee/delete-image/${id}`)
+  },
 }
