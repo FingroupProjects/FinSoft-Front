@@ -298,6 +298,8 @@ const openGroupDialog = (item) => {
 }
 
 const openDialog = (item) => {
+
+
   dialog.value = true
    if (item === 0) {
     idEmployee.value = 0
@@ -318,6 +320,7 @@ const openDialog = (item) => {
       name: item.group.name
     }
 
+
     if (item.image !== null) {
       imagePreview.value = import.meta.env.VITE_IMG_URL + item.image
     } else {
@@ -336,7 +339,6 @@ const isImage = computed(() => {
   if (imageRef.value === null && imagePreview.value === null) {
     return true
   }
-
 })
 
 
@@ -498,9 +500,11 @@ const checkUpdate = () => {
 const deleteImage = async () => {
   if (idEmployee.value === 0) return imagePreview.value = imageRef.value = null
 
+  const employeeVal = employees.value.find(item => item.id === idEmployee.value)
+  employeeVal.image = null
+
   try {
-    const res = await employee.deleteImage(idEmployee.value)
-    console.log(res)
+    await employee.deleteImage(idEmployee.value)
   } catch (e) {
     console.log(e)
   } finally {

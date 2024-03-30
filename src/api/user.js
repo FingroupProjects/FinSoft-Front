@@ -23,5 +23,7 @@ export default {
   password(id, body) {
     return api.post(`/users/change-password/${id}`, body)
   },
-
+  deleteImage(id) {
+    return api.delete(`/user/delete-image/${id}`)
+  },
 }
