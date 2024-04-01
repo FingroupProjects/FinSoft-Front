@@ -142,6 +142,13 @@ const checkAndClose = () => {
     showModal.value = false;
   }
 }
+
+watch(isCreateGroup, newVal => {
+  if (!newVal) {
+    isEditGroup.value = false
+  }
+})
+
 const closeDialogWithoutSaving = () => {
   dialog.value = false;
   showModal.value = false
@@ -608,10 +615,19 @@ onMounted(async () =>  {
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
               <button
-                  class="group_create"
-                  @click="isCreateGroup = true"
+                style="
+                  background-color: #6bd68a;
+                  border-radius: 8px;
+                  white-space: nowrap;
+                  height: 32px;
+                  padding: 0px 4px;
+                  font-size: 12px;
+                  color: white;
+                  text-transform: uppercase;
+                "
+                @click="isCreateGroup = true"
               >
-                <span class="px-2 py-0">создать группу</span>
+                <span class="px-2 pb-0">создать группу</span>
               </button>
               <Icons title="Создать" @click="openDialog(0)" name="add"/>
               <Icons title="Скопировать" @click="addBasedOnUser" name="copy"/>
