@@ -388,11 +388,6 @@ const closingWithSaving = async () => {
     }
   }
 };
-
-
-
-
-
 const checkUpdate = () => {
   if (isDataChanged()) {
     showModal.value = true;
@@ -551,7 +546,8 @@ onMounted(async () => {
                 </template>
                 <template v-else>
                   <div class="d-flex align-center">
-                      <Icons style="margin-right: 10px; margin-top: 4px" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
+                      <Icons style="margin-right: 10px; margin-top: 4px" 
+                      :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
                       <span>{{ index + 1 }}</span>
                     </div>
                 </template>
@@ -566,7 +562,7 @@ onMounted(async () => {
 
     <!-- modal -->
     <v-card>
-      <v-dialog persistent class="mt-2 pa-2" v-model="addDialog">
+      <v-dialog persistent class="mt-2 pa-2" v-model="addDialog" @keyup.esc="isExistsOrganization ? checkUpdate() : checkAndClose()">
         <v-card
           style="border: 2px solid #3ab700"
           min-width="500"
@@ -591,7 +587,6 @@ onMounted(async () => {
               </div>
               <v-btn
                 @click="isExistsOrganization ? checkUpdate() : checkAndClose()"
-                
                 variant="text"
                 :size="32"
                 class="pt-2 pl-1"
@@ -614,6 +609,7 @@ onMounted(async () => {
                   density="compact"
                   placeholder="Организация"
                   label="Наименования"
+                  autofocus
                   clear-icon="close"
                   clearable
                 />
@@ -693,7 +689,7 @@ onMounted(async () => {
       </v-dialog>
 
       <v-card>
-        <v-dialog persistent class="mt-2 pa-2" v-model="filterModal">
+        <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup.esc="closeFilterModal">
           <v-card
             style="border: 2px solid #3ab700"
             min-width="600"
@@ -714,6 +710,7 @@ onMounted(async () => {
                   variant="outlined"
                   class="w-auto text-sm-body-1"
                   density="compact"
+                  autofocus
                   placeholder="Организация"
                   label="Наименования"
                   clear-icon="close"

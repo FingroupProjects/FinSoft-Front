@@ -49,6 +49,8 @@ const search = ref("");
 const modalTitle = ref("");
 
 const showModal = ref(false);
+const showModalAgreement = ref(false);
+const showConfirmDialog = ref(false);
 
 const pagination = ref([]);
 const roles = ref([]);
@@ -156,10 +158,13 @@ const lineMarking = (item) => {
   if (index !== -1) {
     markedID.value.splice(index, 1);
   } else {
-    markedID.value.push(item.id);
+    if (item.id !== null) {
+      markedID.value.push(item.id);
+    }
   }
   markedItem.value = item;
 };
+
 
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
   if (markedItem.value.deleted_at) {
@@ -175,6 +180,9 @@ const openAgreementDialog = () => {
 
 const toggleModal = () => {
   showModal.value = !showModal.value;
+};
+const toggleModalAgreement = () => {
+  showModalAgreement.value = !showModalAgreement.value;
 };
 
 const getDated = () => {
@@ -448,6 +456,26 @@ const isDataChanged = () => {
   return isChanged;
 };
 
+const closingWithSaving = async () => {
+  if (props.isEdit) {
+    await updateCounterparty({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+    showModal.value = false
+  } else {
+    const isValid = validate(
+      name,
+      address,
+      phone,
+      email,
+      );
+      showModal.value = false
+    if (isValid === true) {
+      await CreateCounterparty({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      dialog.value = false;
+      showModal.value = false;
+      showConfirmDialog.value = false;
+    }
+  }
+};
 const checkUpdate = () => {
   if (isDataChanged()) {
     showModal.value = true;
@@ -475,6 +503,69 @@ const closeDialogWithoutSaving = () => {
   showModal.value = false;
   clearForm();
 };
+const isDataChangedAgreement = () => {
+  const item = props.counterpartyAgreement.find((item) => item.id === props.item.id);
+
+  const isChanged =
+    name.value !== item.name ||
+    currencyApi.value !== item.currency_id ||
+    organizationApi.value !== item.organization_id ||
+    priceTypeApi.value !== item.price_type_id ||
+    contact_person.value !== item.contact_person ||
+    comment.value !== item.comment ||
+    date.value !== item.date;
+    return isChanged;
+};
+
+const closingWithSavingAgreement = async () => {
+  if (props.isEdit) {
+    await updateCpAgreement({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+    showModalAgreement.value = false
+  } else {
+    const isValid = validate(
+      name,
+      address,
+      phone,
+      email,
+      );
+      showModalAgreement.value = false
+    if (isValid === true) {
+      await createCpAgreement({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      dialog.value = false;
+      showModalAgreement.value = false;
+      showConfirmDialog.value = false;
+    }
+  }
+};
+const checkUpdateAgreement = () => {
+  if (isDataChangedAgreement()) {
+    showModalAgreement.value = true;
+  } else {
+    agreementDialog.value = false;
+  }
+};
+
+const checkAndCloseAgreement = () => {
+  if (
+    name.value ||
+    phone.value ||
+    email.value ||
+    address.value ||
+    roles.value.length > 0
+  ) {
+    showModalAgreement.value = true;
+  } else {
+    agreementDialog.value = false;
+  }
+};
+
+const closeDialogWithoutSavingAgreement = () => {
+  agreementDialog.value = false;
+  showModalAgreement.value = false;
+  clearForm();
+};
+
+
 
 const createCpAgreement = async () => {
   try {
@@ -560,7 +651,7 @@ const currencyProps = (item) => {
 
 <template>
   <div>
-    <v-dialog persistent v-model="dialog" class="mt-2 pa-2">
+    <v-dialog persistent v-model="dialog" class="mt-2 pa-2" @keyup.esc="isEdit ? checkUpdate() : checkAndClose()">
       <v-card
         style="border: 2px solid #3ab700"
         min-width="350"
@@ -590,7 +681,7 @@ const currencyProps = (item) => {
               />
             </div>
             <v-btn
-              @click="dialog = false"
+            @click="isEdit ? checkUpdate() : checkAndClose()"
               variant="text"
               title="Закрыть"
               :size="32"
@@ -616,6 +707,7 @@ const currencyProps = (item) => {
                   placeholder="Контрагент"
                   label="Наименование"
                   clear-icon="close"
+                  autofocus
                   clearable
                   hide-details
                 />
@@ -758,7 +850,6 @@ const currencyProps = (item) => {
               <tr
                 @mouseenter="hoveredRowIndex = index"
                 @mouseleave="hoveredRowIndex = null"
-                @click="lineMarking(item)"
                 @dblclick="editDialog(item)"
                 :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
               >
@@ -769,6 +860,7 @@ const currencyProps = (item) => {
                     "
                   >
                     <CustomCheckbox
+                      v-model="markedID"
                       :checked="markedID.includes(item.id)"
                       @click="lineMarking(item)"
                       @change="lineMarking(item)"
@@ -811,7 +903,7 @@ const currencyProps = (item) => {
             <div class="d-flex ga-3 align-center mt-2 me-4">
               <Icons
                 @click="
-                  editAgreementDialog
+                  editAgreementDialog   
                     ? updateCpAgreement()
                     : createCpAgreement()
                 "
@@ -819,7 +911,7 @@ const currencyProps = (item) => {
               />
             </div>
             <v-btn
-              @click="agreementDialog = false"
+              @click="agreementDialog "
               variant="text"
               :size="32"
               class="pt-2 pl-1"
@@ -974,13 +1066,22 @@ const currencyProps = (item) => {
         </v-form>
       </v-card>
     </v-dialog>
+    <div v-if="showModal">
+      <ConfirmModal
+        :showModal="true"
+        @close="toggleModal()"
+        @closeClear="closeDialogWithoutSaving()"
+        @closeWithSaving="closingWithSaving()"
+      />
+    </div>
+    <div v-if="showModalAgreement">
+      <ConfirmModal
+        :showModal="true"
+        @close="toggleModalAgreement()"
+        @closeClear="closeDialogWithoutSavingAgreement()"
+        @closeWithSaving="closingWithSavingAgreement()"
+      />
+    </div>
   </div>
 
-  <div v-if="showModal">
-    <ConfirmModal
-      :showModal="true"
-      @close="toggleModal()"
-      @closeClear="closeDialogWithoutSaving()"
-    />
-  </div>
 </template>

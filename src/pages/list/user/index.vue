@@ -763,7 +763,7 @@ onMounted(async () =>  {
 
       <!-- Modal -->
       <v-card>
-        <v-dialog persistent class="mt-2 pa-2" v-model="dialog">
+        <v-dialog persistent class="mt-2 pa-2" v-model="dialog" @keyup.esc="isExistsUser ? checkUpdate() : checkAndClose()">
           <v-card style="border: 2px solid #3AB700" min-width="600"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
@@ -800,6 +800,7 @@ onMounted(async () =>  {
                         density="compact"
                         placeholder="Иван Иванов Иванович"
                         label="ФИО"
+                        autofocus
                         clear-icon="close"
                         :append-inner-icon="fioRef ? 'close' : ''"
                         @click:append-inner="fioRef = null"
@@ -938,7 +939,7 @@ onMounted(async () =>  {
           <change-password @toggleDialogPassword="isDialogPassword = false" :id="idUser" />
         </div>
 
-        <v-dialog persistent class="mt-2 pa-2" v-model="showModalDialog">
+        <v-dialog persistent class="mt-2 pa-2" v-model="showModalDialog" @keyup="closeFilterDialog()">
           <v-card style="border: 2px solid #3AB700" min-width="600"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
@@ -960,6 +961,7 @@ onMounted(async () =>  {
                         class="w-auto text-sm-body-1"
                         density="compact"
                         placeholder="Иван Иванов Иванович"
+                        autofocus
                         label="ФИО"
                         clear-icon="close"
                         :append-inner-icon="fioRef ? 'close' : ''"
