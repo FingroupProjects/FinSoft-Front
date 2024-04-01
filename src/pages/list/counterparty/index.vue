@@ -118,6 +118,8 @@ const createBase = () => {
   editItem(markedItem.value);
 };
 
+
+
 const editItem = (item) => {
   isCreate.value = true;
   isEdit.value = true;
@@ -286,6 +288,10 @@ const handleCheckboxChange = (index) => {
   computeRoles();
 };
 
+const handleCheckboxClick = function (item) {
+  lineMarking(item);
+};
+
 const computeRoles = () => {
   filterForm.value.roles.forEach((roleIndex) => {
     if (roleIndex === 1) a.value = true;
@@ -303,7 +309,7 @@ onMounted(async () => {
 <template>
   <div>
     <v-col>
-      <div class="d-flex justify-space-between text-uppercase">
+      <div class="d-flex justify-space-between text-uppercase" >
         <div class="d-flex align-center ga-2 pe-2 ms-4">
           <span>Контрагенты</span>
         </div>
@@ -379,7 +385,6 @@ onMounted(async () => {
             <tr
               @mouseenter="hoveredRowIndex = index"
               @mouseleave="hoveredRowIndex = null"
-              @click="lineMarking(item)"
               @dblclick="editItem(item)"
               :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
@@ -388,11 +393,12 @@ onMounted(async () => {
                   v-if="hoveredRowIndex === index || markedID.includes(item.id)"
                 >
                   <CustomCheckbox
+                    v-model="markedID"
                     :checked="markedID.includes(item.id)"
                     @click="lineMarking(item)"
-                    @change="lineMarking(item)"
+                    @change="handleCheckboxClick(item)"
                   >
-                    <span>{{ item.id }}</span>
+                    <span>{{ index + 1 }}</span>
                   </CustomCheckbox>
                 </template>
 
@@ -402,7 +408,7 @@ onMounted(async () => {
                       style="margin-right: 10px; margin-top: 4px"
                       :name="item.deleted_at === null ? 'valid' : 'inValid'"
                     />
-                    <span>{{ item.id }}</span>
+                    <span>{{ index + 1 }}</span>
                   </span>
                 </template>
               </td>
@@ -435,7 +441,7 @@ onMounted(async () => {
         "
       />
 
-      <v-dialog persistent v-model="filterDialog" class="mt-2 pa-2">
+      <v-dialog persistent v-model="filterDialog" class="mt-2 pa-2" @keyup.esc="closeFilterDialog">
         <v-card
           style="border: 2px solid #3ab700"
           min-width="650"
@@ -457,6 +463,7 @@ onMounted(async () => {
                     variant="outlined"
                     class="w-auto text-sm-body-1"
                     density="compact"
+                    autofocus
                     placeholder="Контрагент"
                     label="Наименование"
                     clear-icon="close"

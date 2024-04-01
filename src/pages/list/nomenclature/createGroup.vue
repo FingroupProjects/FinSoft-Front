@@ -151,7 +151,7 @@ const rules = {
 <template>
   <div>
     <v-col>
-      <v-dialog persistent v-model="dialog" class="mt-2 pa-2">
+      <v-dialog persistent v-model="dialog" class="mt-2 pa-2" @keyup.esc="$emit('toggleDialog')">
         <v-card
           style="border: 2px solid #3ab700"
           min-width="350"
@@ -200,7 +200,7 @@ const rules = {
               </v-btn>
             </div>
           </div>
-          <v-form class="d-flex w-100">
+          <v-form class="d-flex w-100" >
             <v-row class="w-100">
               <v-col class="d-flex flex-column w-100 ga-3">
                 <v-text-field
@@ -214,6 +214,7 @@ const rules = {
                   placeholder="Наименование"
                   label="Наименование"
                   clear-icon="close"
+                  autofocus
                   clearable
                   hide-details
                 />

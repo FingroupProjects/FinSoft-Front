@@ -23,6 +23,7 @@ const isEdit = ref(false);
 const isCreated = ref(false);
 const isCreateOnBase = ref(false);
 const showModal = ref(false);
+const showConfirmDialog = ref(false);
 
 const currentIndex = ref(0);
 
@@ -61,6 +62,88 @@ const itemsProps = (item) => {
   return {
     title: item.name,
   };
+};
+
+// const toggleModal = () => {
+//   showModal.value = !showModal.value;
+// };
+
+// const closeDialogWithoutSaving = () => {
+//   showModal.value = false;
+//   isImageDialog.value = false;
+//   cleanImages();
+// };
+
+const isDataChanged = () => {
+  // const item = priceTypes.value.find(elem => elem.id === idPriceType.value);
+  const item = props.find((item) => item.id === props.item.id);
+
+
+  return name.value !== item.name ||
+  vendor_code.value !== item.vendor_code ||
+  description.value !== item.description ||
+  unit_id.value !== item.unit_id ||
+  storage_id.value !== item.storage_id ||
+  main_image.value !== item.main_image 
+};
+
+const checkAndClose = () => {
+  if (
+    name.value ||
+    vendor_code.value ||
+    description.value ||
+    unit_id.value ||
+    storage_id.value ||
+    main_image.value 
+  ) {
+    showModal.value = true;
+  } else {
+    showModal.value = false;
+  }
+};
+
+const closingWithSaving = async () => {
+  if (props.isEdit) {
+    await updateGood({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+    showModal.value = false
+  } else {
+    const isValid = validate(
+      name,
+      vendor_code,
+      description,
+      unit_id,
+      storage_id,
+      main_image
+      );
+      showModal.value = false
+    if (isValid === true) {
+      await createGood({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      showModal.value = false;
+      showConfirmDialog.value = false;
+    }
+  }
+};
+
+const closeDialogWithoutSaving = () => {
+  showModal.value = false
+  showConfirmDialog.value = false;
+  cleanForm();
+};
+
+const checkUpdate = () => {
+  if (isDataChanged()) {
+    showModal.value = true;
+  }
+};
+
+
+const cleanForm = () => {
+  name.value = null;
+  vendor_code.value = null
+  description.value = null
+  unit_id.value = null
+  storage_id.value = null
+  main_image.value = null
 };
 
 const main_image = computed(() => add_images.value[currentIndex.value]);
@@ -255,7 +338,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="modal">
+  <div class="modal" @keyup.esc="$router.go(-1)">
     <v-col>
       <div class="d-flex justify-space-between align-center mb-2 ms-4">
         <div>
@@ -299,6 +382,7 @@ onMounted(async () => {
                 density="compact"
                 placeholder="Наименование"
                 label="Наименование"
+                autofocus
                 clear-icon="close"
                 clearablehide-details
                 clearable

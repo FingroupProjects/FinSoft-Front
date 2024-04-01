@@ -454,7 +454,7 @@ watch(search, debounce((newValue) => {
 
       <!-- Modal -->
       <v-card>
-        <v-dialog persistent class="mt-2 pa-2"  v-model="dialog">
+        <v-dialog persistent class="mt-2 pa-2"  v-model="dialog" @keyup.esc="isExistsPosition ? checkUpdate() : checkAndClose()">
           <v-card style="border: 2px solid #3AB700" min-width="400" min-height="150" class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
               <span>{{ isExistsPosition ? positionInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
@@ -486,6 +486,7 @@ watch(search, debounce((newValue) => {
                       :base-color="FIELD_COLOR"
                       class="w-auto text-sm-body-1"
                       density="compact"
+                      autofocus
                       placeholder="Бухгалтер"
                       label="Наименование"
                       clear-icon="close"
@@ -499,7 +500,7 @@ watch(search, debounce((newValue) => {
       </v-card>
 
       <v-card>
-        <v-dialog class="mt-2 pa-2"  v-model="filterModal">
+        <v-dialog class="mt-2 pa-2"  v-model="filterModal" @keyup.esc="closeFilterModal">
           <v-card style="border: 2px solid #3AB700" min-width="400" min-height="150" class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
               <span>Фильтр</span>
@@ -516,6 +517,7 @@ watch(search, debounce((newValue) => {
                       :base-color="FIELD_COLOR"
                       class="w-auto text-sm-body-1"
                       density="compact"
+                      autofocus
                       placeholder="Фильтр"
                       label="Наименование"
                       clear-icon="close"

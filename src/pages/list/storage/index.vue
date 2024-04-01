@@ -813,15 +813,15 @@ onMounted(async () => {
         </div>
         <v-card variant="text" min-width="450" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-2 me-3">
+            <div class="d-flex ga-2 me-3">
               <button
                 style="
-                  margin-top: 10px;
+                  margin-top: 5px;
                   background-color: #6bd68a;
                   border-radius: 8px;
                   white-space: nowrap;
                   height: 32px;
-                  padding: 0px 4px;
+                  padding: 0 4px;
                   font-size: 12px;
                   color: white;
                   text-transform: uppercase;
@@ -980,7 +980,7 @@ onMounted(async () => {
       </div>
 
       <v-card>
-        <v-dialog persistent class="mt-2 pa-2" v-model="dialog">
+        <v-dialog persistent class="mt-2 pa-2" v-model="dialog" @keyup.esc="isExistsStorage ? checkUpdate() : checkAndClose()">
           <v-card style="border: 2px solid #3AB700" max-width="600"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
@@ -1016,6 +1016,7 @@ onMounted(async () => {
                       label="Название"
                       clear-icon="close"
                       clearable
+                      autofocus
                   />
                   <v-autocomplete
                       variant="outlined"
@@ -1166,7 +1167,7 @@ onMounted(async () => {
         </v-dialog>
       </v-card>
       <v-card>
-        <v-dialog persistent class="mt-2 pa-2" v-model="groupDialog">
+        <v-dialog persistent class="mt-2 pa-2" v-model="groupDialog" @keyup.esc="groupDialog = false">
           <v-card style="border: 2px solid #3AB700" min-width="350"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
@@ -1197,16 +1198,16 @@ onMounted(async () => {
                       label="Наименование"
                       clear-icon="close"
                       clearable
+                      autofocus
                   />
                 </v-col>
               </v-row>
             </v-form>
           </v-card>
         </v-dialog>
-
       </v-card>
 
-      <v-dialog persistent class="mt-2 pa-2" v-model="filterDialog">
+      <v-dialog persistent class="mt-2 pa-2" v-model="filterDialog" @keyup.esc="closeFilterDialog">
         <v-card style="border: 2px solid #3AB700" min-width="450"
                 class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
           <div class="d-flex justify-space-between align-center mb-2">
@@ -1226,6 +1227,7 @@ onMounted(async () => {
                     label="Название"
                     clear-icon="close"
                     clearable
+                    autofocus
                 />
                 <v-autocomplete
                     variant="outlined"

@@ -694,7 +694,7 @@ watch(search, debounce((newValue) => {
       </div>
       <!-- Modal -->
       <v-card>
-        <v-dialog persistent class="mt-2 pa-2" v-model="dialog">
+        <v-dialog persistent class="mt-2 pa-2" v-model="dialog" @keyup.esc="isExistsEmployee ? checkUpdate() : checkAndClose()">
           <v-card style="border: 2px solid #3AB700" min-width="540"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
@@ -726,6 +726,7 @@ watch(search, debounce((newValue) => {
                       variant="outlined"
                       class="w-auto text-sm-body-1"
                       density="compact"
+                      autofocus
                       placeholder="ФИО"
                       label="ФИО"
                       clear-icon="close"
@@ -829,7 +830,7 @@ watch(search, debounce((newValue) => {
         <ConfirmModal :showModal="true" @close="showModal = !showModal" @closeClear="closeDialogWithoutSaving()" @closeWithSaving="closingWithSaving()" />
         </div>
 
-        <v-dialog persistent v-model="filterDialog" class="mt-2 pa-2">
+        <v-dialog persistent v-model="filterDialog" class="mt-2 pa-2" @keyup.esc="closeFilterModal">
         <v-card
           style="border: 2px solid #3ab700"
           min-width="650"
@@ -852,6 +853,7 @@ watch(search, debounce((newValue) => {
                     class="w-auto text-sm-body-1"
                     density="compact"
                     placeholder="Наименование"
+                    autofocus
                     label="Наименование"
                     clear-icon="close"
                     clearable
