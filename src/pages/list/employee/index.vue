@@ -542,10 +542,19 @@ watch(search, debounce((newValue) => {
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
               <button
-                  class="group_create"
-                  @click="isCreateGroup = true"
+                style="
+                  background-color: #6bd68a;
+                  border-radius: 8px;
+                  white-space: nowrap;
+                  height: 32px;
+                  padding: 0px 4px;
+                  font-size: 12px;
+                  color: white;
+                  text-transform: uppercase;
+                "
+                @click="isCreateGroup = true"
               >
-              создать группу
+                <span class="px-2 pb-0">создать группу</span>
               </button>
               <Icons @click="openDialog(0)" name="add"/>
               <Icons @click="addBasedOnEmployee" name="copy"/>

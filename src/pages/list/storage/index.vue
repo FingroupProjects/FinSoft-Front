@@ -84,6 +84,12 @@ const toggleModal = () => {
   showConfirmDialog.value = false;
 };
 
+watch(groupDialog, newVal => {
+  if (!newVal) {
+    isExistsGroup.value = false
+    groupName.value = null
+  }
+})
 
 const headers = ref([
   {title: 'Наименование', key: 'name'},
@@ -805,21 +811,24 @@ onMounted(async () => {
         <div class="d-flex align-center ga-2 pe-2 ms-4">
           <span>Склады</span>
         </div>
-        <v-card variant="text" min-width="400" class="d-flex align-center ga-2">
+        <v-card variant="text" min-width="450" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-2 me-3">
               <button
-                  style="
-                  background-color: #4ecb71;
-                  border-radius: 12px;
+                style="
+                  margin-top: 10px;
+                  background-color: #6bd68a;
+                  border-radius: 8px;
                   white-space: nowrap;
-                  height: 25px;
+                  height: 32px;
+                  padding: 0px 4px;
                   font-size: 12px;
-                  border: 1px solid red;
+                  color: white;
+                  text-transform: uppercase;
                 "
-                  @click="groupDialog = true"
+                @click="groupDialog = true"
               >
-                <span class="px-2 py-0">создать группу</span>
+                <span class="px-2 pb-0">создать группу</span>
               </button>
               <Icons @click="openDialog(0)" name="add"/>
               <Icons name="copy" @click="addBasedOnStorage"/>
