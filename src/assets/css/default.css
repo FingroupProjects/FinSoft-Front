@@ -61,6 +61,11 @@ label {
   font-size: 28px !important;
 }
 
+.v-autocomplete__menu-icon {
+  color: #008000;
+  font-size: 28px !important;
+}
+
 .group_create {
   background-color: #4ecb71;
   border-radius: 12px;

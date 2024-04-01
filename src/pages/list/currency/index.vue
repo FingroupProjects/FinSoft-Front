@@ -55,11 +55,9 @@ const showModal = ref(false);
 const showRateModal = ref(false);
 
 const toggleModal = () => {
-  console.log(1)
   showModal.value = !showModal.value;
 };
 const toggleRateModal = () => {
-  console.log(1)
   showRateModal.value = !showRateModal.value;
 };
 
@@ -130,13 +128,6 @@ const getCurrencyData = async ({page, itemsPerPage, sortBy, search}) => {
 const isDataChanged = () => {
   const item = currencies.value.find(elem => elem.id === idCurrency.value)
 
-  console.log(item)
-
-  console.log(nameRef.value !== item.name,
-  digitalRef.value !== item.digital_code,
-  symbolRef.value !== item.symbol_code 
-  )
-
   return nameRef.value !== item.name ||
   digitalRef.value != item.digital_code ||
   symbolRef.value !== item.symbol_code 
@@ -159,7 +150,6 @@ const checkAndClose = () => {
 const isDataRateChanged = () => {
   const item = rates.value.find(elem => elem.id === idCurrencyRate.value)
 
-  console.log(item)
   return valueRef.value !== item.value
  
 }
@@ -228,7 +218,6 @@ const closeRateDialogWithoutSaving = () => {
 };
 
 const checkUpdate = () => {
-  console.log(1)
   if (isDataChanged()) {
     showModal.value = true;
   } else {
@@ -237,7 +226,6 @@ const checkUpdate = () => {
 
 };
 const checkRateUpdate = () => {
-  console.log(1)
   if (isDataRateChanged()) {
     showRateModal.value = true;
   } else {
@@ -453,7 +441,6 @@ const removeCurrencyRate = async ({page, itemsPerPage, sortBy}) => {
 
 const restoreCurrencyRate = async ({page, itemsPerPage, sortBy}) => {
   try {
-    console.log(markedIDRate.value)
     const {status} = await currency.restoreRate({ids: markedIDRate.value})
     if (status === 200) {
       showToast(restoreMessage)
@@ -571,7 +558,7 @@ onMounted(async () => {
 
 watch(markedID, (newVal) => {
   markedItem.value = currencies.value.find((el) => el.id === newVal[0]);
-});
+})
 
 watch(dialog, newVal => {
   if (!newVal) {
@@ -585,6 +572,7 @@ watch(dialog, newVal => {
     markedID.value = [markedID.value[markedID.value.length - 1]];
   }
 })
+
 watch(rateDialog, newVal => {
   if (!newVal) {
     dateRef.value = currentDate()
@@ -608,7 +596,7 @@ watch(search, debounce((newValue) => {
         </div>
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
+            <div class="d-flex ga-2 me-3">
               <Icons title="Добавить"  @click="openDialog(0)" name="add"/>
               <Icons title="Копировать"  @click="addBasedOnCurrency" name="copy"/>
               <Icons title="Удалить"  @click="compute" name="delete"/>
@@ -698,7 +686,7 @@ watch(search, debounce((newValue) => {
 
       <!-- Modal -->
       <v-card>
-        <v-dialog persistent class="mt-2 pa-2" v-model="dialog">
+        <v-dialog persistent class="mt-2 pa-2" v-model="dialog" @keyup.esc="isExistsCurrency ? checkUpdate() : checkAndClose()">
           <v-card style="border: 2px solid #3AB700" min-width="300"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
@@ -710,12 +698,11 @@ watch(search, debounce((newValue) => {
                   <Icons title="Сохранить"  v-else @click="addCurrency" name="save"/>
                 </div>
                 <v-btn
-                @click="isExistsCurrency ? checkUpdate() : checkAndClose()"
-                
-                variant="text"
-                :size="32"
-                class="pt-2 pl-1"
-              >
+                  @click="isExistsCurrency ? checkUpdate() : checkAndClose()"
+                  variant="text"
+                  :size="32"
+                  class="pt-2 pl-1"
+                >
                 <Icons name="close" title="Закрыть" />
               </v-btn>
               </div>
@@ -736,6 +723,7 @@ watch(search, debounce((newValue) => {
                       label="Название"
                       clear-icon="close"
                       clearable
+                      autofocus
                   />
                   <v-text-field
                       v-model="symbolRef"
@@ -827,7 +815,7 @@ watch(search, debounce((newValue) => {
         </v-dialog>
 
         <!--  addCurrencyRate    -->
-        <v-dialog persistent v-model="rateDialog" activator="parent">
+        <v-dialog persistent v-model="rateDialog" activator="parent" @keyup.esc="isExistsCurrencyRate ? checkRateUpdate() : checkRateAndClose()">
           <v-card style="border: 2px solid #3AB700" min-width="400"
                   class="d-flex  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center pr-5 pt-3">
@@ -859,6 +847,7 @@ watch(search, debounce((newValue) => {
                       variant="outlined"
                       density="compact"
                       clear-icon="close"
+                      autofocus
                   />
                   <v-text-field
                       v-model="valueRef"
@@ -884,7 +873,7 @@ watch(search, debounce((newValue) => {
 
 
       <v-card>
-        <v-dialog persistent class="mt-2 pa-2" v-model="filterModal">
+        <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup.esc="closeFilterModal">
           <v-card style="border: 2px solid #3AB700" min-width="600"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
@@ -907,6 +896,7 @@ watch(search, debounce((newValue) => {
                         clear-icon="close"
                         clearable
                         hide-details
+                        autofocus
                     />
                   </div>
                   <div class="d-flex justify-space-between ga-6 mb-3">
