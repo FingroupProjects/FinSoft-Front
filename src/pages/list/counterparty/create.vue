@@ -574,6 +574,7 @@ const currencyProps = (item) => {
           <div class="d-flex align-center justify-space-between">
             <div class="d-flex align-center mt-2 me-4">
               <Icons
+                v-if="isEdit && !createOnBase"
                 class="me-4"
                 @click="$emit('computeCounterparty')"
                 title="Удалить"
@@ -703,14 +704,14 @@ const currencyProps = (item) => {
         <v-card class="table mt-3" style="border: 1px solid #3ab700">
           <div
             class="d-flex w-100 rounded-t-md mb-1 align-center"
-            style="border-bottom: 1px solid #3ab700;"
+            style="border-bottom: 1px solid #3ab700"
           >
             <div
               class="d-flex justify-space-between w-100 ga-2 pt-1 me-2"
-              style="padding-top: 4px !important;"
+              style="padding-top: 4px !important"
             >
               <span>Договоры</span>
-              <span style="display: flex  ">
+              <span style="display: flex">
                 <Icons
                   v-show="isEdit"
                   @click="compute"
@@ -718,7 +719,7 @@ const currencyProps = (item) => {
                   name="delete"
                   title="Удалить"
                 />
-                
+
                 <Icons
                   v-show="isEdit"
                   @click="openAgreementDialog"
@@ -726,7 +727,6 @@ const currencyProps = (item) => {
                   title="Добавить"
                 />
               </span>
-             
             </div>
           </div>
           <v-data-table-server
