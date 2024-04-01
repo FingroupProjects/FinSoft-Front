@@ -44,12 +44,17 @@ function push(item) {
 onMounted(() => {
   users.value = JSON.parse(localStorage.getItem('user'))
 
-  filteredLists.value = lists.value.map(list => {
-    return {
-      ...list,
-      child: list.child.filter(item => users.value.permissions.includes(item.link.slice(6)))
-    }
-  })
+  if (users.value.login !== 'admin') {
+    filteredLists.value = lists.value.map(list => {
+      return {
+        ...list,
+        child: list.child.filter(item => users.value.permissions.includes(item.link.slice(6)))
+      }
+    })
+  } else {
+    filteredLists.value = lists.value
+  }
+
 })
 
 </script>

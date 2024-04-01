@@ -322,7 +322,7 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
           </div>
         </v-card>
       </div>
-      <div class="d-flex ga-4" style="width: 100">
+      <div class="d-flex ga-4">
         <v-card class="table mt-2 w-50">
           <v-data-table-server
             style="height: 78vh"
@@ -374,7 +374,7 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
             </template>
           </v-data-table-server>
         </v-card>
-        <v-card class="table mt-2 w-50">
+        <v-card class="table mt-2 w-100">
           <v-data-table-server
             style="height: 78vh"
             fixed-header
