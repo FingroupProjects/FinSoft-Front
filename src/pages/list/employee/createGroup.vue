@@ -101,7 +101,7 @@ const compute = async () => {
 <template>
   <div>
     <v-col>
-      <v-dialog  v-model="dialog" class="mt-2 pa-2" persistent>
+      <v-dialog  v-model="dialog" class="mt-2 pa-2" persistent @keyup.esc="emit('toggleDialog')">
         <v-card
           style="border: 2px solid #3ab700"
           min-width="350"
@@ -133,6 +133,7 @@ const compute = async () => {
                   variant="outlined"
                   class="w-auto text-sm-body-1"
                   density="compact"
+                  autofocus
                   placeholder="Наименование"
                   label="Наименование"
                   clear-icon="close"
