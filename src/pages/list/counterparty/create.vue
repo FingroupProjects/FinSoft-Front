@@ -590,7 +590,7 @@ const currencyProps = (item) => {
               />
             </div>
             <v-btn
-              @click="isEdit ? checkUpdate() : checkAndClose()"
+              @click="dialog = false"
               variant="text"
               title="Закрыть"
               :size="32"
