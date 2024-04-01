@@ -355,7 +355,7 @@ onMounted(async () => {
         </div>
         <div class="d-flex align-center justify-space-between">
           <div class="d-flex ga-3 align-center mt-2 me-4">
-            <v-btn color="green" @click="goToImages()">ФОТО</v-btn>
+            <v-btn v-if="id === 0" color="green" @click="goToImages()">ФОТО</v-btn>
             <Icons
               @click="isEdit && !isCreateOnBase ? updateGood() : createGood()"
               name="save"
