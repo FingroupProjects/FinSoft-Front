@@ -181,7 +181,7 @@ const getDated = () => {
   agreementDialog.value = true;
   const page = 1;
   const Items = 100;
-  form.value.counterparty_id = editID.value.id;
+  form.value.counterparty_id = editID.value;
   getOrganization(page, Items);
   getPriceType({ page, Items });
   getCounterparties({ page, Items });
@@ -703,14 +703,14 @@ const currencyProps = (item) => {
         <v-card class="table mt-3" style="border: 1px solid #3ab700">
           <div
             class="d-flex w-100 rounded-t-md mb-1 align-center"
-            style="border-bottom: 1px solid #3ab700"
+            style="border-bottom: 1px solid #3ab700;"
           >
             <div
               class="d-flex justify-space-between w-100 ga-2 pt-1 me-2"
-              style="padding-top: 4px !important"
+              style="padding-top: 4px !important;"
             >
               <span>Договоры</span>
-              <span>
+              <span style="width: 100px;">
                 <Icons
                   v-show="isEdit"
                   @click="compute"
@@ -718,6 +718,7 @@ const currencyProps = (item) => {
                   name="delete"
                   title="Удалить"
                 />
+                
                 <Icons
                   v-show="isEdit"
                   @click="openAgreementDialog"
@@ -725,6 +726,7 @@ const currencyProps = (item) => {
                   title="Добавить"
                 />
               </span>
+             
             </div>
           </div>
           <v-data-table-server
