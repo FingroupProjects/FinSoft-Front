@@ -508,11 +508,10 @@ const isDataChangedAgreement = () => {
 
   const isChanged =
     name.value !== item.name ||
-    currencyApi.value !== item.currency_id ||
-    organizationApi.value !== item.organization_id ||
-    priceTypeApi.value !== item.price_type_id ||
-    contact_person.value !== item.contact_person ||
-    comment.value !== item.comment ||
+    currencies.value !== item.currency_id ||
+    organizations.value !== item.organization_id || 
+    priceTypes.value !== item.price_type_id ||
+    counterparties.value !== item.contact_person ||
     date.value !== item.date;
     return isChanged;
 };
@@ -524,9 +523,11 @@ const closingWithSavingAgreement = async () => {
   } else {
     const isValid = validate(
       name,
-      address,
-      phone,
-      email,
+      currencies,
+      organizations,
+      priceTypes,
+      counterparties,
+      date
       );
       showModalAgreement.value = false
     if (isValid === true) {
@@ -548,10 +549,11 @@ const checkUpdateAgreement = () => {
 const checkAndCloseAgreement = () => {
   if (
     name.value ||
-    phone.value ||
-    email.value ||
-    address.value ||
-    roles.value.length > 0
+    currencies.value ||
+    organizations.value ||
+    priceTypes.value ||
+    counterparties.value ||
+    date.value
   ) {
     showModalAgreement.value = true;
   } else {
@@ -907,11 +909,11 @@ const currencyProps = (item) => {
                     ? updateCpAgreement()
                     : createCpAgreement()
                 "
-                name="save"
+                name="save" 
               />
             </div>
             <v-btn
-              @click="agreementDialog "
+              @click="isEdit ? checkUpdateAgreement() : checkAndCloseAgreement()"
               variant="text"
               :size="32"
               class="pt-2 pl-1"
