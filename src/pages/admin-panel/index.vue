@@ -1,11 +1,11 @@
 <script setup>
-import { ref, defineProps, defineEmits, computed } from "vue";
+import {ref, defineProps, onMounted} from "vue";
 import { useRouter } from "vue-router";
 
 const props = defineProps(["rale"]);
-const router = useRouter();
-const emit = defineEmits();
-
+const router = useRouter()
+const users = ref([])
+const filteredLists = ref([])
 const admins = ref([
   {
     id: 1,
@@ -35,17 +35,29 @@ const lists = ref([
       { id: 12, title: "Кассы", link: "/list/cashRegister" },
     ],
   },
-]);
+])
+
 
 function push(item) {
   router.push(item.link);
 }
+onMounted(() => {
+  users.value = JSON.parse(localStorage.getItem('user'))
+
+  filteredLists.value = lists.value.map(list => {
+    return {
+      ...list,
+      child: list.child.filter(item => users.value.permissions.includes(item.link.slice(6)))
+    }
+  })
+})
+
 </script>
 
 <template>
   <div class="">
     <div class="panel align-start ga-10 pa-4">
-      <div v-for="list in lists" :key="list.id">
+      <div v-for="list in filteredLists" :key="list.id">
         <h3 class="text-uppercase mb-4">{{ list.title }}</h3>
         <ul class="list">
           <li

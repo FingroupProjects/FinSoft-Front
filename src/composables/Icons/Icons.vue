@@ -3,7 +3,7 @@ import { defineProps } from "vue";
 
 defineProps({
   name: String,
-});
+})
 </script>
 
 <template>
