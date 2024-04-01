@@ -30,7 +30,6 @@ const loading = ref(true)
 const showConfirmDialog = ref(false);
 const loadingRate = ref(true)
 const dialog = ref(false)
-const digitalRef = ref(null)
 
 const idCashRegister = ref(null)
 const hoveredRowIndex = ref(null)
@@ -57,6 +56,7 @@ const search = ref('')
 const debounceSearch = ref('')
 
 const nameRef = ref(null)
+const balanceRef = ref(null)
 
 const valueRef = ref(null)
 
@@ -65,15 +65,11 @@ const paginations = ref([])
 const showModal = ref(false);
 const count = ref(0)
 
-const toggleModal = () => {
-  showModal.value = !showModal.value;
-};
-
 const filterForm = ref({
-    name: null,
-    currency_id: null,
-    employee_id: null,
-    organization_id: null,
+  name: null,
+  currency_id: null,
+  employee_id: null,
+  organization_id: null,
 
 })
 
@@ -85,25 +81,24 @@ const headers = ref([
 
 ])
 
+const rules = {
+  required: v => !!v,
+  date: v => (v && /^\d{2}-\d{2}-\d{4}$/.test(v)) || 'Формат даты должен быть DD-MM-YYYY',
+}
+const toggleModal = () => {
+  showModal.value = !showModal.value;
+}
+
 const isDataChanged = () => {
-  const item = cashRegisters.value.find(
-    (item) => item.id === idCashRegister.value
-  );    
+  const item = cashRegisters.value.find(item => item.id === idCashRegister.value);
 
-
-  const isChanged =
-    nameRef.value !== item.name ||
+  return    nameRef.value !== item.name ||
     currencyAdd.value !== item.currency.id ||
     organizationAdd.value !== item.organization.id ||
-    employeeAdd.value !== item.responsiblePerson
-.id 
-
-  return isChanged;
-};
+    employeeAdd.value !== item.responsiblePerson.id 
+}
 
 const checkAndClose = () => {
-  
-  
   if (
     nameRef.value ||
     currencyAdd.value ||
@@ -130,7 +125,7 @@ const closingWithSaving = async () => {
       );
       showModal.value = false
     if (isValid === true) {
-      await addcashRegister({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      await addCashRegister({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
       dialog.value = false;
       showModal.value = false;
       showConfirmDialog.value = false;
@@ -172,15 +167,6 @@ function countFilter() {
    return count;
 }
 
-
-
-
-const rules = {
-  required: v => !!v,
-  date: v => (v && /^\d{2}-\d{2}-\d{4}$/.test(v)) || 'Формат даты должен быть DD-MM-YYYY',
-}
-
-
 const getcashRegisterData = async ({page, itemsPerPage, sortBy, search}) => {
   loading.value = true
   count.value = 0
@@ -199,7 +185,7 @@ const getcashRegisterData = async ({page, itemsPerPage, sortBy, search}) => {
 }
 
 
-const addcashRegister = async ({page, itemsPerPage, sortBy}) => {
+const addCashRegister = async ({page, itemsPerPage, sortBy}) => {
 
   const body = {
     name: nameRef.value,
@@ -207,7 +193,6 @@ const addcashRegister = async ({page, itemsPerPage, sortBy}) => {
     organization_id: organizationAdd.value,
     responsible_person_id: employeeAdd.value
   }
-  console.log(employeeAdd.value)
 
   if (validate(nameRef, organizationAdd, currencyAdd, employeeAdd ) !== true) return
 
@@ -353,6 +338,7 @@ const openDialog = (item) => {
       organizationAdd.value = item.organization.id
       currencyAdd.value = item.currency.id
       cashRegisterInDialogTitle.value = nameRef.value
+      balanceRef.value = item.balance
     } else {
 
     }
@@ -361,7 +347,7 @@ const openDialog = (item) => {
 }
 
 
-const addBasedOncashRegister = () => {
+const addBasedOnCashRegister = () => {
   if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
   if (markedID.value.length > 1) return showToast(selectOneItemMessage, 'warning')
   dialog.value = true
@@ -445,6 +431,7 @@ watch(search, debounce((newValue) => {
   debounceSearch.value = newValue
 }, 500))
 
+
 </script>
 
 <template>
@@ -458,7 +445,7 @@ watch(search, debounce((newValue) => {
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
               <Icons @click="openDialog(0)" name="add" title="Создать" />
-              <Icons @click="addBasedOncashRegister" title="Скопировать" name="copy"/>
+              <Icons @click="addBasedOnCashRegister" title="Скопировать" name="copy"/>
               <Icons @click="compute" name="delete" title="Удалить" />
             </div>
 
@@ -478,7 +465,6 @@ watch(search, debounce((newValue) => {
                   clearable
                   flat
               ></v-text-field>
-
             </div>
           </div>
           <div class="filterElement">
@@ -488,7 +474,6 @@ watch(search, debounce((newValue) => {
               @click="showFilterModal = true"
               class="mt-1"
             />
-
             <span v-if="count !== 0" class="countFilter">{{ count }}</span>
           </div>
         </v-card>
@@ -554,7 +539,7 @@ watch(search, debounce((newValue) => {
 
       <!-- Modal -->
       <v-card>
-        <v-dialog persistent class="mt-2 pa-2" v-model="dialog">
+        <v-dialog persistent class="mt-2 pa-2" v-model="dialog" @keyup.esc="isExistsCashRegister ? checkUpdate() : checkAndClose()">
           <v-card style="border: 2px solid #3AB700" min-width="500"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
@@ -563,37 +548,46 @@ watch(search, debounce((newValue) => {
                 <div class="d-flex ga-3 align-center mt-2 me-4">
                   <Icons title="Удалить" v-if="isExistsCashRegister"  @click="compute" name="delete"/>
                   <Icons title="Сохранить" v-if="isExistsCashRegister" @click="update" name="save"/>
-                  <Icons title="Сохранить" v-else @click="addcashRegister" name="save"/>
+                  <Icons title="Сохранить" v-else @click="addCashRegister" name="save"/>
                 </div>
                 <v-btn
-                @click="isExistsCashRegister ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
-                
-                variant="text"
-                :size="32"
-                class="pt-2 pl-1"
-              >
+                  @click="isExistsCashRegister ? checkUpdate() : checkAndClose()"
+                  variant="text"
+                  :size="32"
+                  class="pt-2 pl-1"
+                >
                 <Icons name="close" title="Закрыть" />
               </v-btn>
               </div>
             </div>
-            <v-form class="d-flex w-100" @submit.prevent="addcashRegister">
+            <v-form class="d-flex w-100" @submit.prevent="addCashRegister">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100 ga-3">
-                  <v-text-field
-                      v-model="nameRef"
-                      :rules="[rules.required]"
-                      color="green"
-                      :base-color="FIELD_COLOR"
-                      rounded="md"
-                      variant="outlined"
-                      class="w-auto text-sm-body-1"
-                      density="compact"
-                      placeholder="Наименование"
-                      hide-details
-                      label="Наименование"
-                      clear-icon="close"
-                      clearable
-                  />
+                  <div class="d-flex">
+                    <v-text-field
+                        v-model="nameRef"
+                        :rules="[rules.required]"
+                        color="green"
+                        :base-color="FIELD_COLOR"
+                        rounded="md"
+                        variant="outlined"
+                        class="w-auto text-sm-body-1"
+                        density="compact"
+                        placeholder="Наименование"
+                        hide-details
+                        label="Наименование"
+                        clear-icon="close"
+                        clearable
+                        autofocus
+                    />
+                    <span
+                        v-if="isExistsCashRegister"
+                        class="d-flex align-center px-2 font-weight-bold"
+                        :style="balanceRef > 0 ? 'color: #3AB700' : 'color: #f67665'"
+                    >
+                      {{ balanceRef  > 0 ? '+' : '-' }}{{ balanceRef }}
+                    </span>
+                  </div>
                   <div class="d-flex ga-4">
                     <v-autocomplete
                         style="max-width: 50%; min-width: 50%;"
@@ -653,7 +647,7 @@ watch(search, debounce((newValue) => {
             <div class="d-flex justify-space-between align-center mb-2">
               <span>Фильтр</span>
             </div>
-            <v-form class="d-flex w-100" @submit.prevent="addcashRegister">
+            <v-form class="d-flex w-100" @submit.prevent="addCashRegister">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100 ga-4">
                   <v-text-field
