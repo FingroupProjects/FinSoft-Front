@@ -329,19 +329,13 @@ const openDialog = (item) => {
     idCashRegister.value = item.id
 
     markedID.value.push(item.id);
-    const index = binarySearch(cashRegisters.value, item.id)
-
-    if (index !== 1) {
-      isExistsCashRegister.value = true
-      nameRef.value = item.name
-      employeeAdd.value = item.responsiblePerson.id
-      organizationAdd.value = item.organization.id
-      currencyAdd.value = item.currency.id
-      cashRegisterInDialogTitle.value = nameRef.value
-      balanceRef.value = item.balance
-    } else {
-
-    }
+    isExistsCashRegister.value = true
+    nameRef.value = item.name
+    employeeAdd.value = item.responsiblePerson.id
+    organizationAdd.value = item.organization.id
+    currencyAdd.value = item.currency.id
+    cashRegisterInDialogTitle.value = nameRef.value
+    balanceRef.value = item.balance
   }
 
 }

@@ -18,6 +18,7 @@ import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import validate from "./validate.js";
 import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 import debounce from "lodash.debounce";
+import {createAccess, readAccess, removeAccess, updateAccess} from "../../../composables/access/access.js";
 
 const showConfirmDialog = ref(false);
 const router = useRouter();
@@ -90,7 +91,8 @@ const getOrganizationData = async ({ page, itemsPerPage, sortBy, search}) => {
   }
 };
 
-const addOrganization = async ({ page, itemsPerPage, sortBy }) => {
+const addOrganization = async () => {
+  console.log("c")
   if (
     validate(
       nameRef,
@@ -129,7 +131,7 @@ const addOrganization = async ({ page, itemsPerPage, sortBy }) => {
 
     const res = await organization.add(body);
     if (res.status === 201) {
-      await getOrganizationData({ page, itemsPerPage, sortBy});
+      await getOrganizationData({});
       showToast(addMessage);
       cleanForm()
     }
@@ -162,7 +164,8 @@ const addBasedOnOrganization = () => {
   });
 };
 
-const update = async ({ page, itemsPerPage, sortBy, search }) => {
+const update = async () => {
+  console.log("u")
   if (
     validate(
       nameRef,
@@ -389,6 +392,8 @@ const closingWithSaving = async () => {
   }
 };
 const checkUpdate = () => {
+  if (!updateAccess('organization')) return addDialog.value = false;
+
   if (isDataChanged()) {
     showModal.value = true;
   } else {
@@ -444,7 +449,7 @@ watch(search, debounce((newValue) => {
 
 onMounted(async () => {
   await getEmployees({ page: 1, itemsPerPage: 10000 });
-});
+})
 </script>
 
 <template>
@@ -577,13 +582,9 @@ onMounted(async () => {
             }}</span>
             <div class="d-flex align-center justify-space-between">
               <div class="d-flex ga-3 align-center mt-2 me-4">
-                <Icons  v-if="isExistsOrganization"  @click="destroy" name="delete"/>
-                <Icons
-                  v-if="isExistsOrganization"
-                  @click="update"
-                  name="save"
-                />
-                <Icons v-else @click="addOrganization" name="save" />
+                <Icons v-if="removeAccess('organization') && isExistsOrganization"  @click="destroy" name="delete"/>
+                <Icons v-if="createAccess('organization') && !isExistsOrganization" @click="addOrganization()" name="save"/>
+                <Icons v-if="updateAccess('organization') && isExistsOrganization" @click="update()" name="save"/>
               </div>
               <v-btn
                 @click="isExistsOrganization ? checkUpdate() : checkAndClose()"
@@ -595,7 +596,7 @@ onMounted(async () => {
               </v-btn>
             </div>
           </div>
-          <v-form class="d-flex w-100" @submit.prevent="addOrganization">
+          <v-form class="d-flex w-100" :disabled="!updateAccess('organization') && isExistsOrganization" @submit.prevent="addOrganization">
             <v-row class="w-100">
               <v-col class="d-flex flex-column w-100">
                 <v-text-field
