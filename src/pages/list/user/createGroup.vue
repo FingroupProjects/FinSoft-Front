@@ -97,7 +97,7 @@ onMounted(() => {
 <template>
   <div>
     <v-col>
-      <v-dialog v-model="dialog" class="mt-2 pa-2" persistent>
+      <v-dialog v-model="dialog" class="mt-2 pa-2" persistent @keyup.esc="$emit('toggleDialog')">
         <v-card
           style="border: 2px solid #3ab700"
           min-width="350"
@@ -130,6 +130,7 @@ onMounted(() => {
                   class="w-auto text-sm-body-1"
                   density="compact"
                   placeholder="Наименование"
+                  autofocus
                   label="Наименование"
                   clear-icon="close"
                   :append-inner-icon="name.length > 1 ? 'close' : ''"

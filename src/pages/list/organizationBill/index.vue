@@ -551,7 +551,7 @@ onMounted(async () => {
 
       <!-- Modal -->
       <v-card>
-        <v-dialog persistent class="mt-2 pa-2" v-model="dialog">
+        <v-dialog persistent class="mt-2 pa-2" v-model="dialog" @keyup.esc="isExistsOrganizationBill ? checkUpdate() : checkAndClose()">
           <v-card
               style="border: 2px solid #3ab700"
               min-width="600"
@@ -614,6 +614,7 @@ onMounted(async () => {
                         :base-color="FIELD_COLOR"
                         basecolor=""
                         placeholder="Наименование"
+                        autofocus
                         label="Наименование"
                         clear-icon="close"
                         clearable
@@ -709,7 +710,7 @@ onMounted(async () => {
         </v-dialog>
       </v-card>
       <v-card>
-        <v-dialog persistent class="mt-2 pa-2" v-model="filterModal">
+        <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup="closeFilterModal">
           <v-card
               style="border: 2px solid #3ab700"
               min-width="600"
@@ -737,6 +738,7 @@ onMounted(async () => {
                         density="compact"
                         placeholder="Наименование"
                         label="Наименование"
+                        autofocus
                         clear-icon="close"
                         clearable
                         hide-details

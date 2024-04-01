@@ -406,7 +406,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="modal">
+  <div class="modal" @keyup.esc="$router.go(-1)">
     <v-col>
       <div class="d-flex justify-space-between align-center mb-2 ms-4">
         <div>
@@ -452,6 +452,7 @@ onMounted(async () => {
                 density="compact"
                 placeholder="Наименование"
                 label="Наименование"
+                autofocus
                 clear-icon="close"
                 clearablehide-details
                 clearable
