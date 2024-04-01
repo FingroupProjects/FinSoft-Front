@@ -59,7 +59,12 @@ watch(isCreate, (newVal) => {
 });
 
 const goToBack = () => {
-  router.go(-1);
+  router.push({
+    name: "createUpdateGood",
+    params: {
+      id: route.params.id,
+    },
+  });
 };
 
 const lineMarking = (item) => {
@@ -96,6 +101,12 @@ const openInModal = (item) => {
   imageId.value = item.id;
 };
 
+const openModal = () => {
+  if (images.value.length == 0) {
+    a.value = true;
+  }
+  isCreate.value = true;
+};
 const onPickFile = () => {
   fileInput.value.click();
 };
@@ -123,6 +134,7 @@ const createImage = async () => {
 
     const { data } = await goodsApi.createImage(formData);
     isCreate.value = false;
+    a.value = false;
     showToast(addMessage, "green");
     await getImages({});
   } catch (e) {
@@ -133,11 +145,10 @@ const createImage = async () => {
 const getImages = async ({ page, itemsPerPage }) => {
   try {
     loading.value = true;
-    const { data } = await goodsApi.getImages(
-      route.params.id,
-      { page, itemsPerPage },
-      search
-    );
+    const { data } = await goodsApi.getImages(route.params.id, {
+      page,
+      itemsPerPage,
+    });
     images.value = data.result.data;
     pagination.value = data.result.pagination;
     loading.value = false;
@@ -164,7 +175,6 @@ const delImg = async () => {
 };
 
 onMounted(async () => {
-  // await id.value = route.params.id;
   markedID.value = [];
 });
 </script>
@@ -186,7 +196,7 @@ onMounted(async () => {
         <v-card variant="text" min-width="300" class="d-flex align-center ga-2">
           <div class="d-flex w-100 justify-end">
             <div class="d-flex align-end ga-2 me-3">
-              <Icons @click="isCreate = true" name="add" title="Создать" />
+              <Icons @click="openModal()" name="add" title="Создать" />
               <Icons @click="delImg()" name="delete" title="Удалить" />
             </div>
           </div>
@@ -328,7 +338,9 @@ onMounted(async () => {
                 </div>
               </div>
               <div v-if="!preview" class="mt-2">
-                <CustomCheckbox v-model="a">Главная </CustomCheckbox>
+                <CustomCheckbox :checked="a" v-model="a"
+                  >Главная
+                </CustomCheckbox>
               </div>
             </form>
           </v-card>

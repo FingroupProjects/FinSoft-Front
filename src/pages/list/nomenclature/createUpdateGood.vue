@@ -160,70 +160,17 @@ const nextImage = () => {
   }
 };
 
-const cleanImages = () => {
-  firstImage.value = null;
-  secondImage.value = null;
-  thirdImage.value = null;
-  forthImage.value = null;
-};
-
 const goToImages = () => {
+  if (id.value == 0) {
+    showToast("Сначало сохраните товар", "warning");
+    return;
+  }
   router.push({
     name: "goodImages",
     params: {
       id: id.value,
     },
   });
-};
-
-const setImageByIndex = (index) => {
-  const selectedFile = add_images.value[index];
-  main_image.value = selectedFile;
-};
-
-const selectAvatar = async (event, num) => {
-  const files = event.target.files;
-  imageRef.value = files[0];
-  add_images.value.push(imageRef.value);
-  // for (let i = 1; i < files.length; i++) {
-  //   add_images.value.push(files[i]);
-  // }
-  let filename = files[0].name;
-  if (filename.lastIndexOf(".") <= 0) {
-    return showToast("Пожалуйста, добавьте заново!");
-  }
-  const fileReader = new FileReader();
-  fileReader.addEventListener("load", () => {
-    if (num === 1) {
-      firstImage.value = fileReader.result;
-      main_image.value = firstImage.value;
-      // add_images.value[0] = firstImage.value;
-    } else if (num === 2) {
-      secondImage.value = fileReader.result;
-    } else if (num === 3) {
-      thirdImage.value = fileReader.result;
-    } else if (num === 4) {
-      forthImage.value = fileReader.result;
-    }
-  });
-  // add_images.value[1] = secondImage.value;
-  // add_images.value[2] = thirdImage.value;
-  // add_images.value[3] = forthImage.value;
-  fileReader.readAsDataURL(files[0]);
-};
-
-const setImages = (images) => {
-  if (images.length === 0) {
-    firstImage.value = null;
-    secondImage.value = null;
-    thirdImage.value = null;
-    forthImage.value = null;
-    return;
-  }
-  firstImage.value = import.meta.env.VITE_IMG_URL + images[0].image;
-  secondImage.value = import.meta.env.VITE_IMG_URL + images[1].image;
-  thirdImage.value = import.meta.env.VITE_IMG_URL + images[2].image;
-  forthImage.value = import.meta.env.VITE_IMG_URL + images[3].image;
 };
 
 const getUnits = async ({ page, itemsPerPage, sortBy, search }) => {
@@ -240,6 +187,7 @@ const getGoodByid = async () => {
     return;
   }
   try {
+    add_images.value = [];
     const { data } = await goodsApi.getById(id.value);
     const good = data.result;
     name.value = good.name;
@@ -340,15 +288,9 @@ const createGood = async () => {
     appendIfNotNull("description", description.value);
     appendIfNotNull("unit_id", unit_id.value);
     appendIfNotNull("storage_id", storage_id.value);
-    appendIfNotNull("main_image", imageRef.value);
-    for (const file of add_images.value) {
-      if (file !== imageRef.value) {
-        appendIfNotNull("add_images[]", file);
-      }
-    }
     appendIfNotNull("good_group_id", good_group_id.value);
-    await goodsApi.create(formData);
-    router.push("/list/nomenclature");
+    const { data } = await goodsApi.create(formData);
+    id.value = data.result.id;
     showToast(addMessage);
     isCreated.value = true;
   } catch (e) {
@@ -358,21 +300,6 @@ const createGood = async () => {
     }
   } finally {
     isValid.value = false;
-  }
-};
-
-const onPickFile = (num) => {
-  if (num === 1) {
-    fileInput1.value.click();
-  } else if (num === 2) {
-    fileInput2.value.click();
-  } else if (num === 3) {
-    fileInput3.value.click();
-  } else if (num === 4) {
-    console.log(fileInput4.value);
-    fileInput4.value.click();
-  } else {
-    fileInput.value.click();
   }
 };
 
@@ -386,6 +313,11 @@ const isEditGood = async () => {
 };
 
 const check = async () => {
+  if (isEdit.value === false) {
+    add_images.value.push(
+      "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAAAAAAAD/4QAuRXhpZgAATU0AKgAAAAgAAkAAAAMAAAABAAAAAEABAAEAAAABAAAAAAAAAAD/2wBDAAoHBwkHBgoJCAkLCwoMDxkQDw4ODx4WFxIZJCAmJSMgIyIoLTkwKCo2KyIjMkQyNjs9QEBAJjBGS0U+Sjk/QD3/2wBDAQsLCw8NDx0QEB09KSMpPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT3/wAARCAHaAdoDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD2WiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAoqvc31va/66QBuyjqap/8ACQWv9yX/AL5H+NAGpRWX/wAJBa/3JvyH+NH/AAkFr/cm/If40AalFZf/AAkFr/cm/If40f8ACQWv9yb8h/jQBqUVnx63aSHBZo/d1xV8EOoZSCD0INAC0UUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFZ+q6h9jhCoR5r9PYetXJ5lt4Wkc4VRk1ydzcPdTtK/VjwPQUAREs5LMSWY8knOaWiigAooooAKKKKACrmmag1nMFYkwsfmU9vcVTooA7MEMAQcg9DS1j6Hfb0+zSH5lGUJ7j0/CtigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooACQASeAO9Y13roRilqobHV26fhT9dujHCtuhwZOWx6f/XrBoAuHWL0nPnY9gopP7Xvf+e5/IVUooAnuL64uUCTSllBzjGKgoooAKKsWdjLfPiMYQH5mPQf/AF637XS7e1wQu9/7zc//AKqAOeisribBjhcg98YqwNFvT/yzUfVhXTUUAcrJpN5HyYCf90g1WdGjO11ZW9CMV2dRywxToVlQOvoRQBx9Fa99oZQGS0ywHJQnn8Kx+RkHqOCDQAscjROHQlWByCO1W/7Xvf8AnufyFVKbQBd/te9/57n8hU0Ou3UZHmbJF7gjB/SszI9adQB1lnfRXse6M4YfeU9RViuRtLlrS5SVegOGHqK60EMAR0IoAWiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA5zXSf7QHsgxWdWjrv/IQ/wCACs6gAooooAKsWFk19OEGQi8s3oP8TVeuo0y0+yWiqR87fMx96ALMUSQRiONQqL0Ap9FQ3V1HaQmSU4A6Ad6AJqQuq8FgD7muYutXubkkBjFH2CnH5mqR55PJ96AO1BB5FFcdFcS25zDIyH2PFbenawJyIbnCyHhWHAb/AANAGtWTrGmiVDcQr+8A+YD+If41rUUAcTXU2FjBBax/u1ZmUFmIzmsTVbQWt2dowknzL6D1pbXWLi1hEYCOo6bu1AHRNawOpVoYyD22iuWvYRBeSxKcqrcd6ut4guSpAjiUnoQCazXdpHLMSWY5JPegBldfYkmxgJ/55r/KuQrrrD/jwg/3BQBYooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAOc13/kIf8AABWdWjrv/IQ/4AKzqACiiigCxp0Qmv4UPI3ZP4c11lc3oYB1IeyHFdJQAVy2qXZurxsH93Gdqj+tdNMxWF2HUKTXGUAOooooAKKKKAOn0q8N3ZgscyIdre/vV2sPw8x8ydexANblAGXr0QayWTvG36Hj/CufrqdVAOmT5/u5rlqACiiigBtddYf8eEH+4K5GuusP+PCD/cFAFiiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA5zXf+Qh/wAVnVo67/wAhD/gArOoAKKKKALujSeXqaZ6MCv8An8q6euNilMMySL1Rg1dhHIssSupyrDINACuoZCp6EYrjpYzFI8bfeUkGuyrG1nTTITcwrlh99R396AMSiiigAooqa0tJLyYRoOP4m/u0Aa3h+EiGWYj7x2j8P/11sVHDEtvCkSDCqMCpKAKWsSBNMl/2sKPzrmK2fEFwP3duD0+dv6f1rGoAKKKKAG111h/x4Qf7grka66w/48IP9wUAWKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigDnNd/5CH/AAAVnVo67/yEP+ACs6gAooooAK2dDvuPssh5H3Ce/tWNSAlCGUkEHII4xQB2tFZmm6styBFMQsvQE9GrToAoXWj290xcAxuf4l/wqg3h6XPyzqR7rit6igDHh8PICDPMzf7KjFakMMdvGEiQKo7CpKKACorm4S2gaWQ4UCi4uI7aMySsFUfrXNX9+99J3WNT8q/4+9AEFxM1zO8r/eY5+n/6qZRRQAUUUUANrrrD/jwg/wBwVyNddYf8eEH+4KALFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQBzmvAjUFPYoMVnV0Gt2ZngWZBl4+oHcVz9ABRRRQAUUUUAFX7XWLi2AVj5qDsx5/OqFFAHRRa7ayff3xn3GasDU7M/8vCfnXK0UAdRJq9nH/y2DH0UE1RuPEHBFtEf95/8KxaKAHzXEty++Zyzds9qZRRQAUUUUAFFFFADa6+yBFlAD1EY/lXNWFoby6WMA7AcufQf/XrrAAAAOgoAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigArLvNEjncvC3lOeSMcH/CtSigDnDoN2DwYiPXOKP7Cu/8Apl/31XR0UAc5/YV3/wBMv++qP7Cu/wDpl/31XR0UAc5/YV3/ANMv++qP7Cu/+mX/AH1XR0UAc5/YV3/0y/76o/sK7/6Zf99V0dFAHOf2Fd/9Mv8Avqj+wrv/AKZf99V0dFAHOf2Fd/8ATL/vqj+wrv8A6Zf99V0dFAHOf2Fd/wDTL/vqj+wrv/pl/wB9V0dFAHOf2Fd/9Mv++qlh8PykjzpVVfReTW9RQBDbWsVrGI4lwO59amoooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACsi2v7iTWGt2ZfKDNgY546Vr1y7STRaxM1su6QO2BjNAHR3LmO2ldfvKhI/KqOj3s16JTOwO0jGBiqct3qjROskBCFSGPl4wKl8OfduPqv9aAIW1O/kupIoCGIY4UKOgp/wBo1n/nkf8AvgVTjuJLbU5ZIU3uGYBcE9/arv8AbV9/z6D/AL4agCxcTaiLa3MSEyEHzBtHFUZdT1KFwkmEZhkAoOa34nLxIzDDMoJFYWuf8hKL/dH86ALNtNqrXMYmjIjJ+Y7QMCteiigCvdXsNkgaZsE9ABkmsq614ugFqGRgeS6g5FNukF14gWKTlBgYPpjP61Y12NI7OIIqqA/QDHagBLfxBF5arcK+/HzMAOa1IZo7iMSRMGU9CKp2VtFcaTCsiKcp1IrO0mVooL1QThU3D680AT3erzSXJt7FckHG7Gc/T296ikuNWtB5kvKd8gEfp0p/h2MHzpD94YUGttlDoVYZU8EGgClb35vbGSSAYmUH5fftWdJe6tDGXkTao6koOKTQyY9SljH3Sp/Q1p6x/wAgyX8P50AZkV9qtwm+Fd65xkIK0jeta6ak12D5pHK9CTTNB/5B/wDwM1S8QsTNCn8IUmgBEutUvsvbjagPGAMfr1p8Gr3FtP5N+vGcE4wR/iK2II1igRFGFVQBiszxDGpgikx8wbbn6/8A6qANfryKKq6Y5k06Bm67cflxVqgAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigArn7T/kYpP9566CoVtIEmMyxKJDyWA55oAW7/AOPOf/rm38qyvDn3Lj6r/Wth1V0KsAVIwQaZDbQ2+fJjVM9cDrQBz9tcpaatLLLu2hnHA960/wC3rT0l/wC+asnTrR2LNboSTkkjrSf2ZZ/8+0f5UAS21yl1CJY87T0yMVia5/yEov8AdH863YokhQJGoVR0ApktpBO4eWJXYDAJFAE1FFFAGXqOnSy3CXVqQJVxkE4ziqOp3F3LAi3VuIwrZDA8E10VRzQRXChZkV1HIBFAGNbzahJYJDb24CFcCQnqKvafpotbV0kIZ5B8xFXY41iQIihVUYAHanUAc5azPo968c6kxt1x39CKv3OuwLCfIJdzwMjAFX5reK5G2aMOB6ioU0uzjYMsC5HTJJ/nQBS0K0dd9zICN4wue/v+NW9Y/wCQZL+H86u0yWJJkKSKGU9QaAKOg/8AIP8A+Bmma5aNPAssYJaPOQPStCKGOBNkKKi9cAVJQBj2Otw/Z1S4JV1GM4yDVW/vDqk8cFsrFQeMjqfX6CtiXTLSZyzwLuPUjjP5VJBaw2wIgjVM9SByaAHW8QggSIdEUDNSUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQB/9k="
+    );
+  }
   if (query.createOnBase == "1") {
     isCreateOnBase.value = true;
     id.value = routeParams.id;
@@ -412,8 +344,8 @@ onMounted(async () => {
         <div>
           <div
             style="cursor: pointer"
-            @click="$router.go(-1) ? checkUpdate() : checkAndClose()"
-            class="pa-1 bg-green rounded-circle d-inline-block mr-4"
+            @click="$router.push('/list/nomenclature')"
+            class="pa-1 bg-green rounded-circle d-inline-block mr-4 text-uppercase"
           >
             <v-icon icon="keyboard_backspace" size="x-small" />
           </div>
@@ -423,9 +355,7 @@ onMounted(async () => {
         </div>
         <div class="d-flex align-center justify-space-between">
           <div class="d-flex ga-3 align-center mt-2 me-4">
-            <v-btn v-if="isEdit" color="green" @click="goToImages()"
-              >ФОТО</v-btn
-            >
+            <v-btn color="green" @click="goToImages()">ФОТО</v-btn>
             <Icons
               @click="isEdit && !isCreateOnBase ? updateGood() : createGood()"
               name="save"
@@ -476,14 +406,13 @@ onMounted(async () => {
                 :base-color="FIELD_COLOR"
               />
               <div
-                :class="
-                  add_images.length > 0 || isEdit || firstImage ? 'mb-10' : ''
-                "
+                :class="add_images.length > 1 ? 'mb-3' : ''"
                 class="d-flex justify-space-between ga-3"
               >
-                <div v-if="isEdit" style="width: 40%; height: 180px">
+                <div style="width: 40%; height: 180px">
                   <div>
                     <img
+                      @click="goToImages()"
                       v-if="main_image"
                       :src="main_image"
                       class="image"
@@ -493,6 +422,7 @@ onMounted(async () => {
                         height: 160px;
                         border-radius: 4px;
                         border: 1px solid #3ab700;
+                        cursor: pointer;
                       "
                     />
                     <div
@@ -508,10 +438,7 @@ onMounted(async () => {
                     </div>
                   </div>
                 </div>
-                <div
-                  :class="isEdit ? 'w-75' : 'w-100'"
-                  class="d-flex flex-column ga-3"
-                >
+                <div class="d-flex flex-column ga-3 w-75">
                   <v-autocomplete
                     :rules="isValid ? [rules.required] : []"
                     placeholder="Место расположения"
@@ -563,243 +490,14 @@ onMounted(async () => {
                 color="green"
                 :base-color="FIELD_COLOR"
               />
-              <div
-                v-if="isEdit"
-                style="border: 1px solid #3ab700; border-radius: 8px"
-              >
-                <barcode :isCreated="isCreated" />
+              <div style="border: 1px solid #3ab700; border-radius: 8px">
+                <barcode :isCreated="isCreated" :id="id" />
               </div>
             </v-col>
           </v-row>
         </v-form>
       </v-card>
     </v-col>
-
-    <v-dialog persistent v-model="isImageDialog" class="mt-2 pa-2">
-      <v-card
-        style="border: 2px solid #3ab700"
-        min-width="350"
-        class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
-        rounded="xl"
-      >
-        <div class="d-flex justify-space-between align-center mb-2">
-          <span>Загрузить фото</span>
-          <div class="d-flex align-center justify-space-between">
-            <div class="d-flex ga-3 align-center mt-2 me-4">
-              <Icons
-                @click="isImageDialog = false"
-                name="save"
-                title="Сохранить"
-              />
-            </div>
-            <v-btn
-              @click="isImageDialog = false"
-              variant="text"
-              :size="32"
-              class="pt-2 pl-1"
-            >
-              <Icons name="close" title="Закрыть" />
-            </v-btn>
-          </div>
-        </div>
-        <div class="d-flex w-100 ga-3 mb-3">
-          <div style="width: 220px">
-            <div
-              class="d-flex justify-center align-center py-2 px-6 w-100"
-              style="
-                height: 160px;
-                border-radius: 4px;
-                border: 1px solid #3ab700;
-              "
-            >
-              <div v-if="firstImage === null">
-                <v-btn style="font-size: 10px" @click="onPickFile(1)"
-                  >Загрузить фото</v-btn
-                >
-                <input
-                  accept="image/*"
-                  type="file"
-                  @change="selectAvatar($event, 1)"
-                  style="display: none"
-                  ref="fileInput1"
-                />
-              </div>
-              <img
-                v-else
-                class="image"
-                :src="firstImage"
-                width="200"
-                height="150"
-                alt=""
-              />
-            </div>
-            <div class="d-flex flex-column justify-center align-center">
-              <span class="d-flex justify-center">Фото 1</span>
-              <div v-if="firstImage !== null">
-                <v-btn style="font-size: 10px" @click="onPickFile(1)"
-                  >Изменить фото</v-btn
-                >
-                <input
-                  accept="image/*"
-                  type="file"
-                  @change="selectAvatar($event, 1)"
-                  style="display: none"
-                  ref="fileInput1"
-                />
-              </div>
-            </div>
-          </div>
-          <div style="width: 220px">
-            <div
-              class="d-flex justify-center align-center py-2 px-6 w-100"
-              style="
-                height: 160px;
-                border-radius: 4px;
-                border: 1px solid #3ab700;
-              "
-            >
-              <div class="d-flex justify-center" v-if="secondImage === null">
-                <v-btn style="font-size: 10px" @click="onPickFile(2)"
-                  >Загрузить фото</v-btn
-                >
-                <input
-                  accept="image/*"
-                  type="file"
-                  @change="selectAvatar($event, 2)"
-                  style="display: none"
-                  ref="fileInput2"
-                />
-              </div>
-              <img
-                v-else
-                class="image"
-                :src="secondImage"
-                width="200"
-                height="150"
-                alt=""
-              />
-            </div>
-            <div class="d-flex flex-column justify-center align-center">
-              <span class="d-flex justify-center">Фото 2</span>
-              <div class="d-flex justify-center" v-if="secondImage !== null">
-                <v-btn style="font-size: 10px" @click="onPickFile(2)"
-                  >Изменить фото</v-btn
-                >
-                <input
-                  accept="image/*"
-                  type="file"
-                  @change="selectAvatar($event, 2)"
-                  style="display: none"
-                  ref="fileInput2"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="d-flex w-100 ga-3">
-          <div style="width: 220px">
-            <div
-              class="d-flex justify-center align-center py-2 px-6 w-100"
-              style="
-                height: 160px;
-                border-radius: 4px;
-                border: 1px solid #3ab700;
-              "
-            >
-              <div v-if="thirdImage === null">
-                <v-btn style="font-size: 10px" @click="onPickFile(3)"
-                  >Изменить фото</v-btn
-                >
-                <input
-                  accept="image/*"
-                  type="file"
-                  @change="selectAvatar($event, 3)"
-                  style="display: none"
-                  ref="fileInput3"
-                />
-              </div>
-              <img
-                v-else
-                class="image"
-                :src="thirdImage"
-                width="200"
-                height="150"
-                alt=""
-              />
-            </div>
-            <div class="d-flex flex-column justify-center align-center">
-              <span class="d-flex justify-center">Фото 3</span>
-              <div v-if="thirdImage !== null">
-                <v-btn style="font-size: 10px" @click="onPickFile(3)"
-                  >Загрузить фото</v-btn
-                >
-                <input
-                  accept="image/*"
-                  type="file"
-                  @change="selectAvatar($event, 3)"
-                  style="display: none"
-                  ref="fileInput3"
-                />
-              </div>
-            </div>
-          </div>
-          <div style="width: 220px">
-            <div
-              class="d-flex justify-center align-center py-2 px-6 w-100"
-              style="
-                height: 160px;
-                border-radius: 4px;
-                border: 1px solid #3ab700;
-              "
-            >
-              <div v-if="forthImage === null">
-                <v-btn style="font-size: 10px" @click="onPickFile(4)"
-                  >Загрузить фото</v-btn
-                >
-                <input
-                  accept="image/*"
-                  type="file"
-                  @change="selectAvatar($event, 4)"
-                  style="display: none"
-                  ref="fileInput4"
-                />
-              </div>
-              <img
-                v-else
-                class="image"
-                :src="forthImage"
-                width="200"
-                height="150"
-                alt=""
-              />
-            </div>
-            <div class="d-flex flex-column justify-center align-center">
-              <span class="d-flex justify-center">Фото 4</span>
-              <div v-if="forthImage !== null">
-                <v-btn style="font-size: 10px" @click="onPickFile(4)"
-                  >Изменить фото</v-btn
-                >
-                <input
-                  accept="image/*"
-                  type="file"
-                  @change="selectAvatar($event, 4)"
-                  style="display: none"
-                  ref="fileInput4"
-                />
-              </div>
-            </div>
-          </div>
-          <div v-if="showModal">
-            <ConfirmModal
-              :showModal="showModal"
-              @close="toggleModal()"
-              @closeClear="closeDialogWithoutSaving()"
-              @closeWithSaving="closingWithSaving()"
-            />
-          </div>
-        </div>
-      </v-card>
-    </v-dialog>
   </div>
 </template>
 <style scoped>
