@@ -206,13 +206,9 @@ const openDialog = (item) => {
   } else {
     idPosition.value = item.id
     markedID.value.push(item.id)
-    const index = binarySearch(positions.value, item.id)
-
-    if (index !== 1) {
-      isExistsPosition.value = true
-      nameRef.value = item.name
-      positionInDialogTitle.value = nameRef.value
-    }
+    isExistsPosition.value = true
+    nameRef.value = item.name
+    positionInDialogTitle.value = nameRef.value
   }
 
 }
