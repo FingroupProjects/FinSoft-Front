@@ -171,7 +171,12 @@ const rules = {
               class="d-flex align-center justify-space-between"
             >
               <div class="d-flex ga-3 align-center mt-2 me-4">
-                <Icons @click="compute()" name="delete" title="Удалить" />
+                <Icons
+                  v-if="props.isEditGroup"
+                  @click="compute()"
+                  name="delete"
+                  title="Удалить"
+                />
                 <Icons
                   @click="
                     isFilter
