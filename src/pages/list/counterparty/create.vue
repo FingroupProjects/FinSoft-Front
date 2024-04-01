@@ -710,7 +710,7 @@ const currencyProps = (item) => {
               style="padding-top: 4px !important;"
             >
               <span>Договоры</span>
-              <span style="width: 100px;">
+              <span style="display: flex  ">
                 <Icons
                   v-show="isEdit"
                   @click="compute"
