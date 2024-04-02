@@ -90,6 +90,11 @@ const routes = [
     component: () => import("../pages/list/user/index.vue"),
   },
   {
+    path: "/list/userAccess/:id",
+    name: "userAccess",
+    component: () => import("../pages/list/user/access.vue"),
+  },
+  {
     path: "/list/position",
     name: "position",
     component: () => import("../pages/list/position/index.vue"),
