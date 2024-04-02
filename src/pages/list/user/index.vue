@@ -777,6 +777,7 @@ onMounted(async () =>  {
               <span>{{ isExistsUser ?  'Пользователь: ' + userDialogTitle : 'Добавление' }}</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
+                  <span v-show="isExistsUser" class="mt-1 ms-2 text-blue-darken-4 cursor-pointer" @click="$router.push({name: 'userAccess',params: {id: idUser}})">Доступ</span>
                   <Icons v-if="isExistsUser"  @click="compute" name="delete"/>
                   <div v-if="isExistsUser" @click="update">
                     <Icons title="Сохранить" name="save"/>
