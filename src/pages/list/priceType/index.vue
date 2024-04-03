@@ -19,6 +19,7 @@ import {
   restoreMessage
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
+import procurement from "../../../api/procurement.js";
 
 const router = useRouter()
 
@@ -63,10 +64,21 @@ const headers = ref([
   {title: 'Валюта', key: 'currency.name'}
 ])
 
+
+
 const rules = {
   required: v => !!v,
 }
 
+const getProcurement = async ({page, itemsPerPage, sortBy, search}) => {
+  try {
+    const response = await procurement.get({page, itemsPerPage, sortBy}, search, {})
+    paginations.value = response.data.pagination
+    console.log(response)
+  } catch (e) {
+    console.log(e)
+  }
+}
 
 const getPriceTypeData = async ({page, itemsPerPage, sortBy, search}) => {
   count.value = 0;

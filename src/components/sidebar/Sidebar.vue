@@ -27,7 +27,6 @@ onMounted(() => {
 
   filteredLists.value = menu.value.filter(item => users.value.permissions.includes(item.link.slice(1)));
 
-  console.log(filteredLists.value);
 });
 
 function push(item) {
