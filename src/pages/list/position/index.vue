@@ -441,8 +441,6 @@ watch(search, debounce((newValue) => {
                 </template>
               </td>
               <td>{{ item.name }}</td>
-
-
             </tr>
           </template>
         </v-data-table-server>

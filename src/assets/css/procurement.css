@@ -1,3 +1,10 @@
 .v-input__details {
   display: none !important;
 }
+.v-data-table-footer {
+  display: none !important;
+}
+
+.v-table > .v-table__wrapper > table > tbody > tr > td, .v-table > .v-table__wrapper > table > thead > tr > td, .v-table > .v-table__wrapper > table > tfoot > tr > td {
+  height: 45px !important;
+}
