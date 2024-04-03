@@ -11,7 +11,6 @@ import { useRoute, useRouter } from "vue-router";
 import { addMessage, editMessage } from "../../../composables/constant/buttons";
 import validate from "./validate";
 import { FIELD_COLOR } from "../../../composables/constant/colors.js";
-import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 
 const { query, params: routeParams } = useRoute();
 const router = useRouter();
