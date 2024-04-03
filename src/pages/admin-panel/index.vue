@@ -6,6 +6,8 @@ const props = defineProps(["rale"]);
 const router = useRouter()
 const users = ref([])
 const filteredLists = ref([])
+const filteredAdmins = ref([])
+
 const admins = ref([
   {
     id: 1,
@@ -44,16 +46,21 @@ function push(item) {
 onMounted(() => {
   users.value = JSON.parse(localStorage.getItem('user'))
 
-  if (users.value.login !== 'admin') {
     filteredLists.value = lists.value.map(list => {
       return {
         ...list,
         child: list.child.filter(item => users.value.permissions.includes(item.link.slice(6)))
       }
     })
-  } else {
-    filteredLists.value = lists.value
-  }
+
+
+
+    filteredAdmins.value = admins.value.filter(item => users.value.permissions.includes(item.link.slice(1)));
+
+
+
+
+
 
 })
 
@@ -78,7 +85,7 @@ onMounted(() => {
         </ul>
       </div>
       <div>
-        <div class="mb-10" nav v-for="admin in admins" :key="admin.id">
+        <div class="mb-10" nav v-for="admin in filteredAdmins" :key="admin.id">
           <h3 class="text-uppercase mb-4">{{ admin.title }}</h3>
           <ul class="list">
             <li
