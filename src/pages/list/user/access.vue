@@ -5,6 +5,7 @@ import resourcesApi from "../../../api/resources";
 import subsystemApi from "../../../api/subsystem";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import { useRoute } from "vue-router";
+import {all} from "axios";
 
 const route = useRoute();
 const hoveredRowIndex = ref(null);
@@ -38,11 +39,12 @@ const reportHeaders = ref([
 ]);
 
 const lineMarking = (item, type) => {
+  console.log(1)
   markedItem.value = item;
   if (markedItem.value.access.includes(type)) return;
   markedItem.value.access.push(type);
   body.value.resource.push(markedItem.value);
-  console.log(item);
+
 };
 
 const getRecources = async () => {
@@ -71,12 +73,31 @@ const getSubSystem = async () => {
 
 const createAccess = async () => {
   try {
-    const res = await resourcesApi.create(route.params.id, body.value);
-    getRecources();
+
+    const allAccess = [];
+
+    body.value.resource.forEach(item => {
+        allAccess.push(item);
+    });
+
+    resources.value.forEach(access => {
+
+      if (!allAccess.some(item => item.title === access.title)) {
+        allAccess.push(access);
+      }
+    });
+
+
+    const res = await resourcesApi.create(route.params.id, { resource: allAccess });
+    console.log(res);
+
+    getRecources()
+
   } catch (e) {
     console.log(e);
   }
 };
+
 
 const get = async () => {
   return;
@@ -113,12 +134,13 @@ onMounted(() => {
                 <td>{{ item.ru_title }}</td>
                 <td>
                   <CustomCheckbox
+                      @click="lineMarking(item, 'read')"
                     :checked="item.access.includes('read')"
-                    @click="lineMarking(item, 'read')"
                   ></CustomCheckbox>
                 </td>
                 <td>
                   <CustomCheckbox
+                      @click="lineMarking(item, 'create')"
                     :checked="item.access.includes('create')"
                   ></CustomCheckbox>
                 </td>

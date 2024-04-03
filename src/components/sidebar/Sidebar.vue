@@ -1,11 +1,13 @@
 <script setup>
-import { ref, defineProps } from 'vue'
+import {ref, defineProps, onMounted} from 'vue'
 import Icons from "../../composables/Icons/Icons.vue";
 import { useRouter } from 'vue-router';
 
 const props = defineProps(['rale'])
 const drawer = ref(true)
-const router = useRouter();
+const router = useRouter();const users = ref([])
+const filteredLists = ref([])
+
 
 const menu = ref([
   { id: 1, title: 'Планирование', icon: 'planning', link: '/planning' },
@@ -17,6 +19,16 @@ const menu = ref([
   { id: 7, title: 'Финансы и  анализ', icon: 'financeAnalysis', link: '/financeAnalysis' },
   { id: 8, title: 'Админ - панель', icon: 'adminPanel', link: '/adminPanel' },
 ]);
+
+
+
+onMounted(() => {
+  users.value = JSON.parse(localStorage.getItem('user'));
+
+  filteredLists.value = menu.value.filter(item => users.value.permissions.includes(item.link.slice(1)));
+
+  console.log(filteredLists.value);
+});
 
 function push(item) {
   router.push(item.link)
@@ -32,7 +44,7 @@ function push(item) {
           <v-list density="comfortable">
 
             <v-list-item
-                v-for="item in menu"
+                v-for="item in filteredLists"
                 color="info"
                 :key="item.id"
                 @click="push(item)"
