@@ -1,11 +1,24 @@
 <script setup>
-import {FIELD_COLOR} from "../../composables/constant/colors.js";
+import {FIELD_COLOR} from "../../composables/constant/colors.js"
+
+defineProps({
+  minWidth: {
+    type: String,
+    default: '250',
+    required: false
+  },
+  maxWidth: {
+    type: String,
+    default: '250',
+    required: false
+  }
+})
 
 </script>
 
 <template>
   <v-text-field
-      style="min-width: 250px; max-width: 250px"
+      :style="[`max-width: ${maxWidth}px`, `min-width: ${minWidth}px`]"
       color="green"
       rounded="lg"
       :base-color="FIELD_COLOR"
@@ -13,7 +26,6 @@ import {FIELD_COLOR} from "../../composables/constant/colors.js";
       class="w-auto text-sm-body-1"
       density="compact"
       clear-icon="close"
-      clearable
   />
 </template>
 

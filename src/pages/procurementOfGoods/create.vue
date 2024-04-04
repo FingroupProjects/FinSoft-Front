@@ -1,10 +1,10 @@
 <script setup>
 import Icons from "../../composables/Icons/Icons.vue";
-import {reactive, ref} from "vue";
+import {reactive, ref, watch} from "vue";
 import CustomTextField from "../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../components/formElements/CustomAutocomplete.vue";
 import '../../assets/css/procurement.css'
-import position from "../../api/position.js";
+import CustomCheckbox from "../../components/checkbox/CustomCheckbox.vue";
 
 const form = reactive({
   number: null,
@@ -26,25 +26,46 @@ const hoveredRowIndex = ref(null)
 
 const search = ref('')
 const markedID = ref([])
-const positions = ref([])
+const goods = ref([])
 
 const headers = ref([
-  {title: '№', key: 'name'},
-  {title: 'Товары', key: 'currency.name'},
-  {title: 'Количество', key: 'currency.name'},
-  {title: 'Цена', key: 'currency.name'},
-  {title: 'Сумма', key: 'currency.name'},
+  {title: 'Товары', key: 'goods', sortable: false},
+  {title: 'Количество', key: 'currency.name', sortable: false},
+  {title: 'Цена', key: 'currency.name', sortable: false},
+  {title: 'Сумма', key: 'currency.name', sortable: false},
 ])
 
-
-const getPositionData = async ({ page, itemsPerPage, sortBy, search }) => {
-  try {
-    const { data } = await position.get({page, itemsPerPage, sortBy}, search, {})
-    positions.value = data.result.data
-    loading.value = false
-  } catch (e) {
+const decreaseCountOfGoods = () => {
+  if (goods.value.length > 0) {
+    goods.value = goods.value.slice(0, -1);
   }
 }
+
+const increaseCountOfGoods = () => {
+  goods.value.push({ good_id: null, amount: 1, price: null });
+}
+
+
+const addNewProcurement = () => {
+
+  const body = {
+    number: form.number,
+    date: form.date,
+    organization_id: form.organization,
+    counterparty_id: form.counterparty,
+    counterparty_agreement_id: form.cpAgreement,
+    storage_id: form.storage,
+    sale_integer: form.saleInteger,
+    sale_percent: form.salePercent,
+    goods: goods.value
+ }
+
+  console.log(body)
+}
+
+watch(markedID, (newVal) => {
+  console.log(newVal)
+})
 
 </script>
 
@@ -58,7 +79,7 @@ const getPositionData = async ({ page, itemsPerPage, sortBy, search }) => {
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="" name="add"/>
+              <Icons title="Добавить" @click="addNewProcurement" name="add"/>
               <Icons title="Скопировать" @click="" name="copy"/>
               <Icons title="Удалить" @click="" name="delete"/>
             </div>
@@ -80,15 +101,12 @@ const getPositionData = async ({ page, itemsPerPage, sortBy, search }) => {
           <custom-text-field label="Руч. скидка (сумма)" v-model="form.saleInteger"/>
           <custom-text-field label="Руч. скидка (процент)" v-model="form.salePercent"/>
         </div>
-        <div class="d-flex ga-4">
-
-        </div>
       </v-col>
       <v-col>
-        <div style="border: 1px solid #0FC242; min-height: 500px" class="rounded">
+        <div style="border: 1px solid #0FC242;" class="rounded">
           <div class="d-flex pa-1 ga-1">
-            <Icons name="add" title="Добавить поле"/>
-            <Icons name="delete"/>
+            <Icons name="add" title="Добавить поле" @click="increaseCountOfGoods"/>
+            <Icons name="delete" @click="decreaseCountOfGoods"/>
           </div>
           <div class="d-flex w-100">
             <v-data-table
@@ -97,33 +115,39 @@ const getPositionData = async ({ page, itemsPerPage, sortBy, search }) => {
                 loading-text="Загрузка"
                 no-data-text="Нет данных"
                 :headers="headers"
-                :items="['1']"
-                :item-value="headers.title"
+                :items="goods"
+                item-value="amount"
                 v-model="markedID"
-                @update:options="getPositionData"
-                page-text =  '{0}-{1} от {2}'
+                page-text='{0}-{1} от {2}'
                 :items-per-page-options="[
                   {value: 25, title: '25'},
                   {value: 50, title: '50'},
                   {value: 100, title: '100'},
                 ]"
                 show-select
-                fixed-header
+                fixed-footer
             >
               <template v-slot:item="{ item, index }">
-                <tr>
-                  <td></td>
+                <tr  :key="index">
                   <td>
-                    <custom-autocomplete :items="[1, 1,2, 2, 2, 2]" />
+                    <CustomCheckbox
+                      v-model="markedID"
+                      :checked="markedID.includes(index)"
+                    >
+                      <span>{{ index + 1}}</span>
+                    </CustomCheckbox>
                   </td>
                   <td>
-                    <custom-text-field v-model="form.number" />
+                    <custom-autocomplete v-model="item.good_id" :items="['123', 1, 2, 2, 2, 2]" min-width="150" />
                   </td>
                   <td>
-                    <custom-text-field v-model="form.number" />
+                    <custom-text-field v-model="item.amount" min-width="50" max-width="90" />
                   </td>
                   <td>
-                    <custom-text-field v-model="form.number" />
+                    <custom-text-field v-model="item.price" min-width="80" max-width="110"/>
+                  </td>
+                  <td>
+                    <custom-text-field v-model="form.number"  min-width="100" max-width="110"/>
                   </td>
                 </tr>
               </template>
