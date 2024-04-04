@@ -17,7 +17,7 @@ import { FIELD_COLOR } from "../../../composables/constant/colors.js";
 
 const router = useRouter();
 const route = useRoute();
-const props = defineProps(["isCreated"]);
+const props = defineProps(["isCreated", "id"]);
 
 const pagination = ref([]);
 const barcodes = ref([]);
@@ -31,7 +31,6 @@ const isValid = ref(false);
 
 const hoveredRowIndex = ref(null);
 
-const id = ref(null);
 const barcodeId = ref(null);
 
 const barcode = ref("");
@@ -85,7 +84,7 @@ const createBarcode = async () => {
   }
   try {
     const body = {
-      good_id: id.value,
+      good_id: props.id,
       barcode: barcode.value,
     };
     loading.value = true;
@@ -111,7 +110,7 @@ const updateBarcode = async () => {
   }
   try {
     const body = {
-      good_id: id.value,
+      good_id: props.id,
       barcode: barcode.value,
     };
     const res = await barcodeApi.update(barcodeId.value, body);
@@ -126,14 +125,15 @@ const updateBarcode = async () => {
   }
 };
 const getBarcodes = async ({ page, itemsPerPage, sortBy, search }) => {
-  if (id.value == 0) {
+  if (props.id == 0) {
     loading.value = false;
     return;
   }
   try {
+    const id = route.params.id != 0 ? route.params.id : props.id;
     loading.value = true;
     const { data } = await barcodeApi.getById(
-      route.params.id,
+      props.id,
       { page, itemsPerPage, sortBy },
       search
     );
@@ -204,17 +204,18 @@ const restore = async ({ page, itemsPerPage, sortBy }) => {
   }
 };
 
+const openInModal = () => {
+  if (props.id == 0) return showToast("Сначало сохраните товар", "warning");
+  addBarcode.value = true;
+};
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
+  if (props.id == 0) return showToast("Сначало сохраните товар", "warning");
   if (markedItem.value.deleted_at) {
     return restore({ page, itemsPerPage, sortBy });
   } else {
     return del({ page, itemsPerPage, sortBy, search });
   }
 };
-
-onMounted(async () => {
-  id.value = route.params.id;
-});
 </script>
 
 <template>
@@ -226,7 +227,7 @@ onMounted(async () => {
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex ga-2 mt-2 me-3">
-            <Icons @click="addBarcode = true" name="add" />
+            <Icons @click="openInModal()" name="add" />
             <Icons
               @click="compute({ page, itemsPerPage, sortBy })"
               name="delete"
@@ -336,6 +337,7 @@ onMounted(async () => {
           <v-row class="w-100">
             <v-col class="d-flex flex-column w-100"
               ><v-text-field
+                autofocus
                 v-model="barcode"
                 :rules="isValid ? [rules.required] : []"
                 color="green"

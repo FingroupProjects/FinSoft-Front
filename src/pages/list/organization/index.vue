@@ -17,6 +17,8 @@ import employee from "../../../api/employee";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import validate from "./validate.js";
 import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
+import debounce from "lodash.debounce";
+import {createAccess, readAccess, removeAccess, updateAccess} from "../../../composables/access/access.js";
 
 const showConfirmDialog = ref(false);
 const router = useRouter();
@@ -24,12 +26,10 @@ const addDialog = ref(false);
 const loading = ref(true);
 const markedID = ref([]);
 const markedItem = ref([]);
-const valueRef = ref(null);
 const hoveredRowIndex = ref(null);
 const isExistsOrganization = ref(false);
 const organizationInDialogTitle = ref(null);
 const filterModal = ref(false);
-
 
 const organizations = ref([]);
 const paginations = ref([]);
@@ -43,6 +43,7 @@ const accountantRef = ref(null);
 const addressRef = ref(null);
 const descriptionRef = ref(null);
 const search = ref(null);
+const debounceSearch = ref(null);
 const showModal = ref(false);
 
 const toggleModal = () => {
@@ -90,7 +91,8 @@ const getOrganizationData = async ({ page, itemsPerPage, sortBy, search}) => {
   }
 };
 
-const addOrganization = async ({ page, itemsPerPage, sortBy }) => {
+const addOrganization = async () => {
+  console.log("c")
   if (
     validate(
       nameRef,
@@ -129,7 +131,7 @@ const addOrganization = async ({ page, itemsPerPage, sortBy }) => {
 
     const res = await organization.add(body);
     if (res.status === 201) {
-      await getOrganizationData({ page, itemsPerPage, sortBy});
+      await getOrganizationData({});
       showToast(addMessage);
       cleanForm()
     }
@@ -162,7 +164,8 @@ const addBasedOnOrganization = () => {
   });
 };
 
-const update = async ({ page, itemsPerPage, sortBy, search }) => {
+const update = async () => {
+  console.log("u")
   if (
     validate(
       nameRef,
@@ -213,26 +216,25 @@ const update = async ({ page, itemsPerPage, sortBy, search }) => {
 const openDialog = (item) => {
   addDialog.value = true;
   if (item === 0) {
-    idOrganizations.value = 0;
-    isExistsOrganization.value = false;
+    idOrganizations.value = 0
+    isExistsOrganization.value = false
   } else {
-    idOrganizations.value = item.id;
-    isExistsOrganization.value = true;
-    nameRef.value = item.name;
-    innRef.value = item.INN;
+    idOrganizations.value = item.id
+    isExistsOrganization.value = true
+    nameRef.value = item.name
+    innRef.value = item.INN
     markedID.value.push(item.id)
     directorRef.value = {
       id: item.director.id,
       name: item.director.name,
-    };
+    }
     accountantRef.value = {
       id: item.chief_accountant.id,
       name: item.chief_accountant.name,
-    };
-
-    addressRef.value = item.address;
-    descriptionRef.value = item.description;
-    organizationInDialogTitle.value = nameRef.value;
+    }
+    addressRef.value = item.address
+    descriptionRef.value = item.description
+    organizationInDialogTitle.value = nameRef.value
   }
 
 };
@@ -244,8 +246,8 @@ const getEmployees = async ({ page, itemsPerPage, sortBy, search }) => {
       id: item.id,
       name: item.name,
     }));
-  } catch (error) {
-    console.error(error);
+  } catch (e) {
+    console.error(e)
   }
 };
 
@@ -333,12 +335,14 @@ const  closeFilterModal = async ({page, itemsPerPage, sortBy, search, filterData
 const isDataChanged = () => {
   const item = organizations.value.find(elem => elem.id === idOrganizations.value);
 
-  return    nameRef.value !== item.name ||
+    return nameRef.value !== item.name ||
     innRef.value !== item.INN ||
     directorRef.value.id !== item.director.id ||
     accountantRef.value.id !== item.chief_accountant.id ||
     addressRef.value !== item.address ||
     descriptionRef.value !== item.description;
+
+
 };
 
 const checkAndClose = () => {
@@ -364,7 +368,32 @@ const closeDialogWithoutSaving = () => {
   cleanForm();
 };
 
+const closingWithSaving = async () => {
+  if (isExistsOrganization.value) {
+    await update({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+    showModal.value = false
+  } else {
+    const isValid = validate(
+      nameRef,
+      innRef,
+      directorRef,
+      accountantRef,
+      addressRef,
+      descriptionRef
+      );
+      showModal.value = false
+    if (isValid === true) {
+      await addOrganization({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      addDialog.value = false;
+      showModal.value = false;
+      showConfirmDialog.value = false;
+      cleanForm();
+    }
+  }
+};
 const checkUpdate = () => {
+  if (!updateAccess('organization')) return addDialog.value = false;
+
   if (isDataChanged()) {
     showModal.value = true;
   } else {
@@ -414,9 +443,13 @@ watch(addDialog, (newVal) => {
   }
 });
 
+watch(search, debounce((newValue) => {
+  debounceSearch.value = newValue
+}, 500))
+
 onMounted(async () => {
   await getEmployees({ page: 1, itemsPerPage: 10000 });
-});
+})
 </script>
 
 <template>
@@ -484,6 +517,7 @@ onMounted(async () => {
           :items="organizations"
           :item-value="headers.title"
           @update:options="getOrganizationData"
+          :search="debounceSearch"
           show-select
           v-model="markedID"
           page-text="{0}-{1} от {2}"
@@ -493,7 +527,6 @@ onMounted(async () => {
             { value: 100, title: '100' },
           ]"
           fixed-header
-          :search="search"
           hover
         >
           <template v-slot:item="{ item, index }">
@@ -518,7 +551,8 @@ onMounted(async () => {
                 </template>
                 <template v-else>
                   <div class="d-flex align-center">
-                      <Icons style="margin-right: 10px; margin-top: 4px" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
+                      <Icons style="margin-right: 10px; margin-top: 4px" 
+                      :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
                       <span>{{ index + 1 }}</span>
                     </div>
                 </template>
@@ -533,7 +567,7 @@ onMounted(async () => {
 
     <!-- modal -->
     <v-card>
-      <v-dialog persistent class="mt-2 pa-2" v-model="addDialog">
+      <v-dialog persistent class="mt-2 pa-2" v-model="addDialog" @keyup.esc="isExistsOrganization ? checkUpdate() : checkAndClose()">
         <v-card
           style="border: 2px solid #3ab700"
           min-width="500"
@@ -548,17 +582,12 @@ onMounted(async () => {
             }}</span>
             <div class="d-flex align-center justify-space-between">
               <div class="d-flex ga-3 align-center mt-2 me-4">
-                <Icons  v-if="isExistsOrganization"  @click="destroy" name="delete"/>
-                <Icons
-                  v-if="isExistsOrganization"
-                  @click="update"
-                  name="save"
-                />
-                <Icons v-else @click="addOrganization" name="save" />
+                <Icons v-if="removeAccess('organization') && isExistsOrganization"  @click="destroy" name="delete"/>
+                <Icons v-if="createAccess('organization') && !isExistsOrganization" @click="addOrganization()" name="save"/>
+                <Icons v-if="updateAccess('organization') && isExistsOrganization" @click="update()" name="save"/>
               </div>
               <v-btn
                 @click="isExistsOrganization ? checkUpdate() : checkAndClose()"
-                
                 variant="text"
                 :size="32"
                 class="pt-2 pl-1"
@@ -567,7 +596,7 @@ onMounted(async () => {
               </v-btn>
             </div>
           </div>
-          <v-form class="d-flex w-100" @submit.prevent="addOrganization">
+          <v-form class="d-flex w-100" :disabled="!updateAccess('organization') && isExistsOrganization" @submit.prevent="addOrganization">
             <v-row class="w-100">
               <v-col class="d-flex flex-column w-100">
                 <v-text-field
@@ -581,6 +610,7 @@ onMounted(async () => {
                   density="compact"
                   placeholder="Организация"
                   label="Наименования"
+                  autofocus
                   clear-icon="close"
                   clearable
                 />
@@ -660,7 +690,7 @@ onMounted(async () => {
       </v-dialog>
 
       <v-card>
-        <v-dialog persistent class="mt-2 pa-2" v-model="filterModal">
+        <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup.esc="closeFilterModal">
           <v-card
             style="border: 2px solid #3ab700"
             min-width="600"
@@ -681,6 +711,7 @@ onMounted(async () => {
                   variant="outlined"
                   class="w-auto text-sm-body-1"
                   density="compact"
+                  autofocus
                   placeholder="Организация"
                   label="Наименования"
                   clear-icon="close"
@@ -746,7 +777,7 @@ onMounted(async () => {
                       density="compact"
                       placeholder="Описание"
                       label="Описание"
-                  />
+                />
                 <div class="d-flex justify-end ga-2 mt-2">
                   <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
                   <v-btn color="green" class="btn"  @click="getOrganizationData">применить</v-btn>
@@ -757,7 +788,7 @@ onMounted(async () => {
           </v-card>
         </v-dialog>
         <div v-if="showModal">
-        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" />
+        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" @closeWithSaving="closingWithSaving()" />
       </div>
       </v-card>
     </v-card>

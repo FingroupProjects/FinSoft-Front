@@ -19,6 +19,7 @@ import {
   restoreMessage
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
+import procurement from "../../../api/procurement.js";
 
 const router = useRouter()
 
@@ -63,10 +64,21 @@ const headers = ref([
   {title: 'Валюта', key: 'currency.name'}
 ])
 
+
+
 const rules = {
   required: v => !!v,
 }
 
+const getProcurement = async ({page, itemsPerPage, sortBy, search}) => {
+  try {
+    const response = await procurement.get({page, itemsPerPage, sortBy}, search, {})
+    paginations.value = response.data.pagination
+    console.log(response)
+  } catch (e) {
+    console.log(e)
+  }
+}
 
 const getPriceTypeData = async ({page, itemsPerPage, sortBy, search}) => {
   count.value = 0;
@@ -323,6 +335,26 @@ const checkAndClose = () => {
   }
 };
 
+const closingWithSaving = async () => {
+  if (isExistsPriceType.value) {
+    await update({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+    showModal.value = false
+  } else {
+    const isValid = validate(
+      nameRef,
+      currencyAdd,
+      descriptionRef
+      );
+      showModal.value = false
+    if (isValid === true) {
+      await addPriceType({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      dialog.value = false;
+      showModal.value = false;
+      showConfirmDialog.value = false;
+    }
+  }
+};
+
 const closeDialogWithoutSaving = () => {
   dialog.value = false;
   showModal.value = false
@@ -478,7 +510,7 @@ onMounted(async () => {
       </v-card>
       <!-- Modal -->
       <v-card>
-        <v-dialog persistent class="mt-2 pa-2" v-model="dialog">
+        <v-dialog persistent class="mt-2 pa-2" v-model="dialog" @keyup.esc="isExistsPriceType ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})">
           <v-card style="border: 2px solid #3AB700" min-width="500"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
@@ -509,6 +541,7 @@ onMounted(async () => {
                       :rules="[rules.required]"
                       color="green"
                       hide-details
+                      autofocus
                       rounded="md"
                       variant="outlined"
                       class="w-auto text-sm-body-1"
@@ -551,7 +584,7 @@ onMounted(async () => {
       </v-card>
 
       <v-card>
-        <v-dialog persistent class="mt-2 pa-2" v-model="filterModal">
+        <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup.esc="closeFilterModal">
           <v-card style="border: 2px solid #3AB700" min-width="450"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
@@ -566,6 +599,7 @@ onMounted(async () => {
                       rounded="md"
                       :base-color="FIELD_COLOR"
                       variant="outlined"
+                      autofocus
                       class="w-auto text-sm-body-1"
                       density="compact"
                       placeholder="Наименование"
@@ -606,7 +640,7 @@ onMounted(async () => {
         </v-dialog>
       </v-card>
       <div v-if="showModal">
-        <ConfirmModal :showModal="true" @close="toggleModal" @closeClear="closeDialogWithoutSaving" />
+        <ConfirmModal :showModal="true" @close="toggleModal" @closeClear="closeDialogWithoutSaving"  @closeWithSaving="closingWithSaving()"/>
       </div>
     </v-col>
   </div>

@@ -84,6 +84,12 @@ const toggleModal = () => {
   showConfirmDialog.value = false;
 };
 
+watch(groupDialog, newVal => {
+  if (!newVal) {
+    isExistsGroup.value = false
+    groupName.value = null
+  }
+})
 
 const headers = ref([
   {title: 'Наименование', key: 'name'},
@@ -122,12 +128,50 @@ const getGroup = async ({page, itemsPerPage, sortBy}) => {
     paginationsGroup.value = data.result.pagination
     groups.value = data.result.data.map(item => ({
       id: item.id,
-      name: item.name
+      name: item.name,
+      deleted_at: item.deleted_at
     }))
   } catch (e) {
 
   } finally {
     loadingGroup.value = false
+  }
+}
+
+const getStorage = async ({page, itemsPerPage, sortBy, search}) => {
+  loading.value = true
+  try {
+    const {data} = await storage.get({page, itemsPerPage, sortBy}, search, filterForm.value)
+    paginations.value = data.result.pagination
+    storages.value = data.result.data.map(item => ({
+      id: item.id,
+      name: item.name
+    }))
+  } catch (e) {
+
+  } finally {
+    loading.value = false
+  }
+}
+
+const getStoragesFromTheGroup = async ({page, itemsPerPage, sortBy, search}) => {
+  try {
+    count.value = 0
+    countFilter()
+    const filterData = filterForm.value
+    filterDialog.value = false
+    if (groupIdRef.value === 0) return
+
+    loading.value = true
+
+    const { data } = await storageGroup.getStorages({page, itemsPerPage, sortBy}, search, groupIdRef.value, filterData)
+    paginations.value = data.result.pagination
+    storages.value = data.result.data
+
+  } catch (e) {
+
+  } finally {
+    loading.value = false
   }
 }
 
@@ -151,7 +195,7 @@ const getStorageEmployeeData = async ({page, itemsPerPage, sortBy, search}) => {
 
   loadingStorageData.value = true
   try {
-    const {data} = await storage.getStorageEmployee({page, itemsPerPage, sortBy}, search, idStorage.value)
+    const { data } = await storage.getStoragesFromTheGroupEmployee({page, itemsPerPage, sortBy}, search, idStorage.value)
 
     paginationsStorageData.value = data.result.pagination
     storageData.value = data.result.data.map(item => ({
@@ -160,6 +204,7 @@ const getStorageEmployeeData = async ({page, itemsPerPage, sortBy, search}) => {
       to: showDate(item.to),
     })) || [];
     loadingStorageData.value = false
+
   } catch (e) {
   }
 }
@@ -185,7 +230,7 @@ const addStorage = async () => {
 
     const res = await storage.add(body)
     if (res.status === 201) {
-      await getStorage({})
+      await getStoragesFromTheGroup({})
       showToast(addMessage)
       valueRef.value = null
       organizationAdd.value = null
@@ -239,7 +284,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
 
       dialog.value = null
       cleanForm()
-      await getStorage({page, itemsPerPage, sortBy})
+      await getStoragesFromTheGroup({page, itemsPerPage, sortBy})
       markedID.value = []
       showToast(editMessage)
 
@@ -311,7 +356,7 @@ const closeFilterDialog = () => {
   filterDialog.value = false
   filterForm.value = {}
 
-  getStorage({})
+  getStoragesFromTheGroup({})
 }
 
 const massDel = async ({page, itemsPerPage, sortBy, search}) => {
@@ -321,7 +366,7 @@ const massDel = async ({page, itemsPerPage, sortBy, search}) => {
 
     if (status === 200) {
       showToast(removeMessage, 'red')
-      await getStorage({page, itemsPerPage, sortBy, search})
+      await getStoragesFromTheGroup({page, itemsPerPage, sortBy, search})
       markedID.value = []
       dialog.value = false
     }
@@ -338,7 +383,7 @@ const massRestore = async ({page, itemsPerPage, sortBy, search}) => {
 
     if (status === 200) {
       showToast(restoreMessage)
-      await getStorage({page, itemsPerPage, sortBy, search})
+      await getStoragesFromTheGroup({page, itemsPerPage, sortBy, search})
       markedID.value = []
       dialog.value = false
     }
@@ -440,6 +485,52 @@ const handleCheckboxClick = function (item) {
 const handleEmployeeCheckboxClick = function (item) {
   employeeLineMarking(item)
 }
+
+const openGroupDialog = (item) => {
+  groupDialog.value = true
+  isExistsGroup.value = true
+  groupName.value = item.name
+  group.value = item
+}
+
+const deleteGroup = async () => {
+  
+  try {
+    const res = await storageGroup.delete(group.value.id)
+    if (res.status === 200) {
+      await getGroup({})
+      showToast(removeMessage)
+     
+    }
+    
+  } catch (error) {
+    console.log(error);
+  }
+  isExistsGroup.value = false
+  groupDialog.value = false
+}
+
+const restoreGroup = async () => {
+  const response = await storageGroup.restore(group.value.id);
+    if (response.status === 200) {
+      await getGroup({})
+      showToast(restoreMessage);
+    }
+}
+
+
+
+const computeGroup = async () => {
+  if(group.value.deleted_at !== null) {
+      restoreGroup()
+  }
+  else {
+    deleteGroup()
+  }
+}
+
+
+
 
 const openDialog = (item) => {
   dialog.value = true
@@ -603,29 +694,9 @@ const employeeLineMarking = (item) => {
 const lineMarkingGroup = group_id => {
   markedID.value = []
   groupIdRef.value = group_id
-  getStorage({})
+  getStoragesFromTheGroup({})
 }
 
-const getStorage = async ({page, itemsPerPage, sortBy, search}) => {
-  try {
-    count.value = 0
-    countFilter()
-    const filterData = filterForm.value
-    filterDialog.value = false
-    if (groupIdRef.value === 0) return
-
-    loading.value = true
-
-    const { data } = await storageGroup.getStorages({page, itemsPerPage, sortBy}, search, groupIdRef.value, filterData)
-    paginations.value = data.result.pagination
-    storages.value = data.result.data
-
-  } catch (e) {
-
-  } finally {
-    loading.value = false
-  }
-}
 const isDataChanged = () => {
   const item = storages.value.find(elem => elem.id === idStorage.value);
 
@@ -639,6 +710,25 @@ const cleanForm = () => {
   group.value = null;
 };
 
+const closingWithSaving = async () => {
+  if (isExistsStorage.value) {
+    await update({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+    showModal.value = false
+  } else {
+    const isValid = validate(
+      nameRef,
+      organizationAdd,
+      group
+      );
+      showModal.value = false
+    if (isValid === true) {
+      await addStorage({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      dialog.value = false;
+      showModal.value = false;
+      showConfirmDialog.value = false;
+    }
+  }
+};
 
 const checkAndClose = () => {
   if (nameRef.value || (organizationAdd.value && organizationAdd.value.length > 0) || (group.value && group.value.length > 0)) {
@@ -665,6 +755,25 @@ const checkUpdate = () => {
   }
 
 };
+
+const updateGroup = async () => {
+  if (!groupName.value) {
+    return showToast("Поле наименования не может быть пустым", "warning")
+  }
+  console.log(group.value.id)
+  try {
+    const res = await storageGroup.update(group.value.id, {name: groupName.value})
+    if (res.status === 200) {
+      await getGroup({})
+      showToast(editMessage)
+      groupName.value = null
+      groupDialog.value = false
+      isExistsGroup.value = false
+    }
+  } catch (error) {
+    console.log(error);
+  }
+}
 
 watch(markedID, (newVal) => {
   markedItem.value = storages.value.find((el) => el.id === newVal[0]);
@@ -702,21 +811,24 @@ onMounted(async () => {
         <div class="d-flex align-center ga-2 pe-2 ms-4">
           <span>Склады</span>
         </div>
-        <v-card variant="text" min-width="400" class="d-flex align-center ga-2">
+        <v-card variant="text" min-width="450" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-2 me-3">
+            <div class="d-flex ga-2 me-3">
               <button
-                  style="
-                  background-color: #4ecb71;
-                  border-radius: 12px;
+                style="
+                  margin-top: 5px;
+                  background-color: #6bd68a;
+                  border-radius: 8px;
                   white-space: nowrap;
-                  height: 25px;
+                  height: 32px;
+                  padding: 0 4px;
                   font-size: 12px;
-                  border: 1px solid red;
+                  color: white;
+                  text-transform: uppercase;
                 "
-                  @click="groupDialog = true"
+                @click="groupDialog = true"
               >
-                <span class="px-2 py-0">создать группу</span>
+                <span class="px-2 pb-0">создать группу</span>
               </button>
               <Icons @click="openDialog(0)" name="add"/>
               <Icons name="copy" @click="addBasedOnStorage"/>
@@ -756,7 +868,7 @@ onMounted(async () => {
       </div>
 
       <div class="d-flex ga-4 w-100">
-        <v-card class="mt-2 table w-100">
+        <v-card class="mt-2 table w-50">
           <v-data-table-server
               style="height: 78vh"
               items-per-page-text="Элементов на странице:"
@@ -787,9 +899,14 @@ onMounted(async () => {
                   @mouseenter="hoveredRowIndex = index + 100000"
                   @mouseleave="hoveredRowIndex = null"
                   @click="lineMarkingGroup(item.id)"
+                  @dblclick="openGroupDialog(item)"
               >
                 <td>
                   <div class="d-flex">
+                    <Icons
+                          style="margin-right: 10px; margin-top: 4px"
+                          :name="item.deleted_at === null ? 'valid' : 'inValid'"
+                      />
                     <span>{{ item.id }}</span>
                   </div>
                 </td>
@@ -811,7 +928,7 @@ onMounted(async () => {
               :items="storages"
               :item-value="headers.title"
               :search="debounceSearch"
-              @update:options="getStorage"
+              @update:options="getStoragesFromTheGroup"
               show-select
               v-model="markedID"
               page-text='{0}-{1} от {2}'
@@ -863,7 +980,7 @@ onMounted(async () => {
       </div>
 
       <v-card>
-        <v-dialog persistent class="mt-2 pa-2" v-model="dialog">
+        <v-dialog persistent class="mt-2 pa-2" v-model="dialog" @keyup.esc="isExistsStorage ? checkUpdate() : checkAndClose()">
           <v-card style="border: 2px solid #3AB700" max-width="600"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
@@ -899,6 +1016,7 @@ onMounted(async () => {
                       label="Название"
                       clear-icon="close"
                       clearable
+                      autofocus
                   />
                   <v-autocomplete
                       variant="outlined"
@@ -1049,15 +1167,16 @@ onMounted(async () => {
         </v-dialog>
       </v-card>
       <v-card>
-        <v-dialog persistent class="mt-2 pa-2" v-model="groupDialog">
-          <v-card style="border: 2px solid #3AB700" min-width="300"
+        <v-dialog persistent class="mt-2 pa-2" v-model="groupDialog" @keyup.esc="groupDialog = false">
+          <v-card style="border: 2px solid #3AB700" min-width="350"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
-              <span>Добавление</span>
+              <span>{{isExistsGroup ? 'Изменить' : 'Создать'}} группу</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-
-                  <Icons v-if="isExistsGroup" @click="update" name="save"/>
+                   <Icons v-if="isExistsGroup"  @click="computeGroup" name="delete"/>
+            
+                  <Icons v-if="isExistsGroup" @click="updateGroup" name="save"/>
                   <Icons v-else @click="addGroup" name="save"/>
                 </div>
                 <v-btn @click="groupDialog = false" variant="text" :size="32" class="pt-2 pl-1">
@@ -1079,16 +1198,16 @@ onMounted(async () => {
                       label="Наименование"
                       clear-icon="close"
                       clearable
+                      autofocus
                   />
                 </v-col>
               </v-row>
             </v-form>
           </v-card>
         </v-dialog>
-
       </v-card>
 
-      <v-dialog persistent class="mt-2 pa-2" v-model="filterDialog">
+      <v-dialog persistent class="mt-2 pa-2" v-model="filterDialog" @keyup.esc="closeFilterDialog">
         <v-card style="border: 2px solid #3AB700" min-width="450"
                 class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
           <div class="d-flex justify-space-between align-center mb-2">
@@ -1108,6 +1227,7 @@ onMounted(async () => {
                     label="Название"
                     clear-icon="close"
                     clearable
+                    autofocus
                 />
                 <v-autocomplete
                     variant="outlined"
@@ -1135,7 +1255,7 @@ onMounted(async () => {
                 />
                 <div class="d-flex justify-end ga-2">
                   <v-btn color="red" class="btn" @click="closeFilterDialog">сбросить</v-btn>
-                  <v-btn color="green" class="btn"  @click="getStorage">применить</v-btn>
+                  <v-btn color="green" class="btn"  @click="getStoragesFromTheGroup">применить</v-btn>
                 </div>
               </v-col>
             </v-row>
@@ -1143,7 +1263,7 @@ onMounted(async () => {
         </v-card>
       </v-dialog>
       <div v-if="showConfirmDialog">
-        <ConfirmModal :showModal="true" @close="toggleModal" @closeClear="closeDialogWithoutSaving" />
+        <ConfirmModal :showModal="true" @close="toggleModal" @closeClear="closeDialogWithoutSaving" @closeWithSaving="closingWithSaving()"/>
       </div>
     </v-col>
   </div>

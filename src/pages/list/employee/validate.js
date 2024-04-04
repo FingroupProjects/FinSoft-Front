@@ -13,7 +13,7 @@ export default function validate(
   group,
 ) {
   if (!nameRef.value) {
-    return showToast("Поле Фио не может быть пустым", "warning")
+    return showToast("Поле ФИО не может быть пустым", "warning")
   }
   if (!phoneRef.value) {
     return showToast("Поле Номер телефона не может быть пустым", "warning")

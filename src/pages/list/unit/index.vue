@@ -1,5 +1,5 @@
 <script setup>
-import {ref, watch} from "vue";
+import {onMounted, ref, watch} from "vue";
 import {useRouter} from "vue-router";
 import showToast from '../../../composables/toast'
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
@@ -11,12 +11,10 @@ import {
   addMessage,
   editMessage,
   removeMessage,
-  warningMessage,
   selectOneItemMessage, ErrorSelectMessage
 } from "../../../composables/constant/buttons.js";
+import {createAccess, removeAccess, updateAccess} from "../../../composables/access/access.js";
 import Icons from "../../../composables/Icons/Icons.vue";
-import binarySearch from "../../../composables/binarySearch/binarySearch.js";
-
 import {restoreMessage} from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
 
@@ -87,7 +85,6 @@ const getUnitData = async ({page, itemsPerPage, sortBy, search}) => {
   loading.value = true
   try {
     const {data} = await unit.get({page, itemsPerPage, sortBy}, search, filterData)
-    console.log(data.result)
     paginations.value = data.result.pagination
     units.value = data.result.data
     loading.value = false
@@ -108,7 +105,7 @@ const closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
 
 }
 
-const addUnit = async ({page, itemsPerPage, sortBy}) => {
+const addUnit = async () => {
   if (validate(nameRef) !== true) return
   try {
     const body = {
@@ -117,7 +114,7 @@ const addUnit = async ({page, itemsPerPage, sortBy}) => {
 
     const res = await unit.add(body)
     if (res.status === 201) {
-      await getUnitData({page, itemsPerPage, sortBy})
+      await getUnitData({})
       showToast(addMessage)
       valueRef.value = null
       idUnit.value = res.data.result.id
@@ -171,7 +168,7 @@ const massRestore = async ({page, itemsPerPage, sortBy, search}) => {
 }
 
 
-const update = async ({page, itemsPerPage, sortBy}) => {
+const update = async () => {
   if (validate(nameRef) !== true) return
   const body = {
     name: nameRef.value
@@ -180,7 +177,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
   try {
     const {status} = await unit.update(idUnit.value, body)
     if (status === 200) {
-      await getUnitData({page, itemsPerPage, sortBy})
+      await getUnitData({})
       showToast(editMessage)
 
       dialog.value = false
@@ -204,15 +201,9 @@ const openDialog = (item) => {
   } else {
     idUnit.value = item.id
     markedID.value.push(item.id)
-    const index = binarySearch(units.value, item.id)
-
-    if (index !== 1) {
-      isExistsUnit.value = true
-      nameRef.value = item.name
-      unitInDialogTitle.value = nameRef.value
-    } else {
-
-    }
+    isExistsUnit.value = true
+    nameRef.value = item.name
+    unitInDialogTitle.value = nameRef.value
   }
 
 }
@@ -285,6 +276,25 @@ const checkAndClose = () => {
   }
 };
 
+const closingWithSaving = async () => {
+  if (isExistsUnit.value) {
+    await update({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+    showModal.value = false
+  } else {
+    const isValid = validate(
+      nameRef,
+      );
+      showModal.value = false
+    if (isValid === true) {
+      await addUnit({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      dialog.value = false;
+      showModal.value = false;
+      showConfirmDialog.value = false;
+    }
+  }
+};
+
+
 const closeDialogWithoutSaving = () => {
   dialog.value = false;
   showModal.value = false
@@ -324,6 +334,10 @@ watch(search, debounce((newValue) => {
   debounceSearch.value = newValue
 }, 500))
 
+onMounted(() => {
+  console.log(createAccess())
+  console.log(updateAccess())
+})
 </script>
 
 <template>
@@ -334,14 +348,14 @@ watch(search, debounce((newValue) => {
           <span>Единица измерения</span>
         </div>
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
-          <div class="d-flex w-100">
+          <div class="d-flex justify-end w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Сохранить" @click="openDialog(0)" name="add"/>
-              <Icons title="Скопировать" @click="addBasedOnUnit" name="copy"/>
-              <Icons title="Удалить" @click="compute" name="delete"/>
+              <Icons v-if="createAccess('unit')" title="Сохранить" @click="openDialog(0)" name="add"/>
+              <Icons v-if="createAccess('unit')" title="Скопировать" @click="addBasedOnUnit" name="copy"/>
+              <Icons v-if="removeAccess('unit')" title="Удалить" @click="compute" name="delete"/>
             </div>
 
-            <div class="w-100">
+            <div class="d-flex justify-end w-100" style="max-width: 200px">
               <v-text-field
                   v-model="search"
                   prepend-inner-icon="search"
@@ -433,22 +447,21 @@ watch(search, debounce((newValue) => {
 
       <!-- Modal -->
       <v-card>
-        <v-dialog persistent class="mt-2 pa-2" v-model="dialog">
+        <v-dialog persistent class="mt-2 pa-2" v-model="dialog" @keyup.esc="isExistsUnit ? checkUpdate() : checkAndClose()">
           <v-card style="border: 2px solid #3AB700" min-width="400" min-height="150"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
               <span>{{ isExistsUnit ? unitInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons title="Удалить" v-if="isExistsUnit" @click="destroy" name="delete"/>
-                  <Icons title="Сохранить" v-if="isExistsUnit" @click="update" name="save"/>
-                  <Icons title="Сохранить" v-else @click="addUnit" name="save"/>
+                  <Icons title="Удалить" v-if="removeAccess('unit') && isExistsUnit" @click="destroy" name="delete"/>
+                  <Icons title="Сохранить" v-if="updateAccess('unit') && isExistsUnit" @click="isExistsUnit ? update() : addUnit()" name="save"/>
                 </div>
                 <v-btn
-                    @click="isExistsUnit ? checkUpdate() : checkAndClose()"
-                    variant="text"
-                    :size="32"
-                    class="pt-2 pl-1"
+                   @click="isExistsUnit ? checkUpdate() : checkAndClose()"
+                   variant="text"
+                   :size="32"
+                   class="pt-2 pl-1"
                 >
                   <Icons name="close" title="Закрыть"/>
                 </v-btn>
@@ -468,6 +481,7 @@ watch(search, debounce((newValue) => {
                       density="compact"
                       placeholder="Наименование"
                       label="Наименование"
+                      autofocus
                       clear-icon="close"
                       clearable
                   />
@@ -479,7 +493,7 @@ watch(search, debounce((newValue) => {
       </v-card>
 
       <v-card>
-        <v-dialog persistent class="mt-2 pa-2" v-model="filterModal">
+        <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup.esc="closeFilterModal">
           <v-card style="border: 2px solid #3AB700" min-width="400" min-height="150"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
@@ -499,6 +513,7 @@ watch(search, debounce((newValue) => {
                       placeholder="Фильтр"
                       label="Наименование"
                       clear-icon="close"
+                      autofocus
                       clearable
                   />
                   <div class="d-flex justify-end ga-2">
@@ -513,7 +528,7 @@ watch(search, debounce((newValue) => {
 
       </v-card>
       <div v-if="showModal">
-        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()"/>
+        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()"  @closeWithSaving="closingWithSaving()"/>
       </div>
     </v-col>
   </div>

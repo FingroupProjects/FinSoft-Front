@@ -1,5 +1,5 @@
 <script setup>
-import {onMounted, ref, watch, onUnmounted} from "vue";
+import {onMounted, ref, watch} from "vue";
 
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
@@ -20,45 +20,7 @@ import {
   selectOneItemMessage,
   restoreMessage,
 } from "../../../composables/constant/buttons.js";
-
-const handleOnlineStatus = () => {
-      console.log('Online');
-      // You can perform actions when the user goes online
-    };
-
-    const handleOfflineStatus = () => {
-      console.log('Offline');
-      
-    };
-
-    onMounted(() => {
-      console.log(22)
-      window.addEventListener("online", (event) => {
-  console.log("You are now connected to the network.");
-});
-      window.addEventListener('offline', handleOfflineStatus);
-    });
-
-    onUnmounted(() => {
-      console.log(2)
-      window.removeEventListener('online', handleOnlineStatus);
-      window.removeEventListener('offline', handleOfflineStatus);
-    });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+import debounce from "lodash.debounce";
 
 const loading = ref(true);
 const showConfirmDialog = ref(false);
@@ -83,8 +45,8 @@ const markedID = ref([]);
 const markedItem = ref([]);
 const organizationBillInDialogTitle = ref(null);
 const search = ref("");
+const debounceSearch = ref("");
 const nameRef = ref(null);
-const descriptionRef = ref(null);
 const organizationBills = ref([]);
 const paginations = ref([]);
 
@@ -94,9 +56,6 @@ const showModal = ref(false);
 
 
 const count = ref(0);
-const searchSelect = ref(null)
-//filter
-
 const filterForm = ref({
   name: null,
   currency_id: null,
@@ -131,22 +90,14 @@ function countFilter() {
 
 
 const isDataChanged = () => {
-  const item = organizationBills.value.find(
-      (item) => item.id === idOrganizationBill.value
-  );
+  const item = organizationBills.value.find(item => item.id === idOrganizationBill.value);
 
-  console.log(item)
-
-
-  const isChanged =
-      nameRef.value !== item.name ||
+  return   nameRef.value !== item.name ||
       organizationAdd.value !== item.organization.id ||
       currencyAdd.value !== item.currency.id ||
       bill_number.value !== item.bill_number ||
       showDate(dateRef.value) !== item.date ||
       comment.value !== item.comment;
-
-  return isChanged;
 };
 
 const checkAndClose = () => {
@@ -172,6 +123,31 @@ const closeDialogWithoutSaving = () => {
   cleanForm();
 };
 
+const closingWithSaving = async () => {
+  if (isExistsOrganizationBill.value) {
+    await update({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+    showModal.value = false
+  } else {
+    const isValid = validate(
+      nameRef,
+      organizationAdd,
+      currencyAdd,
+      bill_number,
+      dateRef,
+      comment
+      );
+      showModal.value = false
+    if (isValid === true) {
+      await addOrganizationBill({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      dialog.value = false;
+      showModal.value = false;
+      showConfirmDialog.value = false;
+      cleanForm();
+    }
+  }
+};
+
+
 const checkUpdate = () => {
   if (isDataChanged()) {
     showModal.value = true;
@@ -186,12 +162,7 @@ const rules = {
   required: (v) => !!v,
 };
 
-const getOrganizationBillData = async ({
-                                         page,
-                                         itemsPerPage,
-                                         sortBy,
-                                         search,
-                                       }) => {
+const getOrganizationBillData = async ({page, itemsPerPage, sortBy, search}) => {
   const filterData = filterForm.value;
   filterModal.value = false;
   count.value = 0;
@@ -199,12 +170,7 @@ const getOrganizationBillData = async ({
 
   loading.value = true;
   try {
-    const {data} = await organizationBill.getAll(
-        {page, itemsPerPage, sortBy},
-        search,
-        filterData
-    );
-
+    const {data} = await organizationBill.getAll({page, itemsPerPage, sortBy}, search, filterData);
     paginations.value = data.result.pagination;
     organizationBills.value =
         data.result.data.map((item) => ({
@@ -226,11 +192,7 @@ const addOrganizationBill = async ({page, itemsPerPage, sortBy}) => {
     comment: comment.value,
   };
 
-  if (
-      validate(nameRef, bill_number, dateRef, organizationAdd, currencyAdd) !==
-      true
-  )
-    return;
+  if (validate(nameRef, bill_number, dateRef, organizationAdd, currencyAdd) !== true)    return;
 
   const res = await organizationBill.create(body);
 
@@ -261,12 +223,8 @@ const remove = async ({page, itemsPerPage, sortBy, search}) => {
 };
 
 const restore = async ({page, itemsPerPage, sortBy, search}) => {
-  const body = {
-    ids: markedID.value,
-  };
-
   try {
-    const {status} = await organizationBill.restore(body);
+    const {status} = await organizationBill.restore({ids: markedID.value})
 
     if (status === 200) {
       showToast(restoreMessage);
@@ -386,7 +344,7 @@ const cleanFilterForm = () => {
   count.value = 0
 };
 
-const addBasedOnorganizationBill = () => {
+const addBasedOnOrganizationBill = () => {
   if (markedID.value.length === 0) return showToast(warningMessage, "warning");
   if (markedID.value.length > 1)
     return showToast(selectOneItemMessage, "warning");
@@ -442,6 +400,7 @@ const lineMarking = (item) => {
   }
 
   const index = markedID.value.indexOf(item.id);
+
   if (index !== -1) {
     markedID.value.splice(index, 1);
   } else {
@@ -450,12 +409,6 @@ const lineMarking = (item) => {
   markedItem.value = item;
 };
 
-onMounted(async () => {
-  await getCurrencies();
-  await getOrganizations();
-  currenciesCopy.value = [...currencies.value];
-  organizationCopy.value = [...organizations.value]
-})
 
 watch(dialog, (newVal) => {
   if (!newVal) {
@@ -463,16 +416,20 @@ watch(dialog, (newVal) => {
   } else {
     markedID.value = [markedID.value[markedID.value.length - 1]];
   }
-});
+})
 
-const searchOrganization = () => {
+watch(search, debounce((newValue) => {
+  debounceSearch.value = newValue
+}, 500))
 
-  if (!searchSelect.value) {
-    organizations.value = organizationCopy.value
-  }
 
-  organizations.value = organizationCopy.value.filter((c) => c.name.indexOf(searchSelect.value) > -1);
-}
+onMounted(async () => {
+  await getCurrencies();
+  await getOrganizations();
+  currenciesCopy.value = [...currencies.value];
+  organizationCopy.value = [...organizations.value]
+})
+
 
 
 </script>
@@ -489,7 +446,7 @@ const searchOrganization = () => {
             <div class="d-flex ga-2 mt-1 me-3">
               <Icons @click="openDialog(0)" name="add" title="Создать"/>
               <Icons
-                  @click="addBasedOnorganizationBill"
+                  @click="addBasedOnOrganizationBill"
                   title="Скопировать"
                   name="copy"
               />
@@ -539,7 +496,7 @@ const searchOrganization = () => {
             :items-length="paginations.total || 0"
             :items="organizationBills"
             :item-value="headers.title"
-            :search="search"
+            :search="debounceSearch"
             @update:options="getOrganizationBillData"
             page-text="{0}-{1} от {2}"
             show-select
@@ -594,7 +551,7 @@ const searchOrganization = () => {
 
       <!-- Modal -->
       <v-card>
-        <v-dialog persistent class="mt-2 pa-2" v-model="dialog">
+        <v-dialog persistent class="mt-2 pa-2" v-model="dialog" @keyup.esc="isExistsOrganizationBill ? checkUpdate() : checkAndClose()">
           <v-card
               style="border: 2px solid #3ab700"
               min-width="600"
@@ -657,6 +614,7 @@ const searchOrganization = () => {
                         :base-color="FIELD_COLOR"
                         basecolor=""
                         placeholder="Наименование"
+                        autofocus
                         label="Наименование"
                         clear-icon="close"
                         clearable
@@ -752,7 +710,7 @@ const searchOrganization = () => {
         </v-dialog>
       </v-card>
       <v-card>
-        <v-dialog persistent class="mt-2 pa-2" v-model="filterModal">
+        <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup="closeFilterModal">
           <v-card
               style="border: 2px solid #3ab700"
               min-width="600"
@@ -780,6 +738,7 @@ const searchOrganization = () => {
                         density="compact"
                         placeholder="Наименование"
                         label="Наименование"
+                        autofocus
                         clear-icon="close"
                         clearable
                         hide-details
@@ -859,7 +818,7 @@ const searchOrganization = () => {
           </v-card>
         </v-dialog>
         <div v-if="showModal">
-          <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()"/>
+          <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" @closeWithSaving="closingWithSaving()"/>
         </div>
       </v-card>
     </v-col>

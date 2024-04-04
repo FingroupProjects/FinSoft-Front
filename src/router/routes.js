@@ -20,6 +20,11 @@ const routes = [
     component: () => import("../pages/procurementOfGoods/index.vue"),
   },
   {
+    path: "/procurementOfGoods/create",
+    name: "procurementOfGoodsCreate",
+    component: () => import("../pages/procurementOfGoods/create.vue"),
+  },
+  {
     path: "/sellingGoods",
     name: "sellingGoods",
     component: () => import("../pages/sellingGoods/index.vue"),
@@ -90,6 +95,11 @@ const routes = [
     component: () => import("../pages/list/user/index.vue"),
   },
   {
+    path: "/list/userAccess/:id",
+    name: "userAccess",
+    component: () => import("../pages/list/user/access.vue"),
+  },
+  {
     path: "/list/position",
     name: "position",
     component: () => import("../pages/list/position/index.vue"),
@@ -105,14 +115,14 @@ const routes = [
     component: () => import("../pages/programSettings/index.vue"),
   },
   {
-    path: "/list/nomenclature/:id",
+    path: "/list/nomenclature",
     name: "nomenclature",
     component: () => import("../pages/list/nomenclature/index.vue"),
   },
   {
-    path: "/list/nomenclatureGroup",
-    name: "nomenclatureGroup",
-    component: () => import("../pages/list/nomenclature/nomenclatureGroup.vue"),
+    path: "/list/good-images/:id",
+    name: "goodImages",
+    component: () => import("../pages/list/nomenclature/goodImages.vue"),
   },
   {
     path: "/list/createUpdateGood/:id",

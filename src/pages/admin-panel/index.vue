@@ -1,10 +1,12 @@
 <script setup>
-import { ref, defineProps, defineEmits, computed } from "vue";
+import {ref, defineProps, onMounted} from "vue";
 import { useRouter } from "vue-router";
 
 const props = defineProps(["rale"]);
-const router = useRouter();
-const emit = defineEmits();
+const router = useRouter()
+const users = ref([])
+const filteredLists = ref([])
+const filteredAdmins = ref([])
 
 const admins = ref([
   {
@@ -23,7 +25,7 @@ const lists = ref([
     child: [
       { id: 1, title: "Единица измерения", link: "/list/unit" },
       { id: 2, title: "Банковские счета", link: "/list/organizationBill" },
-      { id: 3, title: "Номенклатура", link: "/list/nomenclatureGroup" },
+      { id: 3, title: "Номенклатура", link: "/list/nomenclature" },
       { id: 4, title: "Пользователи", link: "/list/user" },
       { id: 5, title: "Контрагенты", link: "/list/counterparty" },
       { id: 6, title: "Организации", link: "/list/organization" },
@@ -35,17 +37,39 @@ const lists = ref([
       { id: 12, title: "Кассы", link: "/list/cashRegister" },
     ],
   },
-]);
+])
+
 
 function push(item) {
   router.push(item.link);
 }
+onMounted(() => {
+  users.value = JSON.parse(localStorage.getItem('user'))
+
+    filteredLists.value = lists.value.map(list => {
+      return {
+        ...list,
+        child: list.child.filter(item => users.value.permissions.includes(item.link.slice(6)))
+      }
+    })
+
+
+
+    filteredAdmins.value = admins.value.filter(item => users.value.permissions.includes(item.link.slice(1)));
+
+
+
+
+
+
+})
+
 </script>
 
 <template>
   <div class="">
     <div class="panel align-start ga-10 pa-4">
-      <div v-for="list in lists" :key="list.id">
+      <div v-for="list in filteredLists" :key="list.id">
         <h3 class="text-uppercase mb-4">{{ list.title }}</h3>
         <ul class="list">
           <li
@@ -61,7 +85,7 @@ function push(item) {
         </ul>
       </div>
       <div>
-        <div class="mb-10" nav v-for="admin in admins" :key="admin.id">
+        <div class="mb-10" nav v-for="admin in filteredAdmins" :key="admin.id">
           <h3 class="text-uppercase mb-4">{{ admin.title }}</h3>
           <ul class="list">
             <li

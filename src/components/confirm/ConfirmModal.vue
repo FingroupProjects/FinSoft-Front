@@ -9,7 +9,7 @@
           >
             <span>Подтверждение</span>
             <v-btn
-              @click="showConfirmDialog = false"
+              @click="closeModal"
               variant="text"
               :size="32"
               class="pt-2 pl-1"
@@ -18,19 +18,18 @@
             </v-btn>
           </v-card-title>
           <v-card-text class="text-subtitle-1"
-            >Точно хотите закрыть? Введенные данные не будут
-            сохранены.</v-card-text
+            >Сохранить текущие изменения?</v-card-text
           >
           <v-card-actions class="d-flex justify-end align-end">
             <v-btn
-              @click="closeModal"
+              @click="confirmClose"
               class="text-none w-[200px] h-[20px]"
               color="red"
               variant="flat"
               >Нет</v-btn
             >
             <v-btn
-              @click="confirmClose"
+              @click="closingWithSaving"
               class="text-none w-[200px] h-[20px]"
               color="green"
               variant="flat"
@@ -58,6 +57,10 @@ const closeModal = () => {
 
 const confirmClose = () => {
   emit('closeClear')
+}
+
+const closingWithSaving = () => {
+  emit('closeWithSaving')
 }
 
 </script>

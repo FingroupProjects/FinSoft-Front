@@ -77,9 +77,12 @@ watch(
   }
 );
 
-watch(search, debounce((newValue) => {
-  debounceSearch.value = newValue
-}, 500))
+watch(
+  search,
+  debounce((newValue) => {
+    debounceSearch.value = newValue;
+  }, 500)
+);
 
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
@@ -115,6 +118,8 @@ const createBase = () => {
   editItem(markedItem.value);
 };
 
+
+
 const editItem = (item) => {
   isCreate.value = true;
   isEdit.value = true;
@@ -138,6 +143,7 @@ function countFilter() {
 
 const toggleModal = () => {
   isCreate.value = false;
+  createOnBase.value = false;
   setTimeout(() => {
     isEdit.value = false;
   }, 100);
@@ -212,7 +218,12 @@ const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
   }
 };
 
-const massRestoreCounterparty = async ({ page, itemsPerPage, sortBy, search }) => {
+const massRestoreCounterparty = async ({
+  page,
+  itemsPerPage,
+  sortBy,
+  search,
+}) => {
   if (markedID.value.length === 0) {
     showToast(warningMessage, "warning");
     return;
@@ -277,6 +288,10 @@ const handleCheckboxChange = (index) => {
   computeRoles();
 };
 
+const handleCheckboxClick = function (item) {
+  lineMarking(item);
+};
+
 const computeRoles = () => {
   filterForm.value.roles.forEach((roleIndex) => {
     if (roleIndex === 1) a.value = true;
@@ -294,16 +309,20 @@ onMounted(async () => {
 <template>
   <div>
     <v-col>
-      <div class="d-flex justify-space-between text-uppercase">
+      <div class="d-flex justify-space-between text-uppercase" >
         <div class="d-flex align-center ga-2 pe-2 ms-4">
           <span>Контрагенты</span>
         </div>
-        <v-card variant="text" min-width="320" class="d-flex align-center ga-2">
+        <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100 align-center">
             <div class="d-flex ga-2 mt-2 me-3">
               <Icons title="Добавить" @click="isCreate = true" name="add" />
               <Icons title="Скопировать" @click="createBase()" name="copy" />
-              <Icons title="Удалить" @click="compute({ page, itemsPerPage, sortBy, search })" name="delete" />
+              <Icons
+                title="Удалить"
+                @click="compute({ page, itemsPerPage, sortBy, search })"
+                name="delete"
+              />
             </div>
             <div class="w-100">
               <v-text-field
@@ -366,7 +385,6 @@ onMounted(async () => {
             <tr
               @mouseenter="hoveredRowIndex = index"
               @mouseleave="hoveredRowIndex = null"
-              @click="lineMarking(item)"
               @dblclick="editItem(item)"
               :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
@@ -375,11 +393,12 @@ onMounted(async () => {
                   v-if="hoveredRowIndex === index || markedID.includes(item.id)"
                 >
                   <CustomCheckbox
+                    v-model="markedID"
                     :checked="markedID.includes(item.id)"
                     @click="lineMarking(item)"
-                    @change="lineMarking(item)"
+                    @change="handleCheckboxClick(item)"
                   >
-                    <span>{{ item.id }}</span>
+                    <span>{{ index + 1 }}</span>
                   </CustomCheckbox>
                 </template>
 
@@ -389,7 +408,7 @@ onMounted(async () => {
                       style="margin-right: 10px; margin-top: 4px"
                       :name="item.deleted_at === null ? 'valid' : 'inValid'"
                     />
-                    <span>{{ item.id }}</span>
+                    <span>{{ index + 1 }}</span>
                   </span>
                 </template>
               </td>
@@ -422,7 +441,7 @@ onMounted(async () => {
         "
       />
 
-      <v-dialog persistent v-model="filterDialog" class="mt-2 pa-2">
+      <v-dialog persistent v-model="filterDialog" class="mt-2 pa-2" @keyup.esc="closeFilterDialog">
         <v-card
           style="border: 2px solid #3ab700"
           min-width="650"
@@ -444,6 +463,7 @@ onMounted(async () => {
                     variant="outlined"
                     class="w-auto text-sm-body-1"
                     density="compact"
+                    autofocus
                     placeholder="Контрагент"
                     label="Наименование"
                     clear-icon="close"
@@ -523,8 +543,12 @@ onMounted(async () => {
                   @click:append-inner="filterForm.address = null"
                 />
                 <div class="d-flex justify-end ga-2 mt-2">
-                  <v-btn color="red" class="btn" @click="closeFilterDialog">сбросить</v-btn>
-                  <v-btn color="green" class="btn"  @click="getCounterparty">применить</v-btn>
+                  <v-btn color="red" class="btn" @click="closeFilterDialog"
+                    >сбросить</v-btn
+                  >
+                  <v-btn color="green" class="btn" @click="getCounterparty"
+                    >применить</v-btn
+                  >
                 </div>
               </v-col>
             </v-row>

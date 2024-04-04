@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref, watch, computed } from "vue";
 import groupApi from "../../../api/goodGroup";
 import goodsApi from "../../../api/goods";
 import showToast from "../../../composables/toast";
@@ -16,12 +16,16 @@ import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 const { query, params: routeParams } = useRoute();
 const router = useRouter();
 
+const notImg = ref(false);
 const isImageDialog = ref(false);
 const isValid = ref(false);
 const isEdit = ref(false);
 const isCreated = ref(false);
 const isCreateOnBase = ref(false);
 const showModal = ref(false);
+const showConfirmDialog = ref(false);
+
+const currentIndex = ref(0);
 
 const name = ref("");
 const vendor_code = ref("");
@@ -31,7 +35,7 @@ const id = ref(0);
 const storage_id = ref(null);
 const unit_id = ref(null);
 const good_group_id = ref(null);
-const main_image = ref(null);
+// const main_image = ref(null);
 const firstImage = ref(null);
 const secondImage = ref(null);
 const thirdImage = ref(null);
@@ -60,71 +64,118 @@ const itemsProps = (item) => {
   };
 };
 
-const toggleModal = () => {
-  showModal.value = !showModal.value;
+// const toggleModal = () => {
+//   showModal.value = !showModal.value;
+// };
+
+// const closeDialogWithoutSaving = () => {
+//   showModal.value = false;
+//   isImageDialog.value = false;
+//   cleanImages();
+// };
+
+const isDataChanged = () => {
+  // const item = priceTypes.value.find(elem => elem.id === idPriceType.value);
+  const item = props.find((item) => item.id === props.item.id);
+
+  return (
+    name.value !== item.name ||
+    vendor_code.value !== item.vendor_code ||
+    description.value !== item.description ||
+    unit_id.value !== item.unit_id ||
+    storage_id.value !== item.storage_id ||
+    main_image.value !== item.main_image
+  );
+};
+
+const checkAndClose = () => {
+  if (
+    name.value ||
+    vendor_code.value ||
+    description.value ||
+    unit_id.value ||
+    storage_id.value ||
+    main_image.value
+  ) {
+    showModal.value = true;
+  } else {
+    showModal.value = false;
+  }
+};
+
+const closingWithSaving = async () => {
+  if (props.isEdit) {
+    await updateGood({ page: 1, itemsPerPage: 10, sortBy: "id", search: null });
+    showModal.value = false;
+  } else {
+    const isValid = validate(
+      name,
+      vendor_code,
+      description,
+      unit_id,
+      storage_id,
+      main_image
+    );
+    showModal.value = false;
+    if (isValid === true) {
+      await createGood({
+        page: 1,
+        itemsPerPage: 10,
+        sortBy: "id",
+        search: null,
+      });
+      showModal.value = false;
+      showConfirmDialog.value = false;
+    }
+  }
 };
 
 const closeDialogWithoutSaving = () => {
   showModal.value = false;
-  isImageDialog.value = false;
-  cleanImages();
+  showConfirmDialog.value = false;
+  cleanForm();
 };
 
-const cleanImages = () => {
-  firstImage.value = null;
-  secondImage.value = null;
-  thirdImage.value = null;
-  forthImage.value = null;
-};
-
-const setImageByIndex = (index) => {
-  const selectedFile = add_images.value[index];
-  main_image.value = selectedFile;
-};
-
-const selectAvatar = async (event, num) => {
-  const files = event.target.files;
-  imageRef.value = files[0];
-  add_images.value.push(imageRef.value);
-  // for (let i = 1; i < files.length; i++) {
-  //   add_images.value.push(files[i]);
-  // }
-  let filename = files[0].name;
-  if (filename.lastIndexOf(".") <= 0) {
-    return showToast("Пожалуйста, добавьте заново!");
+const checkUpdate = () => {
+  if (isDataChanged()) {
+    showModal.value = true;
   }
-  const fileReader = new FileReader();
-  fileReader.addEventListener("load", () => {
-    if (num === 1) {
-      firstImage.value = fileReader.result;
-      main_image.value = firstImage.value;
-      // add_images.value[0] = firstImage.value;
-    } else if (num === 2) {
-      secondImage.value = fileReader.result;
-    } else if (num === 3) {
-      thirdImage.value = fileReader.result;
-    } else if (num === 4) {
-      forthImage.value = fileReader.result;
-    }
-  });
-  // add_images.value[1] = secondImage.value;
-  // add_images.value[2] = thirdImage.value;
-  // add_images.value[3] = forthImage.value;
-  fileReader.readAsDataURL(files[0]);
 };
 
-const setImages = (images) => {
-  if (images.length === 0) {
-    firstImage.value = null;
-    secondImage.value = null;
-    thirdImage.value = null;
-    forthImage.value = null;
+const cleanForm = () => {
+  name.value = null;
+  vendor_code.value = null;
+  description.value = null;
+  unit_id.value = null;
+  storage_id.value = null;
+  main_image.value = null;
+};
+
+const main_image = computed(() => add_images.value[currentIndex.value]);
+
+const previousImage = () => {
+  if (currentIndex.value > 0) {
+    currentIndex.value--;
+  }
+};
+
+const nextImage = () => {
+  if (currentIndex.value < add_images.value.length - 1) {
+    currentIndex.value++;
+  }
+};
+
+const goToImages = () => {
+  if (id.value == 0) {
+    showToast("Сначало сохраните товар", "warning");
     return;
   }
-  firstImage.value = import.meta.env.VITE_IMG_URL + images[0].image;
-  secondImage.value = import.meta.env.VITE_IMG_URL + images[1].image;
-  thirdImage.value = import.meta.env.VITE_IMG_URL + images[2].image;
-  forthImage.value = import.meta.env.VITE_IMG_URL + images[3].image;
+  router.push({
+    name: "goodImages",
+    params: {
+      id: id.value,
+    },
+  });
 };
 
 const getUnits = async ({ page, itemsPerPage, sortBy, search }) => {
@@ -141,6 +192,7 @@ const getGoodByid = async () => {
     return;
   }
   try {
+    add_images.value = [];
     const { data } = await goodsApi.getById(id.value);
     const good = data.result;
     name.value = good.name;
@@ -149,17 +201,19 @@ const getGoodByid = async () => {
       (unit_id.value = good.unit_id.id),
       (storage_id.value = good.storage.id),
       (good_group_id.value = good.good_group.id),
-      (main_image.value =
-        good.images.length > 0
-          ? import.meta.env.VITE_IMG_URL + good.images[0].image
-          : ""
-          ? import.meta.env.VITE_IMG_URL + good.images[0].image
-          : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsCAIAAAD2HxkiAAAABGdBTUEAALGOfPtRkwAAACBjSFJNAAB6JQAAgIMAAPn/AACA6AAAdTAAAOpgAAA6lwAAF2+XqZnUAAAepUlEQVR4nGL8//8/wygYBaNg4ABAADENtANGwSgY6QAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggFgG2gEjC/z4/v39+/d//vyBcAUFBXl4eQfWSaNgwAFAADH+//9/oN0wIsCXz5/v370LzIFo4sB8qKmjw8IyWhqOXAAQQKOZkB7g8aNHwBwIZAAzm6KyMpB88ewZPEMC86GugcGAOnAUDCQACKDRApjmAJj9gJmQAZwD9QwMIO1PUTGxyxcuQPIhZvU4CkYUAAig0YEZ2oLnz55BciAQqKqrI/cAga1QSSkpIANCjoIRCwACaLQ5SkPw4/v3c2fOQIZhRtucowAXAAig0eYopeDL58+/wdmMk4ODg5MTWQpYB8IHQoFdQQgDuStIR2eOgsELAAJoNBOSCYDtzA/v379+9QpZENjrA3b2BAQFgSSwGgSqgYgDucCMevvmTbgIXFxCSmo0N45wABBAo81RkgGwKgNmJ2AeYwB350TExCC5CCjy+vVr+CgoCysrRA0QAGtIOBsTAA0Bdhfp4vZRMBgBQACNZkLSAHyok4eXV0tbG639yQBunQL7gZgaZeXkgPUeZGAGWH8CDQGqhMuO5sORDAACaDQTEguAvbvrV65AenTAPAOZ7sOqErPZaWRigrky5vrVq8itWaCBwIxKbVePgiEAAAJodIqCKADMgZdg03rA7IQnBzKAG5/IXGCOxbo2DVj1IRsCrGPxNFlHwTAGAAE0mgmJAsAcAmk9ArMNsBVK0iozXPUbZPUMsgha/YkLAEuE92CA3KAlBgDV41oYADETVymAtuSVpo4cgQAggEZHRwkDYP8Nnj1k5eUx+4Fo4MO7d3A2sA7Eox7YSwS2XeHc169fo2VLZABM1kBnAFuwyMkaaLiikhLQHDzugWgEIkgeQ2v3Ak0DehDSMAaWC8CWM7KDgbnoycOHkKwLlNXU0cE/lku2I0cyAAig0UxIAEAWXkPYwBxFTLcNubbBn/KAyRpoJjy94mmOAvPJ44cPgUkcmKCB2eDz58+QegmoBdi3BJqAK/cC8wMwnyNXYhwcHHA2fJwJAoDKgCZDMuEf8JwKcq8VKPLi2TM8mZBsR45wABBAo5mQALiFVFMRk4bQWl8EdyrxImVCBnAGxkzlkJEeUEWkrQ3J1ZA+KlwjMPULCAmhaYTnIh5UKwSFhDBNwPTFtatXMQuFP79/4/IIeY4cBUAAEECjfUJ8AJiq4GkIUroT1IJcDQJTJEEtBBu38MStZ2AAr1chXLRxHWRd0JGkd++AzUsggosDMyRQF9BTp44fB+YxYLECzDPIGjk5OYGyQL3A/AaU1TUwQHYhLteS58hRAAEAATSaCfEB5KYakcusMescSgB8tgNt8TcDOIkjOwloL7ziguRABtjUCLKTgDkEkseA2QkoC5m9RDYTSAJlgfUzRBZYiHAiNV+xVuzkOXIUwAFAAI02R3ECYEMOOcWIiooSo+s96qgMhQ6AJG5B8Do4TAVo5sO7c0BnAxF8iAVtRBSYx4CmwWdZUKpuVlaILPLKAWQFmBU72Y4cBXAAEECjmRAn+ICU+PAPcsLBF9hQBAQQk2/Relm8sCQL6dFB2DLy8lj18qKm7x8/fsBda2ZpCW8HIhclwAYh2uoc5HoSqBJN9j3eQKDEkaMADgACaLQ5ihMgDwzyElenISdZYHolMt/C2SxgAGEDqxdIfsbTF8VjPnJPDK0qQ1sfh+wAYDZDk0WebsGs6Ch05CiAAIAAGs2E2AFanUZkSkJOskQOA35HqhngfUig1Y8fPoSwiWwG4wKQpimci7lCFbn9jDn8+/r1azgbzSVUdOQIBwABNJoJsYPfqKtDkOfW8AC0xhtB9cB0jJxD4FqAlTC8CCC+JsG6jucz6qgMmmnIZQ1mbYacgTErdio6coQDgAAazYTYAdoEGgsrK0EtaHsLiakJ0bTA65MPqM1aguZAANY2M7JHRDDqK5R1BRiyeKpB6jpyhAOAABrNhFQDaJ0rYtIlcjqWlJKCa0HOnHgyM1p/Emvdi3/5DrIJAhgTKsjOwNRLRUeOcAAQQKOZkGoA/1A+JgC25ZDTsQgslRN/+BpymxnX+jh4HsDqJHiHEHNdAbAhirxQAS3zUNeRIxwABNBoJiQKEJxiBuYotCXLBM1E3jMhiXTIBZ6lYWgApamJLX0jZxXMig7oKcRZ4Biy+FuqVHTkKAAIoNFMiB2gFfwEMyGpHULkoUW0PU3Ez6TBLRUEA0wFaC1kNFn8w0gf8MpS0ZGjACCARjMhdsBLYusLrRokWBNCdhtA2Gi7e9EArl18yM1FXCvLkadMMEdEUFbYYVsKA2cTbEZS4shRABBAo5kQO0DrI+HZDssA20QH5xIcAAQaBV+VCkya+JP4ZxwbHZBNwDXaAXczZN02LlnM8RJcwzlorW6qOHIUAATQaCbECdDWYT2BtR4xAdqOePypDXJWDYQN7ApiblBEm5NErs3gAH6eIrCkwLXFETm3YJYLyHOAmB1CrO1YyLpwyN4uajlyFAABQACNZkKcAG1FMuSkQ0xlwHSGtkMHz4EOkHQMabzhOmENLUvAl4Yhg2tXrzKAs4emjg4uu/B3+fDLYmZC+M4MPfA54tRy5CgAAoAAGs2E+ADa3hxgUrt84QK8swTJlpg5E6gAa9sVsocIkr6BzTNcZxyibf8BJm7kTA6qSMG71IFlBNpuPUzr4GzMLh/yUBOmLPLgJ9AcoMdPHT/OAM6BEBup5chRAAQAATQaOvgAZFsq8ikPkMOLroPLeAhAPtgXktqASRCYV0GdPVFRyAgNUPuH9+8hbTNgrlbD2HeHBoB6gb0seC4CagRygdUyMG9A6hxizkeE99OArsIcKCJ+hR0kd2Ge8kgVR44CIAAIoNFMSABAzmsQERVFvlEQAiCH2L959eo5LBMCkx0wscKzHFozFageaA4xE9aYmf8LLLkDtQNTNsFBDvxdPuTxFazTBiJiYsiexZqdKHfkKIAAgAAaPfyXNIB2nQswNR87fBgiAqxtzCwskBVDzk0CMljJXa4FOVofaj4HBzA70a1p9/jRow/v3gGdjbyeDisYQEcODwAQQKOZEB+ArCnBk3/gV/ACga6Bwehk9CggAwAE0GiJhRPAb5UAtqywTjQjr3qBHMdCV/eNguECAAJodHQUJ4C3PIHVHdbJCfiqF8igBV0dNwqGEQAIoNFMiBOgTU5cv3oVeSoMdNAteDnI6IVKo4BCABBAo31CfAC5y8cAuwOUg5MTcsz76Onuo4AqACCARjMhAQBslL4AX66ALAgZMyTyJNJRMArwA4AAGs2ExILRu+ZHAY0AQACNZsJRMAoGGAAE0OjAzCgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAKIypnwz58/78Hgy+fPxOsCKoZfRo3VwB/fv2OVBYoDZYFqSHUnRCMekyGuwiMLAfhNgJtDT98R47WBdRgxGqkV+GRYzUD3kAEIIBaSVOMCQFufP3v2+tUr5LzHwcmpqKQkKiaGXxcQQbykqKwsKycHlwUa9fjRI6CZIFeysBiZmAANhMsCvfrk4UNISAFlNXV0iLlKHmgRxEzkYAJqBFrNw8uLrOz2zZsQw3UNDLCaDDTh0oULEP+qqqtLSkkNrO+I9Br9HYZmHQQAbQTai8sjlAc+XNnjhw9fv36NbDWaf/E4lQ4JEgIAAvBSLikAwjAQ3VjoiaT3v4O4Cu6K+17AJ4FBGkEXpV31l2RmmukAE4IMqhAAE4Vba94HMNm3DeivckMGrZ8dk3PW/DAjrZZcI61zZk6ga6HTs9ZPziQkbdy/hTPjvTs6vqTWWkqMAo9+HEK6PpjM7ie1+cBUzq/JDFRZUopmGCK+D7wEnViaTUwSQ+Y3pMYlgCjNhEDrgb4FZX1tbUilh1xKMYDDSEBICNlBcEcDS2jkmlNQSAhTOxoAil+7ehWzMfDn9288jkQOJqClrCwsaI0NCBeo7PqVK2hSkBoGM7lwIsUQsnvo7DsivUZ/hzHAigZgqgBWVsAUAhQBFsrwxPrh3TvkUKVK4MMBJM8AfaqlrQ3MKmi++/D+PXImpH/IoAGAAMSWPQ6AIAyFWRndDIcwDNyfxIXEU/lJ9YXgYqKRDkb6E/ra0vbVI9QLXGLUzmPHrRQ1FSIypXQ6VyHhNNMckzVn4/OPIZCQuroJ0IfIme7y3rdS9Lld4NvF4E4WRKXEXYuHmi5ptkaI1CqGTqaCQI2cWRmJ0ITTbf//o3sCbYhjNojQpzuLOYfQTgzRJ8EXHeOUSVvr0Az5Egfhal/IkILsaBeA97JLARAEgnAX8Bp5/zMIPQvhffpqaBItiALDh3DLndl/vyehMnA6hvLm1qF27/atS7YLEjuap+vqQr0UJfYdT+YsUyINIaBOUsqhOTcAGpwKU7tkOr3CEgYOXFKq7wDgWXN2h4RpX4/5RhZw9A9m94Ya0vHAsBvYeJljfHDL9e/eA0v5afxatSZzDqxTl+n3VvX4gOyfTQCROToKLLogQQBsZ2IdekFzxGew94BOBCK4l9DaHkAvAY0CpidMWWAIQmR1YbJoCnC1vyH9bAZwakArTeHuhJR5QJPRYloVKQFBDEEDcJdAWkd09h2RXqO/wyANS4gsWjJAS+VQW6gR+GhWA2XRen3IVguA25kMA5EgsQKAACInE0La0BC2jLw8VjW8qKH/48cPBnCyMLO0hDsauSWN1nlgQA01oEqILFwE2cNAY7HW/kB3QgpFYHwQLJkwQw05IoEOwOwVwM2EMOjpO5K8Rudgh7eERVBLZ8hYJYQNzHLIzqY88NGsFhUVxWU10Edw6+gcMrgAQACRkwmBJRPEq5DhUKxqcDkCucxGKzlUUZsuyH7mAVf6yLLAbj2cjWsWBDI4xgBOqTi8QgAga8TamYEAuGfp5jtSvUY3h0GGUjAVQBp+cDfjmp9ABqQGPjFWY/qIngkSFwAIIJIzIUqhglrekAQgLQE4VxWj8/AeyVeYcfb69Ws4G6szgIbD+wwkNdCRAbxFh2Yj3AoIA7MkoqnvKPEarYMdng2AYQJP30Ab4QOMwDoQ01KsgNTAh1sNtBet1wexGtK2xNp0Z6B9yOABAAFE8sAM8nQw8XUups8/o3YP0Iz6AptsZMBW3yKHF1AWe6MIXihSUFIwwDrocEuR7YI3BzAdQFPfUeI1mjoMXjowIPW7kKf+IOONly9cAMpijnliAuIDH9lqQZjVwJoN2EUEqgQNVsnL45qjp0PI4AcAAURyJvyAVGUTbxkvRoGNXLmLYCQm5IYBZlIjWOoAwwvegIGnBvIAclUDdJUkkpchLRCsDqCd7yj0Gk2DHVkBBwcHaKbk0SNg6gTmAWCq/f7jB2RVF8QioEuQZy+wAuIDH9lqoC6gRffv3YMEFKT1SzDD0zRk8AOAACKnJoSz8QwBIXsJuXkAByi+wmhDYx3LwuoGrO1v5OqapHEqTICsHdlVkDWEDDgGo2nnOwq9RtNgRx7GhC+UAdY/8N4dfOIBYpqikhL+cpz4wEe2Gpg/4aNWQNuJrCpoGjL4AUAAkZYJca1qxQS/kSZSsToL7iusKQne/oYUoshSyGNluDpF8OqaYPlHDAA6AOJx5D4DfA0hnX1Hoddo5zC0PhVo5bCyMpohElJSyEkIWDcSzCHEBD6a1Z/BKyWBNRJJzUKaJkj8ACCASItI4hfjoFTuGMkUOSYwyxWgrxCFPYYs/oYBVA0syDCbwWQAYLDCG1FwwTewpg4W22npO0q8RluHoRbQRrA1UsgAecacSEBM4KNZbWZpSWoJResEiR8ABBBpo6OQ6T5iALyCFgQDNFm00V40WbQpFzTZD3hlGcBtFTI2N+EByEkHvjYd4kismZB2vqPQa7QOdjibmHYyZpWCXRkRgY9mNRltBJqGDEEAEEAU7SfElSCQK2isM0LIkyr4x2ww44lg+xt5mIsqADlkIYbDVwthbfDQzncUeo2mwU7MDlIyJtOICXwiN69CFplgVUzTkCEIAAKIokyIK03Ax9AxN7NBALxogSwZwyWLOaKDq/cMDF+sgYs/1SJP7+IByAujGGCrGRnAPRys6unjOzK8RlOHEdNVgY8iAq0gZr6egbjAJ8ZqoBfOnTmDa9KfbgkSKwAIINIyIQdqiCCXH3AAn7GBjIxhKkB2HGapg9zJxmx/Y202QCZkb8FW0iED+DAaJgCmUWCsYPUCGkCr7iALhoCCBCsEmvqOVK/RM9hxuQpiBfL+BoKApMBnwFY2QSrAyxcuAPMq8nYfOBjwkAEIINJaz2iOAC1vl5dHC81r4JXmoD0sOjpYDcHfwsYvi+ln+EJ4PdjWVbRwRN5IxQCbZ4MkCCLXTzGA0w2k7Q2MSMiCIVwzvzT1HSVeo3WwI3feMEsHyM4mBlgOJKnvRHzgM8CyHGRiEOhsyE4DoCDybi80QOuQIQgAAoi0TAjZowSfk4EsI4Yv8IG3uYF1IDAH4irq8LewkceaMWWRGx6QHVJABwBDFm0vD1AEbg5Q2akTJyCdeGDlANn4D1QA34VMDOCFjdG9gJXEuBZt0tR3lHiN1sEOTILIjT1gcCEvKIPkQKAaNYyNbwQBwcAXEBJCzirw/SVwANrbhVFbIPsIzqZFyBAEAAFE8jgSsIxBPlwA6FsgFxjlQNdAihw8Z3hAALzBAElSaLL4Cx5kAJ+QxVwPAXTAbaTGACRo4JYC1ROzZgorgDhPUUkJlwJa+45sr9HaYaAdpEgnU1y/cgXkElZWyJEtxCwcIwhwBb6oqCjW0z0YwK1ZYCWBfxiWDgkSPwAIIJITIqQ5gXyoxhdYngRmRbQtKpgAfwsbuTuLNeBExMSQAwVXhgcGBNActOIQUoKSnf3gANcWSga6+I48r9HBYZCEAd+vAFroDx4ZghQNpE6d4wJYAx+S026j9sGA6RASJvgNpE+CxA8AAojx////pOqBAKDT4YNdHBwcQA9QZXkKQQCMWmDTCxLE+OP1C+zgOqDDeJGW5JMBkNdbQc5BINso/IBI31HRa9R1GGi46N07yHwytdxGZODDEyRkBpIqeZ4YQHyCxAUAAoj8TDiiAPzoETxn9Y0CGoFhH/gAATR6Ajdh8AWpzyCL4ySBUUAjMBICHyCARjMhYQDvgKniOM1lFNAOjITABwig0UxIAIB6GuAhKFExMfIWJY0CssEICXyAABrNhATA/Xv3IHNTRB7KMAqoCEZI4AME0GgmxAcgF2wAGVra2sO1LTRowcgJfIAAGs2EOMGXz58h06+YpxuPAlqDERX4AAE0nAsYSgD8jCDk0xlGAX3ASAt8gAAazYToALJZBlIMD9eJqUELRmbgAwTQCM2EkKXn8NM7OTk4QBvJWFkhw3GQhVd4Lr4bBZSA0cBHAwABNEJXzOC60A8CIHeADPuuyECB0cBHAwABNEJrQlyjbZBlGZQv8h4FeMBo4KMBgAAaWb6FA2BMQ7bAwq9G4+XlFQCv0B9pKYD+YDTw0QBAAI3Q5ugoGAWDBwAE0Og84SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAJoNBOOglEwwAAggEYz4SgYBQMMAAIMAOrdVOIxsnZhAAAAAElFTkSuQmCC"),
       good.images.forEach((image) => {
-        add_images.value.push(import.meta.env.VITE_IMG_URL + image.image);
-        images_id.value.push(image.id);
-      }),
-      setImages(good.images);
+        if (image.is_main === 1) {
+          add_images.value.push(import.meta.env.VITE_IMG_URL + image.image);
+        } else {
+          add_images.value.push(import.meta.env.VITE_IMG_URL + image.image);
+        }
+      });
+    if (good.images.length === 0) {
+      notImg.value = true;
+      add_images.value.push(
+        "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAAAAAAAD/4QAuRXhpZgAATU0AKgAAAAgAAkAAAAMAAAABAAAAAEABAAEAAAABAAAAAAAAAAD/2wBDAAoHBwkHBgoJCAkLCwoMDxkQDw4ODx4WFxIZJCAmJSMgIyIoLTkwKCo2KyIjMkQyNjs9QEBAJjBGS0U+Sjk/QD3/2wBDAQsLCw8NDx0QEB09KSMpPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT3/wAARCAHaAdoDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD2WiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAoqvc31va/66QBuyjqap/8ACQWv9yX/AL5H+NAGpRWX/wAJBa/3JvyH+NH/AAkFr/cm/If40AalFZf/AAkFr/cm/If40f8ACQWv9yb8h/jQBqUVnx63aSHBZo/d1xV8EOoZSCD0INAC0UUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFZ+q6h9jhCoR5r9PYetXJ5lt4Wkc4VRk1ydzcPdTtK/VjwPQUAREs5LMSWY8knOaWiigAooooAKKKKACrmmag1nMFYkwsfmU9vcVTooA7MEMAQcg9DS1j6Hfb0+zSH5lGUJ7j0/CtigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooACQASeAO9Y13roRilqobHV26fhT9dujHCtuhwZOWx6f/XrBoAuHWL0nPnY9gopP7Xvf+e5/IVUooAnuL64uUCTSllBzjGKgoooAKKsWdjLfPiMYQH5mPQf/AF637XS7e1wQu9/7zc//AKqAOeisribBjhcg98YqwNFvT/yzUfVhXTUUAcrJpN5HyYCf90g1WdGjO11ZW9CMV2dRywxToVlQOvoRQBx9Fa99oZQGS0ywHJQnn8Kx+RkHqOCDQAscjROHQlWByCO1W/7Xvf8AnufyFVKbQBd/te9/57n8hU0Ou3UZHmbJF7gjB/SszI9adQB1lnfRXse6M4YfeU9RViuRtLlrS5SVegOGHqK60EMAR0IoAWiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA5zXSf7QHsgxWdWjrv/IQ/wCACs6gAooooAKsWFk19OEGQi8s3oP8TVeuo0y0+yWiqR87fMx96ALMUSQRiONQqL0Ap9FQ3V1HaQmSU4A6Ad6AJqQuq8FgD7muYutXubkkBjFH2CnH5mqR55PJ96AO1BB5FFcdFcS25zDIyH2PFbenawJyIbnCyHhWHAb/AANAGtWTrGmiVDcQr+8A+YD+If41rUUAcTXU2FjBBax/u1ZmUFmIzmsTVbQWt2dowknzL6D1pbXWLi1hEYCOo6bu1AHRNawOpVoYyD22iuWvYRBeSxKcqrcd6ut4guSpAjiUnoQCazXdpHLMSWY5JPegBldfYkmxgJ/55r/KuQrrrD/jwg/3BQBYooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAOc13/kIf8AABWdWjrv/IQ/4AKzqACiiigCxp0Qmv4UPI3ZP4c11lc3oYB1IeyHFdJQAVy2qXZurxsH93Gdqj+tdNMxWF2HUKTXGUAOooooAKKKKAOn0q8N3ZgscyIdre/vV2sPw8x8ydexANblAGXr0QayWTvG36Hj/CufrqdVAOmT5/u5rlqACiiigBtddYf8eEH+4K5GuusP+PCD/cFAFiiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA5zXf+Qh/wAVnVo67/wAhD/gArOoAKKKKALujSeXqaZ6MCv8An8q6euNilMMySL1Rg1dhHIssSupyrDINACuoZCp6EYrjpYzFI8bfeUkGuyrG1nTTITcwrlh99R396AMSiiigAooqa0tJLyYRoOP4m/u0Aa3h+EiGWYj7x2j8P/11sVHDEtvCkSDCqMCpKAKWsSBNMl/2sKPzrmK2fEFwP3duD0+dv6f1rGoAKKKKAG111h/x4Qf7grka66w/48IP9wUAWKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigDnNd/5CH/AAAVnVo67/yEP+ACs6gAooooAK2dDvuPssh5H3Ce/tWNSAlCGUkEHII4xQB2tFZmm6styBFMQsvQE9GrToAoXWj290xcAxuf4l/wqg3h6XPyzqR7rit6igDHh8PICDPMzf7KjFakMMdvGEiQKo7CpKKACorm4S2gaWQ4UCi4uI7aMySsFUfrXNX9+99J3WNT8q/4+9AEFxM1zO8r/eY5+n/6qZRRQAUUUUANrrrD/jwg/wBwVyNddYf8eEH+4KALFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQBzmvAjUFPYoMVnV0Gt2ZngWZBl4+oHcVz9ABRRRQAUUUUAFX7XWLi2AVj5qDsx5/OqFFAHRRa7ayff3xn3GasDU7M/8vCfnXK0UAdRJq9nH/y2DH0UE1RuPEHBFtEf95/8KxaKAHzXEty++Zyzds9qZRRQAUUUUAFFFFADa6+yBFlAD1EY/lXNWFoby6WMA7AcufQf/XrrAAAAOgoAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigArLvNEjncvC3lOeSMcH/CtSigDnDoN2DwYiPXOKP7Cu/8Apl/31XR0UAc5/YV3/wBMv++qP7Cu/wDpl/31XR0UAc5/YV3/ANMv++qP7Cu/+mX/AH1XR0UAc5/YV3/0y/76o/sK7/6Zf99V0dFAHOf2Fd/9Mv8Avqj+wrv/AKZf99V0dFAHOf2Fd/8ATL/vqj+wrv8A6Zf99V0dFAHOf2Fd/wDTL/vqj+wrv/pl/wB9V0dFAHOf2Fd/9Mv++qlh8PykjzpVVfReTW9RQBDbWsVrGI4lwO59amoooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACsi2v7iTWGt2ZfKDNgY546Vr1y7STRaxM1su6QO2BjNAHR3LmO2ldfvKhI/KqOj3s16JTOwO0jGBiqct3qjROskBCFSGPl4wKl8OfduPqv9aAIW1O/kupIoCGIY4UKOgp/wBo1n/nkf8AvgVTjuJLbU5ZIU3uGYBcE9/arv8AbV9/z6D/AL4agCxcTaiLa3MSEyEHzBtHFUZdT1KFwkmEZhkAoOa34nLxIzDDMoJFYWuf8hKL/dH86ALNtNqrXMYmjIjJ+Y7QMCteiigCvdXsNkgaZsE9ABkmsq614ugFqGRgeS6g5FNukF14gWKTlBgYPpjP61Y12NI7OIIqqA/QDHagBLfxBF5arcK+/HzMAOa1IZo7iMSRMGU9CKp2VtFcaTCsiKcp1IrO0mVooL1QThU3D680AT3erzSXJt7FckHG7Gc/T296ikuNWtB5kvKd8gEfp0p/h2MHzpD94YUGttlDoVYZU8EGgClb35vbGSSAYmUH5fftWdJe6tDGXkTao6koOKTQyY9SljH3Sp/Q1p6x/wAgyX8P50AZkV9qtwm+Fd65xkIK0jeta6ak12D5pHK9CTTNB/5B/wDwM1S8QsTNCn8IUmgBEutUvsvbjagPGAMfr1p8Gr3FtP5N+vGcE4wR/iK2II1igRFGFVQBiszxDGpgikx8wbbn6/8A6qANfryKKq6Y5k06Bm67cflxVqgAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigArn7T/kYpP9566CoVtIEmMyxKJDyWA55oAW7/AOPOf/rm38qyvDn3Lj6r/Wth1V0KsAVIwQaZDbQ2+fJjVM9cDrQBz9tcpaatLLLu2hnHA960/wC3rT0l/wC+asnTrR2LNboSTkkjrSf2ZZ/8+0f5UAS21yl1CJY87T0yMVia5/yEov8AdH863YokhQJGoVR0ApktpBO4eWJXYDAJFAE1FFFAGXqOnSy3CXVqQJVxkE4ziqOp3F3LAi3VuIwrZDA8E10VRzQRXChZkV1HIBFAGNbzahJYJDb24CFcCQnqKvafpotbV0kIZ5B8xFXY41iQIihVUYAHanUAc5azPo968c6kxt1x39CKv3OuwLCfIJdzwMjAFX5reK5G2aMOB6ioU0uzjYMsC5HTJJ/nQBS0K0dd9zICN4wue/v+NW9Y/wCQZL+H86u0yWJJkKSKGU9QaAKOg/8AIP8A+Bmma5aNPAssYJaPOQPStCKGOBNkKKi9cAVJQBj2Otw/Z1S4JV1GM4yDVW/vDqk8cFsrFQeMjqfX6CtiXTLSZyzwLuPUjjP5VJBaw2wIgjVM9SByaAHW8QggSIdEUDNSUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQB/9k="
+      );
+    }
   } catch (e) {
     console.log(e);
   }
@@ -208,9 +262,6 @@ const updateGood = async () => {
     if (!images_id.value) {
       appendIfNotNull("image_ids[]", images_id.value);
     }
-    // for (const file of add_images.value) {
-    //   appendIfNotNull("add_images[]", file);
-    // }
     appendIfNotNull("storage_id", storage_id.value);
     appendIfNotNull("good_group_id", good_group_id.value);
     appendIfNotNull("unit_id", unit_id.value);
@@ -242,17 +293,9 @@ const createGood = async () => {
     appendIfNotNull("description", description.value);
     appendIfNotNull("unit_id", unit_id.value);
     appendIfNotNull("storage_id", storage_id.value);
-    appendIfNotNull("main_image", imageRef.value);
-    for (const file of add_images.value) {
-      if (file !== imageRef.value) {
-        appendIfNotNull("add_images[]", file);
-      }
-    }
-    // console.log(file,'file');
     appendIfNotNull("good_group_id", good_group_id.value);
-    await goodsApi.create(formData);
-    console.log(...formData.entries());
-    router.push("/list/nomenclatureGroup");
+    const { data } = await goodsApi.create(formData);
+    id.value = data.result.id;
     showToast(addMessage);
     isCreated.value = true;
   } catch (e) {
@@ -262,21 +305,6 @@ const createGood = async () => {
     }
   } finally {
     isValid.value = false;
-  }
-};
-
-const onPickFile = (num) => {
-  if (num === 1) {
-    fileInput1.value.click();
-  } else if (num === 2) {
-    fileInput2.value.click();
-  } else if (num === 3) {
-    fileInput3.value.click();
-  } else if (num === 4) {
-    console.log(fileInput4.value);
-    fileInput4.value.click();
-  } else {
-    fileInput.value.click();
   }
 };
 
@@ -290,6 +318,11 @@ const isEditGood = async () => {
 };
 
 const check = async () => {
+  if (isEdit.value === false) {
+    add_images.value.push(
+      "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAAAAAAAD/4QAuRXhpZgAATU0AKgAAAAgAAkAAAAMAAAABAAAAAEABAAEAAAABAAAAAAAAAAD/2wBDAAoHBwkHBgoJCAkLCwoMDxkQDw4ODx4WFxIZJCAmJSMgIyIoLTkwKCo2KyIjMkQyNjs9QEBAJjBGS0U+Sjk/QD3/2wBDAQsLCw8NDx0QEB09KSMpPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT3/wAARCAHaAdoDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD2WiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAoqvc31va/66QBuyjqap/8ACQWv9yX/AL5H+NAGpRWX/wAJBa/3JvyH+NH/AAkFr/cm/If40AalFZf/AAkFr/cm/If40f8ACQWv9yb8h/jQBqUVnx63aSHBZo/d1xV8EOoZSCD0INAC0UUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFZ+q6h9jhCoR5r9PYetXJ5lt4Wkc4VRk1ydzcPdTtK/VjwPQUAREs5LMSWY8knOaWiigAooooAKKKKACrmmag1nMFYkwsfmU9vcVTooA7MEMAQcg9DS1j6Hfb0+zSH5lGUJ7j0/CtigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooACQASeAO9Y13roRilqobHV26fhT9dujHCtuhwZOWx6f/XrBoAuHWL0nPnY9gopP7Xvf+e5/IVUooAnuL64uUCTSllBzjGKgoooAKKsWdjLfPiMYQH5mPQf/AF637XS7e1wQu9/7zc//AKqAOeisribBjhcg98YqwNFvT/yzUfVhXTUUAcrJpN5HyYCf90g1WdGjO11ZW9CMV2dRywxToVlQOvoRQBx9Fa99oZQGS0ywHJQnn8Kx+RkHqOCDQAscjROHQlWByCO1W/7Xvf8AnufyFVKbQBd/te9/57n8hU0Ou3UZHmbJF7gjB/SszI9adQB1lnfRXse6M4YfeU9RViuRtLlrS5SVegOGHqK60EMAR0IoAWiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA5zXSf7QHsgxWdWjrv/IQ/wCACs6gAooooAKsWFk19OEGQi8s3oP8TVeuo0y0+yWiqR87fMx96ALMUSQRiONQqL0Ap9FQ3V1HaQmSU4A6Ad6AJqQuq8FgD7muYutXubkkBjFH2CnH5mqR55PJ96AO1BB5FFcdFcS25zDIyH2PFbenawJyIbnCyHhWHAb/AANAGtWTrGmiVDcQr+8A+YD+If41rUUAcTXU2FjBBax/u1ZmUFmIzmsTVbQWt2dowknzL6D1pbXWLi1hEYCOo6bu1AHRNawOpVoYyD22iuWvYRBeSxKcqrcd6ut4guSpAjiUnoQCazXdpHLMSWY5JPegBldfYkmxgJ/55r/KuQrrrD/jwg/3BQBYooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAOc13/kIf8AABWdWjrv/IQ/4AKzqACiiigCxp0Qmv4UPI3ZP4c11lc3oYB1IeyHFdJQAVy2qXZurxsH93Gdqj+tdNMxWF2HUKTXGUAOooooAKKKKAOn0q8N3ZgscyIdre/vV2sPw8x8ydexANblAGXr0QayWTvG36Hj/CufrqdVAOmT5/u5rlqACiiigBtddYf8eEH+4K5GuusP+PCD/cFAFiiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA5zXf+Qh/wAVnVo67/wAhD/gArOoAKKKKALujSeXqaZ6MCv8An8q6euNilMMySL1Rg1dhHIssSupyrDINACuoZCp6EYrjpYzFI8bfeUkGuyrG1nTTITcwrlh99R396AMSiiigAooqa0tJLyYRoOP4m/u0Aa3h+EiGWYj7x2j8P/11sVHDEtvCkSDCqMCpKAKWsSBNMl/2sKPzrmK2fEFwP3duD0+dv6f1rGoAKKKKAG111h/x4Qf7grka66w/48IP9wUAWKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigDnNd/5CH/AAAVnVo67/yEP+ACs6gAooooAK2dDvuPssh5H3Ce/tWNSAlCGUkEHII4xQB2tFZmm6styBFMQsvQE9GrToAoXWj290xcAxuf4l/wqg3h6XPyzqR7rit6igDHh8PICDPMzf7KjFakMMdvGEiQKo7CpKKACorm4S2gaWQ4UCi4uI7aMySsFUfrXNX9+99J3WNT8q/4+9AEFxM1zO8r/eY5+n/6qZRRQAUUUUANrrrD/jwg/wBwVyNddYf8eEH+4KALFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQBzmvAjUFPYoMVnV0Gt2ZngWZBl4+oHcVz9ABRRRQAUUUUAFX7XWLi2AVj5qDsx5/OqFFAHRRa7ayff3xn3GasDU7M/8vCfnXK0UAdRJq9nH/y2DH0UE1RuPEHBFtEf95/8KxaKAHzXEty++Zyzds9qZRRQAUUUUAFFFFADa6+yBFlAD1EY/lXNWFoby6WMA7AcufQf/XrrAAAAOgoAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigArLvNEjncvC3lOeSMcH/CtSigDnDoN2DwYiPXOKP7Cu/8Apl/31XR0UAc5/YV3/wBMv++qP7Cu/wDpl/31XR0UAc5/YV3/ANMv++qP7Cu/+mX/AH1XR0UAc5/YV3/0y/76o/sK7/6Zf99V0dFAHOf2Fd/9Mv8Avqj+wrv/AKZf99V0dFAHOf2Fd/8ATL/vqj+wrv8A6Zf99V0dFAHOf2Fd/wDTL/vqj+wrv/pl/wB9V0dFAHOf2Fd/9Mv++qlh8PykjzpVVfReTW9RQBDbWsVrGI4lwO59amoooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACsi2v7iTWGt2ZfKDNgY546Vr1y7STRaxM1su6QO2BjNAHR3LmO2ldfvKhI/KqOj3s16JTOwO0jGBiqct3qjROskBCFSGPl4wKl8OfduPqv9aAIW1O/kupIoCGIY4UKOgp/wBo1n/nkf8AvgVTjuJLbU5ZIU3uGYBcE9/arv8AbV9/z6D/AL4agCxcTaiLa3MSEyEHzBtHFUZdT1KFwkmEZhkAoOa34nLxIzDDMoJFYWuf8hKL/dH86ALNtNqrXMYmjIjJ+Y7QMCteiigCvdXsNkgaZsE9ABkmsq614ugFqGRgeS6g5FNukF14gWKTlBgYPpjP61Y12NI7OIIqqA/QDHagBLfxBF5arcK+/HzMAOa1IZo7iMSRMGU9CKp2VtFcaTCsiKcp1IrO0mVooL1QThU3D680AT3erzSXJt7FckHG7Gc/T296ikuNWtB5kvKd8gEfp0p/h2MHzpD94YUGttlDoVYZU8EGgClb35vbGSSAYmUH5fftWdJe6tDGXkTao6koOKTQyY9SljH3Sp/Q1p6x/wAgyX8P50AZkV9qtwm+Fd65xkIK0jeta6ak12D5pHK9CTTNB/5B/wDwM1S8QsTNCn8IUmgBEutUvsvbjagPGAMfr1p8Gr3FtP5N+vGcE4wR/iK2II1igRFGFVQBiszxDGpgikx8wbbn6/8A6qANfryKKq6Y5k06Bm67cflxVqgAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigArn7T/kYpP9566CoVtIEmMyxKJDyWA55oAW7/AOPOf/rm38qyvDn3Lj6r/Wth1V0KsAVIwQaZDbQ2+fJjVM9cDrQBz9tcpaatLLLu2hnHA960/wC3rT0l/wC+asnTrR2LNboSTkkjrSf2ZZ/8+0f5UAS21yl1CJY87T0yMVia5/yEov8AdH863YokhQJGoVR0ApktpBO4eWJXYDAJFAE1FFFAGXqOnSy3CXVqQJVxkE4ziqOp3F3LAi3VuIwrZDA8E10VRzQRXChZkV1HIBFAGNbzahJYJDb24CFcCQnqKvafpotbV0kIZ5B8xFXY41iQIihVUYAHanUAc5azPo968c6kxt1x39CKv3OuwLCfIJdzwMjAFX5reK5G2aMOB6ioU0uzjYMsC5HTJJ/nQBS0K0dd9zICN4wue/v+NW9Y/wCQZL+H86u0yWJJkKSKGU9QaAKOg/8AIP8A+Bmma5aNPAssYJaPOQPStCKGOBNkKKi9cAVJQBj2Otw/Z1S4JV1GM4yDVW/vDqk8cFsrFQeMjqfX6CtiXTLSZyzwLuPUjjP5VJBaw2wIgjVM9SByaAHW8QggSIdEUDNSUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQAlFLRQB/9k="
+    );
+  }
   if (query.createOnBase == "1") {
     isCreateOnBase.value = true;
     id.value = routeParams.id;
@@ -310,16 +343,14 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="modal">
+  <div class="modal" @keyup.esc="$router.go(-1)">
     <v-col>
-      <div
-        class="d-flex justify-space-between align-center mb-2 text-uppercase ms-4"
-      >
+      <div class="d-flex justify-space-between align-center mb-2 ms-4">
         <div>
           <div
             style="cursor: pointer"
-            @click="$router.go(-1)"
-            class="pa-1 bg-green rounded-circle d-inline-block mr-4"
+            @click="$router.push('/list/nomenclature')"
+            class="pa-1 bg-green rounded-circle d-inline-block mr-4 text-uppercase"
           >
             <v-icon icon="keyboard_backspace" size="x-small" />
           </div>
@@ -329,6 +360,12 @@ onMounted(async () => {
         </div>
         <div class="d-flex align-center justify-space-between">
           <div class="d-flex ga-3 align-center mt-2 me-4">
+            <span
+              class="mt-1 ms-2 text-blue-darken-4 cursor-pointer"
+              style="text-decoration: underline"
+              @click="goToImages()"
+              >ФОТО</span
+            >
             <Icons
               @click="isEdit && !isCreateOnBase ? updateGood() : createGood()"
               name="save"
@@ -355,6 +392,7 @@ onMounted(async () => {
                 density="compact"
                 placeholder="Наименование"
                 label="Наименование"
+                autofocus
                 clear-icon="close"
                 clearablehide-details
                 clearable
@@ -378,70 +416,39 @@ onMounted(async () => {
                 :base-color="FIELD_COLOR"
               />
               <div
-                :class="
-                  add_images.length > 0 || isEdit || firstImage ? 'mb-10' : ''
-                "
+                :class="add_images.length > 1 ? 'mb-3' : ''"
                 class="d-flex justify-space-between ga-3"
               >
                 <div style="width: 40%; height: 180px">
-                  <div
-                    class="d-flex justify-center align-center py-2 w-100"
-                    style="
-                      height: 160px;
-                      border-radius: 4px;
-                      border: 1px solid #3ab700;
-                    "
-                  >
-                    <div v-if="main_image === null">
-                      <v-btn @click="isImageDialog = true"
-                        >Загрузить фото</v-btn
-                      >
-                      <input
-                        accept="image/*"
-                        type="file"
-                        @change="selectAvatar($event, 1)"
-                        style="display: none"
-                        ref="fileInput"
-                      />
-                    </div>
+                  <div>
                     <img
-                      v-else
-                      class="image"
+                      @click="goToImages()"
+                      v-if="main_image"
                       :src="main_image"
-                      width="200"
-                      height="150"
-                      alt=""
+                      class="image"
+                      alt="Main Image"
+                      style="
+                        width: 100%;
+                        height: 160px;
+                        border-radius: 4px;
+                        border: 1px solid #3ab700;
+                        cursor: pointer;
+                      "
                     />
-                  </div>
-                  <div class="d-flex justify-center ga-4">
-                    <span
-                      class="photo_el"
-                      v-for="(img, index) in add_images"
-                      :key="index"
-                      @click="setImageByIndex(index)"
+                    <div
+                      v-if="!notImg && add_images.length > 1"
+                      class="d-flex justify-space-between w-100"
                     >
-                      Фото {{ index + 1 }}
-                    </span>
-                  </div>
-                  <div
-                    v-if="add_images.length > 0 || firstImage || isEdit"
-                    class="d-flex justify-center my-1"
-                  >
-                    <v-btn
-                      style="width: 120px; height: 30px; font-size: 10px"
-                      @click="isImageDialog = true"
-                      >Загрузить фото</v-btn
-                    >
-                    <input
-                      accept="image/*"
-                      type="file"
-                      style="display: none"
-                      ref="fileInput"
-                      multiple
-                    />
+                      <div style="cursor: pointer" @click="previousImage()">
+                        <Icons name="left"></Icons>
+                      </div>
+                      <div style="cursor: pointer" @click="nextImage()">
+                        <Icons name="right"></Icons>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div class="d-flex flex-column w-75 ga-3">
+                <div class="d-flex flex-column ga-3 w-75">
                   <v-autocomplete
                     :rules="isValid ? [rules.required] : []"
                     placeholder="Место расположения"
@@ -493,245 +500,17 @@ onMounted(async () => {
                 color="green"
                 :base-color="FIELD_COLOR"
               />
-              <div
-                v-if="isEdit"
-                style="border: 1px solid #3ab700; border-radius: 8px"
-              >
-                <barcode :isCreated="isCreated" />
+              <div style="border: 1px solid #3ab700; border-radius: 8px">
+                <barcode :isCreated="isCreated" :id="id" />
               </div>
             </v-col>
           </v-row>
         </v-form>
       </v-card>
     </v-col>
-
-    <v-dialog persistent v-model="isImageDialog" class="mt-2 pa-2">
-      <v-card
-        style="border: 2px solid #3ab700"
-        min-width="350"
-        class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
-        rounded="xl"
-      >
-        <div class="d-flex justify-space-between align-center mb-2">
-          <span>Загрузить фото</span>
-          <div class="d-flex align-center justify-space-between">
-            <div class="d-flex ga-3 align-center mt-2 me-4">
-              <Icons
-                @click="isImageDialog = false"
-                name="save"
-                title="Сохранить"
-              />
-            </div>
-            <v-btn
-              @click="isImageDialog = false"
-              variant="text"
-              :size="32"
-              class="pt-2 pl-1"
-            >
-              <Icons name="close" title="Закрыть" />
-            </v-btn>
-          </div>
-        </div>
-        <div class="d-flex w-100 ga-3 mb-3">
-          <div style="width: 220px">
-            <div
-              class="d-flex justify-center align-center py-2 px-6 w-100"
-              style="
-                height: 160px;
-                border-radius: 4px;
-                border: 1px solid #3ab700;
-              "
-            >
-              <div v-if="firstImage === null">
-                <v-btn style="font-size: 10px" @click="onPickFile(1)"
-                  >Загрузить фото</v-btn
-                >
-                <input
-                  accept="image/*"
-                  type="file"
-                  @change="selectAvatar($event, 1)"
-                  style="display: none"
-                  ref="fileInput1"
-                />
-              </div>
-              <img
-                v-else
-                class="image"
-                :src="firstImage"
-                width="200"
-                height="150"
-                alt=""
-              />
-            </div>
-            <div class="d-flex flex-column justify-center align-center">
-              <span class="d-flex justify-center">Фото 1</span>
-              <div v-if="firstImage !== null">
-                <v-btn style="font-size: 10px" @click="onPickFile(1)"
-                  >Изменить фото</v-btn
-                >
-                <input
-                  accept="image/*"
-                  type="file"
-                  @change="selectAvatar($event, 1)"
-                  style="display: none"
-                  ref="fileInput1"
-                />
-              </div>
-            </div>
-          </div>
-          <div style="width: 220px">
-            <div
-              class="d-flex justify-center align-center py-2 px-6 w-100"
-              style="
-                height: 160px;
-                border-radius: 4px;
-                border: 1px solid #3ab700;
-              "
-            >
-              <div class="d-flex justify-center" v-if="secondImage === null">
-                <v-btn style="font-size: 10px" @click="onPickFile(2)"
-                  >Загрузить фото</v-btn
-                >
-                <input
-                  accept="image/*"
-                  type="file"
-                  @change="selectAvatar($event, 2)"
-                  style="display: none"
-                  ref="fileInput2"
-                />
-              </div>
-              <img
-                v-else
-                class="image"
-                :src="secondImage"
-                width="200"
-                height="150"
-                alt=""
-              />
-            </div>
-            <div class="d-flex flex-column justify-center align-center">
-              <span class="d-flex justify-center">Фото 2</span>
-              <div class="d-flex justify-center" v-if="secondImage !== null">
-                <v-btn style="font-size: 10px" @click="onPickFile(2)"
-                  >Изменить фото</v-btn
-                >
-                <input
-                  accept="image/*"
-                  type="file"
-                  @change="selectAvatar($event, 2)"
-                  style="display: none"
-                  ref="fileInput2"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="d-flex w-100 ga-3">
-          <div style="width: 220px">
-            <div
-              class="d-flex justify-center align-center py-2 px-6 w-100"
-              style="
-                height: 160px;
-                border-radius: 4px;
-                border: 1px solid #3ab700;
-              "
-            >
-              <div v-if="thirdImage === null">
-                <v-btn style="font-size: 10px" @click="onPickFile(3)"
-                  >Изменить фото</v-btn
-                >
-                <input
-                  accept="image/*"
-                  type="file"
-                  @change="selectAvatar($event, 3)"
-                  style="display: none"
-                  ref="fileInput3"
-                />
-              </div>
-              <img
-                v-else
-                class="image"
-                :src="thirdImage"
-                width="200"
-                height="150"
-                alt=""
-              />
-            </div>
-            <div class="d-flex flex-column justify-center align-center">
-              <span class="d-flex justify-center">Фото 3</span>
-              <div v-if="thirdImage !== null">
-                <v-btn style="font-size: 10px" @click="onPickFile(3)"
-                  >Загрузить фото</v-btn
-                >
-                <input
-                  accept="image/*"
-                  type="file"
-                  @change="selectAvatar($event, 3)"
-                  style="display: none"
-                  ref="fileInput3"
-                />
-              </div>
-            </div>
-          </div>
-          <div style="width: 220px">
-            <div
-              class="d-flex justify-center align-center py-2 px-6 w-100"
-              style="
-                height: 160px;
-                border-radius: 4px;
-                border: 1px solid #3ab700;
-              "
-            >
-              <div v-if="forthImage === null">
-                <v-btn style="font-size: 10px" @click="onPickFile(4)"
-                  >Загрузить фото</v-btn
-                >
-                <input
-                  accept="image/*"
-                  type="file"
-                  @change="selectAvatar($event, 4)"
-                  style="display: none"
-                  ref="fileInput4"
-                />
-              </div>
-              <img
-                v-else
-                class="image"
-                :src="forthImage"
-                width="200"
-                height="150"
-                alt=""
-              />
-            </div>
-            <div class="d-flex flex-column justify-center align-center">
-              <span class="d-flex justify-center">Фото 4</span>
-              <div v-if="forthImage !== null">
-                <v-btn style="font-size: 10px" @click="onPickFile(4)"
-                  >Изменить фото</v-btn
-                >
-                <input
-                  accept="image/*"
-                  type="file"
-                  @change="selectAvatar($event, 4)"
-                  style="display: none"
-                  ref="fileInput4"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div v-if="showModal">
-          <ConfirmModal
-            :showModal="showModal"
-            @close="toggleModal()"
-            @closeClear="closeDialogWithoutSaving()"
-          />
-        </div>
-      </v-card>
-    </v-dialog>
   </div>
 </template>
-<style>
+<style scoped>
 .modal {
   padding: 20px 0px;
 }
@@ -741,5 +520,7 @@ onMounted(async () => {
 }
 .image {
   object-fit: contain;
+  max-height: 180px;
+  /* max-width: 280px; */
 }
 </style>

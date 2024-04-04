@@ -4,11 +4,19 @@ export default {
   create(data) {
     return api.post("/good-group", data);
   },
-  get({ page = 1, itemsPerPage = 25, sortBy }, search = "", filterData ) {
+  update(id, data) {
+    return api.patch(`/good-group/${id}`, data);
+  },
+  get({ page = 1, itemsPerPage = 25, sortBy }, search = "", filterData) {
     const params = buildParams(page, itemsPerPage, sortBy, search, filterData);
     return api.get("/good-group", { params });
   },
-  getById(id, { page = 1, itemsPerPage = 25, sortBy }, search = "", filterData) {
+  getById(
+    id,
+    { page = 1, itemsPerPage = 25, sortBy },
+    search = "",
+    filterData
+  ) {
     const params = buildParams(page, itemsPerPage, sortBy, search, filterData);
     return api.get(`/good-group/get-goods/${id}`, { params });
   },

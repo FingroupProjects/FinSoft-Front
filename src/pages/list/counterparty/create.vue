@@ -1,5 +1,5 @@
 <script setup>
-import { ref, defineProps, defineEmits, watch, computed } from "vue";
+import { ref, defineProps, defineEmits, watch } from "vue";
 import showToast from "../../../composables/toast";
 import Icons from "@/composables/Icons/Icons.vue";
 import CustomCheckbox from "@/components/checkbox/CustomCheckbox.vue";
@@ -49,6 +49,8 @@ const search = ref("");
 const modalTitle = ref("");
 
 const showModal = ref(false);
+const showModalAgreement = ref(false);
+const showConfirmDialog = ref(false);
 
 const pagination = ref([]);
 const roles = ref([]);
@@ -74,7 +76,6 @@ const idAgreement = ref(null);
 const hoveredRowIndex = ref(null);
 
 const headers = ref([
-  { title: "№", key: "id", align: "start" },
   { title: "Номер договора", key: "contract_number" },
   { title: "Валюта", key: "currency_id.name" },
   { title: "Баланс", key: "balance" },
@@ -115,6 +116,7 @@ watch(
       clearInputs();
       isValid.value = false;
       editAgreementDialog.value = false;
+      isDocumentEdit.value = false;
     }
   }
 );
@@ -156,10 +158,13 @@ const lineMarking = (item) => {
   if (index !== -1) {
     markedID.value.splice(index, 1);
   } else {
-    markedID.value.push(item.id);
+    if (item.id !== null) {
+      markedID.value.push(item.id);
+    }
   }
   markedItem.value = item;
 };
+
 
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
   if (markedItem.value.deleted_at) {
@@ -176,11 +181,15 @@ const openAgreementDialog = () => {
 const toggleModal = () => {
   showModal.value = !showModal.value;
 };
+const toggleModalAgreement = () => {
+  showModalAgreement.value = !showModalAgreement.value;
+};
 
 const getDated = () => {
   agreementDialog.value = true;
   const page = 1;
   const Items = 100;
+  form.value.counterparty_id = editID.value;
   getOrganization(page, Items);
   getPriceType({ page, Items });
   getCounterparties({ page, Items });
@@ -208,22 +217,20 @@ const clearInputs = () => {
   };
 };
 const editDialog = (item) => {
-  console.log(item);
   editID.value = item;
+  isDocumentEdit.value = true;
   editAgreementDialog.value = true;
   agreementDialog.value = true;
   getDated();
   cpAgreementGetById(item);
 };
 
-const cpAgreementGetById = async (id) => {
-  console.log(id);
+const cpAgreementGetById = async (item) => {
   try {
-    const { data } = await counterpartyAgreement.getById(id);
-    const item = data.result;
+    // const { data } = await counterpartyAgreement.getById(id);
     form.value = {
       ...item,
-      date: showDate(item.date, "-", true),
+      date: item.date,
       currency_id: item.currency_id.id,
       organization_id: item.organization_id.id,
       counterparty_id: item.counterparty_id.id,
@@ -238,7 +245,6 @@ const getOrganization = async (page, items) => {
   try {
     const { data } = await organizationApi.get({ page, items });
     organizations.value = data.result.data;
-    console.log(data);
   } catch (e) {
     console.log(e);
   }
@@ -450,6 +456,26 @@ const isDataChanged = () => {
   return isChanged;
 };
 
+const closingWithSaving = async () => {
+  if (props.isEdit) {
+    await updateCounterparty({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+    showModal.value = false
+  } else {
+    const isValid = validate(
+      name,
+      address,
+      phone,
+      email,
+      );
+      showModal.value = false
+    if (isValid === true) {
+      await CreateCounterparty({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      dialog.value = false;
+      showModal.value = false;
+      showConfirmDialog.value = false;
+    }
+  }
+};
 const checkUpdate = () => {
   if (isDataChanged()) {
     showModal.value = true;
@@ -477,6 +503,71 @@ const closeDialogWithoutSaving = () => {
   showModal.value = false;
   clearForm();
 };
+const isDataChangedAgreement = () => {
+  const item = props.counterpartyAgreement.find((item) => item.id === props.item.id);
+
+  const isChanged =
+    name.value !== item.name ||
+    currencies.value !== item.currency_id ||
+    organizations.value !== item.organization_id || 
+    priceTypes.value !== item.price_type_id ||
+    counterparties.value !== item.contact_person ||
+    date.value !== item.date;
+    return isChanged;
+};
+
+const closingWithSavingAgreement = async () => {
+  if (props.isEdit) {
+    await updateCpAgreement({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+    showModalAgreement.value = false
+  } else {
+    const isValid = validate(
+      name,
+      currencies,
+      organizations,
+      priceTypes,
+      counterparties,
+      date
+      );
+      showModalAgreement.value = false
+    if (isValid === true) {
+      await createCpAgreement({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      dialog.value = false;
+      showModalAgreement.value = false;
+      showConfirmDialog.value = false;
+    }
+  }
+};
+const checkUpdateAgreement = () => {
+  if (isDataChangedAgreement()) {
+    showModalAgreement.value = true;
+  } else {
+    agreementDialog.value = false;
+  }
+};
+
+const checkAndCloseAgreement = () => {
+  if (
+    name.value ||
+    currencies.value ||
+    organizations.value ||
+    priceTypes.value ||
+    counterparties.value ||
+    date.value
+  ) {
+    showModalAgreement.value = true;
+  } else {
+    agreementDialog.value = false;
+  }
+};
+
+const closeDialogWithoutSavingAgreement = () => {
+  agreementDialog.value = false;
+  showModalAgreement.value = false;
+  clearForm();
+};
+
+
 
 const createCpAgreement = async () => {
   try {
@@ -519,8 +610,9 @@ const updateCpAgreement = async () => {
       contract_number: form.value.contract_number,
       payment_id: 2,
     };
-    const res = await counterpartyAgreement.update(editID.value, body);
-    showToast("Успешно изменено", "#");
+
+    await counterpartyAgreement.update(editID.value.id, body);
+    showToast("Успешно изменено", "green");
     agreementDialog.value = false;
     editAgreementDialog.value = false;
   } catch (e) {
@@ -561,7 +653,7 @@ const currencyProps = (item) => {
 
 <template>
   <div>
-    <v-dialog persistent v-model="dialog" class="mt-2 pa-2">
+    <v-dialog persistent v-model="dialog" class="mt-2 pa-2" @keyup.esc="isEdit ? checkUpdate() : checkAndClose()">
       <v-card
         style="border: 2px solid #3ab700"
         min-width="350"
@@ -575,6 +667,7 @@ const currencyProps = (item) => {
           <div class="d-flex align-center justify-space-between">
             <div class="d-flex align-center mt-2 me-4">
               <Icons
+                v-if="isEdit && !createOnBase"
                 class="me-4"
                 @click="$emit('computeCounterparty')"
                 title="Удалить"
@@ -591,7 +684,7 @@ const currencyProps = (item) => {
               />
             </div>
             <v-btn
-              @click="isEdit ? checkUpdate() : checkAndClose()"
+            @click="isEdit ? checkUpdate() : checkAndClose()"
               variant="text"
               title="Закрыть"
               :size="32"
@@ -617,10 +710,12 @@ const currencyProps = (item) => {
                   placeholder="Контрагент"
                   label="Наименование"
                   clear-icon="close"
+                  autofocus
                   clearable
                   hide-details
                 />
                 <span
+                  v-if="isEdit"
                   style="color: red; font-weight: bolder"
                   class="mr-4 mt-1"
                   >{{ props.item.balance }}</span
@@ -663,6 +758,7 @@ const currencyProps = (item) => {
                   v-mask="'+992#########'"
                   rounded="md"
                   color="green"
+                  clear-icon="close"
                   hide-details
                   clearable
                   @click:append-inner="phone = ''"
@@ -676,6 +772,7 @@ const currencyProps = (item) => {
                   density="compact"
                   rounded="md"
                   color="green"
+                  clear-icon="close"
                   hide-details
                   clearable
                   @click:append-inner="email = ''"
@@ -688,6 +785,7 @@ const currencyProps = (item) => {
                 label="Адрес"
                 v-model="address"
                 density="compact"
+                clear-icon="close"
                 rounded="md"
                 color="green"
                 hide-details
@@ -707,17 +805,20 @@ const currencyProps = (item) => {
               style="padding-top: 4px !important"
             >
               <span>Договоры</span>
-              <span>
+              <span style="display: flex">
                 <Icons
                   v-show="isEdit"
                   @click="compute"
                   class="mr-3"
                   name="delete"
+                  title="Удалить"
                 />
+
                 <Icons
                   v-show="isEdit"
                   @click="openAgreementDialog"
                   name="add"
+                  title="Добавить"
                 />
               </span>
             </div>
@@ -738,6 +839,8 @@ const currencyProps = (item) => {
             @update:options="getDocuments({}, idAgreement)"
             fixed-footer
             hover
+            show-select
+            v-model="markedID"
             page-text="{0}-{1} от {2}"
             :items-per-page-options="[
               { value: 25, title: '25' },
@@ -749,16 +852,34 @@ const currencyProps = (item) => {
               <tr
                 @mouseenter="hoveredRowIndex = index"
                 @mouseleave="hoveredRowIndex = null"
-                @click="lineMarking(item)"
                 @dblclick="editDialog(item)"
                 :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
               >
-                <td class="d-flex align-center">
-                  <Icons
-                    class="mt-2 me-2"
-                    :name="item.deleted_at === null ? 'valid' : 'inValid'"
-                  />
-                  <span>{{ index + 1 }}</span>
+                <td>
+                  <template
+                    v-if="
+                      hoveredRowIndex === index || markedID.includes(item.id)
+                    "
+                  >
+                    <CustomCheckbox
+                      v-model="markedID"
+                      :checked="markedID.includes(item.id)"
+                      @click="lineMarking(item)"
+                      @change="lineMarking(item)"
+                    >
+                      <span>{{ item.id }}</span>
+                    </CustomCheckbox>
+                  </template>
+
+                  <template v-else>
+                    <span class="d-flex align-center">
+                      <Icons
+                        style="margin-right: 10px; margin-top: 4px"
+                        :name="item.deleted_at === null ? 'valid' : 'inValid'"
+                      />
+                      <span>{{ item.id }}</span>
+                    </span>
+                  </template>
                 </td>
                 <td>{{ item.contract_number }}</td>
                 <td>{{ item.currency_id.name }}</td>
@@ -784,15 +905,15 @@ const currencyProps = (item) => {
             <div class="d-flex ga-3 align-center mt-2 me-4">
               <Icons
                 @click="
-                  editAgreementDialog
+                  editAgreementDialog   
                     ? updateCpAgreement()
                     : createCpAgreement()
                 "
-                name="save"
+                name="save" 
               />
             </div>
             <v-btn
-              @click="agreementDialog = false"
+              @click="isEdit ? checkUpdateAgreement() : checkAndCloseAgreement()"
               variant="text"
               :size="32"
               class="pt-2 pl-1"
@@ -817,6 +938,7 @@ const currencyProps = (item) => {
                   placeholder="Наименование"
                   label="Наименование"
                   lear-icon="close"
+                  clear-icon="close"
                   clearable
                   hide-details
                 />
@@ -827,31 +949,19 @@ const currencyProps = (item) => {
               <div class="d-flex justify-space-between ga-5 align-center my-3">
                 <div
                   v-if="isDocumentEdit"
-                  class="w-25"
                   style="
                     border: 1.5px solid #cbc8c8;
                     border-radius: 4px;
-                    padding: 2px 12px;
+                    padding: 6px 12px;
+                    width: 110px;
+                    height: 40px;
                   "
                 >
                   <span>
                     {{ date }}
                   </span>
                 </div>
-                <div
-                  v-if="isDocumentEdit"
-                  class="w-25"
-                  style="
-                    border: 1.5px solid #cbc8c8;
-                    border-radius: 4px;
-                    padding: 2px 12px;
-                  "
-                >
-                  <span>
-                    {{ date }}
-                  </span>
-                </div>
-                <v-text-field
+                <!-- <v-text-field
                   v-model="form.date"
                   :rules="[rules.required]"
                   :base-color="FIELD_COLOR"
@@ -865,7 +975,7 @@ const currencyProps = (item) => {
                   lear-icon="close"
                   type="date"
                   hide-details
-                />
+                /> -->
                 <v-autocomplete
                   color="green"
                   class="w-75"
@@ -876,6 +986,8 @@ const currencyProps = (item) => {
                   :items="currencies"
                   item-title="name"
                   item-value="id"
+                  clear-icon="close"
+                  clearable
                   hide-details
                   :item-props="currencyProps"
                 />
@@ -889,6 +1001,8 @@ const currencyProps = (item) => {
                 :items="organizations"
                 item-title="name"
                 item-value="id"
+                clearable
+                clear-icon="close"
                 :item-props="organizationProps"
                 hide-details
               />
@@ -903,6 +1017,8 @@ const currencyProps = (item) => {
                   :items="counterparties"
                   item-title="name"
                   item-value="id"
+                  clearable
+                  clear-icon="close"
                   hide-details
                   :item-props="counterpartyProps"
                 />
@@ -916,6 +1032,8 @@ const currencyProps = (item) => {
                   item-title="name"
                   label="Вид цены"
                   item-value="id"
+                  clearable
+                  clear-icon="close"
                   hide-details
                   class="w-25"
                 />
@@ -928,6 +1046,8 @@ const currencyProps = (item) => {
                 label="Контактное лицо"
                 density="compact"
                 rounded="md"
+                clear-icon="close"
+                clearable
                 color="green"
                 hide-details
               />
@@ -938,6 +1058,8 @@ const currencyProps = (item) => {
                   :base-color="FIELD_COLOR"
                   color="green"
                   label="Комментарий"
+                  clear-icon="close"
+                  clearable
                   :rules="isValid ? [rules.required] : []"
                 />
               </v-container>
@@ -946,13 +1068,22 @@ const currencyProps = (item) => {
         </v-form>
       </v-card>
     </v-dialog>
+    <div v-if="showModal">
+      <ConfirmModal
+        :showModal="true"
+        @close="toggleModal()"
+        @closeClear="closeDialogWithoutSaving()"
+        @closeWithSaving="closingWithSaving()"
+      />
+    </div>
+    <div v-if="showModalAgreement">
+      <ConfirmModal
+        :showModal="true"
+        @close="toggleModalAgreement()"
+        @closeClear="closeDialogWithoutSavingAgreement()"
+        @closeWithSaving="closingWithSavingAgreement()"
+      />
+    </div>
   </div>
 
-  <div v-if="showModal">
-    <ConfirmModal
-      :showModal="true"
-      @close="toggleModal()"
-      @closeClear="closeDialogWithoutSaving()"
-    />
-  </div>
 </template>
