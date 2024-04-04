@@ -21,7 +21,7 @@ $main: black; //#008cff;
 $grey: #8d9aa9;
 $bezier: cubic-bezier(0.65, 0.25, 0.56, 0.96);
 .block{
-  position: realtive;
+  position: relative;
 }
 .check_svg{
   position: absolute;
