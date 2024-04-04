@@ -9,14 +9,17 @@ import { editMessage } from "../../../composables/constant/buttons";
 import showToast from "../../../composables/toast";
 
 const route = useRoute();
-const hoveredRowIndex = ref(null);
 
+const allSelected = ref(false);
+const allSelectedSystem = ref(false);
+const allSelectedDocuments = ref(false);
 const loading = ref(true);
 
 const markedItem = ref([]);
 const resources = ref([]);
+const documents = ref([]);
+const reports = ref([]);
 const subsystem = ref([]);
-const previewItem = ref([]);
 
 const body = ref({
   resource: [],
@@ -39,6 +42,73 @@ const reportHeaders = ref([
   { title: "Использование", key: "read", align: "start" },
 ]);
 
+const isAllChecked = (access, tableNumber) => {
+  if (tableNumber === 1) {
+    return (
+      allSelected.value &&
+      resources.value.every((item) => item.access.includes(access))
+    );
+  } else if (tableNumber === 2) {
+    return (
+      allSelectedDocuments.value &&
+      documents.value.every((item) => item.access.includes(access))
+    );
+  } else if (tableNumber === 3) {
+    return (
+      allSelectedSystem.value &&
+      subsystem.value.every((item) => item.access.includes(access))
+    );
+  } else if (tableNumber === 4) {
+    return (
+      allSelectedSystem.value &&
+      subsystem.value.every((item) => item.access.includes(access))
+    );
+  }
+};
+
+const toggleColumnSelection = (index, tableNumber) => {
+  if (index === 0) return;
+  if (tableNumber === 1) {
+    allSelected.value = !allSelected.value;
+  } else if (tableNumber === 2) {
+    allSelectedDocuments.value = !allSelectedDocuments.value;
+  } else if (tableNumber === 3) {
+    allSelectedSystem.value = !allSelectedSystem.value;
+  } else if (tableNumber === 4) {
+    allSelectedSystem.value = !allSelectedSystem.value;
+  }
+
+  const dataSets = {
+    1: resources.value,
+    2: documents.value,
+    3: reports.value,
+    4: subsystem.value,
+  };
+
+  const resourcesArray = dataSets[tableNumber];
+
+  const allChecked = resourcesArray.every((item) =>
+    item.access.includes(headers.value[index].key)
+  );
+
+  if (allChecked) {
+    resourcesArray.forEach((item) => {
+      const keyIndex = item.access.indexOf(headers.value[index].key);
+      if (keyIndex !== -1) {
+        item.access.splice(keyIndex, 1);
+      }
+    });
+    allSelected.value = false;
+  } else {
+    resourcesArray.forEach((item) => {
+      if (!item.access.includes(headers.value[index].key)) {
+        item.access.push(headers.value[index].key);
+      }
+    });
+    allSelected.value = true;
+  }
+};
+
 const lineMarking = (item, type) => {
   markedItem.value = item;
 
@@ -59,19 +129,6 @@ const lineMarking = (item, type) => {
   }
   body.value.resource.push(markedItem.value);
 };
-
-// const lineMarkingSystem = (item) => {
-//   const itemName = item.title;
-//   const existingPermissionIndex = systemBody.value.permissions.findIndex(
-//     (permission) => permission.name === itemName
-//   );
-
-//   if (existingPermissionIndex !== -1) {
-//     systemBody.value.permissions.splice(existingPermissionIndex, 1);
-//   } else {
-//     systemBody.value.permissions.push({ name: itemName });
-//   }
-// };
 
 const lineMarkingSystem = (item, type) => {
   markedItem.value = item;
@@ -101,7 +158,7 @@ const getRecources = async () => {
     resources.value = data.result;
     loading.value = false;
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -112,7 +169,7 @@ const getSubSystem = async () => {
     subsystem.value = data.result;
     loading.value = false;
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -137,7 +194,7 @@ const createAccess = async () => {
 
     getRecources();
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -154,8 +211,7 @@ const createSubsystem = async () => {
         allAccess.push(access);
       }
     });
-    console.log(allAccess);
-    const res = await subsystemApi.create(route.params.id, {
+    await subsystemApi.create(route.params.id, {
       resource: allAccess,
     });
 
@@ -163,7 +219,7 @@ const createSubsystem = async () => {
 
     getSubSystem();
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -227,9 +283,13 @@ onMounted(() => {
               <thead>
                 <tr>
                   <th
-                    v-for="header in headers"
+                    v-for="(header, index) in headers"
                     :key="header.title"
                     class="text-left"
+                    :class="
+                      header.title !== 'Наименование' ? 'cursor-pointer' : ''
+                    "
+                    @click="toggleColumnSelection(index, 1)"
                   >
                     {{ header.title }}
                   </th>
@@ -241,25 +301,45 @@ onMounted(() => {
                   <td>
                     <CustomCheckbox
                       @change="lineMarking(item, 'read')"
-                      :checked="item.access.includes('read')"
+                      :checked="
+                        loading
+                          ? false
+                          : isAllChecked('read', 1) ||
+                            item.access.includes('read')
+                      "
                     ></CustomCheckbox>
                   </td>
                   <td>
                     <CustomCheckbox
                       @change="lineMarking(item, 'create')"
-                      :checked="item.access.includes('create')"
+                      :checked="
+                        loading
+                          ? false
+                          : isAllChecked('create', 1) ||
+                            item.access.includes('create')
+                      "
                     ></CustomCheckbox>
                   </td>
                   <td>
                     <CustomCheckbox
                       @change="lineMarking(item, 'update')"
-                      :checked="item.access.includes('update')"
+                      :checked="
+                        loading
+                          ? false
+                          : isAllChecked('update', 1) ||
+                            item.access.includes('update')
+                      "
                     ></CustomCheckbox>
                   </td>
                   <td>
                     <CustomCheckbox
                       @change="lineMarking(item, 'delete')"
-                      :checked="item.access.includes('delete')"
+                      :checked="
+                        loading
+                          ? false
+                          : isAllChecked('delete', 1) ||
+                            item.access.includes('delete')
+                      "
                     ></CustomCheckbox>
                   </td>
                 </tr>
@@ -317,9 +397,13 @@ onMounted(() => {
               <thead>
                 <tr>
                   <th
-                    v-for="header in headers"
+                    v-for="(header, index) in headers"
                     :key="header.title"
                     class="text-left"
+                    :class="
+                      header.title !== 'Наименование' ? 'cursor-pointer' : ''
+                    "
+                    @click="toggleColumnSelection(index, 2)"
                   >
                     {{ header.title }}
                   </th>
@@ -331,25 +415,45 @@ onMounted(() => {
                   <td>
                     <CustomCheckbox
                       @change="lineMarking(item, 'read')"
-                      :checked="item.access.includes('read')"
+                      :checked="
+                        loading
+                          ? false
+                          : isAllChecked('read', 1) ||
+                            item.access.includes('read')
+                      "
                     ></CustomCheckbox>
                   </td>
                   <td>
                     <CustomCheckbox
                       @change="lineMarking(item, 'create')"
-                      :checked="item.access.includes('create')"
+                      :checked="
+                        loading
+                          ? false
+                          : isAllChecked('create', 1) ||
+                            item.access.includes('create')
+                      "
                     ></CustomCheckbox>
                   </td>
                   <td>
                     <CustomCheckbox
                       @change="lineMarking(item, 'update')"
-                      :checked="item.access.includes('update')"
+                      :checked="
+                        loading
+                          ? false
+                          : isAllChecked('update', 1) ||
+                            item.access.includes('update')
+                      "
                     ></CustomCheckbox>
                   </td>
                   <td>
                     <CustomCheckbox
                       @change="lineMarking(item, 'delete')"
-                      :checked="item.access.includes('delete')"
+                      :checked="
+                        loading
+                          ? false
+                          : isAllChecked('delete', 1) ||
+                            item.access.includes('delete')
+                      "
                     ></CustomCheckbox>
                   </td>
                 </tr>
@@ -442,9 +546,13 @@ onMounted(() => {
               <thead>
                 <tr>
                   <th
-                    v-for="header in reportHeaders"
+                    v-for="(header, index) in reportHeaders"
                     :key="header.title"
                     class="text-left"
+                    :class="
+                      header.title !== 'Наименование' ? 'cursor-pointer' : ''
+                    "
+                    @click="toggleColumnSelection(index, 4)"
                   >
                     {{ header.title }}
                   </th>
@@ -456,7 +564,9 @@ onMounted(() => {
                   <td>
                     <CustomCheckbox
                       @change="lineMarkingSystem(item, 'read')"
-                      :checked="item.access.includes('read')"
+                      :checked="
+                        isAllChecked('read', 4) || item.access.includes('read')
+                      "
                     ></CustomCheckbox>
                   </td>
                 </tr>
