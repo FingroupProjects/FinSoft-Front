@@ -25,8 +25,7 @@ const menu = ref([
 onMounted(() => {
   users.value = JSON.parse(localStorage.getItem('user'));
 
-  filteredLists.value = menu.value.filter(item => users.value.permissions.includes(item.link.slice(1)));
-
+  filteredLists.value = menu.value.filter(item => users.value.permissions.includes(item.link.slice(1) + '.read'));
 });
 
 function push(item) {
