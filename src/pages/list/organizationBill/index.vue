@@ -667,7 +667,6 @@ onMounted(() => {
                       v-model="organizationAdd"
                       :items="organizations"
                       item-title="name"
-                      :disabled="updateAccess('organizationBill') && isExistsOrganizationBill"
                       :base-color="FIELD_COLOR"
                       item-value="id"
                       :rules="[rules.required]"

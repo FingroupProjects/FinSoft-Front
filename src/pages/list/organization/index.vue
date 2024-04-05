@@ -463,13 +463,9 @@ onMounted(async () => {
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons @click="openDialog(0)" name="add" title="Создать" />
-              <Icons
-                name="copy"
-                @click="addBasedOnOrganization"
-                title="Скопировать"
-              />
-              <Icons @click="compute" name="delete" title="Удалить" />
+              <Icons v-if="createAccess('organization')" @click="openDialog(0)" name="add" title="Создать" />
+              <Icons v-if="createAccess('organization')" name="copy" @click="addBasedOnOrganization" title="Скопировать"/>
+              <Icons v-if="removeAccess('organization')" @click="compute" name="delete" title="Удалить" />
             </div>
             <div class="w-100">
               <v-text-field

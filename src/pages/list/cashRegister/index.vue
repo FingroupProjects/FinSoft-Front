@@ -545,8 +545,8 @@ onMounted(() => {
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
                   <Icons title="Удалить" v-if="removeAccess('cashRegister') && isExistsCashRegister"  @click="compute" name="delete"/>
-                  <Icons title="Сохранить" v-if="updateAccess('cashRegister') && isExistsCashRegister" @click="update" name="save"/>
                   <Icons title="Сохранить" v-if="createAccess('cashRegister') && !isExistsCashRegister" @click="addCashRegister" name="save"/>
+                  <Icons title="Сохранить" v-if="updateAccess('cashRegister') && isExistsCashRegister" @click="update" name="save"/>
                 </div>
                 <v-btn
                   @click="isExistsCashRegister ? checkUpdate() : checkAndClose()"

@@ -7,6 +7,7 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import CreateGroup from "./createGroup.vue"
 import ChangePassword from "./changePassword.vue";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
+import {createAccess, removeAccess, updateAccess} from "../../../composables/access/access.js";
 import {
   editMessage,
   removeMessage,
@@ -633,12 +634,13 @@ onMounted(async () =>  {
                   text-transform: uppercase;
                 "
                 @click="isCreateGroup = true"
+                v-if="createAccess('user')"
               >
                 <span class="px-2 pb-0">создать группу</span>
               </button>
-              <Icons title="Создать" @click="openDialog(0)" name="add"/>
-              <Icons title="Скопировать" @click="addBasedOnUser" name="copy"/>
-              <Icons title="Удалить" @click="compute" name="delete"/>
+              <Icons title="Создать" v-if="createAccess('user')" @click="openDialog(0)" name="add"/>
+              <Icons title="Скопировать" v-if="createAccess('user')" @click="addBasedOnUser" name="copy"/>
+              <Icons title="Удалить" v-if="removeAccess('user')" @click="compute" name="delete"/>
             </div>
             <v-text-field
                 v-model="search"
@@ -778,11 +780,11 @@ onMounted(async () =>  {
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
                   <span v-show="isExistsUser" class="mt-1 ms-2 text-blue-darken-4 cursor-pointer" @click="$router.push({name: 'userAccess',params: {id: idUser}})">Доступ</span>
-                  <Icons v-if="isExistsUser"  @click="compute" name="delete"/>
-                  <div v-if="isExistsUser" @click="update">
+                  <Icons v-if="removeAccess('user') && isExistsUser"  @click="compute" name="delete"/>
+                  <Icons title="Сохранить" v-if="createAccess('user') && !isExistsUser" @click="addUser" name="save"/>
+                  <div v-if="updateAccess('user') && isExistsUser" @click="update">
                     <Icons title="Сохранить" name="save"/>
                   </div>
-                  <Icons title="Сохранить" v-else @click="addUser" name="save"/>
                 </div>
                 <v-btn
                   @click="isExistsUser ? checkUpdate() : checkAndClose()"
@@ -794,7 +796,7 @@ onMounted(async () =>  {
               </v-btn>
               </div>
             </div>
-            <v-form class="d-flex w-100" @submit.prevent="addUser">
+            <v-form class="d-flex w-100" :disabled="!updateAccess('user') && isExistsUser" @submit.prevent="addUser">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100">
                   <div class="d-flex" :style="isExistsUser ?? { width: '98%' }">

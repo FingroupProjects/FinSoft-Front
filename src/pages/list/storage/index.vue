@@ -7,6 +7,7 @@ import storage from '../../../api/storage.js';
 import employee from '../../../api/employee.js';
 import organization from '../../../api/organizations.js';
 import showDate from "../../../composables/date/showDate.js";
+import {createAccess, updateAccess, removeAccess} from "../../../composables/access/access.js";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 
 import {
@@ -826,16 +827,14 @@ onMounted(async () => {
                   color: white;
                   text-transform: uppercase;
                 "
+                v-if="createAccess('storage') && isExistsStorage"
                 @click="groupDialog = true"
               >
                 <span class="px-2 pb-0">создать группу</span>
               </button>
-              <Icons @click="openDialog(0)" name="add"/>
-              <Icons name="copy" @click="addBasedOnStorage"/>
-              <Icons
-                  @click="compute"
-                  name="delete"
-              />
+              <Icons v-if="createAccess('storage')" @click="openDialog(0)" name="add"/>
+              <Icons v-if="createAccess('storage')" @click="addBasedOnStorage" name="copy"/>
+              <Icons v-if="removeAccess('storage')" @click="compute" name="delete"/>
             </div>
             <div class="w-100">
               <v-text-field
@@ -987,9 +986,9 @@ onMounted(async () => {
               <span>{{ isExistsStorage ? 'Склад: ' + storageInDialogTitle : 'Добавление' }}</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons v-if="isExistsStorage" @click="compute" name="delete"/>
-                  <Icons v-if="isExistsStorage" @click="update" name="save"/>
-                  <Icons v-else @click="addStorage" name="save"/>
+                  <Icons v-if="removeAccess('storage') && isExistsStorage" @click="compute" name="delete"/>
+                  <Icons v-if="createAccess('storage') && !isExistsStorage" @click="addStorage" name="save"/>
+                  <Icons v-if="updateAccess('storage') && isExistsStorage" @click="update" name="save"/>
                 </div>
                 <v-btn
                   @click="isExistsStorage ? checkUpdate() : checkAndClose()"
@@ -1001,7 +1000,7 @@ onMounted(async () => {
                 </v-btn>
               </div>
             </div>
-            <v-form class="d-flex w-100" @submit.prevent="addStorage">
+            <v-form class="d-flex w-100" :disabled="!updateAccess('storage') && isExistsStorage" @submit.prevent="addStorage">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100">
                   <v-text-field
@@ -1051,8 +1050,8 @@ onMounted(async () => {
               <div v-if="isExistsStorage" class="d-flex w-100 rounded-t-lg mb-1 align-center"
                    style="border-bottom: 1px solid #3AB700">
                 <div class="d-flex justify-end w-100 ga-2 pt-1 me-2" style="padding-top: 4px !important;">
-                  <Icons @click="removeStorageEmployee" name="delete"/>
-                  <Icons @click="dataDialog = true" name="add"/>
+                  <Icons v-if="removeAccess('storage') && isExistsStorage" @click="removeStorageEmployee" name="delete"/>
+                  <Icons v-if="createAccess('storage') && !isExistsStorage" @click="dataDialog = true" name="add"/>
                 </div>
               </div>
               <v-data-table-server

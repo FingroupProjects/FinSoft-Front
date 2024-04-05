@@ -6,6 +6,7 @@ import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import priceType from '../../../api/priceType.js';
 import currency from '../../../api/currency.js';
+import {createAccess, updateAccess, removeAccess} from "../../../composables/access/access.js";
 import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 import validate from "./validate.js";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
@@ -414,9 +415,9 @@ onMounted(async () => {
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="openDialog(0)" name="add"/>
-              <Icons title="Скопировать" @click="addBasedOnPriceType" name="copy"/>
-              <Icons title="Удалить" @click="compute" name="delete"/>
+              <Icons title="Добавить" v-if="createAccess('priceType')" @click="openDialog(0)" name="add"/>
+              <Icons title="Скопировать" v-if="createAccess('priceType')" @click="addBasedOnPriceType" name="copy"/>
+              <Icons title="Удалить" v-if="removeAccess('priceType')" @click="compute" name="delete"/>
             </div>
 
             <div class="w-100">
@@ -517,9 +518,9 @@ onMounted(async () => {
               <span>Вид цены: {{ isExistsPriceType ? priceTypeInDialogTitle  : 'Добавление' }}</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons title="Удалить" v-if="isExistsPriceType"  @click="compute" name="delete"/>
-                  <Icons title="Сохранить" v-if="isExistsPriceType" @click="update" name="save"/>
-                  <Icons title="Сохранить" v-else @click="addPriceType" name="save"/>
+                  <Icons title="Удалить" v-if="removeAccess('priceType') && isExistsPriceType"  @click="compute" name="delete"/>
+                  <Icons title="Сохранить" v-if="createAccess('priceType') && !isExistsPriceType" @click="addPriceType" name="save"/>
+                  <Icons title="Сохранить" v-if="updateAccess('priceType') && isExistsPriceType" @click="update" name="save"/>
                 </div>
                 <v-btn
                 @click="isExistsPriceType ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
@@ -532,7 +533,7 @@ onMounted(async () => {
               </v-btn>
               </div>
             </div>
-            <v-form class="d-flex w-100" @submit.prevent="addPriceType">
+            <v-form class="d-flex w-100" :disabled="!updateAccess('priceType') && isExistsPriceType" @submit.prevent="addPriceType">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100 ga-4">
                   <v-text-field

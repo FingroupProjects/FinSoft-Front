@@ -7,6 +7,7 @@ import Icons from "../../../composables/Icons/Icons.vue"
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue"
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue"
 import CreateGroup from "./createGroup.vue"
+import {createAccess, updateAccess, removeAccess} from "../../../composables/access/access.js"
 import {
   addMessage,
   editMessage,
@@ -560,13 +561,14 @@ watch(search, debounce((newValue) => {
                   color: white;
                   text-transform: uppercase;
                 "
+                v-if="createAccess('employee')"
                 @click="isCreateGroup = true"
               >
                 <span class="px-2 pb-0">создать группу</span>
               </button>
-              <Icons @click="openDialog(0)" name="add"/>
-              <Icons @click="addBasedOnEmployee" name="copy"/>
-              <Icons @click="compute" name="delete"/>
+              <Icons v-if="createAccess('employee')" @click="openDialog(0)" name="add"/>
+              <Icons v-if="createAccess('employee')" @click="addBasedOnEmployee" name="copy"/>
+              <Icons v-if="removeAccess('employee')" @click="compute" name="delete"/>
             </div>
 
             <div class="w-100">
@@ -709,9 +711,9 @@ watch(search, debounce((newValue) => {
               <span>{{ isExistsEmployee ? 'сотрудник: ' + employeeDialogTitle : 'Добавление' }}</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons v-if="isExistsEmployee" @click="compute" name="delete"/>
-                  <Icons v-if="isExistsEmployee" @click="update" name="save"/>
-                  <Icons v-else @click="addEmployee" name="save"/>
+                  <Icons v-if="removeAccess('employee') && isExistsEmployee" @click="compute" name="delete"/>
+                  <Icons v-if="createAccess('employee') && !isExistsEmployee" @click="addEmployee" name="save"/>
+                  <Icons v-if="updateAccess('employee') && isExistsEmployee" @click="update" name="save"/>
                 </div>
                 <v-btn
                   @click="isExistsEmployee ? checkUpdate() : checkAndClose()"
@@ -723,7 +725,7 @@ watch(search, debounce((newValue) => {
                 </v-btn>
               </div>
             </div>
-            <v-form class="d-flex w-100" @submit.prevent="addEmployee">
+            <v-form class="d-flex w-100" :disabled="!updateAccess('employee') && isExistsEmployee" @submit.prevent="addEmployee">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100">
                   <v-text-field
