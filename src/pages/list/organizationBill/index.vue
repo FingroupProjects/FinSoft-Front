@@ -9,6 +9,7 @@ import organizationApi from "../../../api/organizations.js";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showDate from "../../../composables/date/showDate.js";
 import validate from "./validate.js";
+import {createAccess, removeAccess, updateAccess} from "../../../composables/access/access.js";
 import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import {
@@ -430,7 +431,10 @@ onMounted(async () => {
   organizationCopy.value = [...organizations.value]
 })
 
-
+onMounted(() => {
+  console.log(createAccess('organizationBill'))
+  console.log(updateAccess('organizationBill'))
+})
 
 </script>
 
@@ -444,13 +448,9 @@ onMounted(async () => {
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons @click="openDialog(0)" name="add" title="Создать"/>
-              <Icons
-                  @click="addBasedOnOrganizationBill"
-                  title="Скопировать"
-                  name="copy"
-              />
-              <Icons @click="compute" title="Удалить" name="delete"/>
+              <Icons v-if="createAccess('organizationBill')" @click="openDialog(0)" name="add" title="Создать"/>
+              <Icons v-if="createAccess('organizationBill')" @click="addBasedOnOrganizationBill" title="Скопировать" name="copy"/>
+              <Icons v-if="removeAccess('organizationBill')" @click="compute" title="Удалить" name="delete"/>
             </div>
 
             <div class="w-100">
@@ -569,24 +569,9 @@ onMounted(async () => {
               >
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons
-                      v-if="isExistsOrganizationBill"
-                      title="Удалить"
-                      @click="compute"
-                      name="delete"
-                  />
-                  <Icons
-                      v-if="isExistsOrganizationBill"
-                      title="Сохранить"
-                      @click="update"
-                      name="save"
-                  />
-                  <Icons
-                      v-else
-                      @click="addOrganizationBill"
-                      title="Сохранить"
-                      name="save"
-                  />
+                  <Icons v-if="removeAccess('organizationBill') && isExistsOrganizationBill" title="Удалить" @click="compute" name="delete"/>
+                  <Icons v-if="createAccess('organizationBill') && !isExistsOrganizationBill" @click="addOrganizationBill" title="Сохранить" name="save"/>
+                  <Icons v-if="updateAccess('organizationBill') && isExistsOrganizationBill" title="Сохранить" @click="update" name="save"/>
                 </div>
                 <v-btn
                     @click="isExistsOrganizationBill ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})"
@@ -599,7 +584,7 @@ onMounted(async () => {
                 </v-btn>
               </div>
             </div>
-            <v-form class="d-flex w-100">
+            <v-form class="d-flex w-100" :disabled="!updateAccess('organizationBill') && isExistsOrganizationBill" @submit.prevent="addOrganizationBill">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100">
                   <div class="d-flex justify-space-between ga-6 mb-3">
@@ -682,7 +667,7 @@ onMounted(async () => {
                       v-model="organizationAdd"
                       :items="organizations"
                       item-title="name"
-
+                      :disabled="updateAccess('organizationBill') && isExistsOrganizationBill"
                       :base-color="FIELD_COLOR"
                       item-value="id"
                       :rules="[rules.required]"
@@ -690,7 +675,6 @@ onMounted(async () => {
                       variant="outlined"
                       density="compact"
                   />
-
                   <v-textarea
                       variant="outlined"
                       :base-color="FIELD_COLOR"

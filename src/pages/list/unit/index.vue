@@ -467,7 +467,7 @@ onMounted(() => {
                 </v-btn>
               </div>
             </div>
-            <v-form class="d-flex w-100" @submit.prevent="addUnit">
+            <v-form class="d-flex w-100" :disabled="!updateAccess('unit') && isExistsUnit" @submit.prevent="addUnit" >
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100">
                   <v-text-field
