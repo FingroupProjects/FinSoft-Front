@@ -20,6 +20,11 @@ const routes = [
     component: () => import("../pages/procurementOfGoods/index.vue"),
   },
   {
+    path: "/procurementOfGoods/create",
+    name: "procurementOfGoodsCreate",
+    component: () => import("../pages/procurementOfGoods/create.vue"),
+  },
+  {
     path: "/sellingGoods",
     name: "sellingGoods",
     component: () => import("../pages/sellingGoods/index.vue"),
@@ -88,6 +93,11 @@ const routes = [
     path: "/list/user",
     name: "user",
     component: () => import("../pages/list/user/index.vue"),
+  },
+  {
+    path: "/list/userAccess/:id",
+    name: "userAccess",
+    component: () => import("../pages/list/user/access.vue"),
   },
   {
     path: "/list/position",

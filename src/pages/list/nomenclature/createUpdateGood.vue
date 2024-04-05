@@ -11,7 +11,6 @@ import { useRoute, useRouter } from "vue-router";
 import { addMessage, editMessage } from "../../../composables/constant/buttons";
 import validate from "./validate";
 import { FIELD_COLOR } from "../../../composables/constant/colors.js";
-import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 
 const { query, params: routeParams } = useRoute();
 const router = useRouter();
@@ -78,13 +77,14 @@ const isDataChanged = () => {
   // const item = priceTypes.value.find(elem => elem.id === idPriceType.value);
   const item = props.find((item) => item.id === props.item.id);
 
-
-  return name.value !== item.name ||
-  vendor_code.value !== item.vendor_code ||
-  description.value !== item.description ||
-  unit_id.value !== item.unit_id ||
-  storage_id.value !== item.storage_id ||
-  main_image.value !== item.main_image 
+  return (
+    name.value !== item.name ||
+    vendor_code.value !== item.vendor_code ||
+    description.value !== item.description ||
+    unit_id.value !== item.unit_id ||
+    storage_id.value !== item.storage_id ||
+    main_image.value !== item.main_image
+  );
 };
 
 const checkAndClose = () => {
@@ -94,7 +94,7 @@ const checkAndClose = () => {
     description.value ||
     unit_id.value ||
     storage_id.value ||
-    main_image.value 
+    main_image.value
   ) {
     showModal.value = true;
   } else {
@@ -104,8 +104,8 @@ const checkAndClose = () => {
 
 const closingWithSaving = async () => {
   if (props.isEdit) {
-    await updateGood({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
-    showModal.value = false
+    await updateGood({ page: 1, itemsPerPage: 10, sortBy: "id", search: null });
+    showModal.value = false;
   } else {
     const isValid = validate(
       name,
@@ -114,10 +114,15 @@ const closingWithSaving = async () => {
       unit_id,
       storage_id,
       main_image
-      );
-      showModal.value = false
+    );
+    showModal.value = false;
     if (isValid === true) {
-      await createGood({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      await createGood({
+        page: 1,
+        itemsPerPage: 10,
+        sortBy: "id",
+        search: null,
+      });
       showModal.value = false;
       showConfirmDialog.value = false;
     }
@@ -125,7 +130,7 @@ const closingWithSaving = async () => {
 };
 
 const closeDialogWithoutSaving = () => {
-  showModal.value = false
+  showModal.value = false;
   showConfirmDialog.value = false;
   cleanForm();
 };
@@ -136,14 +141,13 @@ const checkUpdate = () => {
   }
 };
 
-
 const cleanForm = () => {
   name.value = null;
-  vendor_code.value = null
-  description.value = null
-  unit_id.value = null
-  storage_id.value = null
-  main_image.value = null
+  vendor_code.value = null;
+  description.value = null;
+  unit_id.value = null;
+  storage_id.value = null;
+  main_image.value = null;
 };
 
 const main_image = computed(() => add_images.value[currentIndex.value]);
@@ -355,7 +359,12 @@ onMounted(async () => {
         </div>
         <div class="d-flex align-center justify-space-between">
           <div class="d-flex ga-3 align-center mt-2 me-4">
-            <v-btn v-if="id === 0" color="green" @click="goToImages()">ФОТО</v-btn>
+            <span
+              class="mt-1 ms-2 text-blue-darken-4 cursor-pointer"
+              style="text-decoration: underline"
+              @click="goToImages()"
+              >ФОТО</span
+            >
             <Icons
               @click="isEdit && !isCreateOnBase ? updateGood() : createGood()"
               name="save"
