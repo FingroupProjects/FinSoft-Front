@@ -14,9 +14,9 @@ const router = createRouter({
 api.interceptors.response.use(
   response => response,
   error => {
-    // if (error.response && error.response.status === 429) {
-    //   showToast('Слишком много запроса', 'red')
-    // }
+    if (error.response && error.response.status === 403) {
+      localStorage.setItem('isPayment', true)
+    }
 
     if (error.response && error.response.status === 401) {
 

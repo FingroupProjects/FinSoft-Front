@@ -1,12 +1,12 @@
 <script setup>
-import {ref, defineProps, onMounted} from "vue";
+import { ref, defineProps, onMounted } from "vue";
 import { useRouter } from "vue-router";
 
 const props = defineProps(["rale"]);
-const router = useRouter()
-const users = ref([])
-const filteredLists = ref([])
-const filteredAdmins = ref([])
+const router = useRouter();
+const users = ref([]);
+const filteredLists = ref([]);
+const filteredAdmins = ref([]);
 
 const admins = ref([
   {
@@ -37,33 +37,27 @@ const lists = ref([
       { id: 12, title: "Кассы", link: "/list/cashRegister" },
     ],
   },
-])
-
+]);
 
 function push(item) {
   router.push(item.link);
 }
 onMounted(() => {
-  users.value = JSON.parse(localStorage.getItem('user'))
+  users.value = JSON.parse(localStorage.getItem("user"));
 
-    filteredLists.value = lists.value.map(list => {
-      return {
-        ...list,
-        child: list.child.filter(item => users.value.permissions.includes(item.link.slice(6)))
-      }
-    })
+  filteredLists.value = lists.value.map((list) => {
+    return {
+      ...list,
+      child: list.child.filter((item) =>
+        users.value.permissions.includes(item.link.slice(6))
+      ),
+    };
+  });
 
-
-
-    filteredAdmins.value = admins.value.filter(item => users.value.permissions.includes(item.link.slice(1)));
-
-
-
-
-
-
-})
-
+  filteredAdmins.value = admins.value.filter((item) =>
+    users.value.permissions.includes(item.link.slice(1))
+  );
+});
 </script>
 
 <template>
@@ -73,12 +67,11 @@ onMounted(() => {
         <h3 class="text-uppercase mb-4">{{ list.title }}</h3>
         <ul class="list">
           <li
-            class="d-flex align-center ga-4 cursor-pointer"
+            class="d-flex align-center ga-4"
             v-for="child in list.child"
             :key="child.id"
-            @click="push(child)"
           >
-            <span>
+            <span class="cursor-pointer" @click="push(child)">
               {{ child.title }}
             </span>
           </li>
@@ -88,11 +81,8 @@ onMounted(() => {
         <div class="mb-10" nav v-for="admin in filteredAdmins" :key="admin.id">
           <h3 class="text-uppercase mb-4">{{ admin.title }}</h3>
           <ul class="list">
-            <li
-              class="d-flex align-center ga-4 cursor-pointer"
-              @click="push(admin)"
-            >
-              <span>
+            <li class="d-flex align-center ga-4">
+              <span class="cursor-pointer" @click="push(admin)">
                 {{ admin.title }}
               </span>
             </li>

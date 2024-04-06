@@ -8,15 +8,21 @@ import unitsApi from "../../../api/units";
 import barcode from "./barcode.vue";
 import storageApi from "../../../api/storage";
 import { useRoute, useRouter } from "vue-router";
+import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import { addMessage, editMessage } from "../../../composables/constant/buttons";
 import validate from "./validate";
 import { FIELD_COLOR } from "../../../composables/constant/colors.js";
+import {
+  createAccess,
+  readAccess,
+  removeAccess,
+  updateAccess,
+} from "../../../composables/access/access.js";
 
 const { query, params: routeParams } = useRoute();
 const router = useRouter();
 
 const notImg = ref(false);
-const isImageDialog = ref(false);
 const isValid = ref(false);
 const isEdit = ref(false);
 const isCreated = ref(false);
@@ -27,6 +33,7 @@ const showConfirmDialog = ref(false);
 const currentIndex = ref(0);
 
 const name = ref("");
+const good_name = ref("");
 const vendor_code = ref("");
 const description = ref("");
 
@@ -34,19 +41,10 @@ const id = ref(0);
 const storage_id = ref(null);
 const unit_id = ref(null);
 const good_group_id = ref(null);
-// const main_image = ref(null);
-const firstImage = ref(null);
-const secondImage = ref(null);
-const thirdImage = ref(null);
-const forthImage = ref(null);
-const fileInput = ref(null);
-const fileInput1 = ref(null);
-const fileInput2 = ref(null);
-const fileInput3 = ref(null);
-const fileInput4 = ref(null);
 
 const images_id = ref([]);
 const imageRef = ref([]);
+const goodItem = ref([]);
 const add_images = ref([]);
 const url = ref([]);
 const storages = ref([]);
@@ -63,47 +61,24 @@ const itemsProps = (item) => {
   };
 };
 
-// const toggleModal = () => {
-//   showModal.value = !showModal.value;
-// };
-
-// const closeDialogWithoutSaving = () => {
-//   showModal.value = false;
-//   isImageDialog.value = false;
-//   cleanImages();
-// };
+const toggleModal = () => {
+  showModal.value = !showModal.value;
+};
 
 const isDataChanged = () => {
-  // const item = priceTypes.value.find(elem => elem.id === idPriceType.value);
-  const item = props.find((item) => item.id === props.item.id);
-
-  return (
+  const item = goodItem.value;
+  const isChanged =
     name.value !== item.name ||
     vendor_code.value !== item.vendor_code ||
     description.value !== item.description ||
-    unit_id.value !== item.unit_id ||
-    storage_id.value !== item.storage_id ||
-    main_image.value !== item.main_image
-  );
-};
-
-const checkAndClose = () => {
-  if (
-    name.value ||
-    vendor_code.value ||
-    description.value ||
-    unit_id.value ||
-    storage_id.value ||
-    main_image.value
-  ) {
-    showModal.value = true;
-  } else {
-    showModal.value = false;
-  }
+    good_group_id.value !== item.good_group.id ||
+    unit_id.value !== item.unit_id.id ||
+    storage_id.value !== item.storage.id;
+  return isChanged;
 };
 
 const closingWithSaving = async () => {
-  if (props.isEdit) {
+  if (isEdit.value) {
     await updateGood({ page: 1, itemsPerPage: 10, sortBy: "id", search: null });
     showModal.value = false;
   } else {
@@ -127,17 +102,21 @@ const closingWithSaving = async () => {
       showConfirmDialog.value = false;
     }
   }
+  await getGoodByid();
 };
 
 const closeDialogWithoutSaving = () => {
   showModal.value = false;
   showConfirmDialog.value = false;
+  router.push("/list/nomenclature");
   cleanForm();
 };
 
 const checkUpdate = () => {
   if (isDataChanged()) {
     showModal.value = true;
+  } else {
+    router.push("/list/nomenclature");
   }
 };
 
@@ -182,7 +161,7 @@ const getUnits = async ({ page, itemsPerPage, sortBy, search }) => {
     const { data } = await unitsApi.get({ page, itemsPerPage, sortBy }, search);
     units.value = data.result.data;
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -194,6 +173,8 @@ const getGoodByid = async () => {
     add_images.value = [];
     const { data } = await goodsApi.getById(id.value);
     const good = data.result;
+    goodItem.value = good;
+    good_name.value = good.name;
     name.value = good.name;
     (vendor_code.value = good.vendor_code),
       (description.value = good.description),
@@ -214,7 +195,7 @@ const getGoodByid = async () => {
       );
     }
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -226,7 +207,7 @@ const getStorage = async ({ page, itemsPerPage, sortBy, search }) => {
     );
     storages.value = data.result.data;
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -235,7 +216,7 @@ const getGroups = async ({ page, itemsPerPage, sortBy, search }) => {
     const { data } = await groupApi.get({ page, itemsPerPage, sortBy }, search);
     groups.value = data.result.data;
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -268,7 +249,7 @@ const updateGood = async () => {
     await goodsApi.update(id.value, formData);
     showToast(editMessage);
   } catch (e) {
-    console.log(e);
+    console.error(e);
   } finally {
     isValid.value = false;
   }
@@ -298,17 +279,13 @@ const createGood = async () => {
     showToast(addMessage);
     isCreated.value = true;
   } catch (e) {
-    console.log(e);
+    console.error(e);
     if (e.response.data.errors.vendor_code) {
       showToast("Такой артикуль уже существует", "warning");
     }
   } finally {
     isValid.value = false;
   }
-};
-
-const setImage = (item) => {
-  firstImage.value = item.name;
 };
 
 const isEditGood = async () => {
@@ -348,13 +325,17 @@ onMounted(async () => {
         <div>
           <div
             style="cursor: pointer"
-            @click="$router.push('/list/nomenclature')"
+            @click="
+              isEdit && !isCreateOnBase
+                ? checkUpdate()
+                : $router.push('/list/nomenclature')
+            "
             class="pa-1 bg-green rounded-circle d-inline-block mr-4 text-uppercase"
           >
             <v-icon icon="keyboard_backspace" size="x-small" />
           </div>
           <span>{{
-            isEdit && !isCreateOnBase ? `Товар: ${name}` : "Добавление"
+            isEdit && !isCreateOnBase ? `Товар: ${good_name}` : "Добавление"
           }}</span>
         </div>
         <div class="d-flex align-center justify-space-between">
@@ -366,6 +347,11 @@ onMounted(async () => {
               >ФОТО</span
             >
             <Icons
+              v-if="
+                isEdit && !isCreateOnBase
+                  ? updateAccess('nomenclature')
+                  : createAccess('nomenclature')
+              "
               @click="isEdit && !isCreateOnBase ? updateGood() : createGood()"
               name="save"
               title="Сохранить"
@@ -378,7 +364,10 @@ onMounted(async () => {
         class="d-flex pa-5 justify-center flex-column mx-auto my-0"
         rounded="xl"
       >
-        <v-form class="d-flex w-100">
+        <v-form
+          :disabled="!updateAccess('nomenclature') && isEdit"
+          class="d-flex w-100"
+        >
           <v-row class="w-100">
             <v-col class="d-flex flex-column w-100 ga-3">
               <v-text-field
@@ -421,7 +410,11 @@ onMounted(async () => {
                 <div style="width: 40%; height: 180px">
                   <div>
                     <img
-                      @click="goToImages()"
+                      @click="
+                        updateAccess('nomenclature') && isEdit || createAccess('nomenclature') && !isEdit
+                          ? goToImages()
+                          : ''
+                      "
                       v-if="main_image"
                       :src="main_image"
                       class="image"
@@ -500,13 +493,21 @@ onMounted(async () => {
                 :base-color="FIELD_COLOR"
               />
               <div style="border: 1px solid #3ab700; border-radius: 8px">
-                <barcode :isCreated="isCreated" :id="id" />
+                <barcode :isCreated="isCreated" :id="id" :isEdit="isEdit"/>
               </div>
             </v-col>
           </v-row>
         </v-form>
       </v-card>
     </v-col>
+    <div v-if="showModal">
+      <ConfirmModal
+        :showModal="true"
+        @close="toggleModal()"
+        @closeClear="closeDialogWithoutSaving()"
+        @closeWithSaving="closingWithSaving()"
+      />
+    </div>
   </div>
 </template>
 <style scoped>

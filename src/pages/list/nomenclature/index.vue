@@ -17,6 +17,12 @@ import {
   selectOneItemMessage,
   warningMessage,
 } from "../../../composables/constant/buttons.js";
+import {
+  createAccess,
+  readAccess,
+  removeAccess,
+  updateAccess,
+} from "../../../composables/access/access.js";
 
 const route = useRoute();
 const router = useRouter();
@@ -218,6 +224,7 @@ const getAllGoods = async ({ page, itemsPerPage, sortBy, search }) => {
     console.log(e);
   }
 };
+
 const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
   const body = {
     ids: markedID.value,
@@ -284,9 +291,20 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
               >
                 <span class="px-2 pb-0">создать группу</span>
               </button>
-              <Icons @click="goToCreate()" name="add" title="Создать" />
-              <Icons @click="createOnBase()" name="copy" title="Скопировать" />
               <Icons
+                v-if="createAccess('nomenclature')"
+                @click="goToCreate()"
+                name="add"
+                title="Создать"
+              />
+              <Icons
+                v-if="createAccess('nomenclature')"
+                @click="createOnBase()"
+                name="copy"
+                title="Скопировать"
+              />
+              <Icons
+                v-if="removeAccess('nomenclature')"
                 @click="compute({ page, itemsPerPage, sortBy, search })"
                 name="delete"
                 title="Удалить"
@@ -329,7 +347,7 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
             fixed-header
             :items="groups"
             :headers="Groupheaders"
-            :loading="loading"
+            :loading="loadingGroup"
             items-per-page-text="Элементов на странице:"
             loading-text="Загрузка"
             no-data-text="Нет данных"
