@@ -108,7 +108,7 @@ watch(markedID, (newVal) => {
             <Icons name="add" title="Добавить поле" @click="increaseCountOfGoods"/>
             <Icons name="delete" @click="decreaseCountOfGoods"/>
           </div>
-          <div class="d-flex w-100">
+          <div class="d-flex flex-column w-100">
             <v-data-table
                 style="height: 78vh"
                 items-per-page-text="Элементов на странице:"
@@ -125,7 +125,7 @@ watch(markedID, (newVal) => {
                   {value: 100, title: '100'},
                 ]"
                 show-select
-                fixed-footer
+                fixed-header
             >
               <template v-slot:item="{ item, index }">
                 <tr  :key="index">
@@ -141,17 +141,31 @@ watch(markedID, (newVal) => {
                     <custom-autocomplete v-model="item.good_id" :items="['123', 1, 2, 2, 2, 2]" min-width="150" />
                   </td>
                   <td>
-                    <custom-text-field v-model="item.amount" min-width="50" max-width="90" />
+                    <custom-text-field v-model="item.amount" v-mask="'##'" min-width="50" max-width="90" />
                   </td>
                   <td>
                     <custom-text-field v-model="item.price" min-width="80" max-width="110"/>
                   </td>
                   <td>
-                    <custom-text-field v-model="form.number"  min-width="100" max-width="110"/>
+                    <custom-text-field :value="item.amount * item.price"  min-width="100" max-width="110"/>
                   </td>
                 </tr>
               </template>
             </v-data-table>
+            <div class="py-2 w-100" style="border-top: 1px solid #0FC242">
+              <span class="ml-15">Итого Количество: {{ goods.length }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex justify-space-between w-100 mt-1">
+          <div class="d-flex ga-10">
+            <custom-text-field value="Автор" min-width="100" max-width="110"/>
+            <custom-text-field value="Комментарий" min-width="350"/>
+          </div>
+          <div class="d-flex ga-6">
+            <custom-text-field value="Сумма со скидкой: " min-width="180" />
+            <custom-text-field value="Сумма без скидки: " min-width="180" max-width="110"/>
+            <custom-text-field value="Валюта:" min-width="110" max-width="110" />
           </div>
         </div>
       </v-col>
