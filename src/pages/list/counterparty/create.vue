@@ -561,7 +561,7 @@ const checkAndCloseAgreement = () => {
   }
 };
 
-const closeDialogWithoutSavingAgreement = () => {
+  const closeDialogWithoutSavingAgreement = () => {
   agreementDialog.value = false;
   showModalAgreement.value = false;
   clearForm();
