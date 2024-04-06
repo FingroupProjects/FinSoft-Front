@@ -12,3 +12,7 @@
 body {
   overflow: hidden !important;
 }
+
+.bottomField .v-field__input {
+  font-size: 12px !important;
+}
