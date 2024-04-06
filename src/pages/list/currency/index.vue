@@ -4,6 +4,7 @@ import {useRouter} from "vue-router";
 import showToast from '../../../composables/toast'
 import currentDate from "../../../composables/date/currentDate.js";
 import currency from '../../../api/currency.js'
+import {createAccess, updateAccess, removeAccess} from '../../../composables/access/access.js'
 import {
   addMessage,
   editMessage, ErrorSelectMessage,
@@ -597,9 +598,9 @@ watch(search, debounce((newValue) => {
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 me-3">
-              <Icons title="Добавить"  @click="openDialog(0)" name="add"/>
-              <Icons title="Копировать"  @click="addBasedOnCurrency" name="copy"/>
-              <Icons title="Удалить"  @click="compute" name="delete"/>
+              <Icons title="Добавить" v-if="createAccess('currency')" @click="openDialog(0)" name="add"/>
+              <Icons title="Копировать" v-if="createAccess('currency')"  @click="addBasedOnCurrency" name="copy"/>
+              <Icons title="Удалить" v-if="removeAccess('currency')" @click="compute" name="delete"/>
             </div>
 
             <div class="w-100">
@@ -693,9 +694,9 @@ watch(search, debounce((newValue) => {
               <span>{{ isExistsCurrency ? 'Валюта: ' + currencyInDialogTitle : 'Добавление' }}</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons title="Удалить"  v-show="isExistsCurrency" @click="compute" name="delete"/>
-                  <Icons title="Сохранить"  v-if="isExistsCurrency" @click="update" name="save"/>
-                  <Icons title="Сохранить"  v-else @click="addCurrency" name="save"/>
+                  <Icons title="Удалить"  v-if="removeAccess('currency') &&isExistsCurrency" @click="compute" name="delete"/>
+                  <Icons title="Сохранить" v-if="createAccess('currency') && !isExistsCurrency" @click="addCurrency" name="save"/>
+                  <Icons title="Сохранить"  v-if="updateAccess('currency') && isExistsCurrency" @click="update" name="save"/>
                 </div>
                 <v-btn
                   @click="isExistsCurrency ? checkUpdate() : checkAndClose()"
@@ -707,7 +708,7 @@ watch(search, debounce((newValue) => {
               </v-btn>
               </div>
             </div>
-            <v-form class="d-flex w-100" @submit.prevent="addCurrency">
+            <v-form class="d-flex w-100" :disabled="!updateAccess('unit') && isExistsCurrency" @submit.prevent="addCurrency">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100">
                   <v-text-field
@@ -757,7 +758,7 @@ watch(search, debounce((newValue) => {
               </v-row>
             </v-form>
 
-            <v-card class="table" style="border: 1px solid #3AB700; overflow: auto;">
+            <v-card class="table" style="border: 1px solid #3AB700; overflow: auto;" >
               <div v-if="isExistsCurrency" class="d-flex w-100 rounded-t-lg mb-1 align-center "
                    style="border-bottom: 1px solid #3AB700">
                 <div class="d-flex justify-end w-100 ga-2 pt-1 me-2" style="padding-top: 4px !important;">

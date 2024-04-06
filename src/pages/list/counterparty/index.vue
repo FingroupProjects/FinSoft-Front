@@ -15,6 +15,7 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import createCounterparty from "./create.vue";
 import { FIELD_COLOR } from "../../../composables/constant/colors.js";
 import debounce from "lodash.debounce";
+import {removeAccess, updateAccess, createAccess} from "../../../composables/access/access.js";
 
 const loading = ref(true);
 const isCreate = ref(false);
@@ -316,9 +317,10 @@ onMounted(async () => {
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100 align-center">
             <div class="d-flex ga-2 mt-2 me-3">
-              <Icons title="Добавить" @click="isCreate = true" name="add" />
-              <Icons title="Скопировать" @click="createBase()" name="copy" />
+              <Icons title="Добавить" v-if="createAccess('counterparty')" @click="isCreate = true" name="add" />
+              <Icons title="Скопировать" v-if="createAccess('counterparty')" @click="createBase()" name="copy" />
               <Icons
+              v-if="removeAccess('counterparty')"
                 title="Удалить"
                 @click="compute({ page, itemsPerPage, sortBy, search })"
                 name="delete"

@@ -455,7 +455,8 @@ onMounted(() => {
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
                   <Icons title="Удалить" v-if="removeAccess('unit') && isExistsUnit" @click="destroy" name="delete"/>
-                  <Icons title="Сохранить" v-if="updateAccess('unit') && isExistsUnit" @click="isExistsUnit ? update() : addUnit()" name="save"/>
+                  <Icons title="Сохранить" v-if="createAccess('unit') && !isExistsUnit" @click="addUnit()" name="save"/>
+                  <Icons title="Сохранить" v-if="updateAccess('unit') && isExistsUnit" @click="update()" name="save"/>
                 </div>
                 <v-btn
                    @click="isExistsUnit ? checkUpdate() : checkAndClose()"
@@ -467,7 +468,7 @@ onMounted(() => {
                 </v-btn>
               </div>
             </div>
-            <v-form class="d-flex w-100" @submit.prevent="addUnit">
+            <v-form class="d-flex w-100" :disabled="!updateAccess('unit') && isExistsUnit" @submit.prevent="addUnit" >
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100">
                   <v-text-field
