@@ -14,10 +14,16 @@ import {
   editMessage,
 } from "../../../composables/constant/buttons.js";
 import { FIELD_COLOR } from "../../../composables/constant/colors.js";
+import {
+  createAccess,
+  readAccess,
+  removeAccess,
+  updateAccess,
+} from "../../../composables/access/access.js";
 
 const router = useRouter();
 const route = useRoute();
-const props = defineProps(["isCreated", "id"]);
+const props = defineProps(["isCreated", "id", "isEdit"]);
 
 const pagination = ref([]);
 const barcodes = ref([]);
@@ -227,8 +233,19 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex ga-2 mt-2 me-3">
-            <Icons @click="openInModal()" name="add" />
             <Icons
+              v-if="
+                (updateAccess('nomenclature') && props.isEdit) ||
+                (createAccess('nomenclature') && !props.isEdit)
+              "
+              @click="openInModal()"
+              name="add"
+            />
+            <Icons
+              v-if="
+                (updateAccess('nomenclature') && props.isEdit) ||
+                (createAccess('nomenclature') && !props.isEdit)
+              "
               @click="compute({ page, itemsPerPage, sortBy })"
               name="delete"
             />

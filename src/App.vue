@@ -3,7 +3,7 @@ import { useRoute } from 'vue-router'
 
 import Header from "./components/header/Header.vue";
 import Sidebar from "./components/sidebar/Sidebar.vue";
-
+import warningModal from "./components/paymentWarning/warningModal.vue";
 import { ref, watch } from "vue"
 import showToast from "./composables/toast/index.js";
 
@@ -44,6 +44,7 @@ window.addEventListener('load', () => {
       <Header @rale="toggleSidebar" />
       <div class="content">
         <Sidebar :rale="rale" />
+        <warningModal/>
         <router-view class="w-100 block" />
       </div>
     </div>
