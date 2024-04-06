@@ -20,12 +20,11 @@ import user from "../../../api/user.js";
 import validate from "./validate.js";
 import groupApi from "../../../api/userGroup.js";
 import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
-import employee from "../../../api/employee.js";
 const showModal = ref(false);
 const showConfirmDialog = ref(false);
 const toggleModal = () => {
   showModal.value = !showModal.value;
-};
+}
 const router = useRouter()
 
 const loading = ref(true)
@@ -113,6 +112,19 @@ const getGroup = async ({page, itemsPerPage, sortBy}) => {
   }
 }
 
+const getUsers = async ({page, itemsPerPage, sortBy, search}) => {
+  loading.value = true
+  try {
+    const {data} = await user.get({page, itemsPerPage, sortBy}, search, filterForm.value)
+    paginations.value = data.result.pagination
+    users.value = data.result.data
+    groupIdRef.value = 0
+  } catch (e) {
+
+  } finally {
+    loading.value = false
+  }
+}
 
 
 const isDataChanged = () => {
@@ -388,7 +400,6 @@ const handleCheckboxClick = item => {
 
 const openDialog = item => {
   dialog.value = true
-
   if (groupIdRef.value !== 0) {
     const groupValue = groups.value.find(item => item.id === groupIdRef.value)
     group.value = {
@@ -409,17 +420,17 @@ const openDialog = item => {
     phoneRef.value = item.phone
     passwordRef.value = '#########'
     statusRef.value = item.status
-    const groupValue = groups.value.find(item => item.id === groupIdRef.value)
-    group.value = {
-      id: groupValue.id,
-      name: groupValue.name
+
+    if (item.group) {
+      group.value = {
+        id: item.group.id,
+        name: item.group.name
+      }
     }
 
-    if (item.organization !== null) {
-      organization.value = {
-        "id": item.organization.id,
-        "name": item.organization.name
-      }
+    organization.value = {
+      "id": item.organization.id,
+      "name": item.organization.name
     }
 
     if (item.image !== null) {
@@ -725,7 +736,7 @@ onMounted(async () =>  {
               show-select
               v-model="markedID"
               :search="search"
-              @update:options="getUser"
+              @update:options="getUsers"
               page-text =  '{0}-{1} от {2}'
               :items-per-page-options="[
                 {value: 25, title: '25'},

@@ -5,7 +5,7 @@ import showToast from '@/composables/toast'
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import storage from '../../../api/storage.js';
 import employee from '../../../api/employee.js';
-import organization from '../../../api/organizations.js';
+import organizationApi from '../../../api/organizations.js';
 import showDate from "../../../composables/date/showDate.js";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 
@@ -47,7 +47,7 @@ const isExistsStorageData = ref(false);
 const isExistsGroup = ref(false);
 const groupIdRef = ref(0)
 
-const organizationAdd = ref([])
+const organization = ref(null)
 
 const employees = ref([])
 const organizations = ref([])
@@ -143,10 +143,8 @@ const getStorage = async ({page, itemsPerPage, sortBy, search}) => {
   try {
     const {data} = await storage.get({page, itemsPerPage, sortBy}, search, filterForm.value)
     paginations.value = data.result.pagination
-    storages.value = data.result.data.map(item => ({
-      id: item.id,
-      name: item.name
-    }))
+    storages.value = data.result.data
+    groupIdRef.value = 0
   } catch (e) {
 
   } finally {
@@ -195,7 +193,7 @@ const getStorageEmployeeData = async ({page, itemsPerPage, sortBy, search}) => {
 
   loadingStorageData.value = true
   try {
-    const { data } = await storage.getStoragesFromTheGroupEmployee({page, itemsPerPage, sortBy}, search, idStorage.value)
+    const { data } = await storage.getStorageEmployee({page, itemsPerPage, sortBy}, search, idStorage.value)
 
     paginationsStorageData.value = data.result.pagination
     storageData.value = data.result.data.map(item => ({
@@ -211,7 +209,7 @@ const getStorageEmployeeData = async ({page, itemsPerPage, sortBy, search}) => {
 
 
 const addStorage = async () => {
-  if (validate(nameRef, organizationAdd, group) !== true) return
+  if (validate(nameRef, organization, group) !== true) return
 
   let groupValue;
   if (typeof group.value === 'object') {
@@ -220,10 +218,17 @@ const addStorage = async () => {
     groupValue = group.value
   }
 
+  let organizationValue;
+  if (typeof organization.value === 'object') {
+    organizationValue = organization.value.id
+  } else {
+    organizationValue = organization.value
+  }
+
   try {
     const body = {
       name: nameRef.value,
-      organization_id: organizationAdd.value,
+      organization_id: organizationValue,
       storage_data: [],
       group_id: groupValue
     }
@@ -233,13 +238,13 @@ const addStorage = async () => {
       await getStoragesFromTheGroup({})
       showToast(addMessage)
       valueRef.value = null
-      organizationAdd.value = null
+      organization.value = null
       employeeAdd.value = null
       idStorage.value = res.data.result.id
       isExistsStorage.value = true
       storageInDialogTitle.value = res.data.result.name
 
-      organizationAdd.value = res.data.result.organization.id
+      organization.value = res.data.result.organization.id
 
       markedID.value = []
       markedItem.value = []
@@ -261,7 +266,7 @@ const addStorage = async () => {
 }
 
 const update = async ({page, itemsPerPage, sortBy}) => {
-  if (validate(nameRef, organizationAdd, group) !== true) return
+  if (validate(nameRef, organization, group) !== true) return
 
   let groupValue;
   if (typeof group.value === 'object') {
@@ -270,9 +275,16 @@ const update = async ({page, itemsPerPage, sortBy}) => {
     groupValue = group.value
   }
 
+  let organizationValue;
+  if (typeof organization.value === 'object') {
+    organizationValue = organization.value.id
+  } else {
+    organizationValue = organization.value
+  }
+
   const body = {
     name: nameRef.value,
-    organization_id: organizationAdd.value,
+    organization_id: organizationValue,
     group_id: groupValue
   }
 
@@ -280,8 +292,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
     const {status} = await storage.update(idStorage.value, body)
     if (status === 200) {
       nameRef.value = null
-      organizationAdd.value = null
-
+      organization.value = null
       dialog.value = null
       cleanForm()
       await getStoragesFromTheGroup({page, itemsPerPage, sortBy})
@@ -468,7 +479,7 @@ const getEmployee = async () => {
 
 const getOrganizations = async () => {
   try {
-    const {data} = await organization.get({page: 1, itemsPerPage: 1000})
+    const {data} = await organizationApi.get({page: 1, itemsPerPage: 1000})
 
     organizations.value = data.result.data.map(item => ({
       id: item.id,
@@ -522,10 +533,10 @@ const restoreGroup = async () => {
 
 const computeGroup = async () => {
   if(group.value.deleted_at !== null) {
-      restoreGroup()
+      await restoreGroup()
   }
   else {
-    deleteGroup()
+    await deleteGroup()
   }
 }
 
@@ -536,7 +547,6 @@ const openDialog = (item) => {
   dialog.value = true
 
   const groupValue = groups.value.find(item => item.id === groupIdRef.value)
-
   if (groupIdRef.value !== 0) {
     group.value = {
       id: groupValue.id,
@@ -552,11 +562,16 @@ const openDialog = (item) => {
     markedID.value.push(item.id);
     isExistsStorage.value = true
     nameRef.value = item.name
-    group.value = {
-      id: groupValue.id,
-      name: groupValue.name
+    if (item.group) {
+      group.value = {
+        id: item.group.id,
+        name: item.group.name
+      }
     }
-    organizationAdd.value = item.organization.id
+    organization.value = {
+      id: item.organization.id,
+      name: item.organization.name
+    }
     storageInDialogTitle.value = nameRef.value
   }
 
@@ -577,11 +592,22 @@ const addBasedOnStorage = () => {
       idStorage.value = item.id
       nameRef.value = item.name
 
-      group.value = {
-        id: groupValue.id,
-        name: groupValue.name
+      if (item.group) {
+        group.value = {
+          id: item.group.id,
+          name: item.group.name
+        }
+      } else {
+        group.value = {
+          id: groupValue.id,
+          name: groupValue.name
+        }
       }
-      organizationAdd.value = item.organization.id
+
+      organization.value = {
+        id: item.organization.id,
+        name: item.organization.name
+      }
     }
   })
 }
@@ -701,23 +727,27 @@ const isDataChanged = () => {
   const item = storages.value.find(elem => elem.id === idStorage.value);
 
   return  nameRef.value !== item.name ||
-    organizationAdd.value !== item.organization.id
+    organization.value.id !== item.organization.id
 };
+
+watch(idStorage, (newVal) => {
+  console.log(newVal)
+})
 
 const cleanForm = () => {
   nameRef.value = null;
-  organizationAdd.value = null;
+  organization.value = null;
   group.value = null;
 };
 
 const closingWithSaving = async () => {
   if (isExistsStorage.value) {
-    await update({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+    await update({});
     showModal.value = false
   } else {
     const isValid = validate(
       nameRef,
-      organizationAdd,
+      organization,
       group
       );
       showModal.value = false
@@ -731,7 +761,7 @@ const closingWithSaving = async () => {
 };
 
 const checkAndClose = () => {
-  if (nameRef.value || (organizationAdd.value && organizationAdd.value.length > 0) || (group.value && group.value.length > 0)) {
+  if (nameRef.value || (organization.value) || (group.value && group.value.length > 0)) {
     showConfirmDialog.value = true
   } else {
     dialog.value = false
@@ -760,7 +790,7 @@ const updateGroup = async () => {
   if (!groupName.value) {
     return showToast("Поле наименования не может быть пустым", "warning")
   }
-  console.log(group.value.id)
+
   try {
     const res = await storageGroup.update(group.value.id, {name: groupName.value})
     if (res.status === 200) {
@@ -782,7 +812,7 @@ watch(markedID, (newVal) => {
 watch(dialog, newVal => {
   if (!newVal) {
     nameRef.value = null
-    organizationAdd.value = null
+    organization.value = null
     employeeAdd.value = null
     employeeUpdate.value = null;
     startDateRef.value = null;
@@ -928,7 +958,7 @@ onMounted(async () => {
               :items="storages"
               :item-value="headers.title"
               :search="debounceSearch"
-              @update:options="getStoragesFromTheGroup"
+              @update:options="getStorage"
               show-select
               v-model="markedID"
               page-text='{0}-{1} от {2}'
@@ -1025,7 +1055,7 @@ onMounted(async () => {
                       :base-color="FIELD_COLOR"
                       color="green"
                       item-color="green"
-                      v-model="organizationAdd"
+                      v-model="organization"
                       :items="organizations"
                       item-title="name"
                       item-value="id"
@@ -1081,7 +1111,9 @@ onMounted(async () => {
                   <v-skeleton-loader type="table-row@9"></v-skeleton-loader>
                 </template>
                 <template v-slot:item="{ item, index }">
-                  <tr @mouseenter="hoveredRowEmployeeIndex = index" @mouseleave="hoveredRowEmployeeIndex = null"
+                  <tr
+                      v-if="isExistsStorage"
+                      @mouseenter="hoveredRowEmployeeIndex = index" @mouseleave="hoveredRowEmployeeIndex = null"
                       @click="employeeLineMarking(item)"
                       :class="{'bg-grey-lighten-2': markedEmployeeID.includes(item.id) }"
                       @dblclick="editDialogStorageData(item)">
