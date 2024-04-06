@@ -49,13 +49,13 @@ onMounted(() => {
     return {
       ...list,
       child: list.child.filter((item) =>
-        users.value.permissions.includes(item.link.slice(6))
+        users.value.permissions.includes(item.link.slice(6) + '.read')
       ),
     };
   });
 
   filteredAdmins.value = admins.value.filter((item) =>
-    users.value.permissions.includes(item.link.slice(1))
+    users.value.permissions.includes(item.link.slice(1) + '.read')
   );
 });
 </script>
