@@ -6,6 +6,7 @@ import CustomCheckbox from "@/components/checkbox/CustomCheckbox.vue";
 import counterpartyAgreement from "@/api/counterpartyAgreement.js";
 import showDate from "@/composables/date/showDate.js";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
+import { createAccess, updateAccess, removeAccess } from "../../../composables/access/access";
 import {
   ErrorSelectMessage,
   removeMessage,
@@ -667,13 +668,14 @@ const currencyProps = (item) => {
           <div class="d-flex align-center justify-space-between">
             <div class="d-flex align-center mt-2 me-4">
               <Icons
-                v-if="isEdit && !createOnBase"
+                v-if="removeAccess('counterparty') && isEdit && !createOnBase"
                 class="me-4"
                 @click="$emit('computeCounterparty')"
                 title="Удалить"
                 name="delete"
               ></Icons>
               <Icons
+              v-if="createAccess('counterparty') && isEdit"
                 title="Сохранить"
                 @click="
                   isEdit && !createOnBase
@@ -693,8 +695,8 @@ const currencyProps = (item) => {
               <Icons name="close" />
             </v-btn>
           </div>
-        </div>
-        <v-form class="d-flex w-100">
+        </div> 
+        <v-form class="d-flex w-100" :disabled="!updateAccess('counterparty') && isEdit" @submit.prevent="CreateCounterparty">
           <v-row class="w-100">
             <v-col class="d-flex flex-column w-100">
               <div class="d-flex justify-space-between ga-6">
@@ -705,7 +707,7 @@ const currencyProps = (item) => {
                   :base-color="FIELD_COLOR"
                   rounded="md"
                   variant="outlined"
-                  class="w-auto text-sm-body-1"
+                  class="w-auto text-sm-body-1" 
                   density="compact"
                   placeholder="Контрагент"
                   label="Наименование"
@@ -807,6 +809,7 @@ const currencyProps = (item) => {
               <span>Договоры</span>
               <span style="display: flex">
                 <Icons
+                v-if="removeAccess('counterparty') && isEdit"
                   v-show="isEdit"
                   @click="compute"
                   class="mr-3"
@@ -815,6 +818,7 @@ const currencyProps = (item) => {
                 />
 
                 <Icons
+                v-if="createAccess('counterparty') && isEdit"
                   v-show="isEdit"
                   @click="openAgreementDialog"
                   name="add"
@@ -904,6 +908,7 @@ const currencyProps = (item) => {
           <div class="d-flex align-center justify-space-between">
             <div class="d-flex ga-3 align-center mt-2 me-4">
               <Icons
+              v-if="createAccess('cpAgreement') && !editAgreementDialog"
                 @click="
                   editAgreementDialog   
                     ? updateCpAgreement()
@@ -913,7 +918,7 @@ const currencyProps = (item) => {
               />
             </div>
             <v-btn
-              @click="isEdit ? checkUpdateAgreement() : checkAndCloseAgreement()"
+              @click="editAgreementDialog ? checkUpdateAgreement() : checkAndCloseAgreement()"
               variant="text"
               :size="32"
               class="pt-2 pl-1"
@@ -922,7 +927,7 @@ const currencyProps = (item) => {
             </v-btn>
           </div>
         </div>
-        <v-form class="d-flex w-100">
+        <v-form class="d-flex w-100" :disabled="!updateAccess('cpAgreement') && isEdit" @submit.prevent="createCpAgreement">
           <v-row class="w-100">
             <v-col class="d-flex flex-column w-100">
               <div class="d-flex justify-space-between ga-6">

@@ -82,7 +82,6 @@ const count = ref(0)
 
 const toggleModal = () => {
   showModal.value = !showModal.value;
-  showConfirmDialog.value = false;
 };
 
 watch(groupDialog, newVal => {
@@ -299,8 +298,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
       await getStoragesFromTheGroup({page, itemsPerPage, sortBy})
       markedID.value = []
       showToast(editMessage)
-
-
+      cleanForm()
     }
   } catch (e) {
     console.log(e)
@@ -725,11 +723,16 @@ const lineMarkingGroup = group_id => {
 }
 
 const isDataChanged = () => {
-  const item = storages.value.find(elem => elem.id === idStorage.value);
+  const item = storages.value.find(elem => elem.id === idStorage.value)
 
-  return  nameRef.value !== item.name ||
-    organization.value.id !== item.organization.id
-};
+  return item && (
+    nameRef.value !== item.name ||
+    organization.value.id !== item.organization.id ||
+    group.value.id !== item.group.id
+  );
+}
+
+
 
 watch(idStorage, (newVal) => {
   console.log(newVal)
@@ -743,7 +746,7 @@ const cleanForm = () => {
 
 const closingWithSaving = async () => {
   if (isExistsStorage.value) {
-    await update({});
+    await update({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
     showModal.value = false
   } else {
     const isValid = validate(
@@ -763,7 +766,7 @@ const closingWithSaving = async () => {
 
 const checkAndClose = () => {
   if (nameRef.value || (organization.value) || (group.value && group.value.length > 0)) {
-    showConfirmDialog.value = true
+    showModal.value = true
   } else {
     dialog.value = false
     showModal.value = false
@@ -776,16 +779,15 @@ const closeDialogWithoutSaving = () => {
   showModal.value = false
   showConfirmDialog.value = false;
   cleanForm();
-};
+ };
 
-const checkUpdate = () => {
+ const checkUpdate = () => {
   if (isDataChanged()) {
-    showConfirmDialog.value = true;
+     showModal.value = true;
   } else {
     dialog.value = false;
   }
-
-};
+}
 
 const updateGroup = async () => {
   if (!groupName.value) {
@@ -1080,7 +1082,6 @@ onMounted(async () => {
               <div v-if="isExistsStorage" class="d-flex w-100 rounded-t-lg mb-1 align-center"
                    style="border-bottom: 1px solid #3AB700">
                 <div class="d-flex justify-end w-100 ga-2 pt-1 me-2" style="padding-top: 4px !important;">
-                  <Icons v-if="removeAccess('storage') && isExistsStorage" @click="removeStorageEmployee" name="delete"/>
                   <Icons v-if="createAccess('storage') && !isExistsStorage" @click="dataDialog = true" name="add"/>
                 </div>
               </div>
@@ -1293,7 +1294,7 @@ onMounted(async () => {
           </v-form>
         </v-card>
       </v-dialog>
-      <div v-if="showConfirmDialog">
+      <div v-if="showModal">
         <ConfirmModal :showModal="true" @close="toggleModal" @closeClear="closeDialogWithoutSaving" @closeWithSaving="closingWithSaving()"/>
       </div>
     </v-col>

@@ -8,7 +8,7 @@ export default function validate(
   if (!nameRef.value) {
     return showToast("Поле Название не может быть пустым", "warning")
   }
-  if (organizationAdd.value.length === 0) {
+  if (!organizationAdd.value || organizationAdd.length === 0) {
     return showToast("Поле Организация не может быть пустым", "warning")
   }
   if (!group.value || group.value.length === 0) {
