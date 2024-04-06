@@ -1,13 +1,21 @@
 <script setup>
 import Icons from "../../composables/Icons/Icons.vue";
-import {reactive, ref, watch} from "vue";
+import {computed, onMounted, reactive, ref, watch} from "vue";
 import CustomTextField from "../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../components/formElements/CustomAutocomplete.vue";
 import '../../assets/css/procurement.css'
 import CustomCheckbox from "../../components/checkbox/CustomCheckbox.vue";
+import currentDate from "../../composables/date/currentDate.js";
+import organizationApi from "../../api/organizations.js";
+import counterpartyApi from "../../api/counterparty.js";
+import storageApi from "../../api/storage.js";
+import cpAgreementApi from "../../api/counterpartyAgreement.js";
+import currencyApi from "../../api/currency.js";
+import procurementApi from "../../api/procurement.js";
+import goodApi from "../../api/goods.js";
+
 
 const form = reactive({
-  number: null,
   date: null,
   organization: null,
   organizations: [],
@@ -19,14 +27,24 @@ const form = reactive({
   storages: [],
   saleInteger: null,
   salePercent: null,
+  comment: null,
+  currency: null,
 })
 
 const loading = ref(false)
 const hoveredRowIndex = ref(null)
 
+const author = ref(null)
 const search = ref('')
 const markedID = ref([])
 const goods = ref([])
+
+const organizations = ref([])
+const counterparties = ref([])
+const cpAgreements = ref([])
+const storages = ref([])
+const currencies = ref([])
+const listGoods = ref([])
 
 const headers = ref([
   {title: 'Товары', key: 'goods', sortable: false},
@@ -35,6 +53,37 @@ const headers = ref([
   {title: 'Сумма', key: 'currency.name', sortable: false},
 ])
 
+
+const getOrganizations = async () => {
+  const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  organizations.value = data.result.data
+}
+
+const getCounterparties = async () => {
+  const { data } = await counterpartyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  counterparties.value = data.result.data
+}
+
+const getCpAgreements = async () => {
+  const { data } = await cpAgreementApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  cpAgreements.value = data.result.data
+}
+
+const getStorages = async () => {
+  const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  storages.value = data.result.data
+}
+
+const getCurrencies = async () => {
+  const { data } = await currencyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  currencies.value = data.result.data
+}
+
+const getGoods = async () => {
+  const { data } = await goodApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  listGoods.value = data.result.data
+}
+
 const decreaseCountOfGoods = () => {
   if (goods.value.length > 0) {
     goods.value = goods.value.slice(0, -1);
@@ -42,31 +91,64 @@ const decreaseCountOfGoods = () => {
 }
 
 const increaseCountOfGoods = () => {
-  goods.value.push({ good_id: null, amount: 1, price: null });
+  goods.value.push({id: null, good_id: null, amount: 1, price: null });
 }
 
 
-const addNewProcurement = () => {
+const addNewProcurement = async () => {
 
   const body = {
-    number: form.number,
     date: form.date,
     organization_id: form.organization,
     counterparty_id: form.counterparty,
     counterparty_agreement_id: form.cpAgreement,
     storage_id: form.storage,
-    sale_integer: form.saleInteger,
-    sale_percent: form.salePercent,
-    goods: goods.value
+    saleInteger: Number(form.saleInteger),
+    salePercent: Number(form.salePercent),
+    currency_id: form.currency,
+    goods: goods.value.map((item) => ({
+      good_id: Number(item.good_id),
+      amount: Number(item.amount),
+      price: Number(item.price),
+    }))
  }
 
+ const res = await procurementApi.add(body)
   console.log(body)
-}
+  console.log(res)
 
-watch(markedID, (newVal) => {
-  console.log(newVal)
+}
+const totalPrice = computed(() => {
+  let sum = 0
+  goods.value.forEach(item => {
+    sum += item.price * item.amount
+  })
+  return sum
 })
 
+const totalPriceWithSale = computed(() => {
+  let sum = 0
+  goods.value.forEach(item => {
+    sum += ((item.price * item.amount) * form.salePercent / 100)
+  })
+  return sum
+})
+
+onMounted(() => {
+  form.date = currentDate()
+  author.value = JSON.parse(localStorage.getItem('user')).name || null
+  getOrganizations()
+  getCounterparties()
+  getCpAgreements()
+  getStorages()
+  getCurrencies()
+  getGoods()
+})
+
+watch(() => form.counterparty, (id) => {
+  cpAgreements.value = []
+  cpAgreements.value = counterparties.value.find(item => item.id === id).counterpartyAgreement
+})
 </script>
 
 <template>
@@ -92,18 +174,18 @@ watch(markedID, (newVal) => {
     <div style="background: #fff;">
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
-          <custom-text-field label="Номер" v-model="form.number"/>
+          <custom-text-field disabled value="Номер" v-model="form.number"/>
           <custom-text-field label="Дата" type="date" v-model="form.date"/>
-          <custom-autocomplete label="Организация" :items="['123', '123', '321']" v-model="form.organization"/>
-          <custom-autocomplete label="Поставщик" :items="['123', '123', '321']" v-model="form.counterparty"/>
-          <custom-autocomplete label="Договор" :items="['123', '123', '321']" v-model="form.cpAgreement"/>
-          <custom-autocomplete label="Склад" :items="['123', '123', '321']" v-model="form.storage"/>
+          <custom-autocomplete label="Организация" :items="organizations"  v-model="form.organization"/>
+          <custom-autocomplete label="Поставщик" :items="counterparties" v-model="form.counterparty"/>
+          <custom-autocomplete label="Договор" :items="cpAgreements" v-model="form.cpAgreement"/>
+          <custom-autocomplete label="Склад" :items="storages" v-model="form.storage"/>
           <custom-text-field label="Руч. скидка (сумма)" v-model="form.saleInteger"/>
           <custom-text-field label="Руч. скидка (процент)" v-model="form.salePercent"/>
         </div>
       </v-col>
       <v-col>
-        <div style="border: 1px solid #0FC242;" class="rounded">
+        <div style="border: 1px solid #0FC242" class="rounded">
           <div class="d-flex pa-1 ga-1">
             <Icons name="add" title="Добавить поле" @click="increaseCountOfGoods"/>
             <Icons name="delete" @click="decreaseCountOfGoods"/>
@@ -116,7 +198,6 @@ watch(markedID, (newVal) => {
                 no-data-text="Нет данных"
                 :headers="headers"
                 :items="goods"
-                item-value="amount"
                 v-model="markedID"
                 page-text='{0}-{1} от {2}'
                 :items-per-page-options="[
@@ -132,22 +213,22 @@ watch(markedID, (newVal) => {
                   <td>
                     <CustomCheckbox
                       v-model="markedID"
-                      :checked="markedID.includes(index)"
+                      :checked="markedID.includes(item.id)"
                     >
                       <span>{{ index + 1}}</span>
                     </CustomCheckbox>
                   </td>
                   <td>
-                    <custom-autocomplete v-model="item.good_id" :items="['123', 1, 2, 2, 2, 2]" min-width="150" />
+                    <custom-autocomplete v-model="item.good_id" :items="listGoods" min-width="150" />
                   </td>
                   <td>
-                    <custom-text-field v-model="item.amount" v-mask="'##'" min-width="50" max-width="90" />
+                    <custom-text-field v-model="item.amount" v-mask="'########'" min-width="50" max-width="90" />
                   </td>
                   <td>
                     <custom-text-field v-model="item.price" min-width="80" max-width="110"/>
                   </td>
                   <td>
-                    <custom-text-field :value="item.amount * item.price"  min-width="100" max-width="110"/>
+                    <custom-text-field readonly :value="item.amount * item.price"  min-width="100" max-width="110"/>
                   </td>
                 </tr>
               </template>
@@ -157,15 +238,15 @@ watch(markedID, (newVal) => {
             </div>
           </div>
         </div>
-        <div class="d-flex justify-space-between w-100 mt-1">
+        <div class="d-flex justify-space-between w-100 mt-2 bottomField">
           <div class="d-flex ga-10">
-            <custom-text-field value="Автор" min-width="100" max-width="110"/>
-            <custom-text-field value="Комментарий" min-width="350"/>
+            <custom-text-field readonly :value="author"  min-width="140" max-width="110"/>
+            <custom-text-field label="Комментарий" v-model="form.comment" min-width="310"/>
           </div>
           <div class="d-flex ga-6">
-            <custom-text-field value="Сумма со скидкой: " min-width="180" />
-            <custom-text-field value="Сумма без скидки: " min-width="180" max-width="110"/>
-            <custom-text-field value="Валюта:" min-width="110" max-width="110" />
+            <custom-text-field readonly :value="'Сумма со скидкой: ' + totalPriceWithSale" min-width="180" />
+            <custom-text-field readonly  :value="'Сумма без скидки: ' + totalPrice" min-width="180" max-width="110"/>
+            <custom-autocomplete v-model="form.currency" :items="currencies" min-width="110" max-width="110" />
           </div>
         </div>
       </v-col>
@@ -174,5 +255,4 @@ watch(markedID, (newVal) => {
 </template>
 
 <style scoped>
-
 </style>
