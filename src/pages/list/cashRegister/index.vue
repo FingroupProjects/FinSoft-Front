@@ -8,6 +8,7 @@ import currency from '../../../api/currency.js';
 import organization from '../../../api/organizations.js';
 import employee from '../../../api/employee.js';
 import validate from "./validate.js"
+import {createAccess, removeAccess, updateAccess} from "../../../composables/access/access.js";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 import {
@@ -425,7 +426,10 @@ watch(search, debounce((newValue) => {
   debounceSearch.value = newValue
 }, 500))
 
-
+onMounted(() => {
+  console.log(createAccess('organizationBill'))
+  console.log(updateAccess('organizationBill'))
+})
 </script>
 
 <template>
@@ -438,9 +442,9 @@ watch(search, debounce((newValue) => {
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons @click="openDialog(0)" name="add" title="Создать" />
-              <Icons @click="addBasedOnCashRegister" title="Скопировать" name="copy"/>
-              <Icons @click="compute" name="delete" title="Удалить" />
+              <Icons v-if="createAccess('cashRegister')" @click="openDialog(0)" name="add" title="Создать" />
+              <Icons v-if="createAccess('cashRegister')" @click="addBasedOnCashRegister" title="Скопировать" name="copy"/>
+              <Icons v-if="removeAccess('cashRegister')" @click="compute" name="delete" title="Удалить" />
             </div>
 
             <div class="w-100">
@@ -540,9 +544,9 @@ watch(search, debounce((newValue) => {
               <span>Касса: {{ isExistsCashRegister ? cashRegisterInDialogTitle : 'Добавление' }}</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons title="Удалить" v-if="isExistsCashRegister"  @click="compute" name="delete"/>
-                  <Icons title="Сохранить" v-if="isExistsCashRegister" @click="update" name="save"/>
-                  <Icons title="Сохранить" v-else @click="addCashRegister" name="save"/>
+                  <Icons title="Удалить" v-if="removeAccess('cashRegister') && isExistsCashRegister"  @click="compute" name="delete"/>
+                  <Icons title="Сохранить" v-if="createAccess('cashRegister') && !isExistsCashRegister" @click="addCashRegister" name="save"/>
+                  <Icons title="Сохранить" v-if="updateAccess('cashRegister') && isExistsCashRegister" @click="update" name="save"/>
                 </div>
                 <v-btn
                   @click="isExistsCashRegister ? checkUpdate() : checkAndClose()"
@@ -554,7 +558,7 @@ watch(search, debounce((newValue) => {
               </v-btn>
               </div>
             </div>
-            <v-form class="d-flex w-100" @submit.prevent="addCashRegister">
+            <v-form class="d-flex w-100" :disabled="!updateAccess('cashRegister') && isExistsCashRegister" @submit.prevent="addCashRegister">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100 ga-3">
                   <div class="d-flex">

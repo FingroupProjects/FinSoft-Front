@@ -5,6 +5,7 @@ import showToast from '../../../composables/toast'
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import position from '../../../api/position.js'
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
+import {createAccess, updateAccess, removeAccess} from "../../../composables/access/access.js";
 import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 import {
   addMessage,
@@ -351,9 +352,9 @@ watch(search, debounce((newValue) => {
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Сохранить" @click="openDialog(0)" name="add" />
-              <Icons title="Скопировать" @click="addBasedOnPosition" name="copy" />
-              <Icons title="Удалить" @click="compute" name="delete" />
+              <Icons title="Сохранить" v-if="createAccess('position')" @click="openDialog(0)" name="add" />
+              <Icons title="Скопировать" v-if="createAccess('position')" @click="addBasedOnPosition" name="copy" />
+              <Icons title="Удалить" v-if="removeAccess('position')" @click="compute" name="delete" />
             </div>
 
             <div class="w-100">
@@ -454,9 +455,9 @@ watch(search, debounce((newValue) => {
               <span>{{ isExistsPosition ? positionInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons title="Удалить"  v-if="isExistsPosition"  @click="destroy" name="delete"/>
-                  <Icons title="Сохранить" v-if="isExistsPosition" @click="update" name="save"/>
-                  <Icons title="Сохранить" v-else @click="addPosition" name="save"/>
+                  <Icons title="Удалить"  v-if="removeAccess('position') && isExistsPosition"  @click="destroy" name="delete"/>
+                  <Icons title="Сохранить" v-if="createAccess('position') && !isExistsPosition" @click="addPosition" name="save"/>
+                  <Icons title="Сохранить" v-if="updateAccess('position') && isExistsPosition" @click="update" name="save"/>
                 </div>
                 <v-btn
                 @click="isExistsPosition ? checkUpdate() : checkAndClose()"
@@ -468,7 +469,7 @@ watch(search, debounce((newValue) => {
               </v-btn>
               </div>
             </div>
-            <v-form class="d-flex w-100" @submit.prevent="addPosition">
+            <v-form class="d-flex w-100" :disabled="!updateAccess('position') && isExistsPosition" @submit.prevent="addPosition">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100">
                   <v-text-field
