@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import Icons from "../../../composables/Icons/Icons.vue";
-import resourcesApi from "../../../api/resources";
+import permissionApi from "../../../api/permission";
 import subsystemApi from "../../../api/subsystem";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import { useRoute } from "vue-router";
@@ -154,7 +154,7 @@ const lineMarkingSystem = (item, type) => {
 const getRecources = async () => {
   try {
     loading.value = true;
-    const { data } = await resourcesApi.get(route.params.id);
+    const { data } = await permissionApi.get(route.params.id);
     resources.value = data.result;
     loading.value = false;
   } catch (e) {
@@ -187,10 +187,9 @@ const createAccess = async () => {
       }
     });
 
-    await resourcesApi.create(route.params.id, {
+    await permissionApi.create(route.params.id, {
       resource: allAccess,
     });
-    showToast(editMessage, "green");
 
     getRecources();
   } catch (e) {
@@ -215,28 +214,43 @@ const createSubsystem = async () => {
       resource: allAccess,
     });
 
-    showToast(editMessage, "green");
-
     getSubSystem();
   } catch (e) {
     console.error(e);
   }
 };
 
+const applyAccess = async () => {
+  const promises = [];
+  promises.push(createAccess());
+  promises.push(createSubsystem());
+
+  await Promise.all(promises)
+    .then(() => {
+      showToast("Доступ обновлен", "green");
+    })
+    .catch((e) => {
+      console.error(e);
+    });
+};
+
 onMounted(() => {
   getRecources();
   getSubSystem();
 });
+
 </script>
 <template>
   <div>
     <v-col>
+      <div class="d-flex justify-end mb-1">
+        <v-btn @click="applyAccess()" color="green">ПРИМЕНИТЬ</v-btn>
+      </div>
       <div class="d-flex ga-4 w-100">
         <v-card class="table mt-2 w-100">
-          <v-card-title class="d-flex justify-space-between"
-            ><span>Справочник</span
-            ><Icons @click="createAccess()" name="save"></Icons
-          ></v-card-title>
+          <v-card-title class="d-flex justify-space-between">
+            <span>Справочник</span>
+          </v-card-title>
           <v-table density="compact">
             <template v-if="loading">
               <tbody>
@@ -349,8 +363,8 @@ onMounted(() => {
         </v-card>
         <v-card class="table mt-2 w-100">
           <v-card-title class="d-flex justify-space-between"
-            ><span>Документ</span><Icons name="save"></Icons
-          ></v-card-title>
+            ><span>Документ</span>
+          </v-card-title>
           <v-table density="compact">
             <template v-if="loading">
               <tbody>
@@ -465,9 +479,8 @@ onMounted(() => {
       <div class="d-flex ga-4 w-100 mt-2">
         <v-card class="table mt-2 w-100">
           <v-card-title class="d-flex justify-space-between"
-            ><span>Отчет</span
-            ><Icons @click="createAccess()" name="save"></Icons
-          ></v-card-title>
+            ><span>Отчет</span>
+          </v-card-title>
           <v-table density="compact">
             <template v-if="loading">
               <tbody>
@@ -517,10 +530,8 @@ onMounted(() => {
         </v-card>
         <v-card class="table mt-2 w-100">
           <v-card-title class="d-flex justify-space-between"
-            ><span>Подсистема</span
-            ><Icons @click="createSubsystem()" name="save"></Icons
-          ></v-card-title>
-
+            ><span>Подсистема</span>
+          </v-card-title>
           <v-table density="compact">
             <template v-if="loading">
               <tbody>
