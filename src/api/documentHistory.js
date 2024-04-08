@@ -1,7 +1,7 @@
 import { api } from './api.js'
 
 export default {
-  gety(id) {
+  get(id) {
     return api.get(`/document/changeHistory/${id}`)
   }
 }
