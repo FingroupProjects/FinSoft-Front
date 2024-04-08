@@ -13,7 +13,8 @@ import cpAgreementApi from "../../api/counterpartyAgreement.js";
 import currencyApi from "../../api/currency.js";
 import procurementApi from "../../api/procurement.js";
 import goodApi from "../../api/goods.js";
-
+import showToast from "../../composables/toast/index.js";
+import {addMessage} from "../../composables/constant/buttons.js";
 
 const form = reactive({
   date: null,
@@ -37,7 +38,12 @@ const hoveredRowIndex = ref(null)
 const author = ref(null)
 const search = ref('')
 const markedID = ref([])
-const goods = ref([])
+const goods = ref([{
+  id: 1,
+  good_id: null,
+  amount: 1,
+  price: null,
+}])
 
 const organizations = ref([])
 const counterparties = ref([])
@@ -52,7 +58,6 @@ const headers = ref([
   {title: 'Цена', key: 'currency.name', sortable: false},
   {title: 'Сумма', key: 'currency.name', sortable: false},
 ])
-
 
 const getOrganizations = async () => {
   const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
@@ -85,15 +90,23 @@ const getGoods = async () => {
 }
 
 const decreaseCountOfGoods = () => {
-  if (goods.value.length > 0) {
-    goods.value = goods.value.slice(0, -1);
+  goods.value = goods.value.filter((item) => !markedID.value.includes(item.id))
+}
+
+const lineMarking = (item) => {
+  const index = markedID.value.indexOf(item.id);
+  if (index !== -1) {
+    markedID.value.splice(index, 1);
+  } else {
+    if (item.id !== null) {
+      markedID.value.push(item.id);
+    }
   }
 }
 
 const increaseCountOfGoods = () => {
-  goods.value.push({id: null, good_id: null, amount: 1, price: null });
+  goods.value.push({id: goods.value.length + 1, good_id: null, amount: 1, price: null })
 }
-
 
 const addNewProcurement = async () => {
 
@@ -113,9 +126,17 @@ const addNewProcurement = async () => {
     }))
  }
 
- const res = await procurementApi.add(body)
   console.log(body)
-  console.log(res)
+
+ try {
+   const res = await procurementApi.add(body)
+   if (res.status === 201) {
+     showToast(addMessage)
+     router.push('/procurementOfGoods')
+   }
+ } catch (e) {
+   console.log(e)
+ }
 
 }
 const totalPrice = computed(() => {
@@ -145,10 +166,26 @@ onMounted(() => {
   getGoods()
 })
 
-watch(() => form.counterparty, (id) => {
-  cpAgreements.value = []
-  cpAgreements.value = counterparties.value.find(item => item.id === id).counterpartyAgreement
+watch(() => form.counterparty, async (id) => {
+  form.cpAgreement = null
+
+  try {
+    const res = await cpAgreementApi.getById(id)
+    form.currency = {
+      id: res.data.result.currency_id.id,
+      name: res.data.result.currency_id.name
+    }
+
+    const array = Object.prototype.toString.call(res.data.result) === '[object Array]'
+    const obj = Object.prototype.toString.call(res.data.result) === '[object Object]'
+
+    cpAgreements.value = array ? res.data.result : obj ? [res.data.result] : []
+  } catch (e) {
+    cpAgreements.value = []
+  }
 })
+
+
 </script>
 
 <template>
@@ -180,8 +217,8 @@ watch(() => form.counterparty, (id) => {
           <custom-autocomplete label="Поставщик" :items="counterparties" v-model="form.counterparty"/>
           <custom-autocomplete label="Договор" :items="cpAgreements" v-model="form.cpAgreement"/>
           <custom-autocomplete label="Склад" :items="storages" v-model="form.storage"/>
-          <custom-text-field label="Руч. скидка (сумма)" v-model="form.saleInteger"/>
-          <custom-text-field label="Руч. скидка (процент)" v-model="form.salePercent"/>
+          <custom-text-field label="Руч. скидка (сумма)" v-mask="'###'" v-model="form.saleInteger"/>
+          <custom-text-field label="Руч. скидка (процент)" v-mask="'###'" v-model="form.salePercent"/>
         </div>
       </v-col>
       <v-col>
@@ -199,6 +236,7 @@ watch(() => form.counterparty, (id) => {
                 :headers="headers"
                 :items="goods"
                 v-model="markedID"
+                item-value="id"
                 page-text='{0}-{1} от {2}'
                 :items-per-page-options="[
                   {value: 25, title: '25'},
@@ -209,10 +247,11 @@ watch(() => form.counterparty, (id) => {
                 fixed-header
             >
               <template v-slot:item="{ item, index }">
-                <tr  :key="index">
+                <tr :key="index">
                   <td>
                     <CustomCheckbox
                       v-model="markedID"
+                      @change="lineMarking(item)"
                       :checked="markedID.includes(item.id)"
                     >
                       <span>{{ index + 1}}</span>
@@ -225,7 +264,7 @@ watch(() => form.counterparty, (id) => {
                     <custom-text-field v-model="item.amount" v-mask="'########'" min-width="50" max-width="90" />
                   </td>
                   <td>
-                    <custom-text-field v-model="item.price" min-width="80" max-width="110"/>
+                    <custom-text-field v-model="item.price" v-mask="'##########'" min-width="80" max-width="110"/>
                   </td>
                   <td>
                     <custom-text-field readonly :value="item.amount * item.price"  min-width="100" max-width="110"/>
