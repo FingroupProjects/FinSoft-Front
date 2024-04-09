@@ -166,6 +166,7 @@ watch(() => form.counterparty, (id) => {
               <Icons title="Удалить" @click="" name="delete"/>
             </div>
           </div>
+
         </v-card>
       </div>
     </v-col>
