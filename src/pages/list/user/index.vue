@@ -96,6 +96,10 @@ const rules = {
   phone: (v) => v.length === 13,
 }
 
+const isOrganizationFieldDisabled = computed(() => {
+  return !createAccess('organizations') && !updateAccess('organizations');
+});
+
 const getGroup = async ({page, itemsPerPage, sortBy}) => {
   loadingGroup.value = true
   try {
@@ -854,6 +858,7 @@ onMounted(async () =>  {
                           v-model="organization"
                           :items="organizations"
                           color="green"
+                          :disabled="isOrganizationFieldDisabled"
                           :base-color="FIELD_COLOR"
                           item-title="name"
                           item-value="id"

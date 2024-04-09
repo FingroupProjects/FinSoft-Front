@@ -1,5 +1,5 @@
 <script setup>
-import {onMounted, ref, watch} from "vue";
+import {onMounted, ref, watch, computed} from "vue";
 
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
@@ -32,6 +32,7 @@ const hoveredRowIndex = ref(null);
 const filterModal = ref(false);
 const dateRef = ref(null);
 const bill_number = ref(null);
+
 
 const comment = ref(null);
 const organizationAdd = ref(null);
@@ -78,6 +79,13 @@ const headers = ref([
   {title: "Валюта", key: "currency.name"},
 ]);
 
+const isOrganizationFieldDisabled = computed(() => {
+  return !createAccess('organizations') && !updateAccess('organizations');
+});
+
+const isCurrencyFieldDisabled = computed(() => {
+  return !createAccess('currencies') && !updateAccess('currencies');
+});
 
 function countFilter() {
 
@@ -645,14 +653,13 @@ onMounted(() => {
                     <v-autocomplete
                         style="max-width: 40%; min-width: 40%"
                         v-model="currencyAdd"
-                        
+                        :disabled="isCurrencyFieldDisabled"
                         no-data-text="Валюта не найдена"
                         color="green"
                         :items="currencies"
                         :base-color="FIELD_COLOR"
                         item-title="name"
                         item-value="id"
-
                         :rules="[rules.required]"
                         label="Валюта"
                         variant="outlined"
@@ -667,6 +674,7 @@ onMounted(() => {
                       v-model="organizationAdd"
                       :items="organizations"
                       item-title="name"
+                      :disabled="isOrganizationFieldDisabled"
                       :base-color="FIELD_COLOR"
                       item-value="id"
                       :rules="[rules.required]"
