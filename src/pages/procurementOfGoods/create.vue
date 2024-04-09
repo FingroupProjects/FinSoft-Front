@@ -1,11 +1,13 @@
 <script setup>
-import Icons from "../../composables/Icons/Icons.vue";
 import {computed, onMounted, reactive, ref, watch} from "vue";
+import Icons from "../../composables/Icons/Icons.vue";
 import CustomTextField from "../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../components/formElements/CustomAutocomplete.vue";
-import '../../assets/css/procurement.css'
 import CustomCheckbox from "../../components/checkbox/CustomCheckbox.vue";
+import showToast from "../../composables/toast/index.js";
 import currentDate from "../../composables/date/currentDate.js";
+import validate from "./validate.js";
+import { useRouter } from "vue-router";
 import organizationApi from "../../api/list/organizations.js";
 import counterpartyApi from "../../api/list/counterparty.js";
 import storageApi from "../../api/list/storage.js";
@@ -13,9 +15,11 @@ import cpAgreementApi from "../../api/list/counterpartyAgreement.js";
 import currencyApi from "../../api/list/currency.js";
 import procurementApi from "../../api/documents/procurement.js";
 import goodApi from "../../api/list/goods.js";
-import showToast from "../../composables/toast/index.js";
-import {addMessage} from "../../composables/constant/buttons.js";
-import validate from "./validate.js";
+import { addMessage } from "../../composables/constant/buttons.js";
+import '../../assets/css/procurement.css'
+
+
+const router = useRouter()
 
 const form = reactive({
   date: null,
@@ -34,10 +38,7 @@ const form = reactive({
 })
 
 const loading = ref(false)
-const hoveredRowIndex = ref(null)
-
 const author = ref(null)
-const search = ref('')
 const markedID = ref([])
 const goods = ref([{
   id: 1,
@@ -106,12 +107,33 @@ const lineMarking = (item) => {
 }
 
 const increaseCountOfGoods = () => {
+  const missingData = goods.value.some(validateItem)
+  if (missingData) return
+
   goods.value.push({id: goods.value.length + 1, good_id: null, amount: 1, price: null })
 }
 
-const addNewProcurement = async () => {
+const validateItem = (item) => {
+  if (item.good_id === null) {
+    showToast("Поле Товар не может быть пустым", "warning");
+    return true;
+  }
+  if (item.amount === null) {
+    showToast("Поле Количество не может быть пустым", "warning");
+    return true;
+  }
+  if (item.price === null) {
+    showToast("Поле Цена не может быть пустым", "warning");
+    return true;
+  }
+  return false;
+};
 
+const addNewProcurement = async () => {
   if (validate(form.date, form.organization, form.counterparty, form.cpAgreement, form.storage, form.currency) !== true) return
+
+  const missingData = goods.value.some(validateItem)
+  if (missingData) return
 
   const body = {
     date: form.date,
@@ -140,8 +162,9 @@ const addNewProcurement = async () => {
  } catch (e) {
    console.log(e)
  }
-
 }
+
+
 const totalPrice = computed(() => {
   let sum = 0
   goods.value.forEach(item => {
@@ -191,10 +214,26 @@ watch(() => form.counterparty, async (id) => {
     const obj = Object.prototype.toString.call(res.data.result) === '[object Object]'
 
     cpAgreements.value = array ? res.data.result : obj ? [res.data.result] : []
+
   } catch (e) {
     cpAgreements.value = []
   }
 })
+
+const isSaleIntegerDisabled = computed(() => !!form.salePercent);
+const isSalePercentDisabled = computed(() => !!form.saleInteger);
+
+watch(() => form.saleInteger, (newValue) => {
+  if (!newValue) {
+    form.salePercent = ''
+  }
+});
+
+watch(() => form.salePercent, (newValue) => {
+  if (!newValue) {
+    form.saleInteger = ''
+  }
+});
 
 
 </script>
@@ -229,8 +268,8 @@ watch(() => form.counterparty, async (id) => {
           <custom-autocomplete label="Поставщик" :items="counterparties" v-model="form.counterparty"/>
           <custom-autocomplete label="Договор" :items="cpAgreements" v-model="form.cpAgreement"/>
           <custom-autocomplete label="Склад" :items="storages" v-model="form.storage"/>
-          <custom-text-field label="Руч. скидка (сумма)" v-mask="'###'" v-model="form.saleInteger"/>
-          <custom-text-field label="Руч. скидка (процент)" v-mask="'###'" v-model="form.salePercent"/>
+          <custom-text-field label="Руч. скидка (сумма)" v-mask="'###'" v-model="form.saleInteger" :disabled="isSaleIntegerDisabled"/>
+          <custom-text-field label="Руч. скидка (процент)" v-mask="'###'" v-model="form.salePercent" :disabled="isSalePercentDisabled"/>
         </div>
       </v-col>
       <v-col>
