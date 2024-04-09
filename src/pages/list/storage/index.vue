@@ -1,5 +1,5 @@
 <script setup>
-import {onMounted, ref, watch} from "vue";
+import {onMounted, ref, watch, computed} from "vue";
 import {useRouter} from "vue-router";
 import showToast from '@/composables/toast'
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
@@ -115,6 +115,9 @@ const filterForm = ref({
 const filterDialog = ref(false)
 
 
+const isOrganizationFieldDisabled = computed(() => {
+  return !createAccess('organizations') && !updateAccess('organizations');
+});
 
 const rules = {
   required: v => !!v,
@@ -1055,6 +1058,7 @@ onMounted(async () => {
                       label="Выберите организацию"
                       :base-color="FIELD_COLOR"
                       color="green"
+                      :disabled="isOrganizationFieldDisabled"
                       item-color="green"
                       v-model="organization"
                       :items="organizations"

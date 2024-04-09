@@ -1,5 +1,5 @@
 <script setup>
-import { ref, defineProps, defineEmits, watch } from "vue";
+import { ref, defineProps, defineEmits, watch, computed } from "vue";
 import showToast from "../../../composables/toast";
 import Icons from "@/composables/Icons/Icons.vue";
 import CustomCheckbox from "@/components/checkbox/CustomCheckbox.vue";
@@ -91,6 +91,18 @@ watch(
     }
   }
 );
+
+const isOrganizationFieldDisabled = computed(() => {
+  return !createAccess('organizations') && !updateAccess('organizations');
+});
+
+const isCurrencyFieldDisabled = computed(() => {
+  return !createAccess('currencies') && !updateAccess('currencies');
+});
+
+const isPriseTypesFieldDisabled = computed(() => {
+  return !createAccess('priceTypes') && !updateAccess('priceTypes');
+});
 
 watch(
   () => props.isOpen,
@@ -987,6 +999,7 @@ const currencyProps = (item) => {
                   variant="outlined"
                   label="Валюта"
                   v-model="form.currency_id"
+                  :disabled="isCurrencyFieldDisabled"
                   :base-color="FIELD_COLOR"
                   :items="currencies"
                   item-title="name"
@@ -1002,6 +1015,7 @@ const currencyProps = (item) => {
                 variant="outlined"
                 label="Организация"
                 v-model="form.organization_id"
+                :disabled="isOrganizationFieldDisabled"
                 :base-color="FIELD_COLOR"
                 :items="organizations"
                 item-title="name"
@@ -1031,6 +1045,7 @@ const currencyProps = (item) => {
                   color="green"
                   :item-props="price_typeProps"
                   v-model="form.price_type_id"
+                  :disabled="isPriseTypesFieldDisabled"
                   :base-color="FIELD_COLOR"
                   :items="priceTypes"
                   variant="outlined"

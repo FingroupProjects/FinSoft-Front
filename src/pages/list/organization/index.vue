@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted } from "vue";
+import { ref, watch, onMounted, computed } from "vue";
 import { useRouter } from 'vue-router';
 import organization from "../../../api/list/organizations";
 import {
@@ -49,6 +49,11 @@ const showModal = ref(false);
 const toggleModal = () => {
   showModal.value = !showModal.value;
 };
+
+
+const isEmployeeFieldDisabled = computed(() => {
+  return !createAccess('employees') && !updateAccess('employees');
+});
 
 const filterForm = ref({
   name: null,
@@ -630,6 +635,7 @@ onMounted(async () => {
                 no-data-text="Нет данных"
                   v-model="directorRef"
                   :rules="[rules.required]"
+                  :disabled="isEmployeeFieldDisabled"
                   :items="employees"
                   :base-color="FIELD_COLOR"
                   rounded="lg"
@@ -643,6 +649,7 @@ onMounted(async () => {
                   no-data-text="Нет данных"
                   v-model="accountantRef"
                   :rules="[rules.required]"
+                  :disabled="isEmployeeFieldDisabled"
                   :items="employees"
                   :base-color="FIELD_COLOR"
                   rounded="lg"
@@ -654,7 +661,7 @@ onMounted(async () => {
                 <v-text-field
                   v-model="addressRef"
                   :rules="[rules.required]"
-                  color="green"
+                  color="green" 
                   :base-color="FIELD_COLOR"
                   rounded="lg"
                   variant="outlined"
