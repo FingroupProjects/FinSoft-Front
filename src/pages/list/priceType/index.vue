@@ -1,5 +1,5 @@
 <script setup>
-import {onMounted, ref, watch} from "vue";
+import {onMounted, ref, watch, computed} from "vue";
 import {useRouter} from "vue-router";
 import showToast from '../../../composables/toast'
 import Icons from "../../../composables/Icons/Icons.vue";
@@ -66,6 +66,9 @@ const headers = ref([
 ])
 
 
+const isCurrencyFieldDisabled = computed(() => {
+  return !createAccess('currencies') && !updateAccess('currencies');
+});
 
 const rules = {
   required: v => !!v,
@@ -557,6 +560,7 @@ onMounted(async () => {
                       hide-details
                       no-data-text="Нет данных"
                       color="green"
+                      :disabled="isCurrencyFieldDisabled"
                       label="Выберите валюту"
                       :base-color="FIELD_COLOR"
                       v-model="currencyAdd"

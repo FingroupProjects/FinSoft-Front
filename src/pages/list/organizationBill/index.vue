@@ -80,11 +80,11 @@ const headers = ref([
 ]);
 
 const isOrganizationFieldDisabled = computed(() => {
-  return !createAccess('organizationAdd') && !updateAccess('organizationAdd');
+  return !createAccess('organizations') && !updateAccess('organizations');
 });
 
 const isCurrencyFieldDisabled = computed(() => {
-  return !createAccess('currencieAdd') && !updateAccess('currencieAdd');
+  return !createAccess('currencies') && !updateAccess('currencies');
 });
 
 function countFilter() {
