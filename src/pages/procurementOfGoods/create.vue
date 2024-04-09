@@ -15,6 +15,7 @@ import procurementApi from "../../api/procurement.js";
 import goodApi from "../../api/goods.js";
 import showToast from "../../composables/toast/index.js";
 import {addMessage} from "../../composables/constant/buttons.js";
+import validate from "./validate.js";
 
 const form = reactive({
   date: null,
@@ -110,15 +111,17 @@ const increaseCountOfGoods = () => {
 
 const addNewProcurement = async () => {
 
+  if (validate(form.date, form.organization, form.counterparty, form.cpAgreement, form.storage, form.currency) !== true) return
+
   const body = {
     date: form.date,
     organization_id: form.organization,
     counterparty_id: form.counterparty,
     counterparty_agreement_id: form.cpAgreement,
-    storage_id: form.storage,
+    storage_id: form.storage ,
     saleInteger: Number(form.saleInteger),
     salePercent: Number(form.salePercent),
-    currency_id: form.currency,
+    currency_id: typeof form.currency === 'object' ? form.currency.id : form.currency,
     goods: goods.value.map((item) => ({
       good_id: Number(item.good_id),
       amount: Number(item.amount),
@@ -149,11 +152,18 @@ const totalPrice = computed(() => {
 
 const totalPriceWithSale = computed(() => {
   let sum = 0
-  goods.value.forEach(item => {
-    sum += ((item.price * item.amount) * form.salePercent / 100)
-  })
+  if (form.salePercent !== null) {
+      sum = totalPrice.value - (totalPrice.value * form.salePercent / 100)
+  } else {
+    goods.value.forEach(item => {
+      sum += (item.price * item.amount)
+    })
+    sum -= form.saleInteger
+  }
+
   return sum
 })
+
 
 onMounted(() => {
   form.date = currentDate()
@@ -171,6 +181,7 @@ watch(() => form.counterparty, async (id) => {
 
   try {
     const res = await cpAgreementApi.getById(id)
+
     form.currency = {
       id: res.data.result.currency_id.id,
       name: res.data.result.currency_id.name
