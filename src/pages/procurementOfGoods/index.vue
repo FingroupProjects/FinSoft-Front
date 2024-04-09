@@ -4,7 +4,7 @@ import {useRouter} from "vue-router";
 import showToast from '../../composables/toast'
 import Icons from "../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../components/checkbox/CustomCheckbox.vue";
-import priceType from '../../api/priceType.js';
+import priceType from '../../api/list/priceType.js';
 import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../composables/constant/colors.js";
 import {
   removeMessage,

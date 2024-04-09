@@ -3,9 +3,9 @@ import {onMounted, ref, watch} from "vue";
 
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
-import organizationBill from "../../../api/organizationBill.js";
-import currencyApi from "../../../api/currency.js";
-import organizationApi from "../../../api/organizations.js";
+import organizationBill from "../../../api/list/organizationBill.js";
+import currencyApi from "../../../api/list/currency.js";
+import organizationApi from "../../../api/list/organizations.js";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showDate from "../../../composables/date/showDate.js";
 import validate from "./validate.js";

@@ -130,6 +130,11 @@ const routes = [
     component: () => import("../pages/list/nomenclature/createUpdateGood.vue"),
   },
   {
+    path: "/documentHistory/:id",
+    name: "documentHistory",
+    component: () => import("../pages/document/index.vue"),
+  },
+  {
     path: "/login",
     name: "login",
     component: () => import("../pages/authentication/authentication.vue"),

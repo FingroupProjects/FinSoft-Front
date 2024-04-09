@@ -1,12 +1,12 @@
 <script setup>
 import { onMounted, ref, watch, computed } from "vue";
-import groupApi from "../../../api/goodGroup";
-import goodsApi from "../../../api/goods";
+import groupApi from "../../../api/list/goodGroup";
+import goodsApi from "../../../api/list/goods";
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
-import unitsApi from "../../../api/units";
+import unitsApi from "../../../api/list/units";
 import barcode from "./barcode.vue";
-import storageApi from "../../../api/storage";
+import storageApi from "../../../api/list/storage";
 import { useRoute, useRouter } from "vue-router";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import { addMessage, editMessage } from "../../../composables/constant/buttons";

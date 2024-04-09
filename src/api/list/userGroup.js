@@ -1,4 +1,4 @@
-import {api, buildParams} from './api.js';
+import {api, buildParams} from '../api.js';
 
 export default {
   add(data) {
@@ -6,11 +6,11 @@ export default {
   },
   get({page = 1, itemsPerPage = 10, sortBy}, search = '') {
     const params = buildParams(page, itemsPerPage, sortBy, search);
-    return api.get(`/group/storages-group`, { params });
+    return api.get(`/group/users-group`, { params });
   },
-  getStorages({page = 1, itemsPerPage = 10, sortBy}, search, id, filterData) {
+  getUsers({page = 1, itemsPerPage = 10, sortBy}, search, id, filterData) {
     const params = buildParams(page, itemsPerPage, sortBy, search, filterData);
-    return api.get(`/group/get-storages/${id}`, { params });
+    return api.get(`/group/get-users/${id}`, { params });
   },
   update(id, body) {
     return api.patch(`/group/${id}`, body)
@@ -19,6 +19,6 @@ export default {
     return api.delete(`/group/${id}`)
   },
   restore(id) {
-    return api.get('/group/restore/' + id)
+    return api.get(`/group/restore/${id}`)
   }
 }

@@ -3,9 +3,9 @@ import {onMounted, ref, watch} from "vue";
 import {useRouter} from "vue-router";
 import showToast from '@/composables/toast'
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import storage from '../../../api/storage.js';
-import employee from '../../../api/employee.js';
-import organizationApi from '../../../api/organizations.js';
+import storage from '../../../api/list/storage.js';
+import employee from '../../../api/list/employee.js';
+import organizationApi from '../../../api/list/organizations.js';
 import showDate from "../../../composables/date/showDate.js";
 import {createAccess, updateAccess, removeAccess} from "../../../composables/access/access.js";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
@@ -21,7 +21,7 @@ import {
 import Icons from "@/composables/Icons/Icons.vue";
 
 import {restoreMessage} from "../../../composables/constant/buttons.js";
-import storageGroup from "../../../api/storageGroup.js";
+import storageGroup from "../../../api/list/storageGroup.js";
 import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 import validate from "./validate.js";
 import debounce from "lodash.debounce";

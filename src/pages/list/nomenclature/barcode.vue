@@ -2,7 +2,7 @@
 import { onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Icons from "../../../composables/Icons/Icons.vue";
-import barcodeApi from "../../../api/barcode";
+import barcodeApi from "../../../api/list/barcode";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../../composables/toast";
 import {

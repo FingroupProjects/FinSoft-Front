@@ -16,10 +16,10 @@ import {
   selectOneItemMessage,
   restoreMessage, addMessage
 } from "../../../composables/constant/buttons.js";
-import organizationApi from "../../../api/organizations.js";
-import user from "../../../api/user.js";
+import organizationApi from "../../../api/list/organizations.js";
+import user from "../../../api/list/user.js";
 import validate from "./validate.js";
-import groupApi from "../../../api/userGroup.js";
+import groupApi from "../../../api/list/userGroup.js";
 import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 const showModal = ref(false);
 const showConfirmDialog = ref(false);
