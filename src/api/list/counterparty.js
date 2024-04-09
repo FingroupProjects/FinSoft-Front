@@ -14,6 +14,9 @@ export default {
   getById(id) {
     return api.get(`/counterparty/${id}`);
   },
+  getClientCounterparty() {
+    return api.get(`/counterparty/clients/s`);
+  },
   massDeletion(data) {
     return api.post(`/counterparty/massDelete/`, data);
   },
