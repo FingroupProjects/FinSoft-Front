@@ -7,7 +7,7 @@ import CustomCheckbox from "../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../composables/toast/index.js";
 import currentDate from "../../composables/date/currentDate.js";
 import validate from "./validate.js";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import organizationApi from "../../api/list/organizations.js";
 import counterpartyApi from "../../api/list/counterparty.js";
 import storageApi from "../../api/list/storage.js";
@@ -19,8 +19,10 @@ import { addMessage } from "../../composables/constant/buttons.js";
 import "../../assets/css/procurement.css";
 
 const router = useRouter();
+const route = useRoute();
 
 const form = reactive({
+  id: null,
   date: null,
   organization: null,
   organizations: [],
@@ -61,6 +63,15 @@ const headers = ref([
   { title: "Цена", key: "currency.name", sortable: false },
   { title: "Сумма", key: "currency.name", sortable: false },
 ]);
+
+const getSellingGood = async () => {
+  try {
+    const res = await saleApi.show(form.id);
+    console.log(res);
+  } catch (e) {
+    console.error(e);
+  }
+};
 
 const getOrganizations = async () => {
   const { data } = await organizationApi.get({
@@ -192,7 +203,6 @@ const addNewSale = async () => {
     })),
   };
 
-
   try {
     const res = await saleApi.add(body);
     if (res.status === 201) {
@@ -226,7 +236,9 @@ const totalPriceWithSale = computed(() => {
   return sum;
 });
 
-onMounted(() => {
+onMounted(async () => {
+  form.id = route.params.id;
+  getSellingGood();
   form.date = currentDate();
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
   getOrganizations();
@@ -293,7 +305,7 @@ watch(
     <v-col>
       <div class="d-flex justify-space-between text-uppercase">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Покупка (создание)</span>
+          <span>Покупка (изменение)</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
@@ -468,5 +480,3 @@ watch(
     </div>
   </div>
 </template>
-
-<style scoped></style>

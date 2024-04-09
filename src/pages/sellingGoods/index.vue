@@ -57,7 +57,7 @@ const rules = {
 }
 
 
-const getProcurementData = async ({page, itemsPerPage, sortBy, search}) => {
+const getSellingGoods = async ({page, itemsPerPage, sortBy, search}) => {
   count.value = 0;
   countFilter()
   const filterData = filterForm.value
@@ -65,11 +65,11 @@ const getProcurementData = async ({page, itemsPerPage, sortBy, search}) => {
   loading.value = true
   try {
     const { data } = await saleApi.get({page, itemsPerPage, sortBy}, search, filterData)
-    console.log(data);
     paginations.value = data.result.pagination
     sales.value = data.result.data
     loading.value = false
   } catch (e) {
+    console.error(e);
   }
 }
 
@@ -84,7 +84,9 @@ function countFilter() {
   return count;
 }
 
-
+const editDocument = item => {
+  router.push({name: 'SellingGoodsEdit', params: {id: item.id}})
+}
 
 
 const massDel = async () => {
@@ -95,7 +97,7 @@ const massDel = async () => {
     if (status === 200) {
 
       showToast(removeMessage, 'red')
-      await getProcurementData({})
+      await getSellingGoods({})
       markedID.value = []
       dialog.value = false
     }
@@ -113,7 +115,7 @@ const massRestore = async () => {
 
     if (status === 200) {
       showToast(restoreMessage)
-      await getProcurementData({})
+      await getSellingGoods({})
       markedID.value = []
       dialog.value = false
     }
@@ -162,7 +164,7 @@ const lineMarking = (item) => {
 const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
   filterModal.value = {}
   cleanFilterForm()
-  await getProcurementData({page, itemsPerPage, sortBy, search})
+  await getSellingGoods({page, itemsPerPage, sortBy, search})
 
 }
 
@@ -250,7 +252,7 @@ watch(search, debounce((newValue) => {
             :item-value="headers.title"
             :search="debounceSearch"
             v-model="markedID"
-            @update:options="getProcurementData"
+            @update:options="getSellingGoods"
             page-text =  '{0}-{1} от {2}'
             :items-per-page-options="[
                 {value: 25, title: '25'},
@@ -265,6 +267,7 @@ watch(search, debounce((newValue) => {
             <tr
                 @mouseenter="hoveredRowIndex = index"
                 @mouseleave="hoveredRowIndex = null"
+                @dblclick="editDocument(item)"
                 :class="{'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
               <td>
@@ -325,7 +328,7 @@ watch(search, debounce((newValue) => {
                   />
                   <div class="d-flex justify-end ga-2">
                     <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-                    <v-btn color="green" class="btn"  @click="getProcurementData">применить</v-btn>
+                    <v-btn color="green" class="btn"  @click="getSellingGoods">применить</v-btn>
                   </div>
                 </v-col>
               </v-row>
