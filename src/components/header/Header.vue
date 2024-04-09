@@ -1,11 +1,9 @@
 <script setup>
 import {onMounted, onUnmounted, ref} from "vue";
 import {useRouter} from "vue-router";
-import FlagRU from '../../assets/svg/flags/flag-ru.svg'
-import FlagUS from '../../assets/svg/flags/flag-us.svg'
 import auth from "../../api/auth.js";
 import {deleteToken, deleteUser} from "../../composables/auth";
-import programSettingsApi from "../../api/programSettingsApi.js";
+import programSettingsApi from "../../api/list/programSettingsApi.js";
 
 const isDialog = ref(false)
 const router = useRouter()

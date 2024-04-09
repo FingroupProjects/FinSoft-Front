@@ -4,7 +4,6 @@ import {useRouter} from "vue-router";
 import showToast from '../../composables/toast'
 import Icons from "../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../components/checkbox/CustomCheckbox.vue";
-import priceType from '../../api/priceType.js';
 import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../composables/constant/colors.js";
 import {
   removeMessage,
@@ -13,7 +12,7 @@ import {
   restoreMessage
 } from "../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
-
+import procurementApi from '../../api/documents/procurement.js';
 const router = useRouter()
 
 const loading = ref(true)
@@ -28,7 +27,7 @@ const search = ref('')
 const debounceSearch = ref('')
 const nameRef = ref(null)
 const descriptionRef = ref(null)
-const priceTypes = ref([])
+const procurements = ref([])
 const paginations = ref([])
 const showConfirmDialog = ref(false);
 const showModal = ref(false);
@@ -57,17 +56,17 @@ const rules = {
 }
 
 
-const getPriceTypeData = async ({page, itemsPerPage, sortBy, search}) => {
+const getProcurementData = async ({page, itemsPerPage, sortBy, search}) => {
   count.value = 0;
   countFilter()
   const filterData = filterForm.value
   filterModal.value = false
   loading.value = true
   try {
-
-    const { data } = await priceType.get({page, itemsPerPage, sortBy}, search, filterData)
+    const { data } = await procurementApi.get({page, itemsPerPage, sortBy}, search, filterData)
+    console.log(data)
     paginations.value = data.result.pagination
-    priceTypes.value = data.result.data
+    procurements.value = data.result.data
     loading.value = false
   } catch (e) {
   }
@@ -90,12 +89,12 @@ function countFilter() {
 const massDel = async () => {
 
   try {
-    const {status} = await priceType.massDeletion({ids: markedID.value})
+    const {status} = await procurementApi.massDeletion({ids: markedID.value})
 
     if (status === 200) {
 
       showToast(removeMessage, 'red')
-      await getPriceTypeData({})
+      await getProcurementData({})
       markedID.value = []
       dialog.value = false
     }
@@ -109,11 +108,11 @@ const massDel = async () => {
 const massRestore = async () => {
 
   try {
-    const {status} = await priceType.massRestore({ids: markedID.value})
+    const {status} = await procurementApi.massRestore({ids: markedID.value})
 
     if (status === 200) {
       showToast(restoreMessage)
-      await getPriceTypeData({})
+      await getProcurementData({})
       markedID.value = []
       dialog.value = false
     }
@@ -121,13 +120,6 @@ const massRestore = async () => {
 
   }
 }
-
-
-
-const handleCheckboxClick = (item) => {
-  lineMarking(item)
-}
-
 
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
   if(markedID.value.length === 0) return showToast(warningMessage, 'warning')
@@ -142,7 +134,7 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
 
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
-    const firstMarkedItem = priceTypes.value.find(el => el.id === markedID.value[0]);
+    const firstMarkedItem = procurements.value.find(el => el.id === markedID.value[0]);
     if (firstMarkedItem && firstMarkedItem.deleted_at) {
       if(item.deleted_at === null) {
         showToast(ErrorSelectMessage, 'warning')
@@ -169,7 +161,7 @@ const lineMarking = (item) => {
 const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
   filterModal.value = {}
   cleanFilterForm()
-  await getPriceTypeData({page, itemsPerPage, sortBy, search})
+  await getProcurementData({page, itemsPerPage, sortBy, search})
 
 }
 
@@ -189,8 +181,8 @@ watch(dialog, newVal => {
 })
 
 watch(markedID, (newVal) => {
-  markedItem.value = priceTypes.value.find((el) => el.id === newVal[0]);
-});
+  markedItem.value = procurements.value.find((el) => el.id === newVal[0]);
+})
 
 watch(search, debounce((newValue) => {
   debounceSearch.value = newValue
@@ -253,18 +245,18 @@ watch(search, debounce((newValue) => {
             :loading="loading"
             :headers="headers"
             :items-length="paginations.total || 0"
-            :items="priceTypes"
+            :items="procurements"
             :item-value="headers.title"
             :search="debounceSearch"
-            show-select
             v-model="markedID"
-            @update:options="getPriceTypeData"
+            @update:options="getProcurementData"
             page-text =  '{0}-{1} от {2}'
             :items-per-page-options="[
                 {value: 25, title: '25'},
                 {value: 50, title: '50'},
                 {value: 100, title: '100'},
             ]"
+            show-select
             fixed-header
             hover
         >
@@ -280,10 +272,9 @@ watch(search, debounce((newValue) => {
                   <CustomCheckbox
                       v-model="markedID"
                       :checked="markedID.includes(item.id)"
-                      @click="lineMarking(item)"
-                      @change="handleCheckboxClick(item)"
+                      @change="lineMarking(item)"
                   >
-                    <span>{{ item.id }}</span>
+                    <span>{{ index + 1 }}</span>
                   </CustomCheckbox>
                 </template>
                 <template v-else>
@@ -292,11 +283,16 @@ watch(search, debounce((newValue) => {
                         style="margin-right: 10px; margin-top: 4px"
                         :name="item.deleted_at === null ? 'valid' : 'inValid'"
                     />
-                    <span>{{ item.id }}</span>
+                    <span>{{ index + 1 }}</span>
                   </div>
                 </template>
               </td>
-              <td>{{ item.name }}</td>
+              <td>{{ item.doc_number }}</td>
+              <td>{{ item.date }}</td>
+              <td>{{ item.counterparty.name }}</td>
+              <td>{{ item.organization.name }}</td>
+              <td>{{ item.storage.name }}</td>
+              <td>{{ item.author.name }}</td>
               <td>{{ item.currency.name }}</td>
             </tr>
           </template>
@@ -329,7 +325,7 @@ watch(search, debounce((newValue) => {
                   />
                   <div class="d-flex justify-end ga-2">
                     <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-                    <v-btn color="green" class="btn"  @click="getPriceTypeData">применить</v-btn>
+                    <v-btn color="green" class="btn"  @click="getProcurementData">применить</v-btn>
                   </div>
                 </v-col>
               </v-row>

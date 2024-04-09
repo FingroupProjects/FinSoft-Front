@@ -3,7 +3,7 @@ import { ref, defineEmits, watch, onMounted } from "vue";
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
 import { addMessage, restoreMessage, removeMessage, editMessage } from "../../../composables/constant/buttons";
-import userGroup from "../../../api/userGroup.js";
+import userGroup from "../../../api/list/userGroup.js";
 import {USER_GROUP} from "../../../composables/constant/paramsApi.js";
 import {FIELD_COLOR} from "../../../composables/constant/colors.js";
 import {getUser} from "../../../composables/auth/index.js";

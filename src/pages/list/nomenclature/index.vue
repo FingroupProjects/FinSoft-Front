@@ -1,10 +1,10 @@
 <script setup>
 import { ref, watch } from "vue";
-import goodsApi from "../../../api/goods";
-import unitsApi from "../../../api/units";
+import goodsApi from "../../../api/list/goods";
+import unitsApi from "../../../api/list/units";
 import createGroup from "./createGroup.vue";
-import storageApi from "../../../api/storage";
-import groupApi from "../../../api/goodGroup";
+import storageApi from "../../../api/list/storage";
+import groupApi from "../../../api/list/goodGroup";
 import { useRoute, useRouter } from "vue-router";
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";

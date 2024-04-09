@@ -3,7 +3,7 @@ import {onMounted, ref, watch} from "vue";
 import {useRouter} from "vue-router";
 import showToast from '../../../composables/toast'
 import currentDate from "../../../composables/date/currentDate.js";
-import currency from '../../../api/currency.js'
+import currency from '../../../api/list/currency.js'
 import {createAccess, updateAccess, removeAccess} from '../../../composables/access/access.js'
 import {
   addMessage,

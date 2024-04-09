@@ -4,8 +4,8 @@ import {useRouter} from "vue-router";
 import showToast from '../../../composables/toast'
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import priceType from '../../../api/priceType.js';
-import currency from '../../../api/currency.js';
+import priceType from '../../../api/list/priceType.js';
+import currency from '../../../api/list/currency.js';
 import {createAccess, updateAccess, removeAccess} from "../../../composables/access/access.js";
 import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 import validate from "./validate.js";
@@ -20,7 +20,7 @@ import {
   restoreMessage
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
-import procurement from "../../../api/procurement.js";
+import procurement from "../../../api/documents/procurement.js";
 
 const router = useRouter()
 

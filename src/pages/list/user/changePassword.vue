@@ -2,7 +2,7 @@
 import {ref, defineEmits} from "vue";
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
-import user from "../../../api/user.js";
+import user from "../../../api/list/user.js";
 import {FIELD_COLOR} from "../../../composables/constant/colors.js";
 
 const emit = defineEmits();

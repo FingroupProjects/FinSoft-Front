@@ -3,10 +3,10 @@ import {onMounted, ref, watch, computed} from "vue";
 import {useRouter} from "vue-router";
 import showToast from '@/composables/toast'
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import cashRegister from '../../../api/cashRegister.js';
-import currency from '../../../api/currency.js';
-import organization from '../../../api/organizations.js';
-import employee from '../../../api/employee.js';
+import cashRegister from '../../../api/list/cashRegister.js';
+import currency from '../../../api/list/currency.js';
+import organization from '../../../api/list/organizations.js';
+import employee from '../../../api/list/employee.js';
 import validate from "./validate.js"
 import {createAccess, removeAccess, updateAccess} from "../../../composables/access/access.js";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";

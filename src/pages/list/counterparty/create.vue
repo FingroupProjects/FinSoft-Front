@@ -13,9 +13,9 @@ import {
   restoreMessage,
   warningMessage,
 } from "@/composables/constant/buttons.js";
-import currencyApi from "../../../api/currency.js";
+import currencyApi from "../../../api/list/currency.js";
 import organizationApi from "@/api/organizations.js";
-import counterpartyApi from "../../../api/counterparty.js";
+import counterpartyApi from "../../../api/list/counterparty.js";
 import priceTypeApi from "@/api/priceType.js";
 import validate from "./validate.js";
 import { FIELD_COLOR } from "../../../composables/constant/colors.js";

@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, ref, watch } from "vue";
-import counterpartyApi from "../../../api/counterparty";
+import counterpartyApi from "../../../api/list/counterparty";
 import showDate from "../../../composables/date/showDate";
 import {
   ErrorSelectMessage,

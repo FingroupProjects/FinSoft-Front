@@ -3,7 +3,7 @@ import {ref, watch} from "vue";
 import {useRouter} from "vue-router";
 import showToast from '../../../composables/toast'
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import position from '../../../api/position.js'
+import position from '../../../api/list/position.js'
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import {createAccess, updateAccess, removeAccess} from "../../../composables/access/access.js";
 import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
