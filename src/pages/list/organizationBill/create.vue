@@ -1,9 +1,9 @@
 <script setup>
 import {onMounted, ref,} from "vue"
 import { useRouter } from "vue-router";
-import organizationBill from "../../../api/organizationBill.js";
-import currency from "../../../api/currency.js";
-import organization from "../../../api/organizations.js";
+import organizationBill from "../../../api/list/organizationBill.js";
+import currency from "../../../api/list/currency.js";
+import organization from "../../../api/list/organizations.js";
 
 const currencies = ref([])
 const organizations = ref([])

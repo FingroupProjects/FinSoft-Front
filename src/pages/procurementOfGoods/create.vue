@@ -6,16 +6,14 @@ import CustomAutocomplete from "../../components/formElements/CustomAutocomplete
 import '../../assets/css/procurement.css'
 import CustomCheckbox from "../../components/checkbox/CustomCheckbox.vue";
 import currentDate from "../../composables/date/currentDate.js";
-import organizationApi from "../../api/organizations.js";
-import counterpartyApi from "../../api/counterparty.js";
-import storageApi from "../../api/storage.js";
-import cpAgreementApi from "../../api/counterpartyAgreement.js";
-import currencyApi from "../../api/currency.js";
-import procurementApi from "../../api/procurement.js";
-import goodApi from "../../api/goods.js";
-import showToast from "../../composables/toast/index.js";
-import {addMessage} from "../../composables/constant/buttons.js";
-import validate from "./validate.js";
+import organizationApi from "../../api/list/organizations.js";
+import counterpartyApi from "../../api/list/counterparty.js";
+import storageApi from "../../api/list/storage.js";
+import cpAgreementApi from "../../api/list/counterpartyAgreement.js";
+import currencyApi from "../../api/list/currency.js";
+import procurementApi from "../../api/documents/procurement.js";
+import goodApi from "../../api/list/goods.js";
+
 
 const form = reactive({
   date: null,

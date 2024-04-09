@@ -18,8 +18,8 @@ import {
   restoreMessage
 } from "../../../composables/constant/buttons.js"
 import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js"
-import employee from "../../../api/employee.js"
-import employeeGroup from "../../../api/employeeGroup.js"
+import employee from "../../../api/list/employee.js"
+import employeeGroup from "../../../api/list/employeeGroup.js"
 import debounce from "lodash.debounce";
 
 const router = useRouter()

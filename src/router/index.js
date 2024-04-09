@@ -1,10 +1,6 @@
 import {createRouter, createWebHistory} from 'vue-router'
 import routes from './routes.js'
-import programSettingsApi from "../api/programSettingsApi.js";
-import {getToken} from "../composables/auth/index.js";
-import {ca} from "vuetify/locale";
 import {api} from "../api/api.js";
-import showToast from "../composables/toast/index.js";
 
 const router = createRouter({
   history: createWebHistory(),

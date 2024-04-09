@@ -1,6 +1,6 @@
 <script setup>
 import { ref, defineEmits, onMounted, watch } from "vue";
-import groupApi from "../../../api/goodGroup";
+import groupApi from "../../../api/list/goodGroup";
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";

@@ -1,4 +1,4 @@
-import {api, buildParams} from './api.js'
+import {api, buildParams} from '../api.js'
 
 export default {
   add(data) {

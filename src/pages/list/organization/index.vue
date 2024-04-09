@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch, onMounted } from "vue";
 import { useRouter } from 'vue-router';
-import organization from "../../../api/organizations";
+import organization from "../../../api/list/organizations";
 import {
   addMessage,
   editMessage,
@@ -13,7 +13,7 @@ import {
 import showToast from "../../../composables/toast";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import Icons from "../../../composables/Icons/Icons.vue";
-import employee from "../../../api/employee";
+import employee from "../../../api/list/employee";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import validate from "./validate.js";
 import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";

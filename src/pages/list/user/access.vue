@@ -1,8 +1,8 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import Icons from "../../../composables/Icons/Icons.vue";
-import permissionApi from "../../../api/permission";
-import subsystemApi from "../../../api/subsystem";
+import permissionApi from "../../../api/list/permission";
+import subsystemApi from "../../../api/list/subsystem";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import { useRoute } from "vue-router";
 import { editMessage } from "../../../composables/constant/buttons";

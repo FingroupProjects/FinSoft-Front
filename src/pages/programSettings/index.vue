@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, ref } from "vue";
-import programSettingsApi from "../../api/programSettingsApi.js";
+import programSettingsApi from "../../api/list/programSettingsApi.js";
 import { FIELD_COLOR } from "../../composables/constant/colors";
 
 const name = ref("");
