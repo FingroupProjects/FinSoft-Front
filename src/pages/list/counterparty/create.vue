@@ -3,7 +3,7 @@ import { ref, defineProps, defineEmits, watch, computed } from "vue";
 import showToast from "../../../composables/toast";
 import Icons from "@/composables/Icons/Icons.vue";
 import CustomCheckbox from "@/components/checkbox/CustomCheckbox.vue";
-import counterpartyAgreement from "@/api/counterpartyAgreement.js";
+import counterpartyAgreement from "@/api/list/counterpartyAgreement.js";
 import showDate from "@/composables/date/showDate.js";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import { createAccess, updateAccess, removeAccess } from "../../../composables/access/access";
