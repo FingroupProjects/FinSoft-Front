@@ -3,6 +3,7 @@ import { ref, defineProps, onMounted } from "vue";
 import { useRouter } from "vue-router";
 
 const props = defineProps(["rale"]);
+const emit = defineEmits(['closeAdmin']);
 const router = useRouter();
 const users = ref([]);
 const filteredLists = ref([]);
@@ -11,11 +12,11 @@ const filteredAdmins = ref([]);
 const admins = ref([
   {
     id: 1,
-    title: "Настройки программы",
+    title: "Настройки",
     link: "/programSettings",
     icon: "settings",
   },
-  { id: 2, title: "Настройка разделов", link: "", icon: "settings" },
+  { id: 2, title: "Заголовок программы", link: "", icon: "settings" },
 ]);
 
 const lists = ref([
@@ -40,7 +41,9 @@ const lists = ref([
 ]);
 
 function push(item) {
+  emit('closeAdmin')
   router.push(item.link);
+
 }
 onMounted(() => {
   users.value = JSON.parse(localStorage.getItem("user"));
@@ -49,29 +52,32 @@ onMounted(() => {
     return {
       ...list,
       child: list.child.filter((item) =>
-        users.value.permissions.includes(item.link.slice(6) + '.read')
+        users.value.permissions.includes(item.link.slice(6) + ".read")
       ),
     };
   });
 
   filteredAdmins.value = admins.value.filter((item) =>
-    users.value.permissions.includes(item.link.slice(1) + '.read')
+    users.value.permissions.includes(item.link.slice(1) + ".read")
   );
 });
 </script>
 
 <template>
-  <div style="background-color: #F2FAFF; width: 300px;">
+  <div style="background-color: #f2faff; width: 350px">
     <div class="title">
       <div v-for="list in filteredLists" :key="list.id">
-        <h3 class="text-uppercase">{{ list.title }}</h3>
         <ul class="list">
+          <li class="text-uppercase text-black font-weight-regular">
+            {{ list.title }}
+          </li>
           <li
+            @click="push(child)"
             class="d-flex align-center ga-4"
             v-for="child in list.child"
             :key="child.id"
           >
-            <span class="cursor-pointer" @click="push(child)">
+            <span class="cursor-pointer">
               {{ child.title }}
             </span>
           </li>
@@ -79,11 +85,13 @@ onMounted(() => {
       </div>
       <div>
         <div class="mb-10" nav v-for="admin in filteredAdmins" :key="admin.id">
-          <h3 class="text-uppercase">{{ admin.title }}</h3>
           <ul class="list">
-            <li class="d-flex align-center ga-4">
-              <span class="cursor-pointer" @click="push(admin)">
-                {{ admin.title }}
+            <li class="text-uppercase text-black font-weight-regular">
+              {{ admin.title }}
+            </li>
+            <li class="d-flex align-center ga-4" @click="push(admin)">
+              <span class="cursor-pointer">
+                {{ admins[1].title }}
               </span>
             </li>
           </ul>
@@ -106,12 +114,10 @@ onMounted(() => {
 
 .title {
   color: #848484;
-  font-size: 16px;
+  font-size: 14px;
   font-family: "Inter", sans-serif;
   font-weight: 300;
 }
-
-
 
 ul {
   list-style: none;
@@ -123,10 +129,13 @@ ul {
 }
 
 li {
-  padding: 8px 10px;
+  padding: 8px 20px 10px;
+  border-bottom: 1px solid #c7c5c5;
 }
-
-span:hover {
-  color: #3ab700;
+li:hover {
+  background: rgb(210, 211, 215);
+  color: #08072E;
+  font-weight: normal;
+  cursor: pointer;
 }
 </style>

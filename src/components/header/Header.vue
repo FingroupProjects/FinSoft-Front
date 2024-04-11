@@ -66,9 +66,9 @@ onUnmounted(() => {
       <Icons class="ml-2" name="menu" @click="$emit('rale')"></Icons>
     </template>
 
-    <v-app-bar-title @click="$router.push('/')" class="title cursor-pointer"
-      >SOHIBKOR.{{ organizationName }}</v-app-bar-title
-    >
+    <v-app-bar-title @click="$router.push('/')" class="title cursor-pointer">
+      SOHIBKOR / {{ organizationName }}
+    </v-app-bar-title>
 
     <template v-slot:append>
       <v-menu v-model="isProfile" :close-on-content-click="false">
@@ -79,10 +79,8 @@ onUnmounted(() => {
             v-bind="props"
             rounded="2"
           >
-            <span style="font-size: 14px" class="mx-2 title">{{
-              userName
-            }}</span>
-            <Icons name="profile" class=""></Icons>
+            <span style="font-size: 14px" class="mx-2 title">{{ userName }}</span>
+            <Icons name="profile"></Icons>
           </v-btn>
         </template>
 
@@ -108,7 +106,7 @@ onUnmounted(() => {
 
 <style scoped>
 .title {
-  font-size: 12px;
+  font-size: 14px;
   font-family: "Inter", sans-serif;
   font-weight: 400;
 }
