@@ -6,7 +6,11 @@ import CustomCheckbox from "@/components/checkbox/CustomCheckbox.vue";
 import counterpartyAgreement from "@/api/list/counterpartyAgreement.js";
 import showDate from "@/composables/date/showDate.js";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
-import { createAccess, updateAccess, removeAccess } from "../../../composables/access/access";
+import {
+  createAccess,
+  updateAccess,
+  removeAccess,
+} from "../../../composables/access/access";
 import {
   ErrorSelectMessage,
   removeMessage,
@@ -14,9 +18,9 @@ import {
   warningMessage,
 } from "@/composables/constant/buttons.js";
 import currencyApi from "../../../api/list/currency.js";
-import organizationApi from "@/api/organizations.js";
+import organizationApi from "@/api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
-import priceTypeApi from "@/api/priceType.js";
+import priceTypeApi from "@/api/list/priceType.js";
 import validate from "./validate.js";
 import { FIELD_COLOR } from "../../../composables/constant/colors.js";
 
@@ -93,15 +97,15 @@ watch(
 );
 
 const isOrganizationFieldDisabled = computed(() => {
-  return !createAccess('organizations') && !updateAccess('organizations');
+  return !createAccess("organizations") && !updateAccess("organizations");
 });
 
 const isCurrencyFieldDisabled = computed(() => {
-  return !createAccess('currencies') && !updateAccess('currencies');
+  return !createAccess("currencies") && !updateAccess("currencies");
 });
 
 const isPriseTypesFieldDisabled = computed(() => {
-  return !createAccess('priceTypes') && !updateAccess('priceTypes');
+  return !createAccess("priceTypes") && !updateAccess("priceTypes");
 });
 
 watch(
@@ -177,7 +181,6 @@ const lineMarking = (item) => {
   }
   markedItem.value = item;
 };
-
 
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
   if (markedItem.value.deleted_at) {
@@ -471,18 +474,23 @@ const isDataChanged = () => {
 
 const closingWithSaving = async () => {
   if (props.isEdit) {
-    await updateCounterparty({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
-    showModal.value = false
+    await updateCounterparty({
+      page: 1,
+      itemsPerPage: 10,
+      sortBy: "id",
+      search: null,
+    });
+    showModal.value = false;
   } else {
-    const isValid = validate(
-      name,
-      address,
-      phone,
-      email,
-      );
-      showModal.value = false
+    const isValid = validate(name, address, phone, email);
+    showModal.value = false;
     if (isValid === true) {
-      await CreateCounterparty({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      await CreateCounterparty({
+        page: 1,
+        itemsPerPage: 10,
+        sortBy: "id",
+        search: null,
+      });
       dialog.value = false;
       showModal.value = false;
       showConfirmDialog.value = false;
@@ -517,22 +525,29 @@ const closeDialogWithoutSaving = () => {
   clearForm();
 };
 const isDataChangedAgreement = () => {
-  const item = props.counterpartyAgreement.find((item) => item.id === props.item.id);
+  const item = props.counterpartyAgreement.find(
+    (item) => item.id === props.item.id
+  );
 
   const isChanged =
     name.value !== item.name ||
     currencies.value !== item.currency_id ||
-    organizations.value !== item.organization_id || 
+    organizations.value !== item.organization_id ||
     priceTypes.value !== item.price_type_id ||
     counterparties.value !== item.contact_person ||
     date.value !== item.date;
-    return isChanged;
+  return isChanged;
 };
 
 const closingWithSavingAgreement = async () => {
   if (props.isEdit) {
-    await updateCpAgreement({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
-    showModalAgreement.value = false
+    await updateCpAgreement({
+      page: 1,
+      itemsPerPage: 10,
+      sortBy: "id",
+      search: null,
+    });
+    showModalAgreement.value = false;
   } else {
     const isValid = validate(
       name,
@@ -541,10 +556,15 @@ const closingWithSavingAgreement = async () => {
       priceTypes,
       counterparties,
       date
-      );
-      showModalAgreement.value = false
+    );
+    showModalAgreement.value = false;
     if (isValid === true) {
-      await createCpAgreement({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      await createCpAgreement({
+        page: 1,
+        itemsPerPage: 10,
+        sortBy: "id",
+        search: null,
+      });
       dialog.value = false;
       showModalAgreement.value = false;
       showConfirmDialog.value = false;
@@ -574,13 +594,11 @@ const checkAndCloseAgreement = () => {
   }
 };
 
-  const closeDialogWithoutSavingAgreement = () => {
+const closeDialogWithoutSavingAgreement = () => {
   agreementDialog.value = false;
   showModalAgreement.value = false;
   clearForm();
 };
-
-
 
 const createCpAgreement = async () => {
   try {
@@ -666,7 +684,12 @@ const currencyProps = (item) => {
 
 <template>
   <div>
-    <v-dialog persistent v-model="dialog" class="mt-2 pa-2" @keyup.esc="isEdit ? checkUpdate() : checkAndClose()">
+    <v-dialog
+      persistent
+      v-model="dialog"
+      class="mt-2 pa-2"
+      @keyup.esc="isEdit ? checkUpdate() : checkAndClose()"
+    >
       <v-card
         style="border: 2px solid #3ab700"
         min-width="350"
@@ -687,7 +710,7 @@ const currencyProps = (item) => {
                 name="delete"
               ></Icons>
               <Icons
-              v-if="createAccess('counterparty') && isEdit"
+                v-if="createAccess('counterparty') && isEdit"
                 title="Сохранить"
                 @click="
                   isEdit && !createOnBase
@@ -698,7 +721,7 @@ const currencyProps = (item) => {
               />
             </div>
             <v-btn
-            @click="isEdit ? checkUpdate() : checkAndClose()"
+              @click="isEdit ? checkUpdate() : checkAndClose()"
               variant="text"
               title="Закрыть"
               :size="32"
@@ -707,8 +730,12 @@ const currencyProps = (item) => {
               <Icons name="close" />
             </v-btn>
           </div>
-        </div> 
-        <v-form class="d-flex w-100" :disabled="!updateAccess('counterparty') && isEdit" @submit.prevent="CreateCounterparty">
+        </div>
+        <v-form
+          class="d-flex w-100"
+          :disabled="!updateAccess('counterparty') && isEdit"
+          @submit.prevent="CreateCounterparty"
+        >
           <v-row class="w-100">
             <v-col class="d-flex flex-column w-100">
               <div class="d-flex justify-space-between ga-6">
@@ -719,7 +746,7 @@ const currencyProps = (item) => {
                   :base-color="FIELD_COLOR"
                   rounded="md"
                   variant="outlined"
-                  class="w-auto text-sm-body-1" 
+                  class="w-auto text-sm-body-1"
                   density="compact"
                   placeholder="Контрагент"
                   label="Наименование"
@@ -821,7 +848,7 @@ const currencyProps = (item) => {
               <span>Договоры</span>
               <span style="display: flex">
                 <Icons
-                v-if="removeAccess('counterparty') && isEdit"
+                  v-if="removeAccess('counterparty') && isEdit"
                   v-show="isEdit"
                   @click="compute"
                   class="mr-3"
@@ -830,7 +857,7 @@ const currencyProps = (item) => {
                 />
 
                 <Icons
-                v-if="createAccess('counterparty') && isEdit"
+                  v-if="createAccess('counterparty') && isEdit"
                   v-show="isEdit"
                   @click="openAgreementDialog"
                   name="add"
@@ -920,17 +947,21 @@ const currencyProps = (item) => {
           <div class="d-flex align-center justify-space-between">
             <div class="d-flex ga-3 align-center mt-2 me-4">
               <Icons
-              v-if="createAccess('cpAgreement') && !editAgreementDialog"
+                v-if="createAccess('cpAgreement') && !editAgreementDialog"
                 @click="
-                  editAgreementDialog   
+                  editAgreementDialog
                     ? updateCpAgreement()
                     : createCpAgreement()
                 "
-                name="save" 
+                name="save"
               />
             </div>
             <v-btn
-              @click="editAgreementDialog ? checkUpdateAgreement() : checkAndCloseAgreement()"
+              @click="
+                editAgreementDialog
+                  ? checkUpdateAgreement()
+                  : checkAndCloseAgreement()
+              "
               variant="text"
               :size="32"
               class="pt-2 pl-1"
@@ -939,7 +970,11 @@ const currencyProps = (item) => {
             </v-btn>
           </div>
         </div>
-        <v-form class="d-flex w-100" :disabled="!updateAccess('cpAgreement') && isEdit" @submit.prevent="createCpAgreement">
+        <v-form
+          class="d-flex w-100"
+          :disabled="!updateAccess('cpAgreement') && isEdit"
+          @submit.prevent="createCpAgreement"
+        >
           <v-row class="w-100">
             <v-col class="d-flex flex-column w-100">
               <div class="d-flex justify-space-between ga-6">
@@ -1105,5 +1140,4 @@ const currencyProps = (item) => {
       />
     </div>
   </div>
-
 </template>
