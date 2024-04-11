@@ -1,5 +1,5 @@
 <script setup>
-import {FIELD_COLOR} from "../../composables/constant/colors.js"
+import {BASE_COLOR, FIELD_COLOR} from "../../composables/constant/colors.js"
 
 defineProps({
   minWidth: {
@@ -19,7 +19,7 @@ defineProps({
   <v-autocomplete
       :style="[`max-width: ${maxWidth}px`, `min-width: ${minWidth}px`]"
       variant="outlined"
-      color="green"
+      :color="BASE_COLOR"
       rounded="lg"
       no-data-text="Нет данных"
       :base-color="FIELD_COLOR"

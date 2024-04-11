@@ -15,8 +15,9 @@ import cpAgreementApi from "../../api/list/counterpartyAgreement.js";
 import currencyApi from "../../api/list/currency.js";
 import procurementApi from "../../api/documents/procurement.js";
 import goodApi from "../../api/list/goods.js";
-import { addMessage } from "../../composables/constant/buttons.js";
-
+import { editMessage } from "../../composables/constant/buttons.js";
+import "../../assets/css/procurement.css";
+import {BASE_COLOR} from "../../composables/constant/colors.js";
 
 const router = useRouter()
 const route = useRoute()
@@ -65,35 +66,28 @@ const headers = ref([
 
 const getProcurementDetails = async () => {
   const { data } = await procurementApi.getById(route.params.id)
-
-  form.value = data.result
-  // form.value = {
-  //   doc_number: data.result.doc_number,
-  //   date: data.result.date,
-  //   organization: {
-  //     id: data.result.organization.id,
-  //     name: data.result.organization.name
-  //   },
-  //   counterparty: {
-  //     id: data.result.counterparty.id,
-  //     name: data.result.counterparty.name
-  //   },
-  //   cpAgreement: {
-  //     id: data.result.counterpartyAgreement.id,
-  //     name: data.result.counterpartyAgreement.name
-  //   },
-  //   storage: {
-  //     id: data.result.storage.id,
-  //     name: data.result.storage.name
-  //   },
-  //   saleInteger: data.result.saleInteger,
-  //   salePercent: data.result.salePercent,
-  //   comment: data.result.comment,
-  //   currency: {
-  //     id: data.result.currency.id,
-  //     name: data.result.currency.name
-  //   }
-  // }
+  form.doc_number = data.result.doc_number
+  form.date = data.result.date
+  form.organization = {
+    id: data.result.organization.id,
+    name: data.result.organization.name
+  }
+  form.counterparty = {
+    id: data.result.counterparty.id,
+    name: data.result.counterparty.name
+  }
+  form.cpAgreement = {
+    id: data.result.counterpartyAgreement.id,
+    name: data.result.counterpartyAgreement.name
+  }
+  form.storage = {
+    id: data.result.storage.id,
+    name: data.result.storage.name
+  }
+  form.saleInteger = data.result.saleInteger
+  form.salePercent = data.result.salePercent
+  form.comment = data.result.comment
+  form.currency = data.result.currency
 }
 
 const getOrganizations = async () => {
@@ -164,7 +158,7 @@ const validateItem = (item) => {
   return false
 }
 
-const addNewProcurement = async () => {
+const updateProcurement = async () => {
   if (validate(form.date, form.organization, form.counterparty, form.cpAgreement, form.storage, form.currency) !== true) return
 
   const missingData = goods.value.some(validateItem)
@@ -172,10 +166,10 @@ const addNewProcurement = async () => {
 
   const body = {
     date: form.date,
-    organization_id: form.organization,
-    counterparty_id: form.counterparty,
-    counterparty_agreement_id: form.cpAgreement,
-    storage_id: form.storage ,
+    organization_id: typeof form.organization === 'object' ? form.organization.id : form.organization,
+    counterparty_id: typeof form.counterparty === 'object' ? form.counterparty.id : form.counterparty,
+    counterparty_agreement_id: typeof form.cpAgreement === 'object' ? form.cpAgreement.id : form.cpAgreement,
+    storage_id: typeof form.storage === 'object' ? form.storage.id : form.storage,
     saleInteger: Number(form.saleInteger),
     salePercent: Number(form.salePercent),
     currency_id: typeof form.currency === 'object' ? form.currency.id : form.currency,
@@ -187,9 +181,9 @@ const addNewProcurement = async () => {
  }
 
  try {
-   const res = await procurementApi.add(body)
-   if (res.status === 201) {
-     showToast(addMessage)
+   const res = await procurementApi.update(route.params.id ,body)
+   if (res.status === 200) {
+     showToast(editMessage)
      router.push('/procurementOfGoods')
    }
  } catch (e) {
@@ -238,12 +232,12 @@ onMounted( () => {
 })
 
 
-watch(() => form.counterparty, async (id) => {
+watch(() => form.counterparty, async (data) => {
   form.cpAgreement = null
 
+  const id = typeof data === 'object' ? data.id : data
   try {
     const res = await cpAgreementApi.getById(id)
-
     form.currency = {
       id: res.data.result.currency_id.id,
       name: res.data.result.currency_id.name
@@ -276,21 +270,20 @@ watch(() => form.salePercent, (newValue) => {
 
 </script>
 <template>
-  <div>
+  <div class="document">
     <v-col>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Покупка (создание) {{ form }}</span>
+          <span>Покупка (просмотр)</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="addNewProcurement" name="add"/>
+              <Icons title="Добавить" @click="updateProcurement" name="add"/>
               <Icons title="Скопировать" @click="" name="copy"/>
               <Icons title="Удалить" @click="" name="delete"/>
             </div>
           </div>
-
         </v-card>
       </div>
     </v-col>
@@ -310,7 +303,7 @@ watch(() => form.salePercent, (newValue) => {
         </div>
       </v-col>
       <v-col>
-        <div style="border: 1px solid #0FC242" class="rounded">
+        <div :style="`border: 1px solid ${BASE_COLOR}`" class="rounded">
           <div class="d-flex pa-1 ga-1">
             <Icons name="add" title="Добавить поле" @click="increaseCountOfGoods"/>
             <Icons name="delete" @click="decreaseCountOfGoods"/>
@@ -360,14 +353,14 @@ watch(() => form.salePercent, (newValue) => {
                 </tr>
               </template>
             </v-data-table>
-            <div class="py-2 w-100" style="border-top: 1px solid #0FC242">
+            <div class="py-2 w-100" :style="`border-top: 1px solid ${BASE_COLOR}`">
               <span class="ml-15">Итого Количество: {{ goods.length }}</span>
             </div>
           </div>
         </div>
         <div class="d-flex justify-space-between w-100 mt-2 bottomField">
           <div class="d-flex ga-10">
-            <custom-text-field readonly :value="author"  min-width="140" max-width="110"/>
+            <custom-text-field readonly :value="author" min-width="140" max-width="110"/>
             <custom-text-field label="Комментарий" v-model="form.comment" min-width="310"/>
           </div>
           <div class="d-flex ga-6">
@@ -382,5 +375,5 @@ watch(() => form.salePercent, (newValue) => {
 </template>
 
 <style scoped>
-@import "../../assets/css/procurement.css";
+
 </style>

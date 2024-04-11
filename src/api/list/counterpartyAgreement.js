@@ -7,7 +7,7 @@ export default {
   update(id, data) {
     return api.patch(`/cpAgreement/${id}`, data);
   },
-  get({ page = 1, itemsPerPage = 10, sortBy }, search = "") {
+  get({ page = 1, itemsPerPage = 10, sortBy } = {}, search = "") {
     const params = buildParams(page, itemsPerPage, sortBy, search);
     return api.get("/cpAgreement", { params });
   },
