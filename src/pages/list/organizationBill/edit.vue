@@ -81,7 +81,7 @@ onMounted(async () => {
   <div>
     <v-card  class="block">
     <div class="d-flex justify-end mb-4">
-      <v-btn rounded="lg" color="info" @click="$router.push({name: 'organizationBill'})">Назад</v-btn>
+      <v-btn rounded="lg" :color="BASE_COLOR" @click="$router.push({name: 'organizationBill'})">Назад</v-btn>
     </div>
     <div>
 
@@ -93,7 +93,7 @@ onMounted(async () => {
       </div>
 
       <div class="d-flex justify-end mt-4">
-        <v-btn rounded="lg" color="info" @click="update()">Обновить</v-btn>
+        <v-btn rounded="lg" :color="BASE_COLOR" @click="update()">Обновить</v-btn>
       </div>
     </div>
     </v-card>

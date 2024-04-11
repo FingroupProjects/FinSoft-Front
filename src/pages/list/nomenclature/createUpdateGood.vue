@@ -11,7 +11,7 @@ import { useRoute, useRouter } from "vue-router";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import { addMessage, editMessage } from "../../../composables/constant/buttons";
 import validate from "./validate";
-import { FIELD_COLOR } from "../../../composables/constant/colors.js";
+import { FIELD_COLOR, BASE_COLOR } from "../../../composables/constant/colors.js";
 import {
   createAccess,
   readAccess,
@@ -373,7 +373,7 @@ onMounted(async () => {
               <v-text-field
                 v-model="name"
                 :rules="isValid ? [rules.required] : []"
-                color="green"
+                :color="BASE_COLOR"
                 rounded="md"
                 variant="outlined"
                 class="w-auto text-sm-body-1"
@@ -390,7 +390,7 @@ onMounted(async () => {
               <v-text-field
                 v-model="vendor_code"
                 :rules="isValid ? [rules.required] : []"
-                color="green"
+                :color="BASE_COLOR"
                 rounded="md"
                 variant="outlined"
                 class="w-auto text-sm-body-1"
@@ -451,8 +451,8 @@ onMounted(async () => {
                     item-title="name"
                     item-value="id"
                     :items="storages"
-                    color="green"
-                    hide-details
+                    :color="BASE_COLOR"
+                    hide-zdetails
                     :base-color="FIELD_COLOR"
                   />
                   <v-autocomplete
@@ -465,7 +465,7 @@ onMounted(async () => {
                     item-title="name"
                     item-value="id"
                     :items="units"
-                    color="green"
+                    :color="BASE_COLOR"
                     hide-details
                     :base-color="FIELD_COLOR"
                   />
@@ -479,7 +479,7 @@ onMounted(async () => {
                     item-title="name"
                     item-value="id"
                     :items="groups"
-                    color="green"
+                    :color="BASE_COLOR"
                     hide-details
                     :base-color="FIELD_COLOR"
                   />
@@ -489,10 +489,10 @@ onMounted(async () => {
                 v-model="description"
                 variant="outlined"
                 label="Описание"
-                color="green"
+                :color="BASE_COLOR"
                 :base-color="FIELD_COLOR"
               />
-              <div style="border: 1px solid #3ab700; border-radius: 8px">
+              <div :style="`border: 2px solid ${BASE_COLOR}`" style="border-radius: 8px">
                 <barcode :isCreated="isCreated" :id="id" :isEdit="isEdit"/>
               </div>
             </v-col>

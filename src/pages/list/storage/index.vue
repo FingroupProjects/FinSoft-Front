@@ -22,7 +22,7 @@ import Icons from "@/composables/Icons/Icons.vue";
 
 import {restoreMessage} from "../../../composables/constant/buttons.js";
 import storageGroup from "../../../api/list/storageGroup.js";
-import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
+import {FIELD_COLOR, FIELD_OF_SEARCH,   BASE_COLOR} from "../../../composables/constant/colors.js";
 import validate from "./validate.js";
 import debounce from "lodash.debounce";
 
@@ -878,7 +878,7 @@ onMounted(async () => {
                   density="default"
                   placeholder="Поиск..."
                   variant="outlined"
-                  color="info"
+                  :color="BASE_COLOR"
                   :base-color="FIELD_OF_SEARCH"
                   rounded="lg"
                   hide-details
@@ -1015,7 +1015,7 @@ onMounted(async () => {
 
       <v-card>
         <v-dialog persistent class="mt-2 pa-2" v-model="dialog" @keyup.esc="isExistsStorage ? checkUpdate() : checkAndClose()">
-          <v-card style="border: 2px solid #3AB700" max-width="600"
+          <v-card :style="`border: 2px solid ${BASE_COLOR}`" max-width="600"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
               <span>{{ isExistsStorage ? 'Склад: ' + storageInDialogTitle : 'Добавление' }}</span>
@@ -1041,7 +1041,7 @@ onMounted(async () => {
                   <v-text-field
                       v-model="nameRef"
                       :rules="[rules.required]"
-                      color="green"
+                      :color="BASE_COLOR"
                       :base-color="FIELD_COLOR"
                       variant="outlined"
                       class="w-auto text-sm-body-1"
@@ -1057,9 +1057,9 @@ onMounted(async () => {
                       no-data-text="Нет данных"
                       label="Выберите организацию"
                       :base-color="FIELD_COLOR"
-                      color="green"
+                      :color="BASE_COLOR"
                       :disabled="isOrganizationFieldDisabled"
-                      item-color="green"
+                      item-:color="BASE_COLOR"
                       v-model="organization"
                       :items="organizations"
                       item-title="name"
@@ -1072,8 +1072,8 @@ onMounted(async () => {
                       item-title="name"
                       item-value="id"
                       :base-color="FIELD_COLOR"
-                      color="green"
-                      item-color="green"
+                      :color="BASE_COLOR"
+                      item-:color="BASE_COLOR"
                       :rules="[rules.required]"
                       variant="outlined"
                       label="Группа"
@@ -1082,9 +1082,9 @@ onMounted(async () => {
               </v-row>
             </v-form>
 
-            <v-card class="table" style="border: 1px solid #3AB700">
+            <v-card class="table" :style="`border: 2px solid ${BASE_COLOR}`">
               <div v-if="isExistsStorage" class="d-flex w-100 rounded-t-lg mb-1 align-center"
-                   style="border-bottom: 1px solid #3AB700">
+              :style="`border-bottom: 2px solid ${BASE_COLOR}`">
                 <div class="d-flex justify-end w-100 ga-2 pt-1 me-2" style="padding-top: 4px !important;">
                   <Icons v-if="createAccess('storage') && !isExistsStorage" @click="dataDialog = true" name="add"/>
                 </div>
@@ -1145,7 +1145,7 @@ onMounted(async () => {
 
         <!--  addStorageData    -->
         <v-dialog persistent v-model="dataDialog" activator="parent">
-          <v-card style="border: 2px solid #3AB700" min-width="400"
+          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="400"
                   class="d-flex  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center pr-5 pt-3">
               <span class="pl-5">{{ isExistsStorageData ? 'Изменить' : 'Добавить' }} сотрудника</span>
@@ -1167,7 +1167,7 @@ onMounted(async () => {
                       variant="outlined"
                       label="Выберите сотрудника"
                       no-data-text="нет данных"
-                      color="green"
+                      :color="BASE_COLOR"
                       :base-color="FIELD_COLOR"
                       v-model="employeeAdd"
                       :items="employees"
@@ -1179,7 +1179,7 @@ onMounted(async () => {
                       :rules="[rules.required]"
                       type="date"
                       label="Дата начало"
-                      color="green"
+                      :color="BASE_COLOR"
                       :base-color="FIELD_COLOR"
                       variant="outlined"
                       density="compact"
@@ -1190,7 +1190,7 @@ onMounted(async () => {
                       :rules="[rules.required]"
                       type="date"
                       label="Дата конец"
-                      color="green"
+                      :color="BASE_COLOR"
                       :base-color="FIELD_COLOR"
                       variant="outlined"
                       density="compact"
@@ -1204,7 +1204,7 @@ onMounted(async () => {
       </v-card>
       <v-card>
         <v-dialog persistent class="mt-2 pa-2" v-model="groupDialog" @keyup.esc="groupDialog = false">
-          <v-card style="border: 2px solid #3AB700" min-width="350"
+          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="350"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
               <span>{{isExistsGroup ? 'Изменить' : 'Создать'}} группу</span>
@@ -1226,7 +1226,7 @@ onMounted(async () => {
                   <v-text-field
                       v-model="groupName"
                       :rules="[rules.required]"
-                      color="green"
+                      :color="BASE_COLOR"
                       :base-color="FIELD_COLOR"
                       variant="outlined"
                       class="w-auto text-sm-body-1"
@@ -1244,7 +1244,7 @@ onMounted(async () => {
       </v-card>
 
       <v-dialog persistent class="mt-2 pa-2" v-model="filterDialog" @keyup.esc="closeFilterDialog">
-        <v-card style="border: 2px solid #3AB700" min-width="450"
+        <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="450"
                 class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
           <div class="d-flex justify-space-between align-center mb-2">
             <span>Фильтр</span>
@@ -1254,7 +1254,7 @@ onMounted(async () => {
               <v-col class="d-flex flex-column w-100">
                 <v-text-field
                     v-model="filterForm.name"
-                    color="green"
+                    :color="BASE_COLOR"
                     :base-color="FIELD_COLOR"
                     variant="outlined"
                     class="w-auto text-sm-body-1"
@@ -1270,8 +1270,8 @@ onMounted(async () => {
                     label="Выберите организацию"
                     no-data-text="Нет данных"
                     :base-color="FIELD_COLOR"
-                    color="green"
-                    item-color="green"
+                    :color="BASE_COLOR"
+                    item-:color="BASE_COLOR"
                     v-model="filterForm.organization_id"
                     :items="organizations"
                     item-title="name"
@@ -1284,14 +1284,14 @@ onMounted(async () => {
                     item-title="name"
                     item-value="id"
                     :base-color="FIELD_COLOR"
-                    color="green"
-                    item-color="green"
+                    :color="BASE_COLOR"
+                    item-:color="BASE_COLOR"
                     variant="outlined"
                     label="Сотрудник"
                 />
                 <div class="d-flex justify-end ga-2">
                   <v-btn color="red" class="btn" @click="closeFilterDialog">сбросить</v-btn>
-                  <v-btn color="green" class="btn"  @click="getStoragesFromTheGroup">применить</v-btn>
+                  <v-btn :color="BASE_COLOR" class="btn"  @click="getStoragesFromTheGroup">применить</v-btn>
                 </div>
               </v-col>
             </v-row>

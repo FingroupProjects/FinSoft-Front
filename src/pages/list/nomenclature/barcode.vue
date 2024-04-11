@@ -13,7 +13,7 @@ import {
   addMessage,
   editMessage,
 } from "../../../composables/constant/buttons.js";
-import { FIELD_COLOR } from "../../../composables/constant/colors.js";
+import { FIELD_COLOR, BASE_COLOR } from "../../../composables/constant/colors.js";
 import {
   createAccess,
   readAccess,
@@ -323,7 +323,7 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
     <!-- Creata barcode -->
     <v-dialog persistent v-model="addBarcode" max-width="400px">
       <v-card
-        style="border: 2px solid #3ab700"
+        :style="`border: 2px solid ${BASE_COLOR}`"
         min-width="350"
         class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
         rounded="xl"
@@ -357,7 +357,7 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
                 autofocus
                 v-model="barcode"
                 :rules="isValid ? [rules.required] : []"
-                color="green"
+                :color="BASE_COLOR"
                 rounded="md"
                 variant="outlined"
                 class="w-auto text-sm-body-1"

@@ -4,7 +4,7 @@ import {useRouter} from "vue-router";
 import showToast from '../../composables/toast'
 import Icons from "../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../components/checkbox/CustomCheckbox.vue";
-import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../composables/constant/colors.js";
+import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH} from "../../composables/constant/colors.js";
 import {
   removeMessage,
   warningMessage,
@@ -212,7 +212,7 @@ watch(search, debounce((newValue) => {
                   density="compact"
                   label="Поиск..."
                   variant="outlined"
-                  color="info"
+                  :color="BASE_COLOR"
                   rounded="lg"
                   :base-color="FIELD_OF_SEARCH"
                   clear-icon="close"
@@ -301,7 +301,7 @@ watch(search, debounce((newValue) => {
 
       <v-card>
         <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup.esc="closeFilterModal">
-          <v-card style="border: 2px solid #3AB700" min-width="450"
+          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="450"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
               <span>Фильтр</span>
@@ -311,7 +311,7 @@ watch(search, debounce((newValue) => {
                 <v-col class="d-flex flex-column w-100">
                   <v-text-field
                       v-model="filterForm.name"
-                      color="green"
+                      :color="BASE_COLOR"
                       rounded="md"
                       :base-color="FIELD_COLOR"
                       variant="outlined"
@@ -325,7 +325,7 @@ watch(search, debounce((newValue) => {
                   />
                   <div class="d-flex justify-end ga-2">
                     <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-                    <v-btn color="green" class="btn"  @click="getProcurementData">применить</v-btn>
+                    <v-btn :color="BASE_COLOR" class="btn"  @click="getProcurementData">применить</v-btn>
                   </div>
                 </v-col>
               </v-row>

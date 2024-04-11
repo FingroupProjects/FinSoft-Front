@@ -4,6 +4,7 @@ import groupApi from "../../../api/list/goodGroup";
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
+import { FIELD_COLOR, BASE_COLOR } from "../../../composables/constant/colors.js";
 import {
   addMessage,
   editMessage,
@@ -153,7 +154,7 @@ const rules = {
     <v-col>
       <v-dialog persistent v-model="dialog" class="mt-2 pa-2" @keyup.esc="$emit('toggleDialog')">
         <v-card
-          style="border: 2px solid #3ab700"
+         :style="`border: 2px solid ${BASE_COLOR}`"
           min-width="350"
           class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
           rounded="xl"
@@ -206,7 +207,7 @@ const rules = {
                 <v-text-field
                   v-model="name"
                   :rules="isValid ? [rules.required] : []"
-                  color="green"
+                  :color="BASE_COLOR"
                   rounded="md"
                   variant="outlined"
                   class="w-auto text-sm-body-1"
@@ -234,7 +235,7 @@ const rules = {
                 </div>
                 <div v-if="isFilter" class="d-flex justify-end ga-2 mt-2">
                   <v-btn color="red" class="btn">сбросить</v-btn>
-                  <v-btn color="green" class="btn">применить</v-btn>
+                  <v-btn :color="BASE_COLOR" class="btn">применить</v-btn>
                 </div>
               </v-col>
             </v-row>

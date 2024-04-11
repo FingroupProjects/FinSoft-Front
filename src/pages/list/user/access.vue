@@ -244,7 +244,7 @@ onMounted(() => {
   <div>
     <v-col>
       <div class="d-flex justify-end mb-1">
-        <v-btn @click="applyAccess()" color="green">ПРИМЕНИТЬ</v-btn>
+        <v-btn @click="applyAccess()" :color="BASE_COLOR">ПРИМЕНИТЬ</v-btn>
       </div>
       <div class="d-flex ga-4 w-100">
         <v-card class="table mt-2 w-100">
