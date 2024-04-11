@@ -1,5 +1,5 @@
 <script setup>
-import {onMounted, ref, watch} from "vue";
+import {onMounted, ref, watch, computed} from "vue";
 import {useRouter} from "vue-router";
 import showToast from '@/composables/toast'
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
@@ -89,6 +89,17 @@ const rules = {
 const toggleModal = () => {
   showModal.value = !showModal.value;
 }
+
+const isOrganizationFieldDisabled = computed(() => {
+  return !createAccess('organizations') && !updateAccess('organizations');
+});
+
+const isEmployeeFieldDisabled = computed(() => {
+  return !createAccess('employees') && !updateAccess('employees');
+});
+const isCurrencyFieldDisabled = computed(() => {
+  return !createAccess('currencies') && !updateAccess('currencies');
+});
 
 const isDataChanged = () => {
   const item = cashRegisters.value.find(item => item.id === idCashRegister.value);
@@ -591,7 +602,7 @@ onMounted(() => {
                         style="max-width: 50%; min-width: 50%;"
                         variant="outlined"
                         :color="BASE_COLOR"
-                        
+                        :disabled="isCurrencyFieldDisabled"
                         hide-details
                         :base-color="FIELD_COLOR"
                         label="Валюта"
@@ -607,6 +618,7 @@ onMounted(() => {
                         hide-details
                         no-data-text="нет данных"
                         :color="BASE_COLOR"
+                        :disabled="isEmployeeFieldDisabled"
                         :base-color="FIELD_COLOR"
                         label="Ответственное лицо"
                         v-model="employeeAdd"
@@ -622,6 +634,7 @@ onMounted(() => {
                       no-data-text="нет данных"
                       label="Организация"
                       hide-details
+                      :disabled="isOrganizationFieldDisabled"
                       v-model="organizationAdd"
                       :items="organizations"
                       :base-color="FIELD_COLOR"

@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, ref } from "vue";
-import documentHistoryApi from "../../api/documentHistory";
+import documentHistoryApi from "../../api/documents/documentHistory";
 import showDate from "../../composables/date/showDate";
 
 const id = ref("96555f8f-c29d-4117-be3a-04b75a0cdff7");
@@ -27,11 +27,7 @@ onMounted(async () => {
   <div>
     <h2 class="ml-4 mt-4">История документа : Документ</h2>
     <v-col class="d-flex flex-column ga-4">
-      <v-card
-        class="pa-4 rounded-xl"
-        v-for="item in historyDoc"
-        :key="item"
-      >
+      <v-card class="pa-4 rounded-xl" v-for="item in historyDoc" :key="item">
         <div class="w-100" style="border-bottom: 2px solid #aeec92">
           <h3>{{ item.status }}</h3>
         </div>

@@ -8,4 +8,7 @@ export default {
   add(data) {
     return api.post("/document/client/purchase", data);
   },
+  show(id) {
+    return api.get(`/document/provider/show/${id}`);
+  },
 };
