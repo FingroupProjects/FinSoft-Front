@@ -264,7 +264,7 @@ watch(search, debounce((newValue) => {
             <tr
                 @mouseenter="hoveredRowIndex = index"
                 @mouseleave="hoveredRowIndex = null"
-                @dblclick=""
+                @dblclick="$router.push(`/procurementOfGoods/${item.id}`)"
                 :class="{'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
               <td>
