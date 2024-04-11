@@ -61,10 +61,10 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="">
-    <div class="panel align-start ga-10 pa-4">
+  <div style="background-color: #F2FAFF; width: 300px;">
+    <div class="title">
       <div v-for="list in filteredLists" :key="list.id">
-        <h3 class="text-uppercase mb-4">{{ list.title }}</h3>
+        <h3 class="text-uppercase">{{ list.title }}</h3>
         <ul class="list">
           <li
             class="d-flex align-center ga-4"
@@ -79,7 +79,7 @@ onMounted(() => {
       </div>
       <div>
         <div class="mb-10" nav v-for="admin in filteredAdmins" :key="admin.id">
-          <h3 class="text-uppercase mb-4">{{ admin.title }}</h3>
+          <h3 class="text-uppercase">{{ admin.title }}</h3>
           <ul class="list">
             <li class="d-flex align-center ga-4">
               <span class="cursor-pointer" @click="push(admin)">
@@ -104,10 +104,14 @@ onMounted(() => {
   border-radius: 50px;
 }
 
-.panel {
-  display: grid;
-  grid-template-columns: repeat(3, 2fr);
+.title {
+  color: #848484;
+  font-size: 16px;
+  font-family: "Inter", sans-serif;
+  font-weight: 300;
 }
+
+
 
 ul {
   list-style: none;
@@ -120,7 +124,6 @@ ul {
 
 li {
   padding: 8px 10px;
-  font-size: 18px;
 }
 
 span:hover {
