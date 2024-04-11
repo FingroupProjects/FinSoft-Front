@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import programSettingsApi from "../../api/list/programSettingsApi.js";
-import { FIELD_COLOR } from "../../composables/constant/colors";
+import { FIELD_COLOR , BASE_COLOR } from "../../composables/constant/colors";
 
 const name = ref("");
 const loading = ref(false);
@@ -44,12 +44,12 @@ onMounted(async () => {
           :base-color="FIELD_COLOR"
           variant="outlined"
           v-model="name"
-          color="green"
+          :color="BASE_COLOR"
           rounded="lg"
           autofocus
         />
       </div>
-      <v-btn :disabled="loading" color="green" @click="nameOrganization()"
+      <v-btn :disabled="loading" :color="BASE_COLOR" @click="nameOrganization()"
         >Добавить</v-btn
       >
     </v-col>
