@@ -16,7 +16,8 @@ import currencyApi from "../../api/list/currency.js";
 import procurementApi from "../../api/documents/procurement.js";
 import goodApi from "../../api/list/goods.js";
 import { addMessage } from "../../composables/constant/buttons.js";
-
+import "../../assets/css/procurement.css";
+import {BASE_COLOR} from "../../composables/constant/colors.js";
 
 
 const router = useRouter()
@@ -271,7 +272,7 @@ watch(() => form.salePercent, (newValue) => {
         </div>
       </v-col>
       <v-col>
-        <div style="border: 1px solid #0FC242" class="rounded">
+        <div :style="`border: 1px solid ${BASE_COLOR}`" class="rounded">
           <div class="d-flex pa-1 ga-1">
             <Icons name="add" title="Добавить поле" @click="increaseCountOfGoods"/>
             <Icons name="delete" @click="decreaseCountOfGoods"/>
@@ -321,7 +322,7 @@ watch(() => form.salePercent, (newValue) => {
                 </tr>
               </template>
             </v-data-table>
-            <div class="py-2 w-100" style="border-top: 1px solid #0FC242">
+            <div class="py-2 w-100" :style="`border-top: 1px solid ${BASE_COLOR}`">
               <span class="ml-15">Итого Количество: {{ goods.length }}</span>
             </div>
           </div>
@@ -343,5 +344,5 @@ watch(() => form.salePercent, (newValue) => {
 </template>
 
 <style scoped>
-@import "../../assets/css/procurement.css";
+
 </style>
