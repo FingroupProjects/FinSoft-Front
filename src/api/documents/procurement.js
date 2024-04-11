@@ -9,6 +9,9 @@ export default {
     return api.post('/document/provider/purchase', data)
   },
   getById(id) {
-    return api.get(`/document/provider/show/${id}`)
-  }
+    return api.get(`/document/show/${id}`)
+  },
+  update(id, data) {
+    return api.patch(`/document/update/${id}`, data)
+  },
 }
