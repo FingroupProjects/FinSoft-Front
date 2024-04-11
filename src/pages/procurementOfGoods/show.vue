@@ -16,7 +16,6 @@ import currencyApi from "../../api/list/currency.js";
 import procurementApi from "../../api/documents/procurement.js";
 import goodApi from "../../api/list/goods.js";
 import { addMessage } from "../../composables/constant/buttons.js";
-import '../../assets/css/procurement.css'
 
 
 const router = useRouter()
@@ -66,7 +65,7 @@ const headers = ref([
 
 const getProcurementDetails = async () => {
   const { data } = await procurementApi.getById(route.params.id)
-  console.log(data)
+
   form.value = data.result
   // form.value = {
   //   doc_number: data.result.doc_number,
@@ -383,4 +382,5 @@ watch(() => form.salePercent, (newValue) => {
 </template>
 
 <style scoped>
+@import "../../assets/css/procurement.css";
 </style>

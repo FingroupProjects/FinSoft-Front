@@ -1,19 +1,16 @@
-.v-input__details {
+.document .v-input__details {
   display: none !important;
 }
-.v-data-table-footer {
+.document .v-data-table-footer {
   display: none !important;
 }
-.v-table > .v-table__wrapper > table > tbody > tr > td, .v-table > .v-table__wrapper > table > thead > tr > td, .v-table > .v-table__wrapper > table > tfoot > tr > td {
+.document .v-table > .v-table__wrapper > table > tbody > tr > td, .v-table > .v-table__wrapper > table > thead > tr > td, .v-table > .v-table__wrapper > table > tfoot > tr > td {
   height: 45px !important;
   padding-top: 4px;
   padding-bottom: 4px;
   width: 50px !important;
 }
-body {
-  overflow: hidden !important;
-}
 
-.bottomField .v-field__input {
+.document .bottomField .v-field__input {
   font-size: 12px !important;
 }

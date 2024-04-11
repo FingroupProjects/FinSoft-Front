@@ -16,7 +16,7 @@ import currencyApi from "../../api/list/currency.js";
 import procurementApi from "../../api/documents/procurement.js";
 import goodApi from "../../api/list/goods.js";
 import { addMessage } from "../../composables/constant/buttons.js";
-import '../../assets/css/procurement.css'
+
 
 
 const router = useRouter()
@@ -237,7 +237,7 @@ watch(() => form.salePercent, (newValue) => {
 
 </script>
 <template>
-  <div>
+  <div class="document">
     <v-col>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
@@ -343,4 +343,5 @@ watch(() => form.salePercent, (newValue) => {
 </template>
 
 <style scoped>
+@import "../../assets/css/procurement.css";
 </style>
