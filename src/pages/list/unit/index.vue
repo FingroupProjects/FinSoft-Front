@@ -6,7 +6,7 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import unit from '../../../api/list/units.js'
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import validate from "../unit/validate";
-import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
+import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 import {
   addMessage,
   editMessage,
@@ -362,7 +362,7 @@ onMounted(() => {
                   density="compact"
                   label="Поиск..."
                   variant="outlined"
-                  color="info"
+                  :color="BASE_COLOR"
                   rounded="lg"
                   clear-icon="close"
                   :base-color="FIELD_OF_SEARCH"
@@ -448,7 +448,7 @@ onMounted(() => {
       <!-- Modal -->
       <v-card>
         <v-dialog persistent class="mt-2 pa-2" v-model="dialog" @keyup.esc="isExistsUnit ? checkUpdate() : checkAndClose()">
-          <v-card style="border: 2px solid #3AB700" min-width="400" min-height="150"
+          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="400" min-height="150"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
               <span>{{ isExistsUnit ? unitInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
@@ -474,7 +474,7 @@ onMounted(() => {
                   <v-text-field
                       v-model="nameRef"
                       :rules="[rules.required]"
-                      color="green"
+                      :color="BASE_COLOR"
                       rounded="lg"
                       variant="outlined"
                       :base-color="FIELD_COLOR"
@@ -495,7 +495,7 @@ onMounted(() => {
 
       <v-card>
         <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup.esc="closeFilterModal">
-          <v-card style="border: 2px solid #3AB700" min-width="400" min-height="150"
+          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="400" min-height="150"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
               <span>Фильтр</span>
@@ -505,7 +505,7 @@ onMounted(() => {
                 <v-col class="d-flex flex-column w-100">
                   <v-text-field
                       v-model="filterForm.name"
-                      color="green"
+                      :color="BASE_COLOR"
                       rounded="lg"
                       variant="outlined"
                       :base-color="FIELD_COLOR"
@@ -519,7 +519,7 @@ onMounted(() => {
                   />
                   <div class="d-flex justify-end ga-2">
                   <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-                  <v-btn color="green" class="btn"  @click="getUnitData">применить</v-btn>
+                  <v-btn :color="BASE_COLOR" class="btn"  @click="getUnitData">применить</v-btn>
                 </div>
                 </v-col>
               </v-row>

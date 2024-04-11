@@ -340,6 +340,8 @@ watch(search, debounce((newValue) => {
 </template>
 
 <style scoped>
+@import "../../assets/css/procurement.css";
+
 .filterElement {
   position: relative;
 }

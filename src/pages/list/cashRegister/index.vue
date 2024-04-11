@@ -10,7 +10,7 @@ import employee from '../../../api/list/employee.js';
 import validate from "./validate.js"
 import {createAccess, removeAccess, updateAccess} from "../../../composables/access/access.js";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
-import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
+import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 import {
   addMessage,
   editMessage,
@@ -454,7 +454,7 @@ onMounted(() => {
                   density="compact"
                   label="Поиск..."
                   variant="outlined"
-                  color="info"
+                  :color="BASE_COLOR"
                   rounded="lg"
                   clear-icon="close"
                   :base-color="FIELD_OF_SEARCH"
@@ -538,7 +538,7 @@ onMounted(() => {
       <!-- Modal -->
       <v-card>
         <v-dialog persistent class="mt-2 pa-2" v-model="dialog" @keyup.esc="isExistsCashRegister ? checkUpdate() : checkAndClose()">
-          <v-card style="border: 2px solid #3AB700" min-width="500"
+          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="500"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
               <span>Касса: {{ isExistsCashRegister ? cashRegisterInDialogTitle : 'Добавление' }}</span>
@@ -565,7 +565,7 @@ onMounted(() => {
                     <v-text-field
                         v-model="nameRef"
                         :rules="[rules.required]"
-                        color="green"
+                        :color="BASE_COLOR"
                         :base-color="FIELD_COLOR"
                         rounded="md"
                         variant="outlined"
@@ -590,7 +590,7 @@ onMounted(() => {
                     <v-autocomplete
                         style="max-width: 50%; min-width: 50%;"
                         variant="outlined"
-                        color="green"
+                        :color="BASE_COLOR"
                         
                         hide-details
                         :base-color="FIELD_COLOR"
@@ -606,7 +606,7 @@ onMounted(() => {
                         variant="outlined"
                         hide-details
                         no-data-text="нет данных"
-                        color="green"
+                        :color="BASE_COLOR"
                         :base-color="FIELD_COLOR"
                         label="Ответственное лицо"
                         v-model="employeeAdd"
@@ -618,7 +618,7 @@ onMounted(() => {
                   </div>
                   <v-autocomplete
                       variant="outlined"
-                      color="green"
+                      :color="BASE_COLOR"
                       no-data-text="нет данных"
                       label="Организация"
                       hide-details
@@ -640,7 +640,7 @@ onMounted(() => {
       </v-card>
       <v-card>
         <v-dialog persistent class="mt-2 pa-2" v-model="showFilterModal">
-          <v-card style="border: 2px solid #3AB700" min-width="500"
+          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="500"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
               <span>Фильтр</span>
@@ -650,7 +650,7 @@ onMounted(() => {
                 <v-col class="d-flex flex-column w-100 ga-4">
                   <v-text-field
                       v-model="filterForm.name"
-                      color="green"
+                      :color="BASE_COLOR"
                       rounded="md"
                       :base-color="FIELD_COLOR"
                       hide-details
@@ -665,7 +665,7 @@ onMounted(() => {
                   <div class="d-flex ga-4">
                     <v-autocomplete
                         no-data-text="Нет данных"
-                        color="green"
+                        :color="BASE_COLOR"
                         style="max-width: 50%; min-width: 50%;"
                         variant="outlined"
                         hide-details
@@ -679,7 +679,7 @@ onMounted(() => {
                     <v-autocomplete
                       style="max-width: 47%; min-width: 46%;"
                         variant="outlined"
-                        color="green"
+                        :color="BASE_COLOR"
                         no-data-text="нет данных"
                         :base-color="FIELD_COLOR"
                         hide-details
@@ -693,7 +693,7 @@ onMounted(() => {
                   </div>
                   <v-autocomplete
                       variant="outlined"
-                      color="green"
+                      :color="BASE_COLOR"
                       no-data-text="нет данных"
                       label="Организация"
                       hide-details
@@ -704,7 +704,7 @@ onMounted(() => {
                   />
                   <div class="d-flex justify-end ga-2">
                   <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-                  <v-btn color="green" class="btn"  @click="getcashRegisterData">применить</v-btn>
+                  <v-btn :color="BASE_COLOR" class="btn"  @click="getcashRegisterData">применить</v-btn>
                 </div>
                 </v-col>
               </v-row>
