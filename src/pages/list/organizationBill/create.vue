@@ -80,7 +80,7 @@ onMounted(() => {
 <template>
   <div>
     <div class="d-flex justify-end mb-4">
-      <v-btn rounded="lg" color="info" @click="$router.push({name: 'organizationBill'})">Назад</v-btn>
+      <v-btn rounded="lg" :color="BASE_COLOR" @click="$router.push({name: 'organizationBill'})">Назад</v-btn>
     </div>
     <div class="block">
 
@@ -93,7 +93,7 @@ onMounted(() => {
       </div>
 
       <div class="d-flex justify-end mt-4">
-        <v-btn rounded="lg" color="info" @click="create()">Создать</v-btn>
+        <v-btn rounded="lg" :color="BASE_COLOR" @click="create()">Создать</v-btn>
       </div>
     </div>
   </div>

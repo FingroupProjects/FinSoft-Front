@@ -10,7 +10,7 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showDate from "../../../composables/date/showDate.js";
 import validate from "./validate.js";
 import {createAccess, removeAccess, updateAccess} from "../../../composables/access/access.js";
-import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
+import {FIELD_COLOR, FIELD_OF_SEARCH , BASE_COLOR} from "../../../composables/constant/colors.js";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import {
   addMessage,
@@ -469,7 +469,7 @@ onMounted(() => {
                   density="compact"
                   label="Поиск..."
                   variant="outlined"
-                  color="info"
+                  :color="BASE_COLOR"
                   rounded="lg"
                   clear-icon="close"
                   hide-details
@@ -561,7 +561,7 @@ onMounted(() => {
       <v-card>
         <v-dialog persistent class="mt-2 pa-2" v-model="dialog" @keyup.esc="isExistsOrganizationBill ? checkUpdate() : checkAndClose()">
           <v-card
-              style="border: 2px solid #3ab700"
+            :style="`border: 2px solid ${BASE_COLOR}`"
               min-width="600"
               class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
               rounded="xl"
@@ -599,7 +599,7 @@ onMounted(() => {
                     <v-text-field
                         v-model="nameRef"
                         :rules="[rules.required]"
-                        color="green"
+                        :color="BASE_COLOR"
                         rounded="md"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
@@ -632,7 +632,7 @@ onMounted(() => {
                         density="compact"
                         :base-color="FIELD_COLOR"
                         rounded="md"
-                        color="green"
+                        :color="BASE_COLOR"
                         :append-inner-icon="dateRef ? 'close' : ''"
                         @click:append-inner="dateRef = null"
                         hide-details
@@ -645,7 +645,7 @@ onMounted(() => {
                         label="Номер счёта"
                         density="compact"
                         rounded="md"
-                        color="green"
+                        :color="BASE_COLOR"
                         :append-inner-icon="bill_number ? 'close' : ''"
                         @click:append-inner="bill_number = null"
                         hide-details
@@ -655,7 +655,7 @@ onMounted(() => {
                         v-model="currencyAdd"
                         :disabled="isCurrencyFieldDisabled"
                         no-data-text="Валюта не найдена"
-                        color="green"
+                        :color="BASE_COLOR"
                         :items="currencies"
                         :base-color="FIELD_COLOR"
                         item-title="name"
@@ -670,7 +670,7 @@ onMounted(() => {
                   </div>
                   <v-autocomplete
                       no-data-text="Организация не найдена"
-                      color="green"
+                      :color="BASE_COLOR"
                       v-model="organizationAdd"
                       :items="organizations"
                       item-title="name"
@@ -689,7 +689,7 @@ onMounted(() => {
                       v-model="comment"
                       density="compact"
                       rounded="md"
-                      color="green"
+                      :color="BASE_COLOR"
                       hide-details
                       :append-inner-icon="comment ? 'close' : ''"
                       @click:append-inner="comment = null"
@@ -703,7 +703,7 @@ onMounted(() => {
       <v-card>
         <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup="closeFilterModal">
           <v-card
-              style="border: 2px solid #3ab700"
+          :style="`border: 2px solid ${BASE_COLOR}`"
               min-width="600"
               class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
               rounded="xl"
@@ -721,7 +721,7 @@ onMounted(() => {
                   <div class="d-flex justify-space-between ga-6 mb-3">
                     <v-text-field
                         v-model="filterForm.name"
-                        color="green"
+                        :color="BASE_COLOR"
                         :base-color="FIELD_COLOR"
                         rounded="md"
                         variant="outlined"
@@ -745,7 +745,7 @@ onMounted(() => {
                         v-model="filterForm.date"
                         density="compact"
                         rounded="md"
-                        color="green"
+                        :color="BASE_COLOR"
                         :append-inner-icon="filterForm.date ? 'close' : ''"
                         @click:append-inner="filterForm.date = null"
                         hide-details
@@ -757,7 +757,7 @@ onMounted(() => {
                         density="compact"
                         rounded="md"
                         :base-color="FIELD_COLOR"
-                        color="green"
+                        :color="BASE_COLOR"
                         :append-inner-icon="filterForm.bill_number ? 'close' : ''"
                         @click:append-inner="filterForm.bill_number = null"
                         hide-details
@@ -771,7 +771,7 @@ onMounted(() => {
                         item-value="id"
                         label="Валюта"
                         variant="outlined"
-                        color="green"
+                        :color="BASE_COLOR"
                         density="compact"
                         hide-details
                     />
@@ -783,7 +783,7 @@ onMounted(() => {
                       :base-color="FIELD_COLOR"
                       item-value="id"
                       label="Организация"
-                      color="green"
+                      :color="BASE_COLOR"
                       variant="outlined"
                       density="compact"
                   />
@@ -794,14 +794,14 @@ onMounted(() => {
                       v-model="filterForm.comment"
                       density="compact"
                       rounded="md"
-                      color="green"
+                      :color="BASE_COLOR"
                       hide-details
                       :append-inner-icon="filterForm.comment ? 'close' : ''"
                       @click:append-inner="filterForm.comment = null"
                   />
                   <div class="d-flex justify-end ga-2 mt-2">
                   <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-                  <v-btn color="green" class="btn"  @click="getOrganizationBillData">применить</v-btn>
+                  <v-btn :color="BASE_COLOR" class="btn"  @click="getOrganizationBillData">применить</v-btn>
                 </div>
                 </v-col>
               </v-row>

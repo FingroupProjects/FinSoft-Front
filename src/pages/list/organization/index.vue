@@ -16,7 +16,7 @@ import Icons from "../../../composables/Icons/Icons.vue";
 import employee from "../../../api/list/employee";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import validate from "./validate.js";
-import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
+import {FIELD_COLOR, FIELD_OF_SEARCH, BASE_COLOR} from "../../../composables/constant/colors.js";
 import debounce from "lodash.debounce";
 import {createAccess, readAccess, removeAccess, updateAccess} from "../../../composables/access/access.js";
 
@@ -480,7 +480,7 @@ onMounted(async () => {
                 density="compact"
                 label="Поиск..."
                 variant="outlined"
-                color="info"
+                :color="BASE_COLOR"
                 rounded="lg"
                 clear-icon="close"
                 hide-details
@@ -570,7 +570,7 @@ onMounted(async () => {
     <v-card>
       <v-dialog persistent class="mt-2 pa-2" v-model="addDialog" @keyup.esc="isExistsOrganization ? checkUpdate() : checkAndClose()">
         <v-card
-          style="border: 2px solid #3ab700"
+          :style="`border: 2px solid ${BASE_COLOR}`"
           min-width="500"
           class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
           rounded="xl"
@@ -603,7 +603,7 @@ onMounted(async () => {
                 <v-text-field
                   v-model="nameRef"
                   :rules="[rules.required]"
-                  color="green"
+                  :color="BASE_COLOR"
                   rounded="lg"
                   :base-color="FIELD_COLOR"
                   variant="outlined"
@@ -618,7 +618,7 @@ onMounted(async () => {
                 <v-text-field
                   v-model="innRef"
                   :rules="[rules.required, rules.inn]"
-                  color="green"
+                  :color="BASE_COLOR"
                   :base-color="FIELD_COLOR"
                   rounded="lg"
                   variant="outlined"
@@ -631,7 +631,7 @@ onMounted(async () => {
                   clearable
                 />
                 <v-autocomplete
-                color="green"
+                :color="BASE_COLOR"
                 no-data-text="Нет данных"
                   v-model="directorRef"
                   :rules="[rules.required]"
@@ -645,7 +645,7 @@ onMounted(async () => {
                   variant="outlined"
                 />
                 <v-autocomplete
-                  color="green"
+                  :color="BASE_COLOR"
                   no-data-text="Нет данных"
                   v-model="accountantRef"
                   :rules="[rules.required]"
@@ -661,7 +661,7 @@ onMounted(async () => {
                 <v-text-field
                   v-model="addressRef"
                   :rules="[rules.required]"
-                  color="green" 
+                  :color="BASE_COLOR" 
                   :base-color="FIELD_COLOR"
                   rounded="lg"
                   variant="outlined"
@@ -674,7 +674,7 @@ onMounted(async () => {
                 />
                 <v-text-field
                   v-model="descriptionRef"
-                  color="green"
+                  :color="BASE_COLOR"
                   :base-color="FIELD_COLOR"
                   rounded="lg"
                   variant="outlined"
@@ -695,7 +695,7 @@ onMounted(async () => {
       <v-card>
         <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup.esc="closeFilterModal">
           <v-card
-            style="border: 2px solid #3ab700"
+            :style="`border: 2px solid ${BASE_COLOR}`"
             min-width="600"
             class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
             rounded="xl"
@@ -709,7 +709,7 @@ onMounted(async () => {
                   <v-text-field
                   v-model="filterForm.name"
                   :base-color="FIELD_COLOR"
-                  color="green"
+                  :color="BASE_COLOR"
                   rounded="lg"
                   variant="outlined"
                   class="w-auto text-sm-body-1"
@@ -723,7 +723,7 @@ onMounted(async () => {
                 <v-text-field
                   v-model="filterForm.inn"
                   :base-color="FIELD_COLOR"
-                  color="green"
+                  :color="BASE_COLOR"
                   rounded="lg"
                   variant="outlined"
                   class="w-auto text-sm-body-1"
@@ -734,7 +734,7 @@ onMounted(async () => {
                   clearable
                 />
                 <v-autocomplete
-                  color="green"
+                  :color="BASE_COLOR"
                   v-model="filterForm.director_id"
                   :base-color="FIELD_COLOR"
                   :items="employees"
@@ -746,7 +746,7 @@ onMounted(async () => {
                   variant="outlined"
                 />
                 <v-autocomplete
-                color="green"
+                :color="BASE_COLOR"
                   v-model="filterForm.chief_accountant_id"
                   :base-color="FIELD_COLOR"
                   :items="employees"
@@ -760,7 +760,7 @@ onMounted(async () => {
                 <v-text-field
                   v-model="filterForm.address"
                   :base-color="FIELD_COLOR"
-                  color="green"
+                  :color="BASE_COLOR"
                   rounded="lg"
                   variant="outlined"
                   class="w-auto text-sm-body-1"
@@ -772,7 +772,7 @@ onMounted(async () => {
                 />
                 <v-textarea
                       v-model="filterForm.description"
-                      color="green"
+                      :color="BASE_COLOR"
                       rounded="md"
                       variant="outlined"
                       :base-color="FIELD_COLOR"
@@ -783,7 +783,7 @@ onMounted(async () => {
                 />
                 <div class="d-flex justify-end ga-2 mt-2">
                   <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-                  <v-btn color="green" class="btn"  @click="getOrganizationData">применить</v-btn>
+                  <v-btn :color="BASE_COLOR" class="btn"  @click="getOrganizationData">применить</v-btn>
                 </div>
               </v-col>
               </v-row>

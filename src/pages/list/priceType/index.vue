@@ -7,7 +7,7 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import priceType from '../../../api/list/priceType.js';
 import currency from '../../../api/list/currency.js';
 import {createAccess, updateAccess, removeAccess} from "../../../composables/access/access.js";
-import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
+import {FIELD_COLOR, FIELD_OF_SEARCH ,BASE_COLOR} from "../../../composables/constant/colors.js";
 import validate from "./validate.js";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import {
@@ -430,7 +430,7 @@ onMounted(async () => {
                   density="compact"
                   label="Поиск..."
                   variant="outlined"
-                  color="info"
+                  :color="BASE_COLOR"
                   rounded="lg"
                   :base-color="FIELD_OF_SEARCH"
                   clear-icon="close"
@@ -515,7 +515,7 @@ onMounted(async () => {
       <!-- Modal -->
       <v-card>
         <v-dialog persistent class="mt-2 pa-2" v-model="dialog" @keyup.esc="isExistsPriceType ? checkUpdate() : checkAndClose({ page, itemsPerPage, sortBy, search, filterData})">
-          <v-card style="border: 2px solid #3AB700" min-width="500"
+          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="500"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
               <span>Вид цены: {{ isExistsPriceType ? priceTypeInDialogTitle  : 'Добавление' }}</span>
@@ -543,7 +543,7 @@ onMounted(async () => {
                       v-model="nameRef"
                       :base-color="FIELD_COLOR"
                       :rules="[rules.required]"
-                      color="green"
+                      :color="BASE_COLOR"
                       hide-details
                       autofocus
                       rounded="md"
@@ -559,7 +559,7 @@ onMounted(async () => {
                       variant="outlined"
                       hide-details
                       no-data-text="Нет данных"
-                      color="green"
+                      :color="BASE_COLOR"
                       :disabled="isCurrencyFieldDisabled"
                       label="Выберите валюту"
                       :base-color="FIELD_COLOR"
@@ -573,7 +573,7 @@ onMounted(async () => {
                       :base-color="FIELD_COLOR"
                       hide-details
                       :rules="[rules.required]"
-                      color="green"
+                      :color="BASE_COLOR"
                       rounded="md"
                       variant="outlined"
                       class="w-auto text-sm-body-1"
@@ -590,7 +590,7 @@ onMounted(async () => {
 
       <v-card>
         <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup.esc="closeFilterModal">
-          <v-card style="border: 2px solid #3AB700" min-width="450"
+          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="450"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
               <span>Фильтр</span>
@@ -600,7 +600,7 @@ onMounted(async () => {
                 <v-col class="d-flex flex-column w-100">
                   <v-text-field
                       v-model="filterForm.name"
-                      color="green"
+                      :color="BASE_COLOR"
                       rounded="md"
                       :base-color="FIELD_COLOR"
                       variant="outlined"
@@ -614,7 +614,7 @@ onMounted(async () => {
                   />
                   <v-autocomplete
                       variant="outlined"
-                      color="green"
+                      :color="BASE_COLOR"
                       no-data-text="Нет данных"
                       label="Валюта"
                       v-model="filterForm.currency_id"
@@ -625,7 +625,7 @@ onMounted(async () => {
                   />
                   <v-textarea
                       v-model="filterForm.description"
-                      color="green"
+                      :color="BASE_COLOR"
                       rounded="md"
                       variant="outlined"
                       :base-color="FIELD_COLOR"
@@ -636,7 +636,7 @@ onMounted(async () => {
                   />
                   <div class="d-flex justify-end ga-2">
                   <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-                  <v-btn color="green" class="btn"  @click="getPriceTypeData">применить</v-btn>
+                  <v-btn :color="BASE_COLOR" class="btn"  @click="getPriceTypeData">применить</v-btn>
                 </div>
                 </v-col>
               </v-row>

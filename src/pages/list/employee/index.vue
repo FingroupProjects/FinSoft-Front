@@ -17,7 +17,7 @@ import {
   selectOneItemMessage,
   restoreMessage
 } from "../../../composables/constant/buttons.js"
-import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js"
+import {FIELD_COLOR, FIELD_OF_SEARCH, BASE_COLOR} from "../../../composables/constant/colors.js"
 import employee from "../../../api/list/employee.js"
 import employeeGroup from "../../../api/list/employeeGroup.js"
 import debounce from "lodash.debounce";
@@ -578,7 +578,7 @@ watch(search, debounce((newValue) => {
                   density="compact"
                   label="Поиск..."
                   variant="outlined"
-                  color="info"
+                  :color="BASE_COLOR"
                   :base-color="FIELD_OF_SEARCH"
                   rounded="lg"
                   clear-icon="close"
@@ -705,7 +705,7 @@ watch(search, debounce((newValue) => {
       <!-- Modal -->
       <v-card>
         <v-dialog persistent class="mt-2 pa-2" v-model="dialog" @keyup.esc="isExistsEmployee ? checkUpdate() : checkAndClose()">
-          <v-card style="border: 2px solid #3AB700" min-width="540"
+          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="540"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
               <span>{{ isExistsEmployee ? 'сотрудник: ' + employeeDialogTitle : 'Добавление' }}</span>
@@ -731,7 +731,7 @@ watch(search, debounce((newValue) => {
                   <v-text-field
                       v-model="nameRef"
                       :rules="[rules.required]"
-                      color="green"
+                      :color="BASE_COLOR"
                       :base-color="FIELD_COLOR"
                       variant="outlined"
                       class="w-auto text-sm-body-1"
@@ -773,7 +773,7 @@ watch(search, debounce((newValue) => {
                           <v-text-field
                               v-model="phoneRef"
                               :rules="[rules.required, rules.phone]"
-                              color="green"
+                              :color="BASE_COLOR"
                               :base-color="FIELD_COLOR"
                               variant="outlined"
                               class="w-auto text-sm-body-1"
@@ -787,7 +787,7 @@ watch(search, debounce((newValue) => {
                           <v-text-field
                               v-model="emailRef"
                               :rules="[rules.required, rules.email]"
-                              color="green"
+                              :color="BASE_COLOR"
                               :base-color="FIELD_COLOR"
                               variant="outlined"
                               class="w-auto text-sm-body-1"
@@ -800,7 +800,7 @@ watch(search, debounce((newValue) => {
                           <v-text-field
                               v-model="addressRef"
                               :rules="[rules.required]"
-                              color="green"
+                              :color="BASE_COLOR"
                               :base-color="FIELD_COLOR"
                               variant="outlined"
                               class="w-auto text-sm-body-1"
@@ -821,8 +821,8 @@ watch(search, debounce((newValue) => {
                       item-title="name"
                       item-value="id"
                       :base-color="FIELD_COLOR"
-                      color="green"
-                      item-color="green"
+                      :color="BASE_COLOR"
+                      item-:color="BASE_COLOR"
                       :rules="[rules.required]"
                       variant="outlined"
                       label="Группа"
@@ -842,7 +842,7 @@ watch(search, debounce((newValue) => {
 
         <v-dialog persistent v-model="filterDialog" class="mt-2 pa-2" @keyup.esc="closeFilterModal">
         <v-card
-          style="border: 2px solid #3ab700"
+        :style="`border: 2px solid ${BASE_COLOR}`"
           min-width="650"
           class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
           rounded="xl"
@@ -856,7 +856,7 @@ watch(search, debounce((newValue) => {
                 <div class="d-flex justify-space-between ga-6 mb-3">
                   <v-text-field
                     v-model="filterForm.name"
-                    color="green"
+                    :color="BASE_COLOR"
                     :base-color="FIELD_COLOR"
                     rounded="md"
                     variant="outlined"
@@ -875,7 +875,7 @@ watch(search, debounce((newValue) => {
                   <v-text-field
                     v-model="filterForm.phone"
                     :rules="[rules.required, rules.phone]"
-                    color="green"
+                    :color="BASE_COLOR"
                     :base-color="FIELD_COLOR"
                     variant="outlined"
                     class="w-auto text-sm-body-1"
@@ -892,7 +892,7 @@ watch(search, debounce((newValue) => {
                   <v-text-field
                     v-model="filterForm.email"
                     :rules="[rules.required, rules.email]"
-                    color="green"
+                    :color="BASE_COLOR"
                     :base-color="FIELD_COLOR"
                     variant="outlined"
                     class="w-auto text-sm-body-1"
@@ -913,7 +913,7 @@ watch(search, debounce((newValue) => {
                   v-model="filterForm.address"
                   density="compact"
                   rounded="md"
-                  color="green"
+                  :color="BASE_COLOR"
                   hide-details
                   :append-inner-icon="
                     filterForm.address !== null ? 'close' : ''
@@ -922,7 +922,7 @@ watch(search, debounce((newValue) => {
                 />
                 <div class="d-flex justify-end ga-2 mt-2">
                   <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-                  <v-btn color="green" class="btn"  @click="getEmployee">применить</v-btn>
+                  <v-btn :color="BASE_COLOR" class="btn"  @click="getEmployee">применить</v-btn>
                 </div>
               </v-col>
             </v-row>

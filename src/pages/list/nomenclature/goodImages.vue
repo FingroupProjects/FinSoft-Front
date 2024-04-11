@@ -268,7 +268,7 @@ onMounted(async () => {
 
         <v-dialog persistent v-model="isCreate" class="mt-2 pa-2">
           <v-card
-            style="border: 2px solid #3ab700"
+            :style="`border: 2px solid ${BASE_COLOR}`"
             min-width="350"
             class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
             rounded="xl"

@@ -8,7 +8,7 @@ import groupApi from "../../../api/list/goodGroup";
 import { useRoute, useRouter } from "vue-router";
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
-import { FIELD_COLOR } from "../../../composables/constant/colors.js";
+import { FIELD_COLOR, BASE_COLOR } from "../../../composables/constant/colors.js";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import {
   ErrorSelectMessage,
@@ -314,11 +314,11 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
               <v-text-field
                 v-model="search"
                 prepend-inner-icon="search"
-                base-color="info"
+                base-:color="BASE_COLOR"
                 density="compact"
                 label="Поиск..."
                 variant="outlined"
-                color="info"
+                :color="BASE_COLOR"
                 rounded="lg"
                 clear-icon="close"
                 hide-details
