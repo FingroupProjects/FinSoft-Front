@@ -18,7 +18,7 @@ defineProps({
 
 <template>
   <v-text-field
-      :style="[`max-width: ${maxWidth}px`, `min-width: ${minWidth}px`]"
+      :style="[`max-width: ${maxWidth}px`, `min-width: ${minWidth}px`, `max-hieght: 10px !important;`]"
       :color="BASE_COLOR"
       rounded="lg"
       :base-color="FIELD_COLOR"

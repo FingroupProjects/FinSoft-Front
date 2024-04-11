@@ -277,7 +277,7 @@ watch(() => form.salePercent, (newValue) => {
             <Icons name="add" title="Добавить поле" @click="increaseCountOfGoods"/>
             <Icons name="delete" @click="decreaseCountOfGoods"/>
           </div>
-          <div class="d-flex flex-column w-100">
+          <div class="d-flex flex-column w-100 goods">
             <v-data-table
                 style="height: 78vh"
                 items-per-page-text="Элементов на странице:"
@@ -322,9 +322,6 @@ watch(() => form.salePercent, (newValue) => {
                 </tr>
               </template>
             </v-data-table>
-            <div class="py-2 w-100" :style="`border-top: 1px solid ${BASE_COLOR}`">
-              <span class="ml-15">Итого Количество: {{ goods.length }}</span>
-            </div>
           </div>
         </div>
         <div class="d-flex justify-space-between w-100 mt-2 bottomField">
@@ -335,7 +332,7 @@ watch(() => form.salePercent, (newValue) => {
           <div class="d-flex ga-6">
             <custom-text-field readonly :value="'Сумма со скидкой: ' + totalPriceWithSale" min-width="180" />
             <custom-text-field readonly  :value="'Сумма без скидки: ' + totalPrice" min-width="180" max-width="110"/>
-            <custom-autocomplete v-model="form.currency" :items="currencies" min-width="110" max-width="110" />
+            <custom-autocomplete v-model="form.currency" label="Валюта" :items="currencies" min-width="110" max-width="110" />
           </div>
         </div>
       </v-col>

@@ -7,6 +7,9 @@
   outline: none;
 }
 
+body{
+  overflow: hidden;
+}
 
 .custom_input::placeholder {
   color: #757575;

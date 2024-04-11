@@ -13,6 +13,7 @@ import {
 } from "../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
 import procurementApi from '../../api/documents/procurement.js';
+import showDate from "../../composables/date/showDate.js";
 const router = useRouter()
 
 const loading = ref(true)
@@ -64,7 +65,6 @@ const getProcurementData = async ({page, itemsPerPage, sortBy, search}) => {
   loading.value = true
   try {
     const { data } = await procurementApi.get({page, itemsPerPage, sortBy}, search, filterData)
-    console.log(data)
     paginations.value = data.result.pagination
     procurements.value = data.result.data
     loading.value = false
@@ -288,7 +288,7 @@ watch(search, debounce((newValue) => {
                 </template>
               </td>
               <td>{{ item.doc_number }}</td>
-              <td>{{ item.date }}</td>
+              <td>{{ showDate(item.date) }}</td>
               <td>{{ item.counterparty.name }}</td>
               <td>{{ item.organization.name }}</td>
               <td>{{ item.storage.name }}</td>
