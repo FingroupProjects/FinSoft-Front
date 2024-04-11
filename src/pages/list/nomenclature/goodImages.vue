@@ -305,12 +305,8 @@ onMounted(async () => {
               <div style="width: 100%; height: 180px">
                 <div
                   class="d-flex justify-center align-center py-2 w-100"
-                  style="
-                    height: 180px;
-                    border-radius: 4px;
-                    border: 1px solid #3ab700;
-                  "
-                >
+                  style="height: 180px; border-radius: 4px; border: 1px solid #3ab700;"
+                  >
                   <div v-if="!preview">
                     <div v-if="imagePreview === null">
                       <v-btn style="font-size: 10px" @click="onPickFile()"

@@ -1,11 +1,13 @@
 .document .v-input__details {
   display: none !important;
 }
+
 .document .v-data-table-footer {
   display: none !important;
 }
+
 .document .v-table > .v-table__wrapper > table > tbody > tr > td, .v-table > .v-table__wrapper > table > thead > tr > td, .v-table > .v-table__wrapper > table > tfoot > tr > td {
-  height: 45px !important;
+  max-height: 15px !important;
   padding-top: 4px;
   padding-bottom: 4px;
   width: 50px !important;
@@ -13,4 +15,12 @@
 
 .document .bottomField .v-field__input {
   font-size: 12px !important;
+}
+
+.document .v-table--density-default {
+ height: 26px;
+}
+
+.document .goods .v-field__input {
+  max-height: 30px !important;
 }
