@@ -835,10 +835,10 @@ const currencyProps = (item) => {
             </v-col>
           </v-row>
         </v-form>
-        <v-card class="table mt-3" style="border: 1px solid #3ab700">
+        <v-card class="table mt-3" :style="`border: 2px solid ${BASE_COLOR}`">
           <div
             class="d-flex w-100 rounded-t-md mb-1 align-center"
-            style="border-bottom: 1px solid #3ab700"
+            :style="`border-bottom: 2px solid ${BASE_COLOR}`"
           >
             <div
               class="d-flex justify-space-between w-100 ga-2 pt-1 me-2"
@@ -936,7 +936,7 @@ const currencyProps = (item) => {
     <!--Create Agreement-->
     <v-dialog persistent v-model="agreementDialog" class="mt-2 pa-2">
       <v-card
-        style="border: 2px solid #3ab700"
+        :style="`border: 2px solid ${BASE_COLOR}`"
         min-width="650"
         class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
         rounded="xl"
