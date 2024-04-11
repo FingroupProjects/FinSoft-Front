@@ -423,7 +423,7 @@ onMounted(async () => {
                         width: 100%;
                         height: 160px;
                         border-radius: 4px;
-                        border: 1px solid #3ab700;
+                        border: 1px solid #274D87;
                         cursor: pointer;
                       "
                     />
