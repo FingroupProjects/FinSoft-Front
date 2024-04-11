@@ -1,37 +1,41 @@
 <script setup>
-import { useRoute } from 'vue-router'
+import { useRoute } from "vue-router";
 
 import Header from "./components/header/Header.vue";
 import Sidebar from "./components/sidebar/Sidebar.vue";
 import warningModal from "./components/paymentWarning/warningModal.vue";
-import { ref, watch } from "vue"
+import { ref, watch } from "vue";
 import showToast from "./composables/toast/index.js";
-import AdminPanel from "./pages/admin-panel/index.vue"
+import AdminPanel from "./pages/admin-panel/index.vue";
 
-const rale = ref(false)
-const admin = ref(false)
-const route = useRoute()
-const isLayout = ref(true)
+const rale = ref(false);
+const admin = ref(false);
+const route = useRoute();
+const isLayout = ref(true);
 
 const toggleSidebar = () => {
-  rale.value = !rale.value
-}
+  rale.value = !rale.value;
+};
 
 watch(route, (newVal) => {
   isLayout.value = !!newVal.meta.hideSideBarAndHeader;
-})
+});
 
-window.addEventListener('load', () => {
+watch(
+  () => admin.value,
+  (newValue) => {
+    console.log(newValue);
+  }
+);
+window.addEventListener("load", () => {
+  window.addEventListener("online", () => {
+    showToast("Подключение восстановлена!", "green", 3500);
+  });
 
-  window.addEventListener('online', () => {
-    showToast('Подключение восстановлена!', 'green', 3500)
-  })
-
-  window.addEventListener('offline', () => {
-    showToast('Отсутствует интернет соединение!', 'red', 600000)
-  })
-})
-
+  window.addEventListener("offline", () => {
+    showToast("Отсутствует интернет соединение!", "red", 600000);
+  });
+});
 </script>
 
 <template>
@@ -44,9 +48,17 @@ window.addEventListener('load', () => {
     <div v-else>
       <Header @rale="toggleSidebar" />
       <div class="content">
-        <Sidebar @toggleAdmin="admin = true" @closeAdmin="admin = false" :rale="rale" />
-        <AdminPanel v-if="admin"/>
-        <warningModal/>
+        <Sidebar
+          @toggleAdmin="admin = true"
+          @closeAdmin="admin = false"
+          :rale="rale"
+        />
+        <AdminPanel
+          v-show="admin"
+          @closeAdmin="admin = !admin"
+          :class="admin ? 'open' : 'close'"
+        />
+        <warningModal />
         <router-view class="w-100 block" />
       </div>
     </div>
@@ -58,8 +70,18 @@ window.addEventListener('load', () => {
   display: flex;
   padding-top: 45px;
   height: 100vh;
-  background-color: #E8EDF0FF;
+  background-color: #e8edf0ff;
   position: relative;
+}
+
+.open {
+  width: 100%;
+  transition: width 2s ease-in-out;
+}
+
+.close{
+  width: 0;
+  transition: width 2s ease-in-out;
 }
 
 .block {
@@ -76,7 +98,7 @@ window.addEventListener('load', () => {
   -webkit-box-align: center;
   align-items: center;
   position: relative;
-  background-image: url('assets/svg/auth/login-bg.jpg');
+  background-image: url("assets/svg/auth/login-bg.jpg");
   background-repeat: initial;
   background-attachment: initial;
   background-origin: initial;
