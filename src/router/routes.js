@@ -4,11 +4,11 @@ const routes = [
     name: "main",
     component: () => import("../pages/homepage/index.vue"),
   },
-  {
-    path: "/adminPanel",
-    name: "adminPanel",
-    component: () => import("../pages/admin-panel/index.vue"),
-  },
+  // {
+  //   path: "/adminPanel",
+  //   name: "adminPanel",
+  //   component: () => import("../pages/admin-panel/index.vue"),
+  // },
   {
     path: "/planning",
     name: "planning",

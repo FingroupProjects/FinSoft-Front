@@ -6,9 +6,10 @@ import Sidebar from "./components/sidebar/Sidebar.vue";
 import warningModal from "./components/paymentWarning/warningModal.vue";
 import { ref, watch } from "vue"
 import showToast from "./composables/toast/index.js";
-
+import AdminPanel from "./pages/admin-panel/index.vue"
 
 const rale = ref(false)
+const admin = ref(false)
 const route = useRoute()
 const isLayout = ref(true)
 
@@ -43,7 +44,8 @@ window.addEventListener('load', () => {
     <div v-else>
       <Header @rale="toggleSidebar" />
       <div class="content">
-        <Sidebar :rale="rale" />
+        <Sidebar @toggleAdmin="admin = true" @closeAdmin="admin = false" :rale="rale" />
+        <AdminPanel v-if="admin"/>
         <warningModal/>
         <router-view class="w-100 block" />
       </div>
