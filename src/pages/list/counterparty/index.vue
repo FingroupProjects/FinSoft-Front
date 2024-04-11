@@ -13,7 +13,7 @@ import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import createCounterparty from "./create.vue";
-import { FIELD_COLOR } from "../../../composables/constant/colors.js";
+import { FIELD_COLOR, BASE_COLOR } from "../../../composables/constant/colors.js";
 import debounce from "lodash.debounce";
 import {removeAccess, updateAccess, createAccess} from "../../../composables/access/access.js";
 
@@ -330,11 +330,11 @@ onMounted(async () => {
               <v-text-field
                 v-model="search"
                 prepend-inner-icon="search"
-                base-color="info"
+                base-:color="BASE_COLOR"
                 density="compact"
                 label="Поиск..."
                 variant="outlined"
-                color="info"
+                :color="BASE_COLOR"
                 rounded="lg"
                 clear-icon="close"
                 hide-details
@@ -445,7 +445,7 @@ onMounted(async () => {
 
       <v-dialog persistent v-model="filterDialog" class="mt-2 pa-2" @keyup.esc="closeFilterDialog">
         <v-card
-          style="border: 2px solid #3ab700"
+          :style="`border: 2px solid ${BASE_COLOR}`"
           min-width="650"
           class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
           rounded="xl"
@@ -459,7 +459,7 @@ onMounted(async () => {
                 <div class="d-flex justify-space-between ga-6">
                   <v-text-field
                     v-model="filterForm.name"
-                    color="green"
+                    :color="BASE_COLOR"
                     :base-color="FIELD_COLOR"
                     rounded="md"
                     variant="outlined"
@@ -508,7 +508,7 @@ onMounted(async () => {
                     density="compact"
                     v-mask="'+992#########'"
                     rounded="md"
-                    color="green"
+                    :color="BASE_COLOR"
                     hide-details
                     :append-inner-icon="
                       filterForm.phone !== null ? 'close' : ''
@@ -522,7 +522,7 @@ onMounted(async () => {
                     v-model="filterForm.email"
                     density="compact"
                     rounded="md"
-                    color="green"
+                    :color="BASE_COLOR"
                     hide-details
                     :append-inner-icon="
                       filterForm.email !== null ? 'close' : ''
@@ -537,7 +537,7 @@ onMounted(async () => {
                   v-model="filterForm.address"
                   density="compact"
                   rounded="md"
-                  color="green"
+                  :color="BASE_COLOR"
                   hide-details
                   :append-inner-icon="
                     filterForm.address !== null ? 'close' : ''
@@ -548,7 +548,7 @@ onMounted(async () => {
                   <v-btn color="red" class="btn" @click="closeFilterDialog"
                     >сбросить</v-btn
                   >
-                  <v-btn color="green" class="btn" @click="getCounterparty"
+                  <v-btn :color="BASE_COLOR" class="btn" @click="getCounterparty"
                     >применить</v-btn
                   >
                 </div>

@@ -22,8 +22,7 @@ import organizationApi from "@/api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import priceTypeApi from "@/api/list/priceType.js";
 import validate from "./validate.js";
-import { FIELD_COLOR } from "../../../composables/constant/colors.js";
-
+import { FIELD_COLOR, BASE_COLOR } from "../../../composables/constant/colors.js";
 const props = defineProps([
   "isOpen",
   "isEdit",
@@ -691,7 +690,7 @@ const currencyProps = (item) => {
       @keyup.esc="isEdit ? checkUpdate() : checkAndClose()"
     >
       <v-card
-        style="border: 2px solid #3ab700"
+        :style="`border: 2px solid ${BASE_COLOR}`"
         min-width="350"
         class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
         rounded="xl"
@@ -742,7 +741,7 @@ const currencyProps = (item) => {
                 <v-text-field
                   v-model="name"
                   :rules="isValid ? [rules.required] : []"
-                  color="green"
+                  :color="BASE_COLOR"
                   :base-color="FIELD_COLOR"
                   rounded="md"
                   variant="outlined"
@@ -798,7 +797,7 @@ const currencyProps = (item) => {
                   density="compact"
                   v-mask="'+992#########'"
                   rounded="md"
-                  color="green"
+                  :color="BASE_COLOR"
                   clear-icon="close"
                   hide-details
                   clearable
@@ -812,7 +811,7 @@ const currencyProps = (item) => {
                   v-model="email"
                   density="compact"
                   rounded="md"
-                  color="green"
+                  :color="BASE_COLOR"
                   clear-icon="close"
                   hide-details
                   clearable
@@ -828,7 +827,7 @@ const currencyProps = (item) => {
                 density="compact"
                 clear-icon="close"
                 rounded="md"
-                color="green"
+                :color="BASE_COLOR"
                 hide-details
                 clearable
                 @click:append-inner="address = ''"
@@ -982,7 +981,7 @@ const currencyProps = (item) => {
                   v-model="form.name"
                   :rules="[rules.required]"
                   :base-color="FIELD_COLOR"
-                  color="green"
+                  :color="BASE_COLOR"
                   rounded="md"
                   variant="outlined"
                   class="w-auto text-sm-body-1"
@@ -1017,7 +1016,7 @@ const currencyProps = (item) => {
                   v-model="form.date"
                   :rules="[rules.required]"
                   :base-color="FIELD_COLOR"
-                  color="green"
+                  :color="BASE_COLOR"
                   rounded="md"
                   variant="outlined"
                   class="w-auto text-sm-body-1"
@@ -1029,7 +1028,7 @@ const currencyProps = (item) => {
                   hide-details
                 /> -->
                 <v-autocomplete
-                  color="green"
+                  :color="BASE_COLOR"
                   class="w-75"
                   variant="outlined"
                   label="Валюта"
@@ -1046,7 +1045,7 @@ const currencyProps = (item) => {
                 />
               </div>
               <v-autocomplete
-                color="green"
+                :color="BASE_COLOR"
                 variant="outlined"
                 label="Организация"
                 v-model="form.organization_id"
@@ -1062,7 +1061,7 @@ const currencyProps = (item) => {
               />
               <div class="d-flex ga-4 my-3">
                 <v-autocomplete
-                  color="green"
+                  :color="BASE_COLOR"
                   class="w-50"
                   variant="outlined"
                   label="Контрагент"
@@ -1077,7 +1076,7 @@ const currencyProps = (item) => {
                   :item-props="counterpartyProps"
                 />
                 <v-autocomplete
-                  color="green"
+                  :color="BASE_COLOR"
                   :item-props="price_typeProps"
                   v-model="form.price_type_id"
                   :disabled="isPriseTypesFieldDisabled"
@@ -1103,7 +1102,7 @@ const currencyProps = (item) => {
                 rounded="md"
                 clear-icon="close"
                 clearable
-                color="green"
+                :color="BASE_COLOR"
                 hide-details
               />
               <v-container class="pa-0 mt-3">
@@ -1111,7 +1110,7 @@ const currencyProps = (item) => {
                   v-model="form.comment"
                   variant="outlined"
                   :base-color="FIELD_COLOR"
-                  color="green"
+                  :color="BASE_COLOR"
                   label="Комментарий"
                   clear-icon="close"
                   clearable

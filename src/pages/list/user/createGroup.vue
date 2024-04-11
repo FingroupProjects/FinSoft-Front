@@ -5,7 +5,7 @@ import Icons from "../../../composables/Icons/Icons.vue";
 import { addMessage, restoreMessage, removeMessage, editMessage } from "../../../composables/constant/buttons";
 import userGroup from "../../../api/list/userGroup.js";
 import {USER_GROUP} from "../../../composables/constant/paramsApi.js";
-import {FIELD_COLOR} from "../../../composables/constant/colors.js";
+import {FIELD_COLOR, BASE_COLOR} from "../../../composables/constant/colors.js";
 import {getUser} from "../../../composables/auth/index.js";
 
 const props = defineProps(['isEdit', 'item'])
@@ -99,7 +99,7 @@ onMounted(() => {
     <v-col>
       <v-dialog v-model="dialog" class="mt-2 pa-2" persistent @keyup.esc="$emit('toggleDialog')">
         <v-card
-          style="border: 2px solid #3ab700"
+          :style="`border: 2px solid ${BASE_COLOR}`"
           min-width="350"
           class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
           rounded="xl"
@@ -124,7 +124,7 @@ onMounted(() => {
                 <v-text-field
                   v-model="name"
                   :rules="isValid ? [rules.required] : []"
-                  color="green"
+                  :color="BASE_COLOR"
                   :base-color="FIELD_COLOR"
                   variant="outlined"
                   class="w-auto text-sm-body-1"

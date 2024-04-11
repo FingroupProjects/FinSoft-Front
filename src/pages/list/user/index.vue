@@ -20,7 +20,7 @@ import organizationApi from "../../../api/list/organizations.js";
 import user from "../../../api/list/user.js";
 import validate from "./validate.js";
 import groupApi from "../../../api/list/userGroup.js";
-import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
+import {FIELD_COLOR, FIELD_OF_SEARCH ,BASE_COLOR} from "../../../composables/constant/colors.js";
 const showModal = ref(false);
 const showConfirmDialog = ref(false);
 const toggleModal = () => {
@@ -663,7 +663,7 @@ onMounted(async () =>  {
                 density="compact"
                 label="Поиск..."
                 variant="outlined"
-                color="info"
+                :color="BASE_COLOR"
                 :base-color="FIELD_OF_SEARCH"
                 rounded="lg"
                 clear-icon="close"
@@ -788,7 +788,7 @@ onMounted(async () =>  {
       <!-- Modal -->
       <v-card>
         <v-dialog persistent class="mt-2 pa-2" v-model="dialog" @keyup.esc="isExistsUser ? checkUpdate() : checkAndClose()">
-          <v-card style="border: 2px solid #3AB700" min-width="600"
+          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="600"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
               <span>{{ isExistsUser ?  'Пользователь: ' + userDialogTitle : 'Добавление' }}</span>
@@ -818,7 +818,7 @@ onMounted(async () =>  {
                     <v-text-field
                         v-model="fioRef"
                         :rules="[rules.required]"
-                        color="green"
+                        :color="BASE_COLOR"
                         :base-color="FIELD_COLOR"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
@@ -857,7 +857,7 @@ onMounted(async () =>  {
                       <v-autocomplete
                           v-model="organization"
                           :items="organizations"
-                          color="green"
+                          :color="BASE_COLOR"
                           :disabled="isOrganizationFieldDisabled"
                           :base-color="FIELD_COLOR"
                           item-title="name"
@@ -869,7 +869,7 @@ onMounted(async () =>  {
                       <v-text-field
                           v-model="loginRef"
                           :rules="[rules.required]"
-                          color="green"
+                          :color="BASE_COLOR"
                           :base-color="FIELD_COLOR"
                           variant="outlined"
                           class="w-auto text-sm-body-1"
@@ -885,7 +885,7 @@ onMounted(async () =>  {
                         <v-text-field
                             v-model="passwordRef"
                             :rules="[rules.required]"
-                            color="green"
+                            :color="BASE_COLOR"
                             :base-color="FIELD_COLOR"
                             type="password"
                             variant="outlined"
@@ -907,7 +907,7 @@ onMounted(async () =>  {
                     <v-autocomplete
                       v-model="group"
                       :items="groups"
-                      color="green"
+                      :color="BASE_COLOR"
                       :base-color="FIELD_COLOR"
                       item-title="name"
                       item-value="id"
@@ -921,7 +921,7 @@ onMounted(async () =>  {
                     <v-text-field
                         v-model="phoneRef"
                         :rules="[rules.required, rules.phone]"
-                        color="green"
+                        :color="BASE_COLOR"
                         :base-color="FIELD_COLOR"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
@@ -938,7 +938,7 @@ onMounted(async () =>  {
                     <v-text-field
                         v-model="emailRef"
                         :rules="[rules.required, rules.email]"
-                        color="green"
+                        :color="BASE_COLOR"
                         :base-color="FIELD_COLOR"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
@@ -966,7 +966,7 @@ onMounted(async () =>  {
         </div>
 
         <v-dialog persistent class="mt-2 pa-2" v-model="showModalDialog" @keyup="closeFilterDialog()">
-          <v-card style="border: 2px solid #3AB700" min-width="600"
+          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="600"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
               <span>Фильтр</span>
@@ -981,7 +981,7 @@ onMounted(async () =>  {
                   <div class="d-flex" :style="isExistsUser ?? { width: '98%' }">
                     <v-text-field
                         v-model="filterForm.name"
-                        color="green"
+                        :color="BASE_COLOR"
                         :base-color="FIELD_COLOR"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
@@ -1013,7 +1013,7 @@ onMounted(async () =>  {
                       <v-autocomplete
                           v-model="filterForm.organization_id"
                           :items="organizations"
-                          color="green"
+                          :color="BASE_COLOR"
                           :base-color="FIELD_COLOR"
                           item-title="name"
                           item-value="id"
@@ -1023,7 +1023,7 @@ onMounted(async () =>  {
                       <v-text-field
                           v-model="filterForm.login"
 
-                          color="green"
+                          :color="BASE_COLOR"
                           :base-color="FIELD_COLOR"
                           variant="outlined"
                           class="w-auto text-sm-body-1"
@@ -1039,7 +1039,7 @@ onMounted(async () =>  {
                   <div class="d-flex ga-4 mt-5">
                     <v-text-field
                         v-model="filterForm.phone"
-                        color="green"
+                        :color="BASE_COLOR"
                         :base-color="FIELD_COLOR"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
@@ -1053,7 +1053,7 @@ onMounted(async () =>  {
                     />
                     <v-text-field
                         v-model="filterForm.email"
-                        color="green"
+                        :color="BASE_COLOR"
                         :base-color="FIELD_COLOR"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
@@ -1068,7 +1068,7 @@ onMounted(async () =>  {
                   </div>
                   <div class="d-flex justify-end ga-2 mt-2">
                 <v-btn color="red" class="btn" @click="closeFilterDialog">сбросить</v-btn>
-                <v-btn color="green" class="btn"  @click="getUser">применить</v-btn>
+                <v-btn :color="BASE_COLOR" class="btn"  @click="getUser">применить</v-btn>
               </div>
                 </v-col>
               </v-row>

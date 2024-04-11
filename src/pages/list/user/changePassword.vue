@@ -3,7 +3,7 @@ import {ref, defineEmits} from "vue";
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
 import user from "../../../api/list/user.js";
-import {FIELD_COLOR} from "../../../composables/constant/colors.js";
+import {FIELD_COLOR, BASE_COLOR} from "../../../composables/constant/colors.js";
 
 const emit = defineEmits();
 
@@ -59,7 +59,7 @@ const rules = {
   <div>
     <v-dialog  v-model="dialog" class="mt-2 pa-2" persistent>
       <v-card
-          style="border: 2px solid #3ab700"
+          :style="`border: 2px solid ${BASE_COLOR}`"
           min-width="350"
           class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
           rounded="xl"
@@ -81,7 +81,7 @@ const rules = {
               <v-text-field
                   v-model="password"
                   :rules="isValid ? [rules.required] : []"
-                  color="green"
+                  :color="BASE_COLOR"
                   :base-color="FIELD_COLOR"
                   variant="outlined"
                   class="w-auto text-sm-body-1"
@@ -97,7 +97,7 @@ const rules = {
               <v-text-field
                   v-model="confirmPassword"
                   :rules="isValid ? [rules.required] : []"
-                  color="green"
+                  :color="BASE_COLOR"
                   :base-color="FIELD_COLOR"
                   variant="outlined"
                   class="w-auto text-sm-body-1"

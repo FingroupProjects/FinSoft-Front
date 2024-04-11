@@ -15,7 +15,7 @@ import showDate from "../../../composables/date/showDate.js";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import validate from "./validate.js";
-import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
+import {FIELD_COLOR, FIELD_OF_SEARCH, BASE_COLOR} from "../../../composables/constant/colors.js";
 import {tr} from "vuetify/locale";
 import debounce from "lodash.debounce";
 
@@ -610,7 +610,7 @@ watch(search, debounce((newValue) => {
                   density="compact"
                   label="Поиск..."
                   variant="outlined"
-                  color="info"
+                  :color="BASE_COLOR"
                   :base-color="FIELD_OF_SEARCH"
                   rounded="lg"
                   clear-icon="close"
@@ -688,7 +688,7 @@ watch(search, debounce((newValue) => {
       <!-- Modal -->
       <v-card>
         <v-dialog persistent class="mt-2 pa-2" v-model="dialog" @keyup.esc="isExistsCurrency ? checkUpdate() : checkAndClose()">
-          <v-card style="border: 2px solid #3AB700" min-width="300"
+          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="300"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
               <span>{{ isExistsCurrency ? 'Валюта: ' + currencyInDialogTitle : 'Добавление' }}</span>
@@ -714,7 +714,7 @@ watch(search, debounce((newValue) => {
                   <v-text-field
                       v-model="nameRef"
                       :rules="[rules.required]"
-                      color="green"
+                      :color="BASE_COLOR"
                       rounded="md"
                       :base-color="FIELD_COLOR"
                       variant="outlined"
@@ -729,7 +729,7 @@ watch(search, debounce((newValue) => {
                   <v-text-field
                       v-model="symbolRef"
                       :rules="[rules.required]"
-                      color="green"
+                      :color="BASE_COLOR"
                       rounded="md"
                       :base-color="FIELD_COLOR"
                       variant="outlined"
@@ -743,7 +743,7 @@ watch(search, debounce((newValue) => {
                   <v-text-field
                       v-model="digitalRef"
                       :rules="[rules.required]"
-                      color="green"
+                      :color="BASE_COLOR"
                       rounded="md"
                       density="compact"
                       variant="outlined"
@@ -758,9 +758,9 @@ watch(search, debounce((newValue) => {
               </v-row>
             </v-form>
 
-            <v-card class="table" style="border: 1px solid #3AB700; overflow: auto;" >
+            <v-card class="table" :style="`border: 2px solid ${BASE_COLOR}`">
               <div v-if="isExistsCurrency" class="d-flex w-100 rounded-t-lg mb-1 align-center "
-                   style="border-bottom: 1px solid #3AB700">
+              :style="`border-bottom: 2px solid ${BASE_COLOR}`">
                 <div class="d-flex justify-end w-100 ga-2 pt-1 me-2" style="padding-top: 4px !important;">
                   <Icons title="Удалить"  @click="computeRate" name="delete"/>
                   <Icons title="Добавить"  @click="addDialogRate" name="add"/>
@@ -817,7 +817,7 @@ watch(search, debounce((newValue) => {
 
         <!--  addCurrencyRate    -->
         <v-dialog persistent v-model="rateDialog" activator="parent" @keyup.esc="isExistsCurrencyRate ? checkRateUpdate() : checkRateAndClose()">
-          <v-card style="border: 2px solid #3AB700" min-width="400"
+          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="400"
                   class="d-flex  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center pr-5 pt-3">
               <span class="pl-5">{{ isExistsCurrencyRate ? 'Изменить' : 'Добавить' }} курс</span>
@@ -843,7 +843,7 @@ watch(search, debounce((newValue) => {
                       type="date"
                       label="Дата"
                       rounded="md"
-                      color="green"
+                      :color="BASE_COLOR"
                       :base-color="FIELD_COLOR"
                       variant="outlined"
                       density="compact"
@@ -858,7 +858,7 @@ watch(search, debounce((newValue) => {
                       label="Курс"
                       rounded="md"
                       :base-color="FIELD_COLOR"
-                      color="green"
+                      :color="BASE_COLOR"
                       variant="outlined"
                       density="compact"
                       clear-icon="close"
@@ -875,7 +875,7 @@ watch(search, debounce((newValue) => {
 
       <v-card>
         <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup.esc="closeFilterModal">
-          <v-card style="border: 2px solid #3AB700" min-width="600"
+          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="600"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
               <span>Фильтр</span> 
@@ -886,7 +886,7 @@ watch(search, debounce((newValue) => {
                   <div class="d-flex justify-space-between ga-6 mb-3">
                     <v-text-field
                         v-model="filterForm.name"
-                        color="green"
+                        :color="BASE_COLOR"
                         rounded="md"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
@@ -903,7 +903,7 @@ watch(search, debounce((newValue) => {
                   <div class="d-flex justify-space-between ga-6 mb-3">
                      <v-text-field
                         v-model="filterForm.symbol_code"
-                        color="green"
+                        :color="BASE_COLOR"
                         rounded="md"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
@@ -919,7 +919,7 @@ watch(search, debounce((newValue) => {
                   <div class="d-flex justify-space-between ga-6 mb-3">
                      <v-text-field
                         v-model="filterForm.digital_code"
-                        color="green"
+                        :color="BASE_COLOR"
                         rounded="md"
                         variant="outlined"
                         class="w-auto text-sm-body-1"
@@ -934,7 +934,7 @@ watch(search, debounce((newValue) => {
                   </div>
                   <div class="d-flex justify-end ga-2">
                   <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-                  <v-btn color="green" class="btn"  @click="getCurrencyData">применить</v-btn>
+                  <v-btn :color="BASE_COLOR" class="btn"  @click="getCurrencyData">применить</v-btn>
                 </div>
                   </v-col>
               </v-row>
