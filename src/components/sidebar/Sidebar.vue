@@ -4,7 +4,7 @@ import Icons from "../../composables/Icons/Icons.vue";
 import { useRouter } from "vue-router";
 
 const props = defineProps(["rale"]);
-const emit = defineEmits(['toggleAdmin', 'closeAdmin']);
+const emit = defineEmits(["toggleAdmin", "closeAdmin"]);
 
 const drawer = ref(true);
 const router = useRouter();
@@ -51,13 +51,13 @@ onMounted(() => {
   );
 });
 
-function push(item) {
+const push = (item) => {
   activeItemId.value = item.id;
-  if(item.id === 8) emit('toggleAdmin');
-  else{
-    emit('closeAdmin');
+  if (item.id === 8) emit("toggleAdmin");
+  else {
+    emit("closeAdmin");
+    router.push(item.link);
   }
-  router.push(item.link);
 }
 </script>
 
