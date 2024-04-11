@@ -66,6 +66,7 @@ const headers = ref([
 
 const getProcurementDetails = async () => {
   const { data } = await procurementApi.getById(route.params.id)
+
   form.doc_number = data.result.doc_number
   form.date = data.result.date
   form.organization = {
@@ -76,10 +77,12 @@ const getProcurementDetails = async () => {
     id: data.result.counterparty.id,
     name: data.result.counterparty.name
   }
-  form.cpAgreement = {
-    id: data.result.counterpartyAgreement.id,
-    name: data.result.counterpartyAgreement.name
-  }
+  setTimeout(() => {
+    form.cpAgreement = {
+      id: data.result.counterpartyAgreement.id,
+      name: data.result.counterpartyAgreement.name
+    }
+  }, 300)
   form.storage = {
     id: data.result.storage.id,
     name: data.result.storage.name
@@ -88,6 +91,12 @@ const getProcurementDetails = async () => {
   form.salePercent = data.result.salePercent
   form.comment = data.result.comment
   form.currency = data.result.currency
+
+  goods.value = data.result.goods.map(item => ({
+    good_id: item.good.id,
+    amount: item.amount,
+    price: item.price
+  }))
 }
 
 const getOrganizations = async () => {
@@ -236,6 +245,7 @@ watch(() => form.counterparty, async (data) => {
   form.cpAgreement = null
 
   const id = typeof data === 'object' ? data.id : data
+
   try {
     const res = await cpAgreementApi.getById(id)
     form.currency = {
@@ -308,7 +318,7 @@ watch(() => form.salePercent, (newValue) => {
             <Icons name="add" title="Добавить поле" @click="increaseCountOfGoods"/>
             <Icons name="delete" @click="decreaseCountOfGoods"/>
           </div>
-          <div class="d-flex flex-column w-100">
+          <div class="d-flex flex-column w-100 goods">
             <v-data-table
                 style="height: 78vh"
                 items-per-page-text="Элементов на странице:"
@@ -353,9 +363,6 @@ watch(() => form.salePercent, (newValue) => {
                 </tr>
               </template>
             </v-data-table>
-            <div class="py-2 w-100" :style="`border-top: 1px solid ${BASE_COLOR}`">
-              <span class="ml-15">Итого Количество: {{ goods.length }}</span>
-            </div>
           </div>
         </div>
         <div class="d-flex justify-space-between w-100 mt-2 bottomField">
@@ -364,9 +371,9 @@ watch(() => form.salePercent, (newValue) => {
             <custom-text-field label="Комментарий" v-model="form.comment" min-width="310"/>
           </div>
           <div class="d-flex ga-6">
-            <custom-text-field readonly :value="'Сумма со скидкой: ' + totalPriceWithSale" min-width="180" />
+            <custom-text-field readonly  :value="'Сумма со скидкой: ' + totalPriceWithSale" min-width="180" />
             <custom-text-field readonly  :value="'Сумма без скидки: ' + totalPrice" min-width="180" max-width="110"/>
-            <custom-autocomplete v-model="form.currency" :items="currencies" min-width="110" max-width="110" />
+            <custom-autocomplete v-model="form.currency" label="Валюта" :items="currencies" min-width="110" max-width="110" />
           </div>
         </div>
       </v-col>
