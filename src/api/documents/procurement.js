@@ -7,5 +7,8 @@ export default {
   },
   add(data) {
     return api.post('/document/provider/purchase', data)
+  },
+  getById(id) {
+    return api.get(`/document/provider/show/${id}`)
   }
 }
