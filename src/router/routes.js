@@ -30,6 +30,37 @@ const routes = [
     component: () => import("../pages/procurementOfGoods/create.vue"),
   },
   {
+    path: "/clientOrder",
+    name: "clientOrder",
+    component: () => import("../pages/clientOrder/index.vue"),
+  },
+  {
+    path: "/clientOrder/:id",
+    name: "clientOrderShow",
+    component: () => import("../pages/clientOrder/show.vue"),
+  },
+  {
+    path: "/clientOrder/create",
+    name: "clientOrderCreate",
+    component: () => import("../pages/clientOrder/create.vue"),
+  },
+
+  {
+    path: "/clientReturn",
+    name: "clientReturn",
+    component: () => import("../pages/clientReturn/index.vue"),
+  },
+  {
+    path: "/clientReturn/:id",
+    name: "clientReturnShow",
+    component: () => import("../pages/clientReturn/show.vue"),
+  },
+  {
+    path: "/clientReturn/create",
+    name: "clientReturnCreate",
+    component: () => import("../pages/clientReturn/create.vue"),
+  },
+  {
     path: "/sellingGoods",
     name: "sellingGoods",
     component: () => import("../pages/sellingGoods/index.vue"),

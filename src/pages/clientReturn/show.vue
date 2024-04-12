@@ -13,7 +13,7 @@ import counterpartyApi from "../../api/list/counterparty.js";
 import storageApi from "../../api/list/storage.js";
 import cpAgreementApi from "../../api/list/counterpartyAgreement.js";
 import currencyApi from "../../api/list/currency.js";
-import procurementApi from "../../api/documents/procurement.js";
+import clientReturnApi from "../../api/documents/clientReturn.js";
 import goodApi from "../../api/list/goods.js";
 import { editMessage } from "../../composables/constant/buttons.js";
 import "../../assets/css/procurement.css";
@@ -54,13 +54,15 @@ const listGoods = ref([])
 const headers = ref([
   {title: 'Товары', key: 'goods', sortable: false},
   {title: 'Количество', key: 'currency.name', sortable: false},
+  {title: 'Скидка (процент)', key: 'currency.name', sortable: false},
+  {title: 'Скидка (сумма)', key: 'currency.name', sortable: false},
   {title: 'Цена', key: 'currency.name', sortable: false},
   {title: 'Сумма', key: 'currency.name', sortable: false},
 ])
 
 
-const getProcurementDetails = async () => {
-  const { data } = await procurementApi.getById(route.params.id)
+const getClientReturnDetails = async () => {
+  const { data } = await clientReturnApi.getById(route.params.id)
   console.log(data)
   form.doc_number = data.result.doc_number
   form.date = data.result.date
@@ -90,6 +92,8 @@ const getProcurementDetails = async () => {
   goods.value = data.result.goods.map(item => ({
     good_id: item.good.id,
     amount: item.amount,
+    auto_sale_percent: item.auto_sale_percent,
+    auto_sale_sum: item.auto_sale_sum,
     price: item.price
   }))
 }
@@ -143,7 +147,7 @@ const increaseCountOfGoods = () => {
   const missingData = goods.value.some(validateItem)
   if (missingData) return
 
-  goods.value.push({id: goods.value.length + 1, good_id: null, amount: 1, price: null })
+  goods.value.push({id: goods.value.length + 1, good_id: null, amount: 1, auto_sale_percent: null, auto_sale_sum: null, price: null })
 }
 
 const validateItem = (item) => {
@@ -180,15 +184,17 @@ const updateProcurement = async () => {
     goods: goods.value.map((item) => ({
       good_id: Number(item.good_id),
       amount: Number(item.amount),
+      auto_sale_percent: Number(item.auto_sale_percent),
+      auto_sale_sum: Number(item.auto_sale_sum),
       price: Number(item.price),
     }))
  }
 
  try {
-   const res = await procurementApi.update(route.params.id ,body)
+   const res = await clientReturnApi.update(route.params.id ,body)
    if (res.status === 200) {
      showToast(editMessage)
-     router.push('/procurementOfGoods')
+     router.push('/clientReturn')
    }
  } catch (e) {
    console.log(e)
@@ -230,7 +236,7 @@ onMounted( () => {
       getStorages(),
       getCurrencies(),
       getGoods(),
-      getProcurementDetails()
+      getClientReturnDetails()
   ])
 
 })
@@ -300,7 +306,7 @@ watch(() => form.salePercent, (newValue) => {
           <custom-text-field  :value="form.doc_number"/>
           <custom-text-field label="Дата" type="date" v-model="form.date"/>
           <custom-autocomplete label="Организация" :items="organizations"  v-model="form.organization"/>
-          <custom-autocomplete label="Поставщик" :items="counterparties" v-model="form.counterparty"/>
+          <custom-autocomplete label="Клиент" :items="counterparties" v-model="form.counterparty"/>
           <custom-autocomplete label="Договор" :items="cpAgreements" v-model="form.cpAgreement"/>
           <custom-autocomplete label="Склад" :items="storages" v-model="form.storage"/>
           <custom-text-field label="Руч. скидка (сумма)" v-mask="'###'" v-model="form.saleInteger" :disabled="isSaleIntegerDisabled"/>
@@ -348,6 +354,12 @@ watch(() => form.salePercent, (newValue) => {
                   </td>
                   <td>
                     <custom-text-field v-model="item.amount" v-mask="'########'" min-width="50" max-width="90" />
+                  </td>
+                  <td>
+                    <custom-text-field v-model="item.auto_sale_percent" v-mask="'##########'" min-width="80" max-width="110"/>
+                  </td>
+                  <td>
+                    <custom-text-field v-model="item.auto_sale_sum" v-mask="'##########'" min-width="80" max-width="110"/>
                   </td>
                   <td>
                     <custom-text-field v-model="item.price" v-mask="'##########'" min-width="80" max-width="110"/>
