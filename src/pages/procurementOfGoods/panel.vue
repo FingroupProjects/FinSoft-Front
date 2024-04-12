@@ -2,7 +2,7 @@
 import { ref, defineProps, onMounted, onBeforeUnmount } from "vue";
 import { useRouter } from "vue-router";
 
-const props = defineProps(["admin"]);
+const props = defineProps(["procurementOfGoods"]);
 const emit = defineEmits(["closeAdmin"]);
 const router = useRouter();
 const users = ref([]);
@@ -12,36 +12,30 @@ const filteredAdmins = ref([]);
 const admins = ref([
   {
     id: 1,
-    title: "Настройки",
-    link: "/programSettings",
+    title: "Отчеты",
+    link: "/return",
     icon: "settings",
   },
-  { id: 2, title: "Заголовок программы", link: "", icon: "settings" },
+  { id: 2, title: "Взаимодействие с клиентами", link: "", icon: "settings" },
+  { id: 3, title: "АВС анализ", link: "", icon: "settings" },
+  { id: 4, title: "Акт сверки с клиентами", link: "", icon: "settings" },
+  { id: 5, title: "Отчет покупки киентов", link: "", icon: "settings" },
 ]);
 
 const lists = ref([
   {
     id: 1,
-    title: "Справочники",
+    title: "Покупка",
     child: [
-      { id: 1, title: "Единица измерения", link: "/list/unit" },
-      { id: 2, title: "Банковские счета", link: "/list/organizationBill" },
-      { id: 3, title: "Номенклатура", link: "/list/nomenclature" },
-      { id: 4, title: "Пользователи", link: "/list/user" },
-      { id: 5, title: "Контрагенты", link: "/list/counterparty" },
-      { id: 6, title: "Организации", link: "/list/organization" },
-      { id: 7, title: "Сотрудники", link: "/list/employee" },
-      { id: 8, title: "Должность", link: "/list/position" },
-      { id: 9, title: "Виды цен", link: "/list/priceType" },
-      { id: 10, title: "Валюты", link: "/list/currency" },
-      { id: 11, title: "Склады", link: "/list/storage" },
-      { id: 12, title: "Кассы", link: "/list/cashRegister" },
+      { id: 1, title: "Покупка товаров", link: "/procurementOfGoods" },
+      { id: 2, title: "Возврат постащику", link: "/providerOfGoods" },
+      { id: 3, title: "Заказ поставщику", link: "" },
     ],
   },
 ]);
 
 function push(item) {
-  emit("closeAdmin");
+  emit("close");
   router.push(item.link);
 }
 
@@ -72,11 +66,11 @@ onMounted(() => {
 <template>
   <div
     class="sidebar"
-    :class="props.admin ? 'open' : 'close fadeOut'"
+    :class="props.procurementOfGoods ? 'open' : 'close fadeOut'"
     style="background-color: #f2faff"
   >
     <div class="title">
-      <div v-for="list in filteredLists" :key="list.id">
+      <div v-for="list in lists" :key="list.id">
         <ul class="list">
           <span class="span text-uppercase text-black font-weight-regular">
             {{ list.title }}
@@ -133,11 +127,11 @@ onMounted(() => {
 
 .close {
   width: 0;
-  transition: width 0.3s ease-in-out; 
+  transition: width 0.3s ease-in-out;
 }
 
 .fadeOut {
-  animation: fadeOut 0.2s ease-in-out forwards; 
+  animation: fadeOut 0.2s ease-in-out forwards;
 }
 
 @keyframes fadeOut {
