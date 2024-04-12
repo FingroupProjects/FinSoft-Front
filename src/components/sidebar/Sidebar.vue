@@ -16,31 +16,31 @@ const menu = ref([
   { id: 1, title: "Планирование", icon: "planning", link: "/planning" },
   {
     id: 2,
-    title: "Закупки товаров",
+    title: "Покупка",
     icon: "procurementOfGoods",
     link: "/procurementOfGoods",
   },
   {
     id: 3,
-    title: "Продажа товаров ",
+    title: "Продажа",
     icon: "sellingGoods",
     link: "/sellingGoods",
   },
   {
     id: 4,
-    title: "Учет складов",
+    title: "Учет товаров",
     icon: "storage",
     link: "/warehouseAccounting",
   },
-  { id: 5, title: "Касса и банки", icon: "cash", link: "/cash" },
-  { id: 6, title: "Зарплата и кадры", icon: "salary", link: "/salary" },
+  { id: 5, title: "Деньги", icon: "cash", link: "/cash" },
+  { id: 6, title: "HR-Зарплата", icon: "salary", link: "/salary" },
   {
     id: 7,
     title: "Финансы и  анализ",
     icon: "financeAnalysis",
     link: "/financeAnalysis",
   },
-  { id: 8, title: "Админ - панель", icon: "adminPanel", link: "/adminPanel" },
+  { id: 8, title: "Настройки", icon: "adminPanel", link: "/adminPanel" },
 ]);
 
 onMounted(() => {

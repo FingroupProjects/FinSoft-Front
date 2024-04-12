@@ -1,10 +1,8 @@
 <script setup>
-import {onMounted, ref, watch} from "vue";
+import {ref, watch} from "vue";
 import {useRouter} from "vue-router";
 import showToast from '../../composables/toast'
 import Icons from "../../composables/Icons/Icons.vue";
-import CustomTextField from "../../components/formElements/CustomTextField.vue";
-import CustomAutocomplete from "../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../components/checkbox/CustomCheckbox.vue";
 import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH} from "../../composables/constant/colors.js";
 import {
@@ -14,14 +12,9 @@ import {
   restoreMessage
 } from "../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
-import procurementApi from '../../api/documents/procurement.js';
+import clientOrderApi from '../../api/documents/clientOrder.js';
 import showDate from "../../composables/date/showDate.js";
-import organizationApi from "../../api/list/organizations.js";
-import counterpartyApi from "../../api/list/counterparty.js";
-import storageApi from "../../api/list/storage.js";
-import cpAgreementApi from "../../api/list/counterpartyAgreement.js";
-import currencyApi from "../../api/list/currency.js";
-import user from "../../api/list/user.js";
+
 const router = useRouter()
 
 const loading = ref(true)
@@ -42,33 +35,18 @@ const showConfirmDialog = ref(false);
 const showModal = ref(false);
 const count = ref(0);
 
-
-const organizations = ref([])
-const providers = ref([])
-const storages = ref([])
-const authors = ref([])
-const currencies = ref([])
-const counterparties = ref([])
-const counterpartyAgreements = ref([])
-
 const filterForm = ref({
-  date: null,
-  provider_id: null,
-  counterparty_id: null,
-  counterparty_agreement_id: null,
-  organization_id: null,
-  storage_id: null,
-  author_id: null,
+  name: null,
+  description: null,
   currency_id: null
 })
-
 
 const headers = ref([
   {title: 'Номер', key: 'name'},
   {title: 'Дата', key: 'currency.name'},
   {title: 'Поставщик', key: 'currency.name'},
   {title: 'Организация', key: 'currency.name'},
-  {title: 'Склад', key: 'currency.name'},
+  {title: 'Дата отгрузки', key: 'currency.name'},
   {title: 'Автор', key: 'currency.name'},
   {title: 'Валюта', key: 'currency.name'},
 ])
@@ -78,30 +56,29 @@ const rules = {
 }
 
 
-const getProcurementData = async ({page, itemsPerPage, sortBy, search}) => {
-  count.value = 0;
+const getClientOrderData = async ({page, itemsPerPage, sortBy, search}) => {
+  count.value = 0
   countFilter()
   const filterData = filterForm.value
   filterModal.value = false
   loading.value = true
   try {
-    const { data } = await procurementApi.get({page, itemsPerPage, sortBy}, search, filterData)
+    const { data } = await clientOrderApi.get({page, itemsPerPage, sortBy}, search, filterData)
     paginations.value = data.result.pagination
     procurements.value = data.result.data
     loading.value = false
+    console.log(data)
   } catch (e) {
   }
 }
 
 function countFilter() {
-
   for (const key in filterForm.value) {
     if (filterForm.value[key] !== null) {
-      count.value++;
+      count.value++
     }
   }
-
-  return count;
+  return count
 }
 
 
@@ -110,12 +87,12 @@ function countFilter() {
 const massDel = async () => {
 
   try {
-    const {status} = await procurementApi.massDeletion({ids: markedID.value})
+    const {status} = await clientOrderApi.massDeletion({ids: markedID.value})
 
     if (status === 200) {
 
       showToast(removeMessage, 'red')
-      await getProcurementData({})
+      await getClientOrderData({})
       markedID.value = []
       dialog.value = false
     }
@@ -129,11 +106,11 @@ const massDel = async () => {
 const massRestore = async () => {
 
   try {
-    const {status} = await procurementApi.massRestore({ids: markedID.value})
+    const {status} = await clientOrderApi.massRestore({ids: markedID.value})
 
     if (status === 200) {
       showToast(restoreMessage)
-      await getProcurementData({})
+      await getClientOrderData({})
       markedID.value = []
       dialog.value = false
     }
@@ -182,7 +159,7 @@ const lineMarking = (item) => {
 const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
   filterModal.value = {}
   cleanFilterForm()
-  await getProcurementData({page, itemsPerPage, sortBy, search})
+  await getClientOrderData({page, itemsPerPage, sortBy, search})
 
 }
 
@@ -201,51 +178,6 @@ watch(dialog, newVal => {
   }
 })
 
-
-const getAuthors = async () => {
-  const { data } = await user.getAuthors();
-  
-  authors.value = data.result
-  
-}
-
-const getOrganizations = async () => {
-  const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  organizations.value = data.result.data
-}
-
-const getCounterparties = async () => {
-  const { data } = await counterpartyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  counterparties.value = data.result.data
-}
-
-const getCpAgreements = async () => {
-  const { data } = await cpAgreementApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  counterpartyAgreements.value = data.result.data
-}
-
-const getStorages = async () => {
-  const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  storages.value = data.result.data
-}
-
-const getCurrencies = async () => {
-  const { data } = await currencyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  
-  currencies.value = data.result.data
- 
-}
-
-onMounted(() => {
-  getOrganizations()
-  getCounterparties()
-  getCpAgreements()
-  getStorages()
-  getCurrencies()
-  getAuthors()
- 
-})
-
 watch(markedID, (newVal) => {
   markedItem.value = procurements.value.find((el) => el.id === newVal[0]);
 })
@@ -261,12 +193,12 @@ watch(search, debounce((newValue) => {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Покупка</span>
+          <span>Заказ от клиента</span>
         </div>
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="$router.push('/procurementOfGoods/create')" name="add"/>
+              <Icons title="Добавить" @click="$router.push('/clientOrder/create')" name="add"/>
               <Icons title="Скопировать" @click="" name="copy"/>
               <Icons title="Удалить" @click="compute" name="delete"/>
             </div>
@@ -315,7 +247,7 @@ watch(search, debounce((newValue) => {
             :item-value="headers.title"
             :search="debounceSearch"
             v-model="markedID"
-            @update:options="getProcurementData"
+            @update:options="getClientOrderData"
             page-text =  '{0}-{1} от {2}'
             :items-per-page-options="[
                 {value: 25, title: '25'},
@@ -330,7 +262,7 @@ watch(search, debounce((newValue) => {
             <tr
                 @mouseenter="hoveredRowIndex = index"
                 @mouseleave="hoveredRowIndex = null"
-                @dblclick="$router.push(`/procurementOfGoods/${item.id}`)"
+                @dblclick="$router.push(`/clientOrder/${item.id}`)"
                 :class="{'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
               <td>
@@ -357,7 +289,7 @@ watch(search, debounce((newValue) => {
               <td>{{ showDate(item.date) }}</td>
               <td>{{ item.counterparty.name }}</td>
               <td>{{ item.organization.name }}</td>
-              <td>{{ item.storage.name }}</td>
+              <td>{{ showDate(item.shippingDate) }}</td>
               <td>{{ item.author.name }}</td>
               <td>{{ item.currency.name }}</td>
             </tr>
@@ -375,24 +307,23 @@ watch(search, debounce((newValue) => {
             <v-form class="d-flex w-100" @submit.prevent="">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100">
-                  <div class="d-flex ga-2 w-100">
-                  <custom-text-field label="Дата" type="date" min-width="508"  v-model="filterForm.date"/>
-                  </div>
-                  <div class="d-flex ga-2">
-                    <custom-autocomplete label="Организация" :items="organizations"  v-model="filterForm.organization_id"/>
-                  <custom-autocomplete label="Поставщик" :items="counterparties" v-model="filterForm.counterparty_id"/>               
-                 </div>
-                  <div class="d-flex ga-2">
-                  <custom-autocomplete label="Склад" :items="storages" v-model="filterForm.storage_id"/>
-                  <custom-autocomplete label="Валюта" :items="currencies" v-model="filterForm.currency_id"/>
-                </div>
-                <div class="d-flex ga-2">
-                  <custom-autocomplete label="Автор" :items="authors" v-model="filterForm.author_id"/>
-                   <custom-autocomplete label="Договор" :items="counterpartyAgreements" v-model="filterForm.counterparty_agreement_id"/>
-                  </div>
+                  <v-text-field
+                      v-model="filterForm.name"
+                      :color="BASE_COLOR"
+                      rounded="md"
+                      :base-color="FIELD_COLOR"
+                      variant="outlined"
+                      class="w-auto text-sm-body-1"
+                      density="compact"
+                      placeholder="Наименование"
+                      label="Наименование"
+                      clear-icon="close"
+                      clearable
+                      autofocus
+                  />
                   <div class="d-flex justify-end ga-2">
                     <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-                    <v-btn :color="BASE_COLOR" class="btn"  @click="getProcurementData">применить</v-btn>
+                    <v-btn :color="BASE_COLOR" class="btn"  @click="getClientOrderData">применить</v-btn>
                   </div>
                 </v-col>
               </v-row>
