@@ -8,6 +8,10 @@ export default {
     const params = buildParams(page, itemsPerPage, sortBy, search, filterData);
     return api.get('/user', { params });
   },
+
+  getAuthors() {
+    return api.get('/document/document-author');
+  },
   show(id) {
     return api.get(`/user/${id}`)
   },
