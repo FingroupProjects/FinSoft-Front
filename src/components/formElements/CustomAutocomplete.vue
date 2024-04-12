@@ -9,7 +9,7 @@ defineProps({
   },
   maxWidth: {
     type: String,
-    default: '250',
+    default: '250px',
     required: false
   }
 })
@@ -17,7 +17,7 @@ defineProps({
 
 <template>
   <v-autocomplete
-      :style="[`max-width: ${maxWidth}px`, `min-width: ${minWidth}px`]"
+      :style="[`max-width: ${maxWidth}`, `min-width: ${minWidth}px`]"
       variant="outlined"
       :color="BASE_COLOR"
       rounded="lg"

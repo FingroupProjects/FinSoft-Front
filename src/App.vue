@@ -7,8 +7,10 @@ import warningModal from "./components/paymentWarning/warningModal.vue";
 import { ref, watch } from "vue";
 import showToast from "./composables/toast/index.js";
 import AdminPanel from "./pages/admin-panel/index.vue";
+import panel from "./pages/procurementOfGoods/panel.vue"
 
 const rale = ref(false);
+const procurementOfGoods = ref(false)
 const admin = ref(false);
 const route = useRoute();
 const isLayout = ref(true);
@@ -21,12 +23,6 @@ watch(route, (newVal) => {
   isLayout.value = !!newVal.meta.hideSideBarAndHeader;
 });
 
-watch(
-  () => admin.value,
-  (newValue) => {
-    console.log(newValue);
-  }
-);
 window.addEventListener("load", () => {
   window.addEventListener("online", () => {
     showToast("Подключение восстановлена!", "green", 3500);
@@ -49,15 +45,13 @@ window.addEventListener("load", () => {
       <Header @rale="toggleSidebar" />
       <div class="content">
         <Sidebar
-          @toggleAdmin="admin = true"
+          @toggleProcurementOfGoods="procurementOfGoods = !procurementOfGoods"
+          @toggleAdmin="admin = !admin"
           @closeAdmin="admin = false"
           :rale="rale"
         />
-        <AdminPanel
-          v-show="admin"
-          @closeAdmin="admin = !admin"
-          :class="admin ? 'open' : 'close'"
-        />
+        <panel :procurementOfGoods="procurementOfGoods" @close="procurementOfGoods != procurementOfGoods"/>
+        <AdminPanel :admin="admin" @closeAdmin="admin = !admin" />
         <warningModal />
         <router-view class="w-100 block" />
       </div>
@@ -72,16 +66,6 @@ window.addEventListener("load", () => {
   height: 100vh;
   background-color: #e8edf0ff;
   position: relative;
-}
-
-.open {
-  width: 100%;
-  transition: width 2s ease-in-out;
-}
-
-.close{
-  width: 0;
-  transition: width 2s ease-in-out;
 }
 
 .block {

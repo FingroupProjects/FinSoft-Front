@@ -37,6 +37,7 @@ const form = reactive({
   salePercent: null,
   comment: null,
   currency: null,
+  isChange: true,
 })
 
 const loading = ref(false)
@@ -273,6 +274,23 @@ watch(() => form.salePercent, (newValue) => {
   }
 })
 
+
+
+// предотвращение перехода на другую страницу при несохраненных данных
+const leaveGuard = (to, from, next) => {
+  if (!form.isChange && from.path !== to.path && !confirm('Вы уверены, что хотите покинуть эту страницу без сохранения изменений?')) {
+    next(false); 
+  } else {
+    next();
+  }
+};
+
+router.beforeEach((to, from, next) => {
+  leaveGuard(to, from, next);
+});
+
+// еще не закончено
+
 </script>
 <template>
   <div class="document">
@@ -313,9 +331,9 @@ watch(() => form.salePercent, (newValue) => {
             <Icons name="add" title="Добавить поле" @click="increaseCountOfGoods"/>
             <Icons name="delete" @click="decreaseCountOfGoods"/>
           </div>
-          <div class="d-flex flex-column w-100 goods">
+          <div class="d-flex flex-column w-100">
             <v-data-table
-                style="height: 78vh"
+                style="height: 50vh"
                 items-per-page-text="Элементов на странице:"
                 loading-text="Загрузка"
                 no-data-text="Нет данных"
@@ -343,17 +361,17 @@ watch(() => form.salePercent, (newValue) => {
                       <span>{{ index + 1}}</span>
                     </CustomCheckbox>
                   </td>
-                  <td>
-                    <custom-autocomplete v-model="item.good_id" :items="listGoods" min-width="150" />
+                  <td style="width: 40%;">
+                    <custom-autocomplete v-model="item.good_id" :items="listGoods" min-width="150" max-width="100%"/>
                   </td>
                   <td>
-                    <custom-text-field v-model="item.amount" v-mask="'########'" min-width="50" max-width="90" />
+                    <custom-text-field v-model="item.amount" v-mask="'########'" min-width="50" />
                   </td>
                   <td>
-                    <custom-text-field v-model="item.price" v-mask="'##########'" min-width="80" max-width="110"/>
+                    <custom-text-field v-model="item.price" v-mask="'##########'" min-width="80"/>
                   </td>
                   <td>
-                    <custom-text-field readonly :value="item.amount * item.price"  min-width="100" max-width="110"/>
+                    <custom-text-field readonly :value="item.amount * item.price"  min-width="100"/>
                   </td>
                 </tr>
               </template>

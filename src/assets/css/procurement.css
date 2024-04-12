@@ -10,7 +10,7 @@
   max-height: 15px !important;
   padding-top: 4px;
   padding-bottom: 4px;
-  width: 50px !important;
+  /* width: 50px !important; */
 }
 
 .document .bottomField .v-field__input {

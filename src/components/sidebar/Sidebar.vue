@@ -4,7 +4,11 @@ import Icons from "../../composables/Icons/Icons.vue";
 import { useRouter } from "vue-router";
 
 const props = defineProps(["rale"]);
-const emit = defineEmits(["toggleAdmin", "closeAdmin"]);
+const emit = defineEmits([
+  "toggleProcurementOfGoods",
+  "toggleAdmin",
+  "closeAdmin",
+]);
 
 const drawer = ref(true);
 const router = useRouter();
@@ -53,16 +57,17 @@ onMounted(() => {
 
 const push = (item) => {
   activeItemId.value = item.id;
-  if (item.id === 8) emit("toggleAdmin");
+  if (item.id === 2) emit("toggleProcurementOfGoods");
+  else if (item.id === 8) emit("toggleAdmin");
   else {
     emit("closeAdmin");
     router.push(item.link);
   }
-}
+};
 </script>
 
 <template>
-  <v-card class="sidebar">
+  <v-card :class="props.rale ? 'isClose' : 'isOpen'" class="sidebar">
     <v-layout class="side">
       <v-navigation-drawer
         :width="320"
@@ -104,14 +109,25 @@ const push = (item) => {
   box-shadow: none;
   border-radius: 0%;
 }
+
+.isClose {
+  min-width: 55px;
+}
+
+.isOpen {
+  min-width: 270px;
+}
+
 .activeBg {
   background: #111165;
 }
+
 .active {
   color: rgb(214, 209, 209);
   font-family: "Inter", sans-serif;
   font-weight: 400;
 }
+
 .title {
   color: #848484;
   font-family: "Inter", sans-serif;
@@ -120,24 +136,5 @@ const push = (item) => {
 
 .icons {
   padding-right: 10px;
-}
-
-.admin:hover .icons {
-  animation: 0.2s tremor ease;
-}
-
-@keyframes tremor {
-  0%,
-  100% {
-    transform: rotate(0deg);
-  }
-
-  25% {
-    transform: rotate(15deg);
-  }
-
-  75% {
-    transform: rotate(-15deg);
-  }
 }
 </style>
