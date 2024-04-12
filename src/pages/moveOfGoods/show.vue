@@ -6,7 +6,7 @@ import CustomAutocomplete from "../../components/formElements/CustomAutocomplete
 import CustomCheckbox from "../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../composables/toast/index.js";
 import currentDate from "../../composables/date/currentDate.js";
-import validate from "./validate.js";
+
 import {useRoute, useRouter} from "vue-router";
 import organizationApi from "../../api/list/organizations.js";
 import counterpartyApi from "../../api/list/counterparty.js";
