@@ -7,23 +7,22 @@ import CustomCheckbox from "../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../composables/toast/index.js";
 import currentDate from "../../composables/date/currentDate.js";
 import validate from "./validate.js";
-import {useRoute, useRouter} from "vue-router";
+import { useRouter } from "vue-router";
 import organizationApi from "../../api/list/organizations.js";
 import counterpartyApi from "../../api/list/counterparty.js";
 import storageApi from "../../api/list/storage.js";
 import cpAgreementApi from "../../api/list/counterpartyAgreement.js";
 import currencyApi from "../../api/list/currency.js";
-import procurementApi from "../../api/documents/procurement.js";
+import clientReturnApi from "../../api/documents/clientReturn.js";
 import goodApi from "../../api/list/goods.js";
-import { editMessage } from "../../composables/constant/buttons.js";
+import { addMessage } from "../../composables/constant/buttons.js";
 import "../../assets/css/procurement.css";
 import {BASE_COLOR} from "../../composables/constant/colors.js";
 
+
 const router = useRouter()
-const route = useRoute()
 
 const form = reactive({
-  doc_number: null,
   date: null,
   organization: null,
   organizations: [],
@@ -42,7 +41,14 @@ const form = reactive({
 const loading = ref(false)
 const author = ref(null)
 const markedID = ref([])
-const goods = ref([])
+const goods = ref([{
+  id: 1,
+  good_id: null,
+  amount: 1,
+  auto_sale_percent: null,
+  auto_sale_sum: null,
+  price: null,
+}])
 
 const organizations = ref([])
 const counterparties = ref([])
@@ -54,45 +60,11 @@ const listGoods = ref([])
 const headers = ref([
   {title: 'Товары', key: 'goods', sortable: false},
   {title: 'Количество', key: 'currency.name', sortable: false},
+  {title: 'Скидка (процент)', key: 'currency.name', sortable: false},
+  {title: 'Скидка (сумма)', key: 'currency.name', sortable: false},
   {title: 'Цена', key: 'currency.name', sortable: false},
   {title: 'Сумма', key: 'currency.name', sortable: false},
 ])
-
-
-const getProcurementDetails = async () => {
-  const { data } = await procurementApi.getById(route.params.id)
-  console.log(data)
-  form.doc_number = data.result.doc_number
-  form.date = data.result.date
-  form.organization = {
-    id: data.result.organization.id,
-    name: data.result.organization.name
-  }
-  form.counterparty = {
-    id: data.result.counterparty.id,
-    name: data.result.counterparty.name
-  }
-  setTimeout(() => {
-    form.cpAgreement = {
-      id: data.result.counterpartyAgreement.id,
-      name: data.result.counterpartyAgreement.name
-    }
-  }, 300)
-  form.storage = {
-    id: data.result.storage.id,
-    name: data.result.storage.name
-  }
-  form.saleInteger = data.result.saleInteger !== 0 ? data.result.saleInteger : null
-  form.salePercent = data.result.salePercent !== 0 ? data.result.salePercent : null
-  form.comment = data.result.comment
-  form.currency = data.result.currency
-
-  goods.value = data.result.goods.map(item => ({
-    good_id: item.good.id,
-    amount: item.amount,
-    price: item.price
-  }))
-}
 
 const getOrganizations = async () => {
   const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
@@ -143,26 +115,26 @@ const increaseCountOfGoods = () => {
   const missingData = goods.value.some(validateItem)
   if (missingData) return
 
-  goods.value.push({id: goods.value.length + 1, good_id: null, amount: 1, price: null })
+  goods.value.push({id: goods.value.length + 1, good_id: null, amount: 1, auto_sale_percent: null, auto_sale_sum: null, price: null })
 }
 
 const validateItem = (item) => {
   if (item.good_id === null) {
-    showToast("Поле Товар не может быть пустым", "warning")
-    return true
+    showToast("Поле Товар не может быть пустым", "warning");
+    return true;
   }
   if (item.amount === null) {
-    showToast("Поле Количество не может быть пустым", "warning")
-    return true
+    showToast("Поле Количество не может быть пустым", "warning");
+    return true;
   }
   if (item.price === null) {
-    showToast("Поле Цена не может быть пустым", "warning")
-    return true
+    showToast("Поле Цена не может быть пустым", "warning");
+    return true;
   }
-  return false
-}
+  return false;
+};
 
-const updateProcurement = async () => {
+const addNewClientReturn = async () => {
   if (validate(form.date, form.organization, form.counterparty, form.cpAgreement, form.storage, form.currency) !== true) return
 
   const missingData = goods.value.some(validateItem)
@@ -170,25 +142,29 @@ const updateProcurement = async () => {
 
   const body = {
     date: form.date,
-    organization_id: typeof form.organization === 'object' ? form.organization.id : form.organization,
-    counterparty_id: typeof form.counterparty === 'object' ? form.counterparty.id : form.counterparty,
-    counterparty_agreement_id: typeof form.cpAgreement === 'object' ? form.cpAgreement.id : form.cpAgreement,
-    storage_id: typeof form.storage === 'object' ? form.storage.id : form.storage,
+    organization_id: form.organization,
+    counterparty_id: form.counterparty,
+    counterparty_agreement_id: form.cpAgreement,
+    storage_id: form.storage ,
     saleInteger: Number(form.saleInteger),
     salePercent: Number(form.salePercent),
     currency_id: typeof form.currency === 'object' ? form.currency.id : form.currency,
     goods: goods.value.map((item) => ({
       good_id: Number(item.good_id),
       amount: Number(item.amount),
+      auto_sale_percent: Number(item.auto_sale_percent),
+      auto_sale_sum: Number(item.auto_sale_sum),
       price: Number(item.price),
     }))
  }
 
+  console.log(body)
+
  try {
-   const res = await procurementApi.update(route.params.id ,body)
-   if (res.status === 200) {
-     showToast(editMessage)
-     router.push('/procurementOfGoods')
+   const res = await clientReturnApi.add(body)
+   if (res.status === 201) {
+     showToast(addMessage)
+     router.push('/clientReturn')
    }
  } catch (e) {
    console.log(e)
@@ -219,30 +195,23 @@ const totalPriceWithSale = computed(() => {
 })
 
 
-onMounted( () => {
+onMounted(() => {
   form.date = currentDate()
   author.value = JSON.parse(localStorage.getItem('user')).name || null
-
-  Promise.all([
-      getOrganizations(),
-      getCounterparties(),
-      getCpAgreements(),
-      getStorages(),
-      getCurrencies(),
-      getGoods(),
-      getProcurementDetails()
-  ])
-
+  getOrganizations()
+  getCounterparties()
+  getCpAgreements()
+  getStorages()
+  getCurrencies()
+  getGoods()
 })
 
-
-watch(() => form.counterparty, async (data) => {
+watch(() => form.counterparty, async (id) => {
   form.cpAgreement = null
-
-  const id = typeof data === 'object' ? data.id : data
 
   try {
     const res = await cpAgreementApi.getById(id)
+
     form.currency = {
       id: res.data.result.currency_id.id,
       name: res.data.result.currency_id.name
@@ -279,16 +248,17 @@ watch(() => form.salePercent, (newValue) => {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Возврат от клиента (просмотр)</span>
+          <span>Возврат от клиента (создание)</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="updateProcurement" name="add"/>
+              <Icons title="Добавить" @click="addNewClientReturn" name="add"/>
               <Icons title="Скопировать" @click="" name="copy"/>
               <Icons title="Удалить" @click="" name="delete"/>
             </div>
           </div>
+
         </v-card>
       </div>
     </v-col>
@@ -297,10 +267,10 @@ watch(() => form.salePercent, (newValue) => {
     <div style="background: #fff;">
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
-          <custom-text-field  :value="form.doc_number"/>
+          <custom-text-field disabled value="Номер" v-model="form.number"/>
           <custom-text-field label="Дата" type="date" v-model="form.date"/>
           <custom-autocomplete label="Организация" :items="organizations"  v-model="form.organization"/>
-          <custom-autocomplete label="Поставщик" :items="counterparties" v-model="form.counterparty"/>
+          <custom-autocomplete label="Клиент" :items="counterparties" v-model="form.counterparty"/>
           <custom-autocomplete label="Договор" :items="cpAgreements" v-model="form.cpAgreement"/>
           <custom-autocomplete label="Склад" :items="storages" v-model="form.storage"/>
           <custom-text-field label="Руч. скидка (сумма)" v-mask="'###'" v-model="form.saleInteger" :disabled="isSaleIntegerDisabled"/>
@@ -350,6 +320,12 @@ watch(() => form.salePercent, (newValue) => {
                     <custom-text-field v-model="item.amount" v-mask="'########'" min-width="50" max-width="90" />
                   </td>
                   <td>
+                    <custom-text-field v-model="item.auto_sale_percent" v-mask="'##########'" min-width="80" max-width="110"/>
+                  </td>
+                  <td>
+                    <custom-text-field v-model="item.auto_sale_sum" v-mask="'##########'" min-width="80" max-width="110"/>
+                  </td>
+                  <td>
                     <custom-text-field v-model="item.price" v-mask="'##########'" min-width="80" max-width="110"/>
                   </td>
                   <td>
@@ -362,11 +338,11 @@ watch(() => form.salePercent, (newValue) => {
         </div>
         <div class="d-flex justify-space-between w-100 mt-2 bottomField">
           <div class="d-flex ga-10">
-            <custom-text-field readonly :value="author" min-width="140" max-width="110"/>
+            <custom-text-field readonly :value="author"  min-width="140" max-width="110"/>
             <custom-text-field label="Комментарий" v-model="form.comment" min-width="310"/>
           </div>
           <div class="d-flex ga-6">
-            <custom-text-field readonly  :value="'Сумма со скидкой: ' + totalPriceWithSale" min-width="180" />
+            <custom-text-field readonly :value="'Сумма со скидкой: ' + totalPriceWithSale" min-width="180" />
             <custom-text-field readonly  :value="'Сумма без скидки: ' + totalPrice" min-width="180" max-width="110"/>
             <custom-autocomplete v-model="form.currency" label="Валюта" :items="currencies" min-width="110" max-width="110" />
           </div>
