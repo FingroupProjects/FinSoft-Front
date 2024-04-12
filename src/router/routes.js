@@ -61,6 +61,36 @@ const routes = [
     component: () => import("../pages/clientReturn/create.vue"),
   },
   {
+    path: "/providerOfGoods",
+    name: "providerOfGoods",
+    component: () => import("../pages/providerOfGoods/index.vue"),
+  },
+  {
+    path: "/providerOfGoods/:id",
+    name: "providerOfGoodsShow",
+    component: () => import("../pages/providerOfGoods/show.vue"),
+  },
+  {
+    path: "/providerOfGoods/create",
+    name: "providerOfGoodsCreate",
+    component: () => import("../pages/providerOfGoods/create.vue"),
+  },
+  {
+    path: "/moveOfGoods",
+    name: "moveOfGoods",
+    component: () => import("../pages/moveOfGoods/index.vue"),
+  },
+  {
+    path: "/moveOfGoods/:id",
+    name: "moveOfGoodsShow",
+    component: () => import("../pages/moveOfGoods/show.vue"),
+  },
+  {
+    path: "/moveOfGoods/create",
+    name: "moveOfGoodsCreate",
+    component: () => import("../pages/moveOfGoods/create.vue"),
+  },
+  {
     path: "/sellingGoods",
     name: "sellingGoods",
     component: () => import("../pages/sellingGoods/index.vue"),
