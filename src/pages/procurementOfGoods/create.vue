@@ -92,7 +92,7 @@ const getGoods = async () => {
   listGoods.value = data.result.data
 }
 
-const decreaseCountOfGoods = () => {
+const decreaseCountOfGoods = () => {z
   goods.value = goods.value.filter((item) => !markedID.value.includes(item.id))
 }
 
