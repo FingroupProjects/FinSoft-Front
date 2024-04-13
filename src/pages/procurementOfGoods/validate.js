@@ -29,7 +29,7 @@ export default function validate(
   if (!storage) {
     return showToast("Поле Склад не может быть пустым", "warning")
   }
-  if (!currency) {
+  if (!currency || currency.id === null) {
     return showToast("Поле Валюта не может быть пустым", "warning")
   }
 

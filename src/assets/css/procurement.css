@@ -7,7 +7,7 @@
 }
 
 .document .v-table > .v-table__wrapper > table > tbody > tr > td, .v-table > .v-table__wrapper > table > thead > tr > td, .v-table > .v-table__wrapper > table > tfoot > tr > td {
-  max-height: 15px !important;
+  max-height: 25px !important;
   padding-top: 4px;
   padding-bottom: 4px;
   /* width: 50px !important; */
@@ -18,9 +18,9 @@
 }
 
 .document .v-table--density-default {
- height: 26px;
+  height: 26px;
 }
 
-.document .goods .v-field__input {
-  max-height: 30px !important;
+.document .v-field__input {
+  max-height: 20px !important;
 }
