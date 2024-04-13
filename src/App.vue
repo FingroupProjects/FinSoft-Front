@@ -7,16 +7,23 @@ import warningModal from "./components/paymentWarning/warningModal.vue";
 import { ref, watch } from "vue";
 import showToast from "./composables/toast/index.js";
 import AdminPanel from "./pages/admin-panel/index.vue";
-import panel from "./pages/procurementOfGoods/panel.vue"
 
 const rale = ref(false);
-const procurementOfGoods = ref(false)
+const procurementOfGoods = ref(false);
 const admin = ref(false);
 const route = useRoute();
 const isLayout = ref(true);
+const lists = ref([]);
+const admins = ref([]);
 
 const toggleSidebar = () => {
   rale.value = !rale.value;
+};
+
+const toggleAdmin = (data) => {
+  lists.value = data.lists;
+  admins.value = data.admins;
+  admin.value = true;
 };
 
 watch(route, (newVal) => {
@@ -45,13 +52,21 @@ window.addEventListener("load", () => {
       <Header @rale="toggleSidebar" />
       <div class="content">
         <Sidebar
+          style="z-index: 5"
           @toggleProcurementOfGoods="procurementOfGoods = !procurementOfGoods"
-          @toggleAdmin="admin = !admin"
+          @toggleAdmin="toggleAdmin"
           @closeAdmin="admin = false"
           :rale="rale"
+          :admin="admin"
         />
-        <panel :procurementOfGoods="procurementOfGoods" @close="procurementOfGoods != procurementOfGoods"/>
-        <AdminPanel :admin="admin" @closeAdmin="admin = !admin" />
+        <AdminPanel
+          class="panel"
+          :class="{ active: admin }"
+          :admins="admins"
+          :lists="lists"
+          :admin="admin"
+          @toggle="admin = !admin"
+        />
         <warningModal />
         <router-view class="w-100 block" />
       </div>
@@ -65,7 +80,6 @@ window.addEventListener("load", () => {
   padding-top: 45px;
   height: 100vh;
   background-color: #e8edf0ff;
-  position: relative;
 }
 
 .block {
@@ -90,5 +104,22 @@ window.addEventListener("load", () => {
   background-color: initial;
   background-size: cover !important;
   background-position: right top !important;
+}
+
+.panel {
+  position: relative;
+  top: 0;
+  left: -20%;
+  width: 0px;
+  height: 100vh;
+  background-color: white;
+  transition: left 0.2s ease-in-out, width 0.2s ease-in-out;
+  z-index: 1;
+}
+
+.panel.active {
+  left: 0;
+  width: 350px;
+  display: block;
 }
 </style>

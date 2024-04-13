@@ -1,18 +1,8 @@
 const routes = [
   {
     path: "/",
-    name: "main",
+    name: "dashboard",
     component: () => import("../pages/homepage/index.vue"),
-  },
-  // {
-  //   path: "/adminPanel",
-  //   name: "adminPanel",
-  //   component: () => import("../pages/admin-panel/index.vue"),
-  // },
-  {
-    path: "/planning",
-    name: "planning",
-    component: () => import("../pages/planning/index.vue"),
   },
   {
     path: "/procurementOfGoods",
@@ -119,11 +109,6 @@ const routes = [
     path: "/salary",
     name: "salary",
     component: () => import("../pages/salary/index.vue"),
-  },
-  {
-    path: "/financeAnalysis",
-    name: "financeAnalysis",
-    component: () => import("../pages/financeAnalysis/index.vue"),
   },
   {
     path: "/list/currency",
