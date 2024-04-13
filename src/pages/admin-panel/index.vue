@@ -1,47 +1,39 @@
 <script setup>
-import { ref, defineProps, onMounted, onBeforeUnmount } from "vue";
+import { ref, defineProps, onMounted, watch, onBeforeUnmount } from "vue";
 import { useRouter } from "vue-router";
 
-const props = defineProps(["admin"]);
-const emit = defineEmits(["closeAdmin"]);
+const props = defineProps(["admin", "admins", "lists"]);
+const emit = defineEmits(["toggle"]);
 const router = useRouter();
 const users = ref([]);
 const filteredLists = ref([]);
 const filteredAdmins = ref([]);
 
-const admins = ref([
-  {
-    id: 1,
-    title: "Настройки",
-    link: "/programSettings",
-    icon: "settings",
-  },
-  { id: 2, title: "Заголовок программы", link: "", icon: "settings" },
-]);
+watch(props.admins, (newVal) => {
+  if (newVal) {
+    console.log("admins");
+    filteredAdmins.value = props.admins.filter((item) =>
+      users.value.permissions.includes(item.link.slice(1) + ".read")
+    );
+  }
+});
 
-const lists = ref([
-  {
-    id: 1,
-    title: "Справочники",
-    child: [
-      { id: 1, title: "Единица измерения", link: "/list/unit" },
-      { id: 2, title: "Банковские счета", link: "/list/organizationBill" },
-      { id: 3, title: "Номенклатура", link: "/list/nomenclature" },
-      { id: 4, title: "Пользователи", link: "/list/user" },
-      { id: 5, title: "Контрагенты", link: "/list/counterparty" },
-      { id: 6, title: "Организации", link: "/list/organization" },
-      { id: 7, title: "Сотрудники", link: "/list/employee" },
-      { id: 8, title: "Должность", link: "/list/position" },
-      { id: 9, title: "Виды цен", link: "/list/priceType" },
-      { id: 10, title: "Валюты", link: "/list/currency" },
-      { id: 11, title: "Склады", link: "/list/storage" },
-      { id: 12, title: "Кассы", link: "/list/cashRegister" },
-    ],
-  },
-]);
+watch(props.lists, (newVal) => {
+  if (newVal) {
+    console.log("lists");
+    filteredLists.value = props.lists.map((list) => {
+      return {
+        ...list,
+        child: list.child.filter((item) =>
+          users.value.permissions.includes(item.link.slice(6) + ".read")
+        ),
+      };
+    });
+  }
+});
 
 function push(item) {
-  emit("closeAdmin");
+  emit("toggle");
   router.push(item.link);
 }
 
@@ -53,19 +45,6 @@ function push(item) {
 
 onMounted(() => {
   users.value = JSON.parse(localStorage.getItem("user"));
-
-  filteredLists.value = lists.value.map((list) => {
-    return {
-      ...list,
-      child: list.child.filter((item) =>
-        users.value.permissions.includes(item.link.slice(6) + ".read")
-      ),
-    };
-  });
-
-  filteredAdmins.value = admins.value.filter((item) =>
-    users.value.permissions.includes(item.link.slice(1) + ".read")
-  );
 });
 </script>
 
@@ -76,7 +55,7 @@ onMounted(() => {
     style="background-color: #f2faff"
   >
     <div class="title">
-      <div v-for="list in filteredLists" :key="list.id">
+      <div v-for="list in props.lists" :key="list.id">
         <ul class="list">
           <span class="span text-uppercase text-black font-weight-regular">
             {{ list.title }}
@@ -94,14 +73,19 @@ onMounted(() => {
         </ul>
       </div>
       <div>
-        <div class="mb-10" nav v-for="admin in filteredAdmins" :key="admin.id">
+        <div v-for="list in props.admins" :key="list.id">
           <ul class="list">
             <span class="span text-uppercase text-black font-weight-regular">
-              {{ admin.title }}
+              {{ list.title }}
             </span>
-            <li class="d-flex align-center ga-4" @click="push(admin)">
+            <li
+              @click="push(child)"
+              class="d-flex align-center ga-4"
+              v-for="child in list.child"
+              :key="child.id"
+            >
               <span class="cursor-pointer">
-                {{ admins[1].title }}
+                {{ child.title }}
               </span>
             </li>
           </ul>
@@ -117,37 +101,13 @@ onMounted(() => {
   border-radius: 50px;
 }
 
+.sidebar{
+  max-height: 100vh;
+  overflow: auto;
+}
 ::-webkit-scrollbar-thumb {
   background: #c7c5c5;
   border-radius: 50px;
-}
-
-.sidebar {
-  width: auto;
-  transition: width 0.3s ease-in-out;
-}
-
-.open {
-  width: 350px;
-}
-
-.close {
-  width: 0;
-  transition: width 0.3s ease-in-out; 
-}
-
-.fadeOut {
-  animation: fadeOut 0.2s ease-in-out forwards; 
-}
-
-@keyframes fadeOut {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-    z-index: -111;
-  }
 }
 
 .span {
@@ -159,6 +119,8 @@ onMounted(() => {
   font-size: 14px;
   font-family: "Inter", sans-serif;
   font-weight: 300;
+  max-height: 92vh;
+  overflow: auto;
 }
 
 ul {
