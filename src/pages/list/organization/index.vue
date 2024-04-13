@@ -817,8 +817,4 @@ onMounted(async () => {
   font-size: 10px;
   color: white;
 }
-
-
 </style> 
-
-
