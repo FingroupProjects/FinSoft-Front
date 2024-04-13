@@ -1,5 +1,5 @@
 <script setup>
-import {computed, onMounted, reactive, ref, watch} from "vue";
+import {computed, onMounted, onUpdated, reactive, ref, watch} from "vue";
 import Icons from "../../composables/Icons/Icons.vue";
 import CustomTextField from "../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../components/formElements/CustomAutocomplete.vue";
@@ -19,8 +19,11 @@ import { editMessage } from "../../composables/constant/buttons.js";
 import "../../assets/css/procurement.css";
 import {BASE_COLOR} from "../../composables/constant/colors.js";
 
+
+const document = ref(null)
 const router = useRouter()
 const route = useRoute()
+const emits = defineEmits(['changed'])
 
 const form = reactive({
   doc_number: null,
@@ -62,7 +65,8 @@ const headers = ref([
 
 const getProcurementDetails = async () => {
   const { data } = await procurementApi.getById(route.params.id)
-  console.log(data)
+
+
   form.doc_number = data.result.doc_number
   form.date = data.result.date
   form.organization = {
@@ -93,6 +97,11 @@ const getProcurementDetails = async () => {
     amount: item.amount,
     price: item.price
   }))
+
+  setTimeout(() => {
+    document.value = data.result
+  }, 3000)
+
 }
 
 const getOrganizations = async () => {
@@ -178,6 +187,7 @@ const updateProcurement = async () => {
     saleInteger: Number(form.saleInteger),
     salePercent: Number(form.salePercent),
     currency_id: typeof form.currency === 'object' ? form.currency.id : form.currency,
+    comment: form.comment,
     goods: goods.value.map((item) => ({
       good_id: Number(item.good_id),
       amount: Number(item.amount),
@@ -217,6 +227,19 @@ const totalPriceWithSale = computed(() => {
   }
 
   return sum
+})
+
+const isDataChanged = () => {
+  console.log(document.value.saleInteger, form.saleInteger)
+  return form.saleInteger != document.value.saleInteger
+}
+
+watch(form, () => {
+  setTimeout(() => {
+    if (isDataChanged()) {
+      emits('changed')
+    }
+  }, 3930)
 })
 
 
@@ -297,7 +320,7 @@ router.beforeEach((to, from, next) => {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Возврат от клиента (просмотр)</span>
+          <span>Покупка (просмотр)</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">

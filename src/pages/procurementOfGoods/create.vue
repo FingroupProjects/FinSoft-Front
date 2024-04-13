@@ -341,5 +341,6 @@ watch(() => form.salePercent, (newValue) => {
 </template>
 
 <style scoped>
+@import "../../assets/css/procurement.css"
 
 </style>
