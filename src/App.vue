@@ -4,7 +4,7 @@ import { useRoute } from "vue-router";
 import Header from "./components/header/Header.vue";
 import Sidebar from "./components/sidebar/Sidebar.vue";
 import warningModal from "./components/paymentWarning/warningModal.vue";
-import { ref, watch } from "vue";
+import {ref, watch, onMounted} from "vue";
 import showToast from "./composables/toast/index.js";
 import AdminPanel from "./pages/admin-panel/index.vue";
 
@@ -32,13 +32,21 @@ watch(route, (newVal) => {
 
 window.addEventListener("load", () => {
   window.addEventListener("online", () => {
-    showToast("Подключение восстановлена!", "green", 3500);
-  });
+    showToast("Подключение восстановлена!", "green", 3500)
+  })
 
   window.addEventListener("offline", () => {
-    showToast("Отсутствует интернет соединение!", "red", 600000);
-  });
-});
+    showToast("Отсутствует интернет соединение!", "red", 600000)
+  })
+})
+
+const changed = () => {
+  console.log('турсунбой')
+}
+
+onMounted(() => {
+
+})
 </script>
 
 <template>
@@ -68,7 +76,7 @@ window.addEventListener("load", () => {
           @toggle="admin = !admin"
         />
         <warningModal />
-        <router-view class="w-100 block" />
+        <router-view class="w-100 block" @changed="changed"/>
       </div>
     </div>
   </v-app>

@@ -126,6 +126,7 @@ const validateItem = (item) => {
 };
 
 const addNewClientOrder = async () => {
+  console.log(form.currency)
   if (validate(form.date, form.organization, form.counterparty, form.cpAgreement, form.currency) !== true) return
 
   const missingData = goods.value.some(validateItem)
@@ -234,7 +235,7 @@ watch(() => form.counterparty, async (id) => {
           <custom-text-field disabled value="Номер"/>
           <custom-text-field label="Дата" type="date" v-model="form.date"/>
           <custom-autocomplete label="Организация" :items="organizations"  v-model="form.organization"/>
-          <custom-autocomplete label="Поставщик" :items="counterparties" v-model="form.counterparty"/>
+          <custom-autocomplete label="Клиент" :items="counterparties" v-model="form.counterparty"/>
           <custom-autocomplete label="Договор" :items="cpAgreements" v-model="form.cpAgreement"/>
           <custom-text-field label="Дата отгрузки" type="date" v-model="form.shipping_date"/>
         </div>
