@@ -1,9 +1,17 @@
 <script setup>
-import {ref, watch} from "vue";
+import {ref, watch, onMounted} from "vue";
 import {useRouter} from "vue-router";
 import showToast from '../../../composables/toast/index.js'
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
+import CustomTextField from "../../../components/formElements/CustomTextField.vue";
+import organizationApi from "../../../api/list/organizations.js";
+import counterpartyApi from "../../../api/list/counterparty.js";
+import storageApi from "../../../api/list/storage.js";
+import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
+import currencyApi from "../../../api/list/currency.js";
+import user from "../../../api/list/user.js";
+import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 import {
   removeMessage,
@@ -33,11 +41,23 @@ const paginations = ref([])
 const showConfirmDialog = ref(false);
 const showModal = ref(false);
 const count = ref(0);
+const organizations = ref([])
+const providers = ref([])
+const storages = ref([])
+const authors = ref([])
+const currencies = ref([])
+const counterparties = ref([])
+const counterpartyAgreements = ref([])
 
 
 const filterForm = ref({
-  name: null,
-  description: null,
+  date: null,
+  provider_id: null,
+  counterparty_id: null,
+  counterparty_agreement_id: null,
+  organization_id: null,
+  storage_id: null,
+  author_id: null,
   currency_id: null
 })
 
@@ -179,6 +199,51 @@ watch(search, debounce((newValue) => {
   debounceSearch.value = newValue
 }, 500))
 
+
+const getAuthors = async () => {
+  const { data } = await user.getAuthors();
+  
+  authors.value = data.result
+  
+}
+
+const getOrganizations = async () => {
+  const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  organizations.value = data.result.data
+}
+
+const getCounterparties = async () => {
+  const { data } = await counterpartyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  counterparties.value = data.result.data
+}
+
+const getCpAgreements = async () => {
+  const { data } = await cpAgreementApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  counterpartyAgreements.value = data.result.data
+}
+
+const getStorages = async () => {
+  const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  storages.value = data.result.data
+}
+
+const getCurrencies = async () => {
+  const { data } = await currencyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  
+  currencies.value = data.result.data
+ 
+}
+
+onMounted(() => {
+  getOrganizations()
+  getCounterparties()
+  getCpAgreements()
+  getStorages()
+  getCurrencies()
+  getAuthors()
+ 
+})
+
 </script>
 
 <template>
@@ -300,27 +365,28 @@ watch(search, debounce((newValue) => {
             <v-form class="d-flex w-100" @submit.prevent="">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100">
-                  <v-text-field
-                      v-model="filterForm.name"
-                      :color="BASE_COLOR"
-                      rounded="md"
-                      :base-color="FIELD_COLOR"
-                      variant="outlined"
-                      class="w-auto text-sm-body-1"
-                      density="compact"
-                      placeholder="Наименование"
-                      label="Наименование"
-                      clear-icon="close"
-                      clearable
-                      autofocus
-                  />
+                  <div class="d-flex ga-2 w-100">
+                  <custom-text-field label="Дата" type="date" min-width="508"  v-model="filterForm.date"/>
+                  </div>
+                  <div class="d-flex ga-2">
+                    <custom-autocomplete label="Организация" :items="organizations"  v-model="filterForm.organization_id"/>
+                  <custom-autocomplete label="Поставщик" :items="counterparties" v-model="filterForm.counterparty_id"/>               
+                 </div>
+                  <div class="d-flex ga-2">
+                  <custom-autocomplete label="Склад" :items="storages" v-model="filterForm.storage_id"/>
+                  <custom-autocomplete label="Валюта" :items="currencies" v-model="filterForm.currency_id"/>
+                </div>
+                <div class="d-flex ga-2">
+                  <custom-autocomplete label="Автор" :items="authors" v-model="filterForm.author_id"/>
+                   <custom-autocomplete label="Договор" :items="counterpartyAgreements" v-model="filterForm.counterparty_agreement_id"/>
+                  </div>
                   <div class="d-flex justify-end ga-2">
                     <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
                     <v-btn :color="BASE_COLOR" class="btn"  @click="getProviderData">применить</v-btn>
                   </div>
                 </v-col>
               </v-row>
-            </v-form>
+            </v-form> 
           </v-card>
         </v-dialog>
       </v-card>
