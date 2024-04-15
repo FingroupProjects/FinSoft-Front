@@ -1,10 +1,15 @@
 <script setup>
 import { onMounted, ref } from "vue";
+import { useRoute } from "vue-router";
 import documentHistoryApi from "../../api/documents/documentHistory";
 import showDate from "../../composables/date/showDate";
 
-const id = ref("96555f8f-c29d-4117-be3a-04b75a0cdff7");
+const route = useRoute();
+
+const id = ref(null);
+
 const historyDoc = ref([]);
+
 const getDocumentHistory = async () => {
   try {
     const { data } = await documentHistoryApi.get(id.value);
@@ -12,13 +17,13 @@ const getDocumentHistory = async () => {
       ...item,
       date: showDate(item.date),
     }));
-    console.log(historyDoc.value);
   } catch (e) {
     console.error(e);
   }
 };
 
 onMounted(async () => {
+  id.value = route.params.id;
   await getDocumentHistory();
 });
 </script>

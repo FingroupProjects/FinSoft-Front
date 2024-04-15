@@ -1,10 +1,12 @@
 <script setup>
-import {ref, watch} from "vue";
+import {onMounted, ref, watch} from "vue";
 import {useRouter} from "vue-router";
 import showToast from '../../../composables/toast/index.js'
 import Icons from "../../../composables/Icons/Icons.vue";
+import CustomTextField from "../../../components/formElements/CustomTextField.vue";
+import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import {FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
+import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 import {
   removeMessage,
   warningMessage,
@@ -13,7 +15,13 @@ import {
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
 import saleApi from '../../../api/documents/sale.js';
-
+import showDate from "../../../composables/date/showDate.js";
+import organizationApi from "../../../api/list/organizations.js";
+import counterpartyApi from "../../../api/list/counterparty.js";
+import storageApi from "../../../api/list/storage.js";
+import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
+import currencyApi from "../../../api/list/currency.js";
+import user from "../../../api/list/user.js";
 const router = useRouter()
 
 const loading = ref(true)
@@ -35,9 +43,22 @@ const showModal = ref(false);
 const count = ref(0);
 
 
+const organizations = ref([])
+const providers = ref([])
+const storages = ref([])
+const authors = ref([])
+const currencies = ref([])
+const counterparties = ref([])
+const counterpartyAgreements = ref([])
+
 const filterForm = ref({
-  name: null,
-  description: null,
+  date: null,
+  provider_id: null,
+  counterparty_id: null,
+  counterparty_agreement_id: null,
+  organization_id: null,
+  storage_id: null,
+  author_id: null,
   currency_id: null
 })
 
@@ -84,9 +105,7 @@ function countFilter() {
   return count;
 }
 
-const editDocument = item => {
-  router.push({name: 'SellingGoodsEdit', params: {id: item.id}})
-}
+
 
 
 const massDel = async () => {
@@ -183,8 +202,53 @@ watch(dialog, newVal => {
   }
 })
 
+
+const getAuthors = async () => {
+  const { data } = await user.getAuthors();
+  
+  authors.value = data.result
+  
+}
+
+const getOrganizations = async () => {
+  const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  organizations.value = data.result.data
+}
+
+const getCounterparties = async () => {
+  const { data } = await counterpartyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  counterparties.value = data.result.data
+}
+
+const getCpAgreements = async () => {
+  const { data } = await cpAgreementApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  counterpartyAgreements.value = data.result.data
+}
+
+const getStorages = async () => {
+  const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  storages.value = data.result.data
+}
+
+const getCurrencies = async () => {
+  const { data } = await currencyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  
+  currencies.value = data.result.data
+ 
+}
+
+onMounted(() => {
+  getOrganizations()
+  getCounterparties()
+  getCpAgreements()
+  getStorages()
+  getCurrencies()
+  getAuthors()
+ 
+})
+
 watch(markedID, (newVal) => {
-  markedItem.value = sales.value.find((el) => el.id === newVal[0]);
+  markedItem.value = procurements.value.find((el) => el.id === newVal[0]);
 })
 
 watch(search, debounce((newValue) => {
@@ -215,7 +279,7 @@ watch(search, debounce((newValue) => {
                   density="compact"
                   label="Поиск..."
                   variant="outlined"
-                  color="info"
+                  :color="BASE_COLOR"
                   rounded="lg"
                   :base-color="FIELD_OF_SEARCH"
                   clear-icon="close"
@@ -267,7 +331,7 @@ watch(search, debounce((newValue) => {
             <tr
                 @mouseenter="hoveredRowIndex = index"
                 @mouseleave="hoveredRowIndex = null"
-                @dblclick="editDocument(item)"
+                @dblclick="$router.push(`/SellingGoodsEdit/${item.id}`)"
                 :class="{'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
               <td>
@@ -291,7 +355,7 @@ watch(search, debounce((newValue) => {
                 </template>
               </td>
               <td>{{ item.doc_number }}</td>
-              <td>{{ item.date }}</td>
+              <td>{{ showDate(item.date) }}</td>
               <td>{{ item.counterparty.name }}</td>
               <td>{{ item.organization.name }}</td>
               <td>{{ item.storage.name }}</td>
@@ -304,7 +368,7 @@ watch(search, debounce((newValue) => {
 
       <v-card>
         <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup.esc="closeFilterModal">
-          <v-card style="border: 2px solid #3AB700" min-width="450"
+          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="450"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
               <span>Фильтр</span>
@@ -312,23 +376,24 @@ watch(search, debounce((newValue) => {
             <v-form class="d-flex w-100" @submit.prevent="">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100">
-                  <v-text-field
-                      v-model="filterForm.name"
-                      color="green"
-                      rounded="md"
-                      :base-color="FIELD_COLOR"
-                      variant="outlined"
-                      class="w-auto text-sm-body-1"
-                      density="compact"
-                      placeholder="Наименование"
-                      label="Наименование"
-                      clear-icon="close"
-                      clearable
-                      autofocus
-                  />
+                  <div class="d-flex ga-2 w-100">
+                  <custom-text-field label="Дата" type="date" min-width="508"  v-model="filterForm.date"/>
+                  </div>
+                  <div class="d-flex ga-2">
+                    <custom-autocomplete label="Организация" :items="organizations"  v-model="filterForm.organization_id"/>
+                  <custom-autocomplete label="Клиент" :items="counterparties" v-model="filterForm.counterparty_id"/>               
+                 </div>
+                  <div class="d-flex ga-2">
+                  <custom-autocomplete label="Склад" :items="storages" v-model="filterForm.storage_id"/>
+                  <custom-autocomplete label="Валюта" :items="currencies" v-model="filterForm.currency_id"/>
+                </div>
+                <div class="d-flex ga-2">
+                  <custom-autocomplete label="Автор" :items="authors" v-model="filterForm.author_id"/>
+                   <custom-autocomplete label="Договор" :items="counterpartyAgreements" v-model="filterForm.counterparty_agreement_id"/>
+                  </div>
                   <div class="d-flex justify-end ga-2">
                     <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-                    <v-btn color="green" class="btn"  @click="getSellingGoods">применить</v-btn>
+                    <v-btn :color="BASE_COLOR" class="btn"  @click="getSellingGoods">применить</v-btn>
                   </div>
                 </v-col>
               </v-row>

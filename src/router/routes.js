@@ -93,7 +93,7 @@ const routes = [
   {
     path: "/SellingGoodsEdit/:id",
     name: "SellingGoodsEdit",
-    component: () => import("../pages/selling/sellingGoods/update.vue"),
+    component: () => import("../pages/selling/sellingGoods/show.vue"),
   },
   {
     path: "/cash",
@@ -188,7 +188,7 @@ const routes = [
   {
     path: "/documentHistory/:id",
     name: "documentHistory",
-    component: () => import("../pages/document/index.vue"),
+    component: () => import("../pages/documentHistory/index.vue"),
   },
   {
     path: "/login",

@@ -22,7 +22,10 @@ import organizationApi from "@/api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import priceTypeApi from "@/api/list/priceType.js";
 import validate from "./validate.js";
-import { FIELD_COLOR, BASE_COLOR } from "../../../composables/constant/colors.js";
+import {
+  FIELD_COLOR,
+  BASE_COLOR,
+} from "../../../composables/constant/colors.js";
 const props = defineProps([
   "isOpen",
   "isEdit",
@@ -65,6 +68,7 @@ const currencies = ref([]);
 const organizations = ref([]);
 const priceTypes = ref([]);
 const counterparties = ref([]);
+const counterpartyAgreements = ref([]);
 
 const editAgreementDialog = ref(false);
 const agreementDialog = ref(false);
@@ -96,15 +100,15 @@ watch(
 );
 
 const isOrganizationFieldDisabled = computed(() => {
-  return !createAccess("organizations") && !updateAccess("organizations");
+  return !createAccess("organization") && !updateAccess("organization");
 });
 
 const isCurrencyFieldDisabled = computed(() => {
-  return !createAccess("currencies") && !updateAccess("currencies");
+  return !createAccess("currency") && !updateAccess("currency");
 });
 
 const isPriseTypesFieldDisabled = computed(() => {
-  return !createAccess("priceTypes") && !updateAccess("priceTypes");
+  return !createAccess("priceType") && !updateAccess("priceType");
 });
 
 watch(
@@ -251,6 +255,7 @@ const cpAgreementGetById = async (item) => {
       counterparty_id: item.counterparty_id.id,
       price_type_id: item.price_type_id.id,
     };
+    counterpartyAgreements.value = form.value
   } catch (e) {
     console.log(e);
   }
@@ -523,18 +528,18 @@ const closeDialogWithoutSaving = () => {
   showModal.value = false;
   clearForm();
 };
-const isDataChangedAgreement = () => {
-  const item = props.counterpartyAgreement.find(
-    (item) => item.id === props.item.id
-  );
 
+const isDataChangedAgreement = () => {
+  const item = counterpartyAgreements.value
+  console.log(item);
+  console.log(form.value);
   const isChanged =
-    name.value !== item.name ||
-    currencies.value !== item.currency_id ||
-    organizations.value !== item.organization_id ||
-    priceTypes.value !== item.price_type_id ||
-    counterparties.value !== item.contact_person ||
-    date.value !== item.date;
+    form.value.name !== item.name ||
+    form.value.currency_id !== item.currency_id ||
+    form.value.organization_id !== item.organization_id ||
+    form.value.price_type_id !== item.price_type_id ||
+    form.value.contact_person !== item.contact_person ||
+    form.value.date !== item.date;
   return isChanged;
 };
 
@@ -570,6 +575,7 @@ const closingWithSavingAgreement = async () => {
     }
   }
 };
+
 const checkUpdateAgreement = () => {
   if (isDataChangedAgreement()) {
     showModalAgreement.value = true;
@@ -740,6 +746,7 @@ const currencyProps = (item) => {
               <div class="d-flex justify-space-between ga-6">
                 <v-text-field
                   v-model="name"
+                  max-length="25"
                   :rules="isValid ? [rules.required] : []"
                   :color="BASE_COLOR"
                   :base-color="FIELD_COLOR"
@@ -946,7 +953,7 @@ const currencyProps = (item) => {
           <div class="d-flex align-center justify-space-between">
             <div class="d-flex ga-3 align-center mt-2 me-4">
               <Icons
-                v-if="createAccess('cpAgreement') && !editAgreementDialog"
+                v-if="createAccess('counterpartyAgreement') && !editAgreementDialog"
                 @click="
                   editAgreementDialog
                     ? updateCpAgreement()
@@ -971,7 +978,7 @@ const currencyProps = (item) => {
         </div>
         <v-form
           class="d-flex w-100"
-          :disabled="!updateAccess('cpAgreement') && isEdit"
+          :disabled="!updateAccess('counterpartyAgreement') && isEdit"
           @submit.prevent="createCpAgreement"
         >
           <v-row class="w-100">

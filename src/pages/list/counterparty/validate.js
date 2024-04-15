@@ -4,6 +4,9 @@ export default function validate(name, phone, address, email, roles) {
   if (!name.value) {
     return showToast("Поле наименования не может быть пустым", "warning");
   }
+  if(name.value.length > 25){
+    return showToast('Поле наименования не может быть больше 25 символов', 'warning')
+  }
   if (phone.value.length !== 13) {
     return showToast(
       "Поле тел номер должен состоять из 11 символов",

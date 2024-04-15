@@ -37,12 +37,6 @@ function push(item) {
   router.push(item.link);
 }
 
-// onBeforeUnmount(() => {
-//   window.onbeforeunload = () => {
-//     return "У вас есть несохраненные данные. Вы уверены, что хотите покинуть страницу?";
-//   };
-// });
-
 onMounted(() => {
   users.value = JSON.parse(localStorage.getItem("user"));
 });
@@ -62,6 +56,7 @@ onMounted(() => {
           </span>
           <li
             @click="push(child)"
+            :class="child.link === $route.path ? 'active' : ''"
             class="d-flex align-center ga-4"
             v-for="child in list.child"
             :key="child.id"
@@ -97,16 +92,29 @@ onMounted(() => {
 
 <style scoped>
 ::-webkit-scrollbar {
-  width: 12px;
+  width: 3px;
   border-radius: 50px;
+  background: #c7c5c5;
+  transition: width 20s ease-in-out;
 }
 
-.sidebar{
+.sidebar:hover ::-webkit-scrollbar {
+  transition: width 20s ease-in-out;
+  width: 8px;
+}
+
+.active {
+  color: #08072e;
+  font-weight: 600;
+}
+
+.sidebar {
   max-height: 100vh;
   overflow: auto;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #c7c5c5;
+  background: #08072e;
   border-radius: 50px;
 }
 

@@ -297,23 +297,6 @@ watch(() => form.salePercent, (newValue) => {
   }
 })
 
-
-
-// предотвращение перехода на другую страницу при несохраненных данных
-const leaveGuard = (to, from, next) => {
-  if (!form.isChange && from.path !== to.path && !confirm('Вы уверены, что хотите покинуть эту страницу без сохранения изменений?')) {
-    next(false); 
-  } else {
-    next();
-  }
-};
-
-router.beforeEach((to, from, next) => {
-  leaveGuard(to, from, next);
-});
-
-// еще не закончено
-
 </script>
 <template>
   <div class="document">

@@ -8,7 +8,10 @@ export default {
   add(data) {
     return api.post("/document/client/purchase", data);
   },
-  show(id) {
-    return api.get(`/document/provider/show/${id}`);
+  getById(id) {
+    return api.get(`/document/show/${id}`);
+  },
+  update(id, data) {
+    return api.patch(`/document/update/${id}`, data);
   },
 };

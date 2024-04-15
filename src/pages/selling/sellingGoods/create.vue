@@ -17,6 +17,7 @@ import saleApi from "../../../api/documents/sale.js";
 import goodApi from "../../../api/list/goods.js";
 import { addMessage } from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
+import { BASE_COLOR } from "../../../composables/constant/colors.js";
 
 const router = useRouter();
 
@@ -72,12 +73,17 @@ const getOrganizations = async () => {
 };
 
 const getCounterparties = async () => {
-  const { data } = await counterpartyApi.get({
-    page: 1,
-    itemsPerPage: 100000,
-    sortBy: "name",
-  });
-  counterparties.value = data.result.data;
+  try {
+    const { data } = await counterpartyApi.getClientCounterparty({
+      page: 1,
+      itemsPerPage: 100000,
+      sortBy: "name",
+    });
+    console.log(data);
+    counterparties.value = data.result;
+  } catch (e) {
+    console.error(e);
+  }
 };
 
 const getCpAgreements = async () => {
@@ -192,7 +198,6 @@ const addNewSale = async () => {
     })),
   };
 
-
   try {
     const res = await saleApi.add(body);
     if (res.status === 201) {
@@ -289,22 +294,25 @@ watch(
 </script>
 
 <template>
-  <div>
+  <div class="document">
     <v-col>
       <div class="d-flex justify-space-between text-uppercase">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Покупка (создание)</span>
+          <span>Продажа (создание)</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
               <!-- <Icons name="folder" /> -->
-              <Icons @click="addNewSale" name="createOnbase" />
+              <!-- <Icons @click="addNewSale" name="createOnbase" />
               <Icons @click="addNewSale" name="deleteFromBase" />
               <Icons @click="addNewSale" name="print" />
               <Icons title="Удалить" @click="addNewSale" name="delete" />
               <Icons title="Добавить" @click="addNewSale" name="add" />
-              <Icons title="Назад" @click="$router.go(-1)" name="close" />
+              <Icons title="Назад" @click="$router.go(-1)" name="close" /> -->
+              <Icons title="Добавить" @click="addNewSale" name="add"/>
+              <Icons title="Скопировать" name="copy"/>
+              <Icons title="Удалить" name="delete"/>
             </div>
           </div>
         </v-card>
@@ -323,7 +331,7 @@ watch(
             v-model="form.organization"
           />
           <custom-autocomplete
-            label="Поставщик"
+            label="Клиент"
             :items="counterparties"
             v-model="form.counterparty"
           />
@@ -352,7 +360,7 @@ watch(
         </div>
       </v-col>
       <v-col>
-        <div style="border: 1px solid #0fc242" class="rounded">
+        <div :style="`border: 1px solid ${BASE_COLOR}`" class="rounded">
           <div class="d-flex pa-1 ga-1">
             <Icons
               name="add"
@@ -363,7 +371,7 @@ watch(
           </div>
           <div class="d-flex flex-column w-100">
             <v-data-table
-              style="height: 78vh"
+              style="height: 50vh"
               items-per-page-text="Элементов на странице:"
               loading-text="Загрузка"
               no-data-text="Нет данных"
@@ -391,11 +399,12 @@ watch(
                       <span>{{ index + 1 }}</span>
                     </CustomCheckbox>
                   </td>
-                  <td>
+                  <td style="width: 40%">
                     <custom-autocomplete
                       v-model="item.good_id"
                       :items="listGoods"
                       min-width="150"
+                      max-width="100%"
                     />
                   </td>
                   <td>
@@ -403,7 +412,6 @@ watch(
                       v-model="item.amount"
                       v-mask="'########'"
                       min-width="50"
-                      max-width="90"
                     />
                   </td>
                   <td>
@@ -411,7 +419,6 @@ watch(
                       v-model="item.price"
                       v-mask="'##########'"
                       min-width="80"
-                      max-width="110"
                     />
                   </td>
                   <td>
@@ -419,15 +426,11 @@ watch(
                       readonly
                       :value="item.amount * item.price"
                       min-width="100"
-                      max-width="110"
                     />
                   </td>
                 </tr>
               </template>
             </v-data-table>
-            <div class="py-2 w-100" style="border-top: 1px solid #0fc242">
-              <span class="ml-15">Итого Количество: {{ goods.length }}</span>
-            </div>
           </div>
         </div>
         <div class="d-flex justify-space-between w-100 mt-2 bottomField">
@@ -458,6 +461,7 @@ watch(
             />
             <custom-autocomplete
               v-model="form.currency"
+              label="Валюта"
               :items="currencies"
               min-width="110"
               max-width="110"
@@ -469,4 +473,6 @@ watch(
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+@import "../../../assets/css/procurement.css";
+</style>
