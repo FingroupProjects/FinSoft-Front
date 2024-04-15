@@ -214,6 +214,10 @@ const getOrganizations = async () => {
   organizations.value = data.result.data
 }
 
+const getStorages = async () => {
+  const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  storages.value = data.result.data
+}
 const getCounterparties = async () => {
   const { data } = await counterpartyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   counterparties.value = data.result.data
@@ -224,10 +228,6 @@ const getCpAgreements = async () => {
   counterpartyAgreements.value = data.result.data
 }
 
-const getStorages = async () => {
-  const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  storages.value = data.result.data
-}
 
 const getCurrencies = async () => {
   const { data } = await currencyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
