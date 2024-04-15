@@ -81,7 +81,7 @@ const getOrganizationData = async ({ page, itemsPerPage, sortBy, search}) => {
 
   const filterData = filterForm.value
   filterModal.value = false
-  loading.value = true;
+  
   try {
     const { data } = await organization.get(
       { page, itemsPerPage, sortBy },
@@ -330,7 +330,7 @@ const remove = async ({page, itemsPerPage, sortBy}) => {
     console.log(e)
   }
 }
-const  closeFilterModal = async ({page, itemsPerPage, sortBy, search, filterData}) => {
+const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
   filterModal.value = false
   filterForm.value = {}
   await getOrganizationData({page, itemsPerPage, sortBy, search})

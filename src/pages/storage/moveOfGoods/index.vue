@@ -1,5 +1,5 @@
 <script setup>
-import {ref, watch} from "vue";
+import {ref, watch, onMounted} from "vue";
 import {useRouter} from "vue-router";
 import showToast from '../../../composables/toast/index.js'
 import Icons from "../../../composables/Icons/Icons.vue";
@@ -12,7 +12,9 @@ import {
   restoreMessage
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
-import providerApi from '../../../api/documents/provider.js';
+import organizationApi from "../../../api/list/organizations.js";
+import storageApi from "../../../api/list/storage.js";
+import providerApi from '../../../api/documents/provider.js'; 
 import showDate from "../../../composables/date/showDate.js";
 const router = useRouter()
 
@@ -34,22 +36,29 @@ const showConfirmDialog = ref(false);
 const showModal = ref(false);
 const count = ref(0);
 
+const organizations = ref([])
+const storages = ref([])
+
+
+
 
 const filterForm = ref({
-  name: null,
-  description: null,
-  currency_id: null
+  date: null,
+  organization_id: null,
+  sender_storage_id: null,
+  recipient_storage_id: null,
+  storage_id: null,
+  comment: null,
 })
 
 
 const headers = ref([
   {title: 'Номер', key: 'name'},
   {title: 'Дата', key: 'currency.name'},
-  {title: 'Поставщик', key: 'currency.name'},
+  {title: 'Склад-отправитель', key: 'currency.name'},
+  {title: 'Склад-получатель', key: 'currency.name'},
   {title: 'Организация', key: 'currency.name'},
-  {title: 'Склад', key: 'currency.name'},
   {title: 'Автор', key: 'currency.name'},
-  {title: 'Валюта', key: 'currency.name'},
 ])
 
 const rules = {
@@ -57,7 +66,7 @@ const rules = {
 }
 
 
-const getProviderData = async ({page, itemsPerPage, sortBy, search}) => {
+const getMoveData = async ({page, itemsPerPage, sortBy, search}) => {
   count.value = 0;
   countFilter()
   const filterData = filterForm.value
@@ -71,6 +80,21 @@ const getProviderData = async ({page, itemsPerPage, sortBy, search}) => {
   } catch (e) {
   }
 }
+const getOrganizations = async () => {
+  const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  organizations.value = data.result.data
+}
+
+const getStorages = async () => {
+  const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  storages.value = data.result.data
+}
+
+onMounted(() => {
+  getOrganizations()
+  getStorages()
+})
+
 
 function countFilter() {
 
@@ -90,7 +114,7 @@ const massDel = async () => {
     if (status === 200) {
 
       showToast(removeMessage, 'red')
-      await getProviderData({})
+      await getMoveData({})
       markedID.value = []
       dialog.value = false
     }
@@ -106,7 +130,7 @@ const massRestore = async () => {
 
     if (status === 200) {
       showToast(restoreMessage)
-      await getProviderData({})
+      await getMoveData({})
       markedID.value = []
       dialog.value = false
     }
@@ -155,7 +179,7 @@ const lineMarking = (item) => {
 const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
   filterModal.value = {}
   cleanFilterForm()
-  await getProviderData({page, itemsPerPage, sortBy, search})
+  await getMoveData({page, itemsPerPage, sortBy, search})
 }
 
 const cleanFilterForm = () => {
@@ -191,7 +215,7 @@ watch(search, debounce((newValue) => {
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="$router.push('/providerOfGoods/create')" name="add"/>
+              <Icons title="Добавить" @click="$router.push('/moveOfGoods/create')" name="add"/>
               <Icons title="Скопировать" @click="" name="copy"/>
               <Icons title="Удалить" @click="compute" name="delete"/>
             </div>
@@ -240,7 +264,7 @@ watch(search, debounce((newValue) => {
             :item-value="headers.title"
             :search="debounceSearch"
             v-model="markedID"
-            @update:options="getProviderData"
+            @update:options="getMoveData"
             page-text =  '{0}-{1} от {2}'
             :items-per-page-options="[
                 {value: 25, title: '25'},
@@ -255,7 +279,7 @@ watch(search, debounce((newValue) => {
             <tr
                 @mouseenter="hoveredRowIndex = index"
                 @mouseleave="hoveredRowIndex = null"
-                @dblclick="$router.push(`/providerOfGoods/${item.id}`)"
+                @dblclick="$router.push(`/moveOfGoods/${item.id}`)"
                 :class="{'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
               <td>
@@ -280,11 +304,10 @@ watch(search, debounce((newValue) => {
               </td>
               <td>{{ item.doc_number }}</td>
               <td>{{ showDate(item.date) }}</td>
-              <td>{{ item.counterparty.name }}</td>
-              <td>{{ item.organization.name }}</td>
               <td>{{ item.storage.name }}</td>
+              <td>{{ item.storage.name }}</td>
+              <td>{{ item.organization.name }}</td>
               <td>{{ item.author.name }}</td>
-              <td>{{ item.currency.name }}</td>
             </tr>
           </template>
         </v-data-table-server>
@@ -300,24 +323,14 @@ watch(search, debounce((newValue) => {
             <v-form class="d-flex w-100" @submit.prevent="">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100">
-                  <v-text-field
-                      v-model="filterForm.name"
-                      :color="BASE_COLOR"
-                      rounded="md"
-                      :base-color="FIELD_COLOR"
-                      variant="outlined"
-                      class="w-auto text-sm-body-1"
-                      density="compact"
-                      placeholder="Наименование"
-                      label="Наименование"
-                      clear-icon="close"
-                      clearable
-                      autofocus
-                  />
-                  <div class="d-flex justify-end ga-2">
-                    <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-                    <v-btn :color="BASE_COLOR" class="btn"  @click="getProviderData">применить</v-btn>
+                  <div class="d-flex ga-2 w-100">
+                  <custom-text-field label="Дата" type="date" min-width="508"  v-model="filterForm.date"/>
                   </div>
+                  <div class="d-flex ga-2">
+                    <custom-autocomplete label="Склад-отправитель" :items="organizations"  v-model="filterForm.organization_id"/>
+                  <custom-autocomplete label="Склад-получатель" :items="storages" v-model="filterForm.storage_id"/>               
+                 </div>
+                 
                 </v-col>
               </v-row>
             </v-form>

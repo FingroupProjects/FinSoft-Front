@@ -347,12 +347,6 @@ const cleanForm = () => {
   comment.value = null;
 };
 
-
-const cleanFilterForm = () => {
-  filterForm.value = {};
-  count.value = 0
-};
-
 const addBasedOnOrganizationBill = () => {
   if (markedID.value.length === 0) return showToast(warningMessage, "warning");
   if (markedID.value.length > 1)
@@ -385,7 +379,7 @@ const compute = ({page, itemsPerPage, sortBy, search}) => {
 
 const closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
   filterModal.value = false;
-  cleanFilterForm();
+  filterForm.value = {}
   await getOrganizationBillData({page, itemsPerPage, sortBy, search});
 };
 
@@ -701,7 +695,7 @@ onMounted(() => {
         </v-dialog>
       </v-card>
       <v-card>
-        <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup="closeFilterModal">
+        <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup.esc="closeFilterModal">
           <v-card
           :style="`border: 2px solid ${BASE_COLOR}`"
               min-width="600"
