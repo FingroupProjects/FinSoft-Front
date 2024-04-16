@@ -7,7 +7,8 @@ const routes = [
   {
     path: "/procurementOfGoods",
     name: "procurementOfGoods",
-    component: () => import("../pages/procurement/procurementOfGoods/index.vue"),
+    component: () =>
+      import("../pages/procurement/procurementOfGoods/index.vue"),
   },
   {
     path: "/procurementOfGoods/:id",
@@ -17,7 +18,8 @@ const routes = [
   {
     path: "/procurementOfGoods/create",
     name: "procurementOfGoodsCreate",
-    component: () => import("../pages/procurement/procurementOfGoods/create.vue"),
+    component: () =>
+      import("../pages/procurement/procurementOfGoods/create.vue"),
   },
   {
     path: "/clientOrder",
@@ -94,6 +96,21 @@ const routes = [
     path: "/SellingGoodsEdit/:id",
     name: "SellingGoodsEdit",
     component: () => import("../pages/selling/sellingGoods/show.vue"),
+  },
+  {
+    path: "/invertory",
+    name: "invertory",
+    component: () => import("../pages/storage/invertor/index.vue"),
+  },
+  {
+    path: "/invertoryCreate",
+    name: "invertoryCreate",
+    component: () => import("../pages/storage/invertor/create.vue"),
+  },
+  {
+    path: "/InvertoryEdit/:id",
+    name: "InvertoryEdit",
+    component: () => import("../pages/storage/invertor/show.vue"),
   },
   {
     path: "/cash",
