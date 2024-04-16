@@ -97,7 +97,7 @@ const rules = {
 }
 
 const isOrganizationFieldDisabled = computed(() => {
-  return !createAccess('organizations') && !updateAccess('organizations');
+  return !createAccess('organization') && !updateAccess('organization');
 });
 
 const getGroup = async ({page, itemsPerPage, sortBy}) => {

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, onUpdated, reactive, ref, watch } from "vue";
+import { computed, onMounted, reactive, ref, watch } from "vue";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
@@ -7,99 +7,79 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../../composables/toast/index.js";
 import currentDate from "../../../composables/date/currentDate.js";
 import validate from "./validate.js";
+
 import { useRoute, useRouter } from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
-import counterpartyApi from "../../../api/list/counterparty.js";
 import storageApi from "../../../api/list/storage.js";
-import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
-import currencyApi from "../../../api/list/currency.js";
-import saleApi from "../../../api/documents/sale.js";
+import invertorApi from "../../../api/documents/invertor.js";
 import goodApi from "../../../api/list/goods.js";
 import { editMessage } from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
 import { BASE_COLOR } from "../../../composables/constant/colors.js";
 
-const document = ref(null);
 const router = useRouter();
 const route = useRoute();
-const emits = defineEmits(["changed"]);
 
 const form = reactive({
   doc_number: null,
   date: null,
   organization: null,
   organizations: [],
-  counterparty: null,
-  counterparties: [],
-  cpAgreement: null,
-  cpAgreements: [],
   storage: null,
+  user: null,
   storages: [],
-  saleInteger: null,
-  salePercent: null,
   comment: null,
   currency: null,
-  isChange: true,
+  accounting_quantity: null,
+  actual_quantity: null,
+  difference: null,
 });
 
 const loading = ref(false);
 const author = ref(null);
 const markedID = ref([]);
-const goods = ref([]);
-
-const organizations = ref([]);
-const counterparties = ref([]);
-const cpAgreements = ref([]);
-const storages = ref([]);
-const currencies = ref([]);
-const listGoods = ref([]);
-
-const headers = ref([
-  { title: "Товары", key: "goods", sortable: false },
-  { title: "Количество", key: "currency.name", sortable: false },
-  { title: "Цена", key: "currency.name", sortable: false },
-  { title: "Сумма", key: "currency.name", sortable: false },
+const goods = ref([
+  {
+    id: 1,
+    good_id: null,
+    difference: 1,
+    actual_quantity: 1,
+    accounting_quantity: 1,
+  },
 ]);
 
-const getProcurementDetails = async () => {
-  const { data } = await saleApi.getById(route.params.id);
+const organizations = ref([]);
+const storages = ref([]);
+const listGoods = ref([]);
+const users = ref([]);
 
+const headers = ref([
+  { title: "Товары", sortable: false },
+  { title: "Количество по учету", sortable: false },
+  { title: "Количество по факту", sortable: false },
+  { title: "Разница", sortable: false },
+]);
+
+const getInvertorDetail = async () => {
+  const { data } = await invertorApi.getById(route.params.id);
   form.doc_number = data.result.doc_number;
   form.date = data.result.date;
   form.organization = {
     id: data.result.organization.id,
     name: data.result.organization.name,
   };
-  form.counterparty = {
-    id: data.result.counterparty.id,
-    name: data.result.counterparty.name,
-  };
-  setTimeout(() => {
-    form.cpAgreement = {
-      id: data.result.counterpartyAgreement.id,
-      name: data.result.counterpartyAgreement.name,
-    };
-  }, 300);
   form.storage = {
     id: data.result.storage.id,
     name: data.result.storage.name,
   };
-  form.saleInteger =
-    data.result.saleInteger !== 0 ? data.result.saleInteger : null;
-  form.salePercent =
-    data.result.salePercent !== 0 ? data.result.salePercent : null;
   form.comment = data.result.comment;
-  form.currency = data.result.currency;
-
-  goods.value = data.result.goods.map((item) => ({
+  goods.value = data.result.inventoryGoods.map((item) => ({
     good_id: item.good.id,
-    amount: item.amount,
-    price: item.price,
+    difference: item.difference,
+    actual_quantity: item.actual_quantity,
+    accounting_quantity: item.accounting_quantity,
   }));
-
-  setTimeout(() => {
-    document.value = data.result;
-  }, 3000);
+  form.user = data.result.responsiblePerson;
 };
 
 const getOrganizations = async () => {
@@ -111,24 +91,6 @@ const getOrganizations = async () => {
   organizations.value = data.result.data;
 };
 
-const getCounterparties = async () => {
-  const { data } = await counterpartyApi.get({
-    page: 1,
-    itemsPerPage: 100000,
-    sortBy: "name",
-  });
-  counterparties.value = data.result.data;
-};
-
-const getCpAgreements = async () => {
-  const { data } = await cpAgreementApi.get({
-    page: 1,
-    itemsPerPage: 100000,
-    sortBy: "name",
-  });
-  cpAgreements.value = data.result.data;
-};
-
 const getStorages = async () => {
   const { data } = await storageApi.get({
     page: 1,
@@ -138,13 +100,22 @@ const getStorages = async () => {
   storages.value = data.result.data;
 };
 
-const getCurrencies = async () => {
-  const { data } = await currencyApi.get({
+const getSenderStorage = async () => {
+  const { data } = await storageApi.get({
     page: 1,
     itemsPerPage: 100000,
     sortBy: "name",
   });
-  currencies.value = data.result.data;
+  storages.value = data.result.data;
+};
+
+const getRecipientStorage = async () => {
+  const { data } = await storageApi.get({
+    page: 1,
+    itemsPerPage: 100000,
+    sortBy: "name",
+  });
+  storages.value = data.result.data;
 };
 
 const getGoods = async () => {
@@ -192,25 +163,11 @@ const validateItem = (item) => {
     showToast("Поле Количество не может быть пустым", "warning");
     return true;
   }
-  if (item.price === null) {
-    showToast("Поле Цена не может быть пустым", "warning");
-    return true;
-  }
   return false;
 };
 
-const updateProcurement = async () => {
-  if (
-    validate(
-      form.date,
-      form.organization,
-      form.counterparty,
-      form.cpAgreement,
-      form.storage,
-      form.currency
-    ) !== true
-  )
-    return;
+const updateInvertor = async () => {
+  if (validate(form.date, form.organization, form.storage) !== true) return;
 
   const missingData = goods.value.some(validateItem);
   if (missingData) return;
@@ -221,36 +178,31 @@ const updateProcurement = async () => {
       typeof form.organization === "object"
         ? form.organization.id
         : form.organization,
-    counterparty_id:
-      typeof form.counterparty === "object"
-        ? form.counterparty.id
-        : form.counterparty,
-    counterparty_agreement_id:
-      typeof form.cpAgreement === "object"
-        ? form.cpAgreement.id
-        : form.cpAgreement,
     storage_id:
       typeof form.storage === "object" ? form.storage.id : form.storage,
-    saleInteger: Number(form.saleInteger),
-    salePercent: Number(form.salePercent),
-    currency_id:
-      typeof form.currency === "object" ? form.currency.id : form.currency,
+    responsible_person_id:
+      typeof form.user === "object" ? form.user.id : form.user,
+    goods:
+      goods.value.length > 0
+        ? goods.value
+        : goods.value.map((item) => ({
+            good_id: Number(item.good_id),
+            difference: Number(item.difference),
+            actual_quantity: Number(item.actual_quantity),
+            accounting_quantity: Number(item.accounting_quantity),
+          })),
     comment: form.comment,
-    goods: goods.value.map((item) => ({
-      good_id: Number(item.good_id),
-      amount: Number(item.amount),
-      price: Number(item.price),
-    })),
   };
-
+  if (body.goods.length === 0)
+    return showToast("Товар объязателен для заполнения", "warning");
   try {
-    const res = await saleApi.update(route.params.id, body);
+    const res = await invertorApi.update(route.params.id, body);
     if (res.status === 200) {
       showToast(editMessage);
-      router.push("/sellingGoods");
+      router.push("/invertory");
     }
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -276,38 +228,15 @@ const totalPriceWithSale = computed(() => {
   return sum;
 });
 
-const getHistory = () => {
-  router.push({
-    name: "documentHistory",
-    params: route.params.id,
-  });
-};
-
-const isDataChanged = () => {
-  console.log(document.value.saleInteger, form.saleInteger);
-  return form.saleInteger != document.value.saleInteger;
-};
-
-watch(form, () => {
-  setTimeout(() => {
-    if (isDataChanged()) {
-      emits("changed");
-    }
-  }, 3930);
-});
-
 onMounted(() => {
   form.date = currentDate();
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
 
   Promise.all([
+    getInvertorDetail(),
     getOrganizations(),
-    getCounterparties(),
-    getCpAgreements(),
     getStorages(),
-    getCurrencies(),
     getGoods(),
-    getProcurementDetails(),
   ]);
 });
 
@@ -341,6 +270,13 @@ watch(
   }
 );
 
+const getHistory = () => {
+  router.push({
+    name: "documentHistory",
+    params: route.params.id,
+  });
+};
+
 const isSaleIntegerDisabled = computed(() => !!form.salePercent);
 const isSalePercentDisabled = computed(() => !!form.saleInteger);
 
@@ -367,13 +303,13 @@ watch(
     <v-col>
       <div class="d-flex justify-space-between text-uppercase">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Продажа (просмотр)</span>
+          <span>Инвентаризация товаров (просмотр)</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
-            <div class="d-flex items-center ga-2 mt-1 me-3">
+            <div class="d-flex ga-2 mt-1 me-3">
               <span style="color: #08072E" class="mt-1 ms-2 cursor-pointer" @click="getHistory()">История</span>
-              <Icons title="Добавить" @click="updateProcurement" name="add" />
+              <Icons title="Добавить" @click="updateInvertor" name="add" />
               <Icons title="Скопировать" name="copy" />
               <Icons title="Удалить" name="delete" />
             </div>
@@ -386,7 +322,7 @@ watch(
     <div style="background: #fff">
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
-          <custom-text-field :value="form.doc_number" />
+          <custom-text-field readonly v-model="form.doc_number" />
           <custom-text-field label="Дата" type="date" v-model="form.date" />
           <custom-autocomplete
             label="Организация"
@@ -394,31 +330,14 @@ watch(
             v-model="form.organization"
           />
           <custom-autocomplete
-            label="Клиент"
-            :items="counterparties"
-            v-model="form.counterparty"
-          />
-          <custom-autocomplete
-            label="Договор"
-            :items="cpAgreements"
-            v-model="form.cpAgreement"
+            label="От.лицо"
+            :items="users"
+            v-model="form.user"
           />
           <custom-autocomplete
             label="Склад"
             :items="storages"
             v-model="form.storage"
-          />
-          <custom-text-field
-            label="Руч. скидка (сумма)"
-            v-mask="'###'"
-            v-model="form.saleInteger"
-            :disabled="isSaleIntegerDisabled"
-          />
-          <custom-text-field
-            label="Руч. скидка (процент)"
-            v-mask="'###'"
-            v-model="form.salePercent"
-            :disabled="isSalePercentDisabled"
           />
         </div>
       </v-col>
@@ -432,9 +351,9 @@ watch(
             />
             <Icons name="delete" @click="decreaseCountOfGoods" />
           </div>
-          <div class="d-flex flex-column w-100">
+          <div class="d-flex flex-column w-100 goods">
             <v-data-table
-              style="height: 50vh"
+              style="height: 78vh"
               items-per-page-text="Элементов на странице:"
               loading-text="Загрузка"
               no-data-text="Нет данных"
@@ -472,23 +391,23 @@ watch(
                   </td>
                   <td>
                     <custom-text-field
-                      v-model="item.amount"
+                      v-model="item.accounting_quantity"
                       v-mask="'########'"
                       min-width="50"
                     />
                   </td>
                   <td>
                     <custom-text-field
-                      v-model="item.price"
-                      v-mask="'##########'"
-                      min-width="80"
+                      v-model="item.actual_quantity"
+                      v-mask="'########'"
+                      min-width="50"
                     />
                   </td>
                   <td>
                     <custom-text-field
-                      readonly
-                      :value="item.amount * item.price"
-                      min-width="100"
+                      v-model="item.difference"
+                      v-mask="'########'"
+                      min-width="50"
                     />
                   </td>
                 </tr>
@@ -508,26 +427,6 @@ watch(
               label="Комментарий"
               v-model="form.comment"
               min-width="310"
-            />
-          </div>
-          <div class="d-flex ga-6">
-            <custom-text-field
-              readonly
-              :value="'Сумма со скидкой: ' + totalPriceWithSale"
-              min-width="180"
-            />
-            <custom-text-field
-              readonly
-              :value="'Сумма без скидки: ' + totalPrice"
-              min-width="180"
-              max-width="110"
-            />
-            <custom-autocomplete
-              v-model="form.currency"
-              label="Валюта"
-              :items="currencies"
-              min-width="110"
-              max-width="110"
             />
           </div>
         </div>
