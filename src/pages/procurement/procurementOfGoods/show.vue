@@ -1,5 +1,5 @@
 <script setup>
-import {computed, onMounted, onUpdated, reactive, ref, watch} from "vue";
+import {computed, defineEmits, onMounted, onUpdated, reactive, ref, watch} from "vue";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
@@ -18,12 +18,15 @@ import goodApi from "../../../api/list/goods.js";
 import { editMessage } from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
 import {BASE_COLOR} from "../../../composables/constant/colors.js";
+import {tr} from "vuetify/locale";
 
 
-const document = ref(null)
 const router = useRouter()
 const route = useRoute()
 const emits = defineEmits(['changed'])
+
+
+const tempForm = ref({})
 
 const form = reactive({
   doc_number: null,
@@ -39,11 +42,10 @@ const form = reactive({
   saleInteger: null,
   salePercent: null,
   comment: null,
-  currency: null,
-  isChange: true,
+  currency: null
 })
 
-const loading = ref(false)
+const loading = ref(true)
 const author = ref(null)
 const markedID = ref([])
 const goods = ref([])
@@ -54,6 +56,9 @@ const cpAgreements = ref([])
 const storages = ref([])
 const currencies = ref([])
 const listGoods = ref([])
+const prevForm = ref({})
+const prevGoods = ref([])
+const isDataChanged = ref(false)
 
 const headers = ref([
   {title: 'Товары', key: 'goods', sortable: false},
@@ -62,45 +67,53 @@ const headers = ref([
   {title: 'Сумма', key: 'currency.name', sortable: false},
 ])
 
-
 const getProcurementDetails = async () => {
-  const { data } = await procurementApi.getById(route.params.id)
-
-
-  form.doc_number = data.result.doc_number
-  form.date = data.result.date
-  form.organization = {
-    id: data.result.organization.id,
-    name: data.result.organization.name
-  }
-  form.counterparty = {
-    id: data.result.counterparty.id,
-    name: data.result.counterparty.name
-  }
-  setTimeout(() => {
-    form.cpAgreement = {
-      id: data.result.counterpartyAgreement.id,
-      name: data.result.counterpartyAgreement.name
+  let curr = new Date();
+  console.log('funtion', curr.getSeconds(), curr.getMilliseconds())
+  try {
+    const { data } = await procurementApi.getById(route.params.id)
+    form.doc_number = data.result.doc_number
+    form.date = data.result.date
+    form.organization = {
+      id: data.result.organization.id,
+      name: data.result.organization.name
     }
-  }, 300)
-  form.storage = {
-    id: data.result.storage.id,
-    name: data.result.storage.name
+    form.counterparty = {
+      id: data.result.counterparty.id,
+      name: data.result.counterparty.name
+    }
+      form.cpAgreement = {
+        id: data.result.counterpartyAgreement.id,
+        name: data.result.counterpartyAgreement.name
+      }
+    form.storage = {
+      id: data.result.storage.id,
+      name: data.result.storage.name
+    }
+    form.saleInteger = data.result.saleInteger !== 0 ? data.result.saleInteger : null
+    form.salePercent = data.result.salePercent !== 0 ? data.result.salePercent : null
+    form.comment = data.result.comment
+    form.currency = data.result.currency
+    goods.value = data.result.goods.map(item => ({
+      good_id: item.good.id,
+      amount: item.amount,
+      price: item.price
+    }))
+
+    prevForm.value = { ...form };
+    prevGoods.value = [...goods.value];
+    tempForm.value = Object.assign({}, form);
+
+  console.log(JSON.stringify(prevForm.value), 'TURSUNBOY', JSON.stringify(tempForm.value))
+    console.log(tempForm.value)
+
+    loading.value = false
+
+  } catch (e) {
+
+  } finally {
+
   }
-  form.saleInteger = data.result.saleInteger !== 0 ? data.result.saleInteger : null
-  form.salePercent = data.result.salePercent !== 0 ? data.result.salePercent : null
-  form.comment = data.result.comment
-  form.currency = data.result.currency
-
-  goods.value = data.result.goods.map(item => ({
-    good_id: item.good.id,
-    amount: item.amount,
-    price: item.price
-  }))
-
-  setTimeout(() => {
-    document.value = data.result
-  }, 3000)
 
 }
 
@@ -207,6 +220,11 @@ const updateProcurement = async () => {
 }
 
 
+const isChanged = () => {
+
+}
+
+
 const totalPrice = computed(() => {
   let sum = 0
   goods.value.forEach(item => {
@@ -229,36 +247,25 @@ const totalPriceWithSale = computed(() => {
   return sum
 })
 
-const isDataChanged = () => {
-  console.log(document.value.saleInteger, form.saleInteger)
-  return form.saleInteger != document.value.saleInteger
-}
 
-watch(form, () => {
-  setTimeout(() => {
-    if (isDataChanged()) {
-      emits('changed')
-    }
-  }, 3930)
+const isSaleIntegerDisabled = computed(() => !!form.salePercent);
+const isSalePercentDisabled = computed(() => !!form.saleInteger);
+
+watch([form, goods], () => {
+  if (loading.value === true) {
+    return 1
+  } else if (checkDataChanges()) {
+    console.log('Данные изменились');
+  }
 })
 
+const checkDataChanges = () => {
+  const formDataChanged = JSON.stringify(tempForm) !== JSON.stringify(prevForm.value);
+  let curr = new Date();
+  console.log(formDataChanged, curr.getSeconds(), curr.getMilliseconds())
 
-onMounted( () => {
-  form.date = currentDate()
-  author.value = JSON.parse(localStorage.getItem('user')).name || null
-
-  Promise.all([
-      getOrganizations(),
-      getCounterparties(),
-      getCpAgreements(),
-      getStorages(),
-      getCurrencies(),
-      getGoods(),
-      getProcurementDetails()
-  ])
-
-})
-
+  return formDataChanged
+};
 
 watch(() => form.counterparty, async (data) => {
   form.cpAgreement = null
@@ -267,6 +274,7 @@ watch(() => form.counterparty, async (data) => {
 
   try {
     const res = await cpAgreementApi.getById(id)
+    console.log()
     form.currency = {
       id: res.data.result.currency_id.id,
       name: res.data.result.currency_id.name
@@ -282,21 +290,22 @@ watch(() => form.counterparty, async (data) => {
   }
 })
 
-const isSaleIntegerDisabled = computed(() => !!form.salePercent);
-const isSalePercentDisabled = computed(() => !!form.saleInteger);
+onMounted( () => {
+  form.date = currentDate()
+  author.value = JSON.parse(localStorage.getItem('user')).name || null
 
-watch(() => form.saleInteger, (newValue) => {
-  if (!newValue) {
-    form.salePercent = ''
-  }
+  getProcurementDetails()
+  Promise.all([
+    getOrganizations(),
+    getCounterparties(),
+    getCpAgreements(),
+    getStorages(),
+    getCurrencies(),
+    getGoods(),
+
+  ])
+
 })
-
-watch(() => form.salePercent, (newValue) => {
-  if (!newValue) {
-    form.saleInteger = ''
-  }
-})
-
 </script>
 <template>
   <div class="document">
