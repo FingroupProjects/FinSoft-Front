@@ -1,12 +1,11 @@
 <script setup>
 import { useRoute } from "vue-router";
-
-import Header from "./components/header/Header.vue";
-import Sidebar from "./components/sidebar/Sidebar.vue";
-import warningModal from "./components/paymentWarning/warningModal.vue";
 import {ref, watch, onMounted} from "vue";
+import Header from "./components/header/Header.vue";
 import showToast from "./composables/toast/index.js";
 import AdminPanel from "./pages/admin-panel/index.vue";
+import Sidebar from "./components/sidebar/Sidebar.vue";
+import warningModal from "./components/paymentWarning/warningModal.vue";
 
 const rale = ref(false);
 const procurementOfGoods = ref(false);
@@ -127,7 +126,7 @@ onMounted(() => {
 
 .panel.active {
   left: 0;
-  width: 350px;
+  width: 360px;
   display: block;
 }
 </style>

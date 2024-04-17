@@ -33,7 +33,7 @@ onMounted(async () => {
     <h2 class="ml-4 mt-4">История документа : Документ</h2>
     <v-col class="d-flex flex-column ga-4">
       <v-card class="pa-4 rounded-xl" v-for="item in historyDoc" :key="item">
-        <div class="w-100" style="border-bottom: 2px solid #aeec92">
+        <div class="w-100" style="border-bottom: 2px solid #08072E">
           <h3>{{ item.status }}</h3>
         </div>
         <div class="d-flex ga-2">
