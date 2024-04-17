@@ -284,7 +284,6 @@ const getHistory = () => {
 };
 
 const isDataChanged = () => {
-  console.log(document.value.saleInteger, form.saleInteger);
   return form.saleInteger != document.value.saleInteger;
 };
 

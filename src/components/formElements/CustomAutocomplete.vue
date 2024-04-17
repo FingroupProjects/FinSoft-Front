@@ -17,9 +17,10 @@ defineProps({
 
 <template>
   <v-autocomplete
-      :style="[`max-width: ${maxWidth}`, `min-width: ${minWidth}px`]"
+      :style="[`max-width: ${maxWidth}`, `min-width: ${minWidth}px`, 'max-height: 40px !important']"
       variant="outlined"
       :color="BASE_COLOR"
+      hide-details
       rounded="lg"
       no-data-text="Нет данных"
       :base-color="FIELD_COLOR"
