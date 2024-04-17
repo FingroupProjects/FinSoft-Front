@@ -145,8 +145,8 @@ const updateMove = async () => {
 
   const body = {
     date: form.date,
-    organization_id: typeof form.organization === 'object' ? form.organization.id : form.organization,
-    storage_id: typeof form.storage === 'object' ? form.storage.id : form.storage,
+    organization_id: typeof form.organizations === 'object' ? form.organization.id : form.organization,
+    storage_id: typeof form.storages ===  'object' ? form.storage : form.storage,
     goods: goods.value.map((item) => ({
       good_id: Number(item.good_id),
       amount: Number(item.amount),
@@ -163,31 +163,6 @@ const updateMove = async () => {
    console.log(e)
  }
 }
-
-
-const totalPrice = computed(() => {
-  let sum = 0
-  goods.value.forEach(item => {
-    sum += item.price * item.amount
-  })
-  return sum
-})
-
-const totalPriceWithSale = computed(() => {
-  let sum = 0
-  if (form.salePercent !== null) {
-      sum = totalPrice.value - (totalPrice.value * form.salePercent / 100)
-  } else {
-    goods.value.forEach(item => {
-      sum += (item.price * item.amount)
-    })
-    sum -= form.saleInteger
-  }
-
-  return sum
-})
-
-
 onMounted( () => {
   form.date = currentDate()
   author.value = JSON.parse(localStorage.getItem('user')).name || null
@@ -199,44 +174,6 @@ onMounted( () => {
       getMoveDetails()
   ])
 
-})
-
-
-watch(() => form.counterparty, async (data) => {
-  form.cpAgreement = null
-
-  const id = typeof data === 'object' ? data.id : data
-
-  try {
-    const res = await cpAgreementApi.getById(id)
-    form.currency = {
-      id: res.data.result.currency_id.id,
-      name: res.data.result.currency_id.name
-    }
-
-    const array = Object.prototype.toString.call(res.data.result) === '[object Array]'
-    const obj = Object.prototype.toString.call(res.data.result) === '[object Object]'
-
-    cpAgreements.value = array ? res.data.result : obj ? [res.data.result] : []
-
-  } catch (e) {
-    cpAgreements.value = []
-  }
-})
-
-const isSaleIntegerDisabled = computed(() => !!form.salePercent);
-const isSalePercentDisabled = computed(() => !!form.saleInteger);
-
-watch(() => form.saleInteger, (newValue) => {
-  if (!newValue) {
-    form.salePercent = ''
-  }
-})
-
-watch(() => form.salePercent, (newValue) => {
-  if (!newValue) {
-    form.saleInteger = ''
-  }
 })
 
 </script>
@@ -268,7 +205,6 @@ watch(() => form.salePercent, (newValue) => {
           <custom-autocomplete label="Организация" :items="organizations"  v-model="form.organization"/>
           <custom-autocomplete label="Склад-отп" :items="storages" v-model="form.sender_storage"/>
           <custom-autocomplete label="Склад-пол" :items="storages" v-model="form.recipient_storage"/>
-          <custom-autocomplete label="Склад" :items="storages" v-model="form.storage"/>
         </div>
       </v-col>
       <v-col>

@@ -14,7 +14,7 @@ import {
 import debounce from "lodash.debounce";
 import organizationApi from "../../../api/list/organizations.js";
 import storageApi from "../../../api/list/storage.js";
-import providerApi from '../../../api/documents/provider.js'; 
+import moveApi from '../../../api/documents/move.js'; 
 import showDate from "../../../composables/date/showDate.js";
 const router = useRouter()
 
@@ -30,7 +30,7 @@ const search = ref('')
 const debounceSearch = ref('')
 const nameRef = ref(null)
 const descriptionRef = ref(null)
-const procurements = ref([])
+const moves = ref([])
 const paginations = ref([])
 const showConfirmDialog = ref(false);
 const showModal = ref(false);
@@ -38,9 +38,8 @@ const count = ref(0);
 
 const organizations = ref([])
 const storages = ref([])
-
-
-
+const sender_storages = ref([])
+const recipient_storages = ref([])
 
 const filterForm = ref({
   date: null,
@@ -55,10 +54,10 @@ const filterForm = ref({
 const headers = ref([
   {title: 'Номер', key: 'name'},
   {title: 'Дата', key: 'currency.name'},
-  {title: 'Склад-отправитель', key: 'currency.name'},
-  {title: 'Склад-получатель', key: 'currency.name'},
-  {title: 'Организация', key: 'currency.name'},
-  {title: 'Автор', key: 'currency.name'},
+  {title: 'Склад-отправитель', key: 'sender_storage.name'},
+  {title: 'Склад-получатель', key: 'recipient_storage.name'},
+  {title: 'Организация', key: 'organization.name'},
+  {title: 'Автор', key: 'author.name'},
 ])
 
 const rules = {
@@ -73,9 +72,10 @@ const getMoveData = async ({page, itemsPerPage, sortBy, search}) => {
   filterModal.value = false
   loading.value = true
   try {
-    const { data } = await providerApi.get({page, itemsPerPage, sortBy}, search, filterData)
+    const { data } = await moveApi.get({page, itemsPerPage, sortBy}, search, filterData)
+    console.log(data);
     paginations.value = data.result.pagination
-    procurements.value = data.result.data
+    moves.value = data.result.data
     loading.value = false
   } catch (e) {
   }
@@ -90,9 +90,20 @@ const getStorages = async () => {
   storages.value = data.result.data
 }
 
+const getSenderStorage = async () => {
+  const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  sender_storages.value = data.result.data
+}
+const getRecipientStorage = async () => {
+  const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  recipient_storages.value = data.result.data
+}
+
 onMounted(() => {
   getOrganizations()
   getStorages()
+  getSenderStorage()
+  getRecipientStorage()
 })
 
 
@@ -109,7 +120,7 @@ function countFilter() {
 
 const massDel = async () => {
   try {
-    const {status} = await providerApi.massDeletion({ids: markedID.value})
+    const {status} = await moveApi.massDeletion({ids: markedID.value})
 
     if (status === 200) {
 
@@ -126,7 +137,7 @@ const massDel = async () => {
 const massRestore = async () => {
 
   try {
-    const {status} = await providerApi.massRestore({ids: markedID.value})
+    const {status} = await moveApi.massRestore({ids: markedID.value})
 
     if (status === 200) {
       showToast(restoreMessage)
@@ -152,7 +163,7 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
 
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
-    const firstMarkedItem = procurements.value.find(el => el.id === markedID.value[0]);
+    const firstMarkedItem = moves.value.find(el => el.id === markedID.value[0]);
     if (firstMarkedItem && firstMarkedItem.deleted_at) {
       if(item.deleted_at === null) {
         showToast(ErrorSelectMessage, 'warning')
@@ -196,7 +207,7 @@ watch(dialog, newVal => {
 })
 
 watch(markedID, (newVal) => {
-  markedItem.value = procurements.value.find((el) => el.id === newVal[0]);
+  markedItem.value = moves.value.find((el) => el.id === newVal[0]);
 })
 
 watch(search, debounce((newValue) => {
@@ -260,7 +271,7 @@ watch(search, debounce((newValue) => {
             :loading="loading"
             :headers="headers"
             :items-length="paginations.total || 0"
-            :items="procurements"
+            :items="moves"
             :item-value="headers.title"
             :search="debounceSearch"
             v-model="markedID"
@@ -304,10 +315,11 @@ watch(search, debounce((newValue) => {
               </td>
               <td>{{ item.doc_number }}</td>
               <td>{{ showDate(item.date) }}</td>
-              <td>{{ item.storage.name }}</td>
-              <td>{{ item.storage.name }}</td>
+              <td>{{ item.sender_storage.name }}</td>
+              <td>{{ item.recipient_storage.name }}</td>
               <td>{{ item.organization.name }}</td>
               <td>{{ item.author.name }}</td>
+
             </tr>
           </template>
         </v-data-table-server>

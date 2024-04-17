@@ -24,10 +24,11 @@ const form = reactive({
   date: null,
   organization: null,
   organizations: [],
-  storage: null,
-  storages: [],
+  storage: null, 
   sender_storage: null,
+  sender_storages: [],
   recipient_storage: null,
+  recipient_storages: [],
   comment: null,
   currency: null,
 })
@@ -39,12 +40,12 @@ const goods = ref([{
   id: 1,
   good_id: null,
   amount: 1,
-  price: null,
 }])
 
 const organizations = ref([])
 const storages = ref([])
-const currencies = ref([])
+const sender_storages = ref([])
+const recipient_storages = ref([])
 const listGoods = ref([])
 
 const headers = ref([
@@ -60,6 +61,14 @@ const getOrganizations = async () => {
 const getStorages = async () => {
   const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   storages.value = data.result.data
+}
+const getSenderStorage = async () => {
+  const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  sender_storages.value = data.result.data
+}
+const getRecipientStorage = async () => {
+  const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  recipient_storages.value = data.result.data
 }
 
 const getGoods = async () => {
@@ -102,7 +111,7 @@ const validateItem = (item) => {
 };
 
 const addNewMove = async () => {
-  if (validate(form.date, form.organization, form.storage) !== true) return
+  if (validate(form.date, form.organization) !== true) return
 
   const missingData = goods.value.some(validateItem)
   if (missingData) return
@@ -110,18 +119,15 @@ const addNewMove = async () => {
   const body = {
     date: form.date,
     organization_id: form.organization,
-    sender_storage_id: form.storage,
-    recipient_storage_id: form.storage,
-    storage_id: form.storage ,
+    sender_storage_id: form.sender_storage,
+    recipient_storage_id: form.recipient_storage,
     comment : form.comment, 
     goods: goods.value.map((item) => ({
       good_id: Number(item.good_id),
       amount: Number(item.amount),
     }))
  }
-
   console.log(body)
-
  try {
    const res = await moveApi.add(body)
    if (res.status === 201) {
@@ -132,73 +138,15 @@ const addNewMove = async () => {
    console.log(e)
  }
 }
-const totalPrice = computed(() => {
-  let sum = 0
-  goods.value.forEach(item => {
-    sum += item.price * item.amount
-  })
-  return sum
-})
-
-const totalPriceWithSale = computed(() => {
-  let sum = 0
-  if (form.salePercent !== null) {
-      sum = totalPrice.value - (totalPrice.value * form.salePercent / 100)
-  } else {
-    goods.value.forEach(item => {
-      sum += (item.price * item.amount)
-    })
-    sum -= form.saleInteger
-  }
-
-  return sum
-})
-
-
 onMounted(() => {
   form.date = currentDate()
   author.value = JSON.parse(localStorage.getItem('user')).name || null
   getOrganizations()
   getStorages()
   getGoods()
+  getSenderStorage()
+  getRecipientStorage()
 })
-
-watch(() => form.counterparty, async (id) => {
-  form.cpAgreement = null
-
-  try {
-    const res = await cpAgreementApi.getById(id)
-
-    form.currency = {
-      id: res.data.result.currency_id.id,
-      name: res.data.result.currency_id.name
-    }
-
-    const array = Object.prototype.toString.call(res.data.result) === '[object Array]'
-    const obj = Object.prototype.toString.call(res.data.result) === '[object Object]'
-
-    cpAgreements.value = array ? res.data.result : obj ? [res.data.result] : []
-
-  } catch (e) {
-    cpAgreements.value = []
-  }
-})
-
-const isSaleIntegerDisabled = computed(() => !!form.salePercent);
-const isSalePercentDisabled = computed(() => !!form.saleInteger);
-
-watch(() => form.saleInteger, (newValue) => {
-  if (!newValue) {
-    form.salePercent = ''
-  }
-})
-
-watch(() => form.salePercent, (newValue) => {
-  if (!newValue) {
-    form.saleInteger = ''
-  }
-})
-
 </script>
 <template>
   <div class="document">
@@ -227,9 +175,8 @@ watch(() => form.salePercent, (newValue) => {
           <custom-text-field disabled value="Номер" v-model="form.number"/>
           <custom-text-field label="Дата" type="date" v-model="form.date"/>
           <custom-autocomplete label="Организация" :items="organizations"  v-model="form.organization"/>
-          <custom-autocomplete label="Склад-отп" :items="storages" v-model="form.sender_storage"/>
-          <custom-autocomplete label="Склад-пол" :items="storages" v-model="form.recipient_storage"/>
-          <custom-autocomplete label="Склад" :items="storages" v-model="form.storage"/> 
+          <custom-autocomplete label="Склад-отп" :items="sender_storages"   v-model="form.sender_storage"/>
+          <custom-autocomplete label="Склад-пол" :items="recipient_storages" v-model="form.recipient_storage"/>
         </div>
       </v-col>
       <v-col>
