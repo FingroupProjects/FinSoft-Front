@@ -1,19 +1,21 @@
 <script setup>
 import { ref, defineProps, onMounted, watch, onBeforeUnmount } from "vue";
 import { useRouter } from "vue-router";
+import Icons from "../../composables/Icons/Icons.vue";
 
-const props = defineProps(["admin", "admins", "lists"]);
-const emit = defineEmits(["toggle"]);
+const props = defineProps(["admin", "admins", "lists", "isChangedDocument"]);
+const emit = defineEmits(["toggle", "changedDocument"]);
 const router = useRouter();
 const users = ref([]);
 const filteredLists = ref([]);
 const filteredAdmins = ref([]);
+const showConfirmModal = ref(false)
+const panelItem = ref({});
 
 watch(props.admins, (newVal) => {
   if (newVal) {
-    console.log("admins");
     filteredAdmins.value = props.admins.filter((item) =>
-      users.value.permissions.includes(item.link.slice(1) + ".read")
+        users.value.permissions.includes(item.link.slice(1) + ".read")
     );
   }
 });
@@ -25,7 +27,7 @@ watch(props.lists, (newVal) => {
       return {
         ...list,
         child: list.child.filter((item) =>
-          users.value.permissions.includes(item.link.slice(6) + ".read")
+            users.value.permissions.includes(item.link.slice(6) + ".read")
         ),
       };
     });
@@ -33,8 +35,19 @@ watch(props.lists, (newVal) => {
 });
 
 function push(item) {
+  panelItem.value = item
+  if (props.isChangedDocument) {
+    return showConfirmModal.value = true
+  }
   emit("toggle");
   router.push(item.link);
+}
+
+const toggleChangedDocument = () => {
+
+  showConfirmModal.value = false;
+  emit("changedDocument");
+  router.push(panelItem.value.link);
 }
 
 onMounted(() => {
@@ -44,9 +57,9 @@ onMounted(() => {
 
 <template>
   <div
-    class="sidebar"
-    :class="props.admin ? 'open' : 'close fadeOut'"
-    style="background-color: #f2faff"
+      class="sidebar"
+      :class="props.admin ? 'open' : 'close fadeOut'"
+      style="background-color: #f2faff"
   >
     <div class="title">
       <div v-for="list in props.lists" :key="list.id">
@@ -55,11 +68,11 @@ onMounted(() => {
             {{ list.title }}
           </span>
           <li
-            @click="push(child)"
-            :class="child.link === $route.path ? 'active' : ''"
-            class="d-flex align-center ga-4"
-            v-for="child in list.child"
-            :key="child.id"
+              @click="push(child)"
+              :class="child.link === $route.path ? 'active' : ''"
+              class="d-flex align-center ga-4"
+              v-for="child in list.child"
+              :key="child.id"
           >
             <span class="cursor-pointer">
               {{ child.title }}
@@ -74,10 +87,10 @@ onMounted(() => {
               {{ list.title }}
             </span>
             <li
-              @click="push(child)"
-              class="d-flex align-center ga-4"
-              v-for="child in list.child"
-              :key="child.id"
+                @click="push(child)"
+                class="d-flex align-center ga-4"
+                v-for="child in list.child"
+                :key="child.id"
             >
               <span class="cursor-pointer">
                 {{ child.title }}
@@ -87,6 +100,49 @@ onMounted(() => {
         </div>
       </div>
     </div>
+    <v-card>
+      <v-dialog persistent class="mt-2 pa-2" v-model="showConfirmModal">
+        <v-card
+            style="max-width: 400px; border-radius: 16px"
+            class="mx-auto flex flex-col"
+        >
+          <v-card-title
+              class="d-flex justify-space-between align-center text-h6"
+          >
+            <span>Подтверждение</span>
+            <v-btn
+                @click="toggleChangedDocument"
+                variant="text"
+                :size="32"
+                class="pt-2 pl-1"
+            >
+              <Icons name="close" title="Закрыть" />
+            </v-btn>
+          </v-card-title>
+          <v-card-text class="text-subtitle-1"
+          >Сохранить текущие изменения?</v-card-text
+          >
+          <v-card-actions class="d-flex justify-end align-end">
+            <v-btn
+                @click="toggleChangedDocument"
+                class="text-none w-[200px] h-[20px]"
+                color="red"
+                variant="flat"
+            >Нет</v-btn
+            >
+            <v-btn
+                @click=""
+                class="text-none w-[200px] h-[20px]"
+                color="green"
+                variant="flat"
+            >Да</v-btn
+            >
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+
+    </v-card>
   </div>
 </template>
 
