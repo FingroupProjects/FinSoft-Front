@@ -16,6 +16,7 @@ const isLayout = ref(true);
 const lists = ref([]);
 const admins = ref([]);
 const isChangedDocument = ref(false)
+const isUpdateOrCreateDocument = ref(false)
 
 const toggleSidebar = () => {
   rale.value = !rale.value;
@@ -42,6 +43,7 @@ window.addEventListener("load", () => {
 })
 
 const changed = data => {
+  console.log(data)
   return isChangedDocument.value = data
 }
 

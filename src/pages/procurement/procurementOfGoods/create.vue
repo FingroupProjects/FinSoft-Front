@@ -18,10 +18,11 @@ import goodApi from "../../../api/list/goods.js";
 import {addMessage} from "../../../composables/constant/buttons.js";
 import {BASE_COLOR} from "../../../composables/constant/colors.js";
 import "../../../assets/css/procurement.css";
-
+import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
 
 const router = useRouter()
 const emits = defineEmits(['changed'])
+const confirmDocument = useConfirmDocumentStore()
 
 const form = reactive({
   date: null,
@@ -170,9 +171,8 @@ const isChanged = () => {
   const goodsValues = goods.value.flatMap(good => [good.good_id, good.amount, good.price]);
 
   const cleanedGoodsValues = goodsValues.filter(val => val !== undefined);
-
   const valuesToCheck = [saleInteger, salePercent, organization, counterparty, cpAgreement, storage, currency, date, ...cleanedGoodsValues];
-  console.log(cleanedGoodsValues)
+
   return valuesToCheck.every(val => val === null || val === '' || val === currentDate() || val === "1");
 }
 
@@ -232,6 +232,12 @@ watch(() => form.saleInteger, (newValue) => {
 watch(() => form.salePercent, (newValue) => {
   if (!newValue) {
     form.saleInteger = ''
+  }
+})
+
+watch(confirmDocument, (newValue) => {
+  if (confirmDocument.isUpdateOrCreateDocument) {
+    addNewProcurement()
   }
 })
 
