@@ -33,6 +33,7 @@ const form = reactive({
   comment: null,
   summa: null,
   currency: null,
+  status: null,
 })
 
 const loading = ref(false)
@@ -52,6 +53,7 @@ const counterparties = ref([])
 const cpAgreements = ref([])
 const currencies = ref([])
 const listGoods = ref([])
+const statuses = ref([])
 
 const headers = ref([
   {title: 'Товары', key: 'goods', sortable: false},
@@ -62,6 +64,10 @@ const headers = ref([
   {title: 'Сумма', key: 'currency.name', sortable: false},
 ])
 
+const getStatuses = async () => {
+  const { data } = await clientOrderApi.getStatuses();
+  statuses.value = data.result
+}
 const getOrganizations = async () => {
   const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   organizations.value = data.result.data
@@ -126,7 +132,6 @@ const validateItem = (item) => {
 };
 
 const addNewClientOrder = async () => {
-  console.log(form.currency)
   if (validate(form.date, form.organization, form.counterparty, form.cpAgreement, form.currency) !== true) return
 
   const missingData = goods.value.some(validateItem)
@@ -137,6 +142,7 @@ const addNewClientOrder = async () => {
     shipping_date: form.shipping_date,
     organization_id: form.organization,
     counterparty_id: form.counterparty,
+    status: form.status,
     counterparty_agreement_id: form.cpAgreement,
     comment: form.comment,
     currency_id: typeof form.currency === 'object' ? form.currency.id : form.currency,
@@ -151,7 +157,6 @@ const addNewClientOrder = async () => {
     }))
  }
 
-  console.log(body)
 
  try {
    const res = await clientOrderApi.add(body)
@@ -160,7 +165,7 @@ const addNewClientOrder = async () => {
      router.push('/clientOrder')
    }
  } catch (e) {
-   console.log(e)
+   console.error(e)
  }
 }
 
@@ -178,10 +183,11 @@ onMounted(() => {
   form.date = currentDate()
   form.shipping_date = currentDate()
   author.value = JSON.parse(localStorage.getItem('user')).name || null
-  getOrganizations()
   getCounterparties()
+  getOrganizations()
   getCpAgreements()
   getCurrencies()
+  getStatuses()
   getGoods()
 })
 
@@ -238,6 +244,7 @@ watch(() => form.counterparty, async (id) => {
           <custom-autocomplete label="Клиент" :items="counterparties" v-model="form.counterparty"/>
           <custom-autocomplete label="Договор" :items="cpAgreements" v-model="form.cpAgreement"/>
           <custom-text-field label="Дата отгрузки" type="date" v-model="form.shipping_date"/>
+          <custom-autocomplete label="Статус заказа" :items="statuses" v-model="form.status"/>
         </div>
       </v-col>
       <v-col>

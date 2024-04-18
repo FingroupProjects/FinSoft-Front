@@ -11,12 +11,18 @@ defineProps({
     type: String,
     default: '250px',
     required: false
+  },
+  disabled: {
+    type: Boolean,
+    default: false,
+    required: false
   }
 })
 </script>
 
 <template>
   <v-autocomplete
+      :disabled="disabled"
       :style="[`max-width: ${maxWidth}`, `min-width: ${minWidth}px`, 'max-height: 40px !important']"
       variant="outlined"
       :color="BASE_COLOR"

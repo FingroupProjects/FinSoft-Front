@@ -32,6 +32,7 @@ const form = reactive({
   cpAgreements: [],
   comment: null,
   currency: null,
+  status: null,
 })
 
 const loading = ref(false)
@@ -51,6 +52,7 @@ const counterparties = ref([])
 const cpAgreements = ref([])
 const currencies = ref([])
 const listGoods = ref([])
+const statuses = ref([])
 
 const headers = ref([
   {title: 'Товары', key: 'goods', sortable: false},
@@ -92,6 +94,11 @@ const getClientOrderDetails = async () => {
     auto_sale_sum: item.auto_sale_sum,
     price: item.price,
   }))
+}
+
+const getStatuses = async () => {
+  const { data } = await clientOrderApi.getStatuses();
+  statuses.value = data.result
 }
 
 const getOrganizations = async () => {
@@ -170,6 +177,7 @@ const updateProcurement = async () => {
     counterparty_agreement_id: typeof form.cpAgreement === 'object' ? form.cpAgreement.id : form.cpAgreement,
     currency_id: typeof form.currency === 'object' ? form.currency.id : form.currency,
     comment: form.comment,
+    status: form.status,
     summa: totalPrice.value,
     order_status_id: 1,
     goods: goods.value.map((item) => ({
@@ -210,6 +218,7 @@ onMounted( () => {
       getCounterparties(),
       getCpAgreements(),
       getCurrencies(),
+      getStatuses(),
       getGoods(),
       getClientOrderDetails()
   ])
@@ -269,6 +278,7 @@ watch(() => form.counterparty, async (data) => {
           <custom-autocomplete label="Поставщик" :items="counterparties" v-model="form.counterparty"/>
           <custom-text-field label="Дата" type="date" v-model="form.shipping_date"/>
           <custom-autocomplete label="Договор" :items="cpAgreements" v-model="form.cpAgreement"/>
+          <custom-autocomplete label="Статус заказа" :items="statuses" v-model="form.status"/>
         </div>
       </v-col>
       <v-col>

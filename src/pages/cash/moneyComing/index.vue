@@ -1,41 +1,171 @@
 <script setup>
-import { ref, reactive, onMounted } from "vue";
-import usersApi from "../../../api/list/user.js";
-import organizationApi from "../../../api/list/organizations.js";
 import {
   BASE_COLOR,
   FIELD_COLOR,
 } from "../../../composables/constant/colors.js";
+import validate from "./validate.js";
+import { ref, reactive, onMounted, watch } from "vue";
+import employeeApi from "../../../api/list/employee.js";
+import Icons from "../../../composables/Icons/Icons.vue";
+import showToast from "../../../composables/toast/index.js";
+import counterpartyApi from "../../../api/list/counterparty.js";
+import cashRegisterApi from "../../../api/list/cashRegister.js";
+import organizationApi from "../../../api/list/organizations.js";
+import currentDate from "../../../composables/date/currentDate.js";
+import { add, addMessage } from "../../../composables/constant/buttons.js";
+import clientPaymentApi from "../../../api/documents/clientPayment.js";
+import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 
 const author = ref("");
 
 const typeOperations = ref([
-  "Оплата от клиента",
-  "Списание",
-  "Получение с другой кассы",
-  "Вложение",
-  "Получение кредита",
-  "Возврат от подотчетника",
-  "Возврат от поставщика",
-  "Прочие доходы",
-  "Прочие приходы",
+  { id: 1, title: "Оплата от клиента" },
+  { id: 2, title: "Списание" },
+  { id: 3, title: "Получение с другой кассы" },
+  { id: 4, title: "Вложение" },
+  { id: 5, title: "Получение кредита" },
+  { id: 6, title: "Возврат от поставщика" },
+  { id: 7, title: "Возврат от подотчетника" },
+  { id: 8, title: "Прочие доходы" },
+  { id: 9, title: "Прочие приходы" },
 ]);
 
 const form = reactive({
   sum: null,
   user: null,
+  base: null,
   date: null,
-  number: null,
+  cash: null,
   comment: null,
-  storage: null,
+  employee: null,
+  incomeItem: null,
+  balanceItem: null,
+  cpAgreement: null,
+  bankAccount: null,
+  sender_cash: null,
+  counterparty: null,
   organization: null,
-  typeOperation: typeOperations.value[0],
+  typeOperation: typeOperations.value[0].title,
 });
 
+const employees = ref([]);
+const cpAgreements = ref([]);
+const cashRegisters = ref([]);
 const organizations = ref([]);
-const users = ref([]);
+const counterparties = ref([]);
+
+watch(
+  () => form.typeOperation,
+  (newValue) => {
+    resetFields();
+  }
+);
+
+watch(
+  () => form.counterparty,
+  (newValue) => {
+    form.cpAgreement = null;
+    cpAgreements.value = [];
+    getCpAgreements(form.counterparty);
+  }
+);
+
+const resetFields = () => {
+  form.base = null;
+  form.employee = null;
+  form.incomeItem = null;
+  form.balanceItem = null;
+  form.cpAgreement = null;
+  form.bankAccount = null;
+  form.sender_cash = null;
+  form.cpAgreement = null;
+  form.organization = null;
+  form.counterparty = null;
+};
+
+const firstAccess = async () => {
+  if (
+    validate(
+      form.sum,
+      form.base,
+      form.date,
+      form.organization,
+      form.cash,
+      form.counterparty,
+      form.cpAgreement
+    ) !== true
+  )
+    return;
+  const body = {
+    date: form.date,
+    organization_id: form.organization,
+    cashRegister_id: form.cash,
+    sum: form.sum,
+    counterparty_id: form.counterparty,
+    counterparty_agreement_id: form.cpAgreement,
+    basis: form.base,
+    comment: form.comment,
+    type_operation: form.typeOperation,
+    type: "PKO",
+  };
+  try {
+    const res = await clientPaymentApi.add(body);
+    showToast(addMessage, "green");
+  } catch (e) {
+    console.error(e);
+  }
+};
+const secondAccess = () => {
+  console.log(2);
+};
+const thirdAccess = () => {
+  console.log(3);
+};
+const fourthAccess = () => {
+  console.log(4);
+};
+
+const fifthAccess = () => {
+  console.log(5);
+};
+
+const sixthAccess = () => {
+  console.log(6);
+};
+
+const getAccess = () => {
+  switch (form.typeOperation) {
+    case "Оплата от клиента":
+      firstAccess();
+      break;
+    case "Списание":
+      secondAccess();
+      break;
+    case "Получение с другой кассы":
+      thirdAccess();
+      break;
+    case "Вложение":
+      firstAccess();
+      break;
+    case "Получение кредита":
+      firstAccess();
+      break;
+    case "Возврат от поставщика":
+      firstAccess();
+      break;
+    case "Возврат от подотчетника":
+      fourthAccess();
+      break;
+    case "Прочие доходы":
+      fifthAccess();
+      break;
+    case "Прочие приходы":
+      sixthAccess();
+      break;
+  }
+};
 
 const getOrganizations = async () => {
   const { data } = await organizationApi.get({
@@ -46,29 +176,68 @@ const getOrganizations = async () => {
   organizations.value = data.result.data;
 };
 
-const getUsers = async () => {
-  const { data } = await usersApi.get({
+const getCashregisters = async () => {
+  const { data } = await cashRegisterApi.get({
     page: 1,
     itemsPerPage: 100000,
     sortBy: "name",
   });
-  users.value = data.result.data;
+  cashRegisters.value = data.result.data;
+};
+
+const getCounterparties = async () => {
+  const { data } = await counterpartyApi.get({
+    page: 1,
+    itemsPerPage: 100000,
+    sortBy: "name",
+  });
+  counterparties.value = data.result.data;
+};
+
+const getCpAgreements = async (id) => {
+  try {
+    const { data } = await cpAgreementApi.getById(id);
+    cpAgreements.value = data.result.counterparty_id.counterpartyAgreement;
+  } catch (e) {}
+};
+
+const getEmployees = async () => {
+  const { data } = await employeeApi.get({
+    page: 1,
+    itemsPerPage: 100000,
+    sortBy: "name",
+  });
+  employees.value = data.result.data;
 };
 
 onMounted(async () => {
+  form.date = currentDate();
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
-  await getOrganizations();
-  await getUsers();
+  await Promise.all([
+    getEmployees(),
+    getCashregisters(),
+    getOrganizations(),
+    getCounterparties(),
+  ]);
 });
 </script>
 
 <template>
   <div>
     <v-col>
-      <div class="d-flex flex-column justify-space-between text-uppercase mb-3">
+      <div class="d-flex justify-space-between text-uppercase">
         <div class="d-flex align-center ga-2 ms-4">
           <span>ПКО (создание)</span>
         </div>
+        <v-card variant="text" class="d-flex align-center ga-2">
+          <div class="d-flex w-100">
+            <div class="d-flex ga-2 mt-1 me-3">
+              <Icons title="Добавить" @click="getAccess" name="add" />
+              <Icons title="Скопировать" name="copy" />
+              <Icons title="Удалить" name="delete" />
+            </div>
+          </div>
+        </v-card>
       </div>
     </v-col>
     <v-divider />
@@ -76,18 +245,11 @@ onMounted(async () => {
     <div style="background: #fff">
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4 mb-2">
-          <v-text-field
-            rounded="lg"
-            hide-details
-            label="Номер"
-            density="compact"
-            clear-icon="close"
-            variant="outlined"
-            :color="BASE_COLOR"
-            v-model="form.number"
-            style="max-width: 170px; max-height: 40px !important"
-            :base-color="FIELD_COLOR"
-            class="w-auto text-sm-body-1"
+          <custom-text-field
+            readonly
+            :value="'Номер'"
+            min-width="140"
+            max-width="110"
           />
           <v-text-field
             type="date"
@@ -100,7 +262,7 @@ onMounted(async () => {
             clear-icon="close"
             variant="outlined"
             class="text-sm-body-1"
-            style="max-width: 170px; max-height: 40px !important"
+            style="max-width: 145px; max-height: 40px !important"
             :base-color="FIELD_COLOR"
           />
           <custom-autocomplete
@@ -110,8 +272,8 @@ onMounted(async () => {
           />
           <custom-autocomplete
             label="Касса"
-            :items="users"
-            v-model="form.user"
+            :items="cashRegisters"
+            v-model="form.cash"
           />
           <custom-text-field label="Сумма" v-model="form.sum" />
         </div>
@@ -134,246 +296,75 @@ onMounted(async () => {
                   class="text-black"
                   v-for="typeOperation in typeOperations"
                   :color="BASE_COLOR"
-                  :key="typeOperation"
-                  :label="typeOperation"
-                  :value="typeOperation"
-                  @change="form.typeOperation = typeOperation"
+                  :key="typeOperation.id"
+                  :label="typeOperation.title"
+                  :value="typeOperation.title"
+                  @change="form.typeOperation = typeOperation.title"
                 ></v-radio>
               </v-radio-group>
             </div>
           </div>
-          <div
-            v-if="form.typeOperation === 'Оплата от клиента'"
-            class="d-flex flex-column ga-4"
-          >
-            <custom-autocomplete
-              label="Контрагент"
-              :items="organizations"
-              v-model="form.organization"
-            />
-            <custom-autocomplete
-              label="Договор"
-              :items="organizations"
-              v-model="form.organization"
-            />
-            <v-textarea
-              variant="outlined"
-              :base-color="FIELD_COLOR"
-              label="Комментарий"
-              v-model="form.comment"
-              density="compact"
-              rounded="md"
-              :color="BASE_COLOR"
-              hide-details
-              :append-inner-icon="form.comment ? 'close' : ''"
-              @click:append-inner="form.comment = null"
-            />
-          </div>
-          <div
-            v-if="form.typeOperation === 'Списание'"
-            class="d-flex flex-column ga-4"
-          >
-            <custom-autocomplete
-              label="Банковский счет"
-              :items="organizations"
-              v-model="form.organization"
-            />
-            <v-textarea
-              variant="outlined"
-              :base-color="FIELD_COLOR"
-              label="Комментарий"
-              v-model="form.comment"
-              density="compact"
-              rounded="md"
-              :color="BASE_COLOR"
-              hide-details
-              :append-inner-icon="form.comment ? 'close' : ''"
-              @click:append-inner="form.comment = null"
-            />
-          </div>
-          <div
-            v-if="form.typeOperation === 'Получение с другой кассы'"
-            class="d-flex flex-column ga-4"
-          >
-            <custom-autocomplete
-              label="Касса отправителя"
-              :items="organizations"
-              v-model="form.organization"
-            />
-            <v-textarea
-              variant="outlined"
-              :base-color="FIELD_COLOR"
-              label="Комментарий"
-              v-model="form.comment"
-              density="compact"
-              rounded="md"
-              :color="BASE_COLOR"
-              hide-details
-              :append-inner-icon="form.comment ? 'close' : ''"
-              @click:append-inner="form.comment = null"
-            />
-          </div>
-          <div
-            v-if="form.typeOperation === 'Вложение'"
-            class="d-flex flex-column ga-4"
-          >
-            <custom-autocomplete
-              label="Контрагент"
-              :items="organizations"
-              v-model="form.organization"
-            />
-            <custom-autocomplete
-              label="Договор"
-              :items="organizations"
-              v-model="form.organization"
-            />
-            <v-textarea
-              variant="outlined"
-              :base-color="FIELD_COLOR"
-              label="Комментарий"
-              v-model="form.comment"
-              density="compact"
-              rounded="md"
-              :color="BASE_COLOR"
-              hide-details
-              :append-inner-icon="form.comment ? 'close' : ''"
-              @click:append-inner="form.comment = null"
-            />
-          </div>
-          <div
-            v-if="form.typeOperation === 'Получение кредита'"
-            class="d-flex flex-column ga-4"
-          >
-            <custom-autocomplete
-              label="Контрагент"
-              :items="organizations"
-              v-model="form.organization"
-            />
-            <custom-autocomplete
-              label="Договор"
-              :items="organizations"
-              v-model="form.organization"
-            />
-            <v-textarea
-              variant="outlined"
-              :base-color="FIELD_COLOR"
-              label="Комментарий"
-              v-model="form.comment"
-              density="compact"
-              rounded="md"
-              :color="BASE_COLOR"
-              hide-details
-              :append-inner-icon="form.comment ? 'close' : ''"
-              @click:append-inner="form.comment = null"
-            />
-          </div>
-          <div
-            v-if="form.typeOperation === 'Возврат от подотчетника'"
-            class="d-flex flex-column ga-4"
-          >
-            <custom-autocomplete
-              label="Контрагент"
-              :items="organizations"
-              v-model="form.organization"
-            />
-            <custom-autocomplete
-              label="Договор"
-              :items="organizations"
-              v-model="form.organization"
-            />
-            <v-textarea
-              variant="outlined"
-              :base-color="FIELD_COLOR"
-              label="Комментарий"
-              v-model="form.comment"
-              density="compact"
-              rounded="md"
-              :color="BASE_COLOR"
-              hide-details
-              :append-inner-icon="form.comment ? 'close' : ''"
-              @click:append-inner="form.comment = null"
-            />
-          </div>
-          <div
-            v-if="form.typeOperation === 'Возврат от поставщика'"
-            class="d-flex flex-column ga-4"
-          >
-            <custom-autocomplete
-              label="Контрагент"
-              :items="organizations"
-              v-model="form.organization"
-            />
-            <custom-autocomplete
-              label="Договор"
-              :items="organizations"
-              v-model="form.organization"
-            />
-            <v-textarea
-              variant="outlined"
-              :base-color="FIELD_COLOR"
-              label="Комментарий"
-              v-model="form.comment"
-              density="compact"
-              rounded="md"
-              :color="BASE_COLOR"
-              hide-details
-              :append-inner-icon="form.comment ? 'close' : ''"
-              @click:append-inner="form.comment = null"
-            />
-          </div>
-          <div
-            v-if="form.typeOperation === 'Прочие доходы'"
-            class="d-flex flex-column ga-4"
-          >
-            <custom-autocomplete
-              label="Контрагент"
-              :items="organizations"
-              v-model="form.organization"
-            />
-            <custom-autocomplete
-              label="Договор"
-              :items="organizations"
-              v-model="form.organization"
-            />
-            <v-textarea
-              variant="outlined"
-              :base-color="FIELD_COLOR"
-              label="Комментарий"
-              v-model="form.comment"
-              density="compact"
-              rounded="md"
-              :color="BASE_COLOR"
-              hide-details
-              :append-inner-icon="form.comment ? 'close' : ''"
-              @click:append-inner="form.comment = null"
-            />
-          </div>
-          <div
-            v-if="form.typeOperation === 'Прочие приходы'"
-            class="d-flex flex-column ga-4"
-          >
-            <custom-autocomplete
-              label="Контрагент"
-              :items="organizations"
-              v-model="form.organization"
-            />
-            <custom-autocomplete
-              label="Договор"
-              :items="organizations"
-              v-model="form.organization"
-            />
-            <v-textarea
-              variant="outlined"
-              :base-color="FIELD_COLOR"
-              label="Комментарий"
-              v-model="form.comment"
-              density="compact"
-              rounded="md"
-              :color="BASE_COLOR"
-              hide-details
-              :append-inner-icon="form.comment ? 'close' : ''"
-              @click:append-inner="form.comment = null"
-            />
+          <div class="d-flex flex-column ga-4">
+            <div v-if="form.typeOperation === 'Списание'">
+              <custom-autocomplete
+                label="Банковский счет"
+                :items="organizations"
+                v-model="form.bankAccount"
+              />
+            </div>
+            <div v-else-if="form.typeOperation === 'Получение с другой кассы'">
+              <custom-autocomplete
+                label="Касса отправителя"
+                :items="organizations"
+                v-model="form.sender_cash"
+              />
+            </div>
+            <div v-else-if="form.typeOperation === 'Возврат от подотчетника'">
+              <custom-autocomplete
+                label="Сотрудник"
+                :items="employees"
+                v-model="form.employee"
+              />
+            </div>
+            <div v-else-if="form.typeOperation === 'Прочие доходы'">
+              <custom-autocomplete
+                label="Статья дохода"
+                :items="organizations"
+                v-model="form.incomeItem"
+              />
+            </div>
+            <div v-else-if="form.typeOperation === 'Прочие приходы'">
+              <custom-autocomplete
+                label="Статья баланса"
+                :items="organizations"
+                v-model="form.balanceItem"
+              />
+            </div>
+            <div v-else class="d-flex flex-column ga-4">
+              <custom-autocomplete
+                label="Контрагент"
+                :items="counterparties"
+                v-model="form.counterparty"
+              />
+              <custom-autocomplete
+                :disabled="form.counterparty !== null ? false : true"
+                label="Договор"
+                :items="cpAgreements"
+                v-model="form.cpAgreement"
+              />
+            </div>
+
+            <v-container fluid>
+              <v-textarea
+                style="width: 450px"
+                :base-color="FIELD_COLOR"
+                v-model="form.base"
+                :color="BASE_COLOR"
+                variant="outlined"
+                label="Основание"
+                rounded="lg"
+              ></v-textarea>
+            </v-container>
           </div>
         </div>
 
