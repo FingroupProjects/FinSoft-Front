@@ -149,7 +149,7 @@ const cash = ref({
       id: 1,
       title: "Деньги",
       child: [
-        { id: 1, title: "Приход деньги", link: "/" },
+        { id: 1, title: "Приход деньги", link: "/moneyComing" },
         { id: 2, title: "Расход деньги", link: "/" },
         { id: 2, title: "Приход и расход рас. счета", link: "/" },
       ],

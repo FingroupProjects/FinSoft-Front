@@ -14,6 +14,7 @@ const route = useRoute();
 const isLayout = ref(true);
 const lists = ref([]);
 const admins = ref([]);
+const isChangedDocument = ref(false)
 
 const toggleSidebar = () => {
   rale.value = !rale.value;
@@ -39,13 +40,10 @@ window.addEventListener("load", () => {
   })
 })
 
-const changed = () => {
-  console.log('турсунбой')
+const changed = data => {
+  return isChangedDocument.value = data
 }
 
-onMounted(() => {
-
-})
 </script>
 
 <template>
@@ -68,6 +66,8 @@ onMounted(() => {
         />
         <AdminPanel
           class="panel"
+          @changedDocument="isChangedDocument = false"
+          :isChangedDocument="isChangedDocument"
           :class="{ active: admin }"
           :admins="admins"
           :lists="lists"

@@ -113,9 +113,19 @@ const routes = [
     component: () => import("../pages/storage/invertor/show.vue"),
   },
   {
-    path: "/cash",
-    name: "cash",
-    component: () => import("../pages/cash/index.vue"),
+    path: "/moneyComing",
+    name: "moneyComing",
+    component: () => import("../pages/cash/moneyComing/index.vue"),
+  },
+  {
+    path: "/moneyComingCreate",
+    name: "moneyComingCreate",
+    component: () => import("../pages/cash/moneyComing/create.vue"),
+  },
+  {
+    path: "/moneyComingEdit/:id",
+    name: "moneyComingEdit",
+    component: () => import("../pages/cash/moneyComing/show.vue"),
   },
   {
     path: "/salary",

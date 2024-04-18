@@ -74,6 +74,7 @@ const getInvertorDetail = async () => {
   };
   form.comment = data.result.comment;
   goods.value = data.result.inventoryGoods.map((item) => ({
+    id: item.id,
     good_id: item.good.id,
     difference: item.difference,
     actual_quantity: item.actual_quantity,

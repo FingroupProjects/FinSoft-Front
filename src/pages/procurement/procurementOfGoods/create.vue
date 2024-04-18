@@ -1,5 +1,5 @@
 <script setup>
-import {computed, onMounted, reactive, ref, watch} from "vue";
+import {computed, onMounted, reactive, ref, watch, defineEmits} from "vue";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
@@ -7,7 +7,7 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../../composables/toast/index.js";
 import currentDate from "../../../composables/date/currentDate.js";
 import validate from "./validate.js";
-import { useRouter } from "vue-router";
+import {useRouter} from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import storageApi from "../../../api/list/storage.js";
@@ -15,12 +15,13 @@ import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import currencyApi from "../../../api/list/currency.js";
 import procurementApi from "../../../api/documents/procurement.js";
 import goodApi from "../../../api/list/goods.js";
-import { addMessage } from "../../../composables/constant/buttons.js";
-import "../../../assets/css/procurement.css";
+import {addMessage} from "../../../composables/constant/buttons.js";
 import {BASE_COLOR} from "../../../composables/constant/colors.js";
+import "../../../assets/css/procurement.css";
 
 
 const router = useRouter()
+const emits = defineEmits(['changed'])
 
 const form = reactive({
   date: null,
@@ -44,7 +45,7 @@ const markedID = ref([])
 const goods = ref([{
   id: 1,
   good_id: null,
-  amount: 1,
+  amount: "1",
   price: null,
 }])
 
@@ -63,36 +64,36 @@ const headers = ref([
 ])
 
 const getOrganizations = async () => {
-  const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  const {data} = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   organizations.value = data.result.data
 }
 
 const getCounterparties = async () => {
-  const { data } = await counterpartyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  const {data} = await counterpartyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   counterparties.value = data.result.data
 }
 
 const getCpAgreements = async () => {
-  const { data } = await cpAgreementApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  const {data} = await cpAgreementApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   cpAgreements.value = data.result.data
 }
 
 const getStorages = async () => {
-  const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  const {data} = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   storages.value = data.result.data
 }
 
 const getCurrencies = async () => {
-  const { data } = await currencyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  const {data} = await currencyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   currencies.value = data.result.data
 }
 
 const getGoods = async () => {
-  const { data } = await goodApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  const {data} = await goodApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   listGoods.value = data.result.data
 }
 
-const decreaseCountOfGoods = () => {z
+const decreaseCountOfGoods = () => {
   goods.value = goods.value.filter((item) => !markedID.value.includes(item.id))
 }
 
@@ -111,7 +112,7 @@ const increaseCountOfGoods = () => {
   const missingData = goods.value.some(validateItem)
   if (missingData) return
 
-  goods.value.push({id: goods.value.length + 1, good_id: null, amount: 1, price: null })
+  goods.value.push({id: goods.value.length + 1, good_id: null, amount: "1", price: null})
 }
 
 const validateItem = (item) => {
@@ -141,7 +142,7 @@ const addNewProcurement = async () => {
     organization_id: form.organization,
     counterparty_id: form.counterparty,
     counterparty_agreement_id: form.cpAgreement,
-    storage_id: form.storage ,
+    storage_id: form.storage,
     saleInteger: Number(form.saleInteger),
     salePercent: Number(form.salePercent),
     currency_id: typeof form.currency === 'object' ? form.currency.id : form.currency,
@@ -150,19 +151,29 @@ const addNewProcurement = async () => {
       amount: Number(item.amount),
       price: Number(item.price),
     }))
- }
+  }
 
-  console.log(body)
+  try {
+    const res = await procurementApi.add(body)
+    if (res.status === 201) {
+      showToast(addMessage)
+      router.push('/procurementOfGoods')
+    }
+  } catch (e) {
+    console.log(e)
+  }
+}
 
- try {
-   const res = await procurementApi.add(body)
-   if (res.status === 201) {
-     showToast(addMessage)
-     router.push('/procurementOfGoods')
-   }
- } catch (e) {
-   console.log(e)
- }
+const isChanged = () => {
+  const {saleInteger, salePercent, organization, counterparty, cpAgreement, storage, currency, date} = form;
+
+  const goodsValues = goods.value.flatMap(good => [good.good_id, good.amount, good.price]);
+
+  const cleanedGoodsValues = goodsValues.filter(val => val !== undefined);
+
+  const valuesToCheck = [saleInteger, salePercent, organization, counterparty, cpAgreement, storage, currency, date, ...cleanedGoodsValues];
+  console.log(cleanedGoodsValues)
+  return valuesToCheck.every(val => val === null || val === '' || val === currentDate() || val === "1");
 }
 
 
@@ -177,7 +188,7 @@ const totalPrice = computed(() => {
 const totalPriceWithSale = computed(() => {
   let sum = 0
   if (form.salePercent !== null) {
-      sum = totalPrice.value - (totalPrice.value * form.salePercent / 100)
+    sum = totalPrice.value - (totalPrice.value * form.salePercent / 100)
   } else {
     goods.value.forEach(item => {
       sum += (item.price * item.amount)
@@ -188,17 +199,8 @@ const totalPriceWithSale = computed(() => {
   return sum
 })
 
-
-onMounted(() => {
-  form.date = currentDate()
-  author.value = JSON.parse(localStorage.getItem('user')).name || null
-  getOrganizations()
-  getCounterparties()
-  getCpAgreements()
-  getStorages()
-  getCurrencies()
-  getGoods()
-})
+const isSaleIntegerDisabled = computed(() => !!form.salePercent);
+const isSalePercentDisabled = computed(() => !!form.saleInteger);
 
 watch(() => form.counterparty, async (id) => {
   form.cpAgreement = null
@@ -221,9 +223,6 @@ watch(() => form.counterparty, async (id) => {
   }
 })
 
-const isSaleIntegerDisabled = computed(() => !!form.salePercent);
-const isSalePercentDisabled = computed(() => !!form.saleInteger);
-
 watch(() => form.saleInteger, (newValue) => {
   if (!newValue) {
     form.salePercent = ''
@@ -234,6 +233,26 @@ watch(() => form.salePercent, (newValue) => {
   if (!newValue) {
     form.saleInteger = ''
   }
+})
+
+watch([form, goods.value], () => {
+  if (!isChanged()) {
+    emits('changed', true);
+  } else {
+    emits('changed', false);
+  }
+});
+
+onMounted(() => {
+  form.date = currentDate()
+  author.value = JSON.parse(localStorage.getItem('user')).name || null
+
+  getOrganizations()
+  getCounterparties()
+  getCpAgreements()
+  getStorages()
+  getCurrencies()
+  getGoods()
 })
 
 </script>
@@ -263,12 +282,14 @@ watch(() => form.salePercent, (newValue) => {
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field disabled value="Номер" v-model="form.number"/>
           <custom-text-field label="Дата" type="date" v-model="form.date"/>
-          <custom-autocomplete label="Организация" :items="organizations"  v-model="form.organization"/>
+          <custom-autocomplete label="Организация" :items="organizations" v-model="form.organization"/>
           <custom-autocomplete label="Поставщик" :items="counterparties" v-model="form.counterparty"/>
           <custom-autocomplete label="Договор" :items="cpAgreements" v-model="form.cpAgreement"/>
           <custom-autocomplete label="Склад" :items="storages" v-model="form.storage"/>
-          <custom-text-field label="Руч. скидка (сумма)" v-mask="'###'" v-model="form.saleInteger" :disabled="isSaleIntegerDisabled"/>
-          <custom-text-field label="Руч. скидка (процент)" v-mask="'###'" v-model="form.salePercent" :disabled="isSalePercentDisabled"/>
+          <custom-text-field label="Руч. скидка (сумма)" v-mask="'###'" v-model="form.saleInteger"
+                             :disabled="isSaleIntegerDisabled"/>
+          <custom-text-field label="Руч. скидка (процент)" v-mask="'###'" v-model="form.salePercent"
+                             :disabled="isSalePercentDisabled"/>
         </div>
       </v-col>
       <v-col>
@@ -300,24 +321,24 @@ watch(() => form.salePercent, (newValue) => {
                 <tr :key="index">
                   <td>
                     <CustomCheckbox
-                      v-model="markedID"
-                      @change="lineMarking(item)"
-                      :checked="markedID.includes(item.id)"
+                        v-model="markedID"
+                        @change="lineMarking(item)"
+                        :checked="markedID.includes(item.id)"
                     >
-                      <span>{{ index + 1}}</span>
+                      <span>{{ index + 1 }}</span>
                     </CustomCheckbox>
                   </td>
                   <td style="width: 40%;">
                     <custom-autocomplete v-model="item.good_id" :items="listGoods" min-width="150" max-width="100%"/>
                   </td>
                   <td>
-                    <custom-text-field v-model="item.amount" v-mask="'########'" min-width="50" />
+                    <custom-text-field v-model="item.amount" v-mask="'########'" min-width="50"/>
                   </td>
                   <td>
                     <custom-text-field v-model="item.price" v-mask="'##########'" min-width="80"/>
                   </td>
                   <td>
-                    <custom-text-field readonly :value="item.amount * item.price"  min-width="100"/>
+                    <custom-text-field readonly :value="item.amount * item.price" min-width="100"/>
                   </td>
                 </tr>
               </template>
@@ -330,9 +351,10 @@ watch(() => form.salePercent, (newValue) => {
             <custom-text-field label="Комментарий" v-model="form.comment" min-width="310"/>
           </div>
           <div class="d-flex ga-6">
-            <custom-text-field readonly :value="'Сумма со скидкой: ' + totalPriceWithSale" min-width="180" />
-            <custom-text-field readonly  :value="'Сумма без скидки: ' + totalPrice" min-width="180" max-width="110"/>
-            <custom-autocomplete v-model="form.currency" label="Валюта" :items="currencies" min-width="110" max-width="110" />
+            <custom-text-field readonly :value="'Сумма со скидкой: ' + totalPriceWithSale" min-width="180"/>
+            <custom-text-field readonly :value="'Сумма без скидки: ' + totalPrice" min-width="180" max-width="110"/>
+            <custom-autocomplete v-model="form.currency" label="Валюта" :items="currencies" min-width="110"
+                                 max-width="110"/>
           </div>
         </div>
       </v-col>
@@ -341,6 +363,6 @@ watch(() => form.salePercent, (newValue) => {
 </template>
 
 <style scoped>
-@import "../../../assets/css/procurement.css"
+@import "../../../assets/css/procurement.css";
 
 </style>
