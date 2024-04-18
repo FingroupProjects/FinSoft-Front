@@ -9,7 +9,7 @@ export default {
     return api.post('/document/movement', data)
   },
   getById(id) {
-    return api.get(`/document/show/${id}`)
+    return api.get(`/document/movement/${id}`)
   },
   update(id, data) {
     return api.patch(`/document/update/${id}`, data)

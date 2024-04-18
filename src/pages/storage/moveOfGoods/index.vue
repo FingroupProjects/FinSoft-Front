@@ -4,6 +4,8 @@ import {useRouter} from "vue-router";
 import showToast from '../../../composables/toast/index.js'
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
+import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
+import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 import {
   removeMessage,
@@ -315,10 +317,10 @@ watch(search, debounce((newValue) => {
               </td>
               <td>{{ item.doc_number }}</td>
               <td>{{ showDate(item.date) }}</td>
-              <td>{{ item.sender_storage.name }}</td>
-              <td>{{ item.recipient_storage.name }}</td>
-              <td>{{ item.organization.name }}</td>
-              <td>{{ item.author.name }}</td>
+              <td>{{ item.sender_storage_id.name }}</td>
+              <td>{{ item.recipient_storage_id.name }}</td>
+              <td>{{ item.organization_id.name }}</td>
+              <td>{{ item.author_id.name }}</td>
 
             </tr>
           </template>
@@ -339,7 +341,8 @@ watch(search, debounce((newValue) => {
                   <custom-text-field label="Дата" type="date" min-width="508"  v-model="filterForm.date"/>
                   </div>
                   <div class="d-flex ga-2">
-                    <custom-autocomplete label="Склад-отправитель" :items="organizations"  v-model="filterForm.organization_id"/>
+                    <custom-autocomplete label="Огранизация" :items="organizations"  v-model="filterForm.organization_id"/>
+                    <custom-autocomplete label="Склад-отправитель" :items="storages" v-model="filterForm.storage_id"/>
                   <custom-autocomplete label="Склад-получатель" :items="storages" v-model="filterForm.storage_id"/>               
                  </div>
                  

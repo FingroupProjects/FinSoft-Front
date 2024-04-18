@@ -30,7 +30,7 @@ const form = reactive({
   sender_storage: null,
   sender_storages: [],
   recipient_storage: null,
-  recipient_storage: [],
+  recipient_storages: [],
   comment: null,
 })
 
@@ -57,23 +57,33 @@ const headers = ref([
 
 const getMoveDetails = async () => {
   const { data } = await moveApi.getById(route.params.id)
-  console.log(data);
-  form.doc_number = data.result.doc_number
-  form.date = data.result.date
-  form.organization = {
-    id: data.result.organization.id,
-    name: data.result.organization.name
-  }
-  form.storage = {
-    id: data.result.storage.id,
-    name: data.result.storage.name
-  }
-  form.comment = data.result.comment
+  console.log(data)
+  if(data?.result) {
 
-  goods.value = data.result.goods.map(item => ({
-    good_id: item.good.id,
-    amount: item.amount,
-  }))
+    form.doc_number = data.result.doc_number   
+    form.date = data.result.date
+    form.organization = {
+      id: data.result.organization.id,
+      name: data.result.organization.name
+    }
+    form.storage = {
+      id: data.result.storage.id,
+      name: data.result.storage.name
+    }
+    form.sender_storage = {
+      id: data.result.sender_storage.id,
+      name: data.result.sender_storage.name
+    }
+    form.recipient_storage = {
+      id: data.result.recipient_storage.id,
+      name: data.result.recipient_storage.name
+    }
+    form.comment = data.result.comment
+    goods.value = data.result.goods.map(item => ({
+      good_id: item.good.id,
+      amount: item.amount,
+    }))
+  }
 }
 
 const getOrganizations = async () => {
@@ -95,18 +105,13 @@ const getRecipientStorage = async () => {
   const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   storages.value = data.result.data
 }
-
-
-
 const getGoods = async () => {
   const { data } = await goodApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   listGoods.value = data.result.data
 }
-
 const decreaseCountOfGoods = () => {
   goods.value = goods.value.filter((item) => !markedID.value.includes(item.id))
 }
-
 const lineMarking = (item) => {
   const index = markedID.value.indexOf(item.id);
   if (index !== -1) {
@@ -117,7 +122,6 @@ const lineMarking = (item) => {
     }
   }
 }
-
 const increaseCountOfGoods = () => {
   const missingData = goods.value.some(validateItem)
   if (missingData) return
@@ -142,11 +146,13 @@ const updateMove = async () => {
 
   const missingData = goods.value.some(validateItem)
   if (missingData) return
-
+ 
   const body = {
     date: form.date,
-    organization_id: typeof form.organizations === 'object' ? form.organization.id : form.organization,
-    storage_id: typeof form.storages ===  'object' ? form.storage : form.storage,
+    organization_id: typeof form.organization === 'object' ? form.organization.id : form.organization,
+    storage_id: typeof form.storage ===  'object' ? form.storage.id : form.storage,
+    sender_storage_id: typeof form.sender_storage ===  'object' ? form.sender_storage.id: form.sender_storage,
+    recipient_storage_id: typeof form.recipient_storage ===  'object' ? form.recipient_storage.id : form.recipient_storage,
     goods: goods.value.map((item) => ({
       good_id: Number(item.good_id),
       amount: Number(item.amount),
@@ -167,7 +173,7 @@ onMounted( () => {
   form.date = currentDate()
   author.value = JSON.parse(localStorage.getItem('user')).name || null
 
-  Promise.all([
+   Promise.all([
       getOrganizations(),
       getStorages(),
       getGoods(),
