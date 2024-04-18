@@ -2,6 +2,7 @@
 import { ref, defineProps, onMounted, watch, onBeforeUnmount } from "vue";
 import { useRouter } from "vue-router";
 import Icons from "../../composables/Icons/Icons.vue";
+import { useConfirmDocumentStore } from "../../store/confirmDocument.js";
 
 const props = defineProps(["admin", "admins", "lists", "isChangedDocument"]);
 const emit = defineEmits(["toggle", "changedDocument"]);
@@ -11,6 +12,7 @@ const filteredLists = ref([]);
 const filteredAdmins = ref([]);
 const showConfirmModal = ref(false)
 const panelItem = ref({});
+const confirmDocument = useConfirmDocumentStore()
 
 watch(props.admins, (newVal) => {
   if (newVal) {
@@ -43,11 +45,16 @@ function push(item) {
   router.push(item.link);
 }
 
-const toggleChangedDocument = () => {
+const toggleChangedDocument = (action) => {
 
   showConfirmModal.value = false;
-  emit("changedDocument");
-  router.push(panelItem.value.link);
+  if (action === 'cancel') {
+    emit("changedDocument");
+    router.push(panelItem.value.link);
+  } else {
+   confirmDocument.updateOrCreateDocument()
+  }
+
 }
 
 onMounted(() => {
@@ -111,7 +118,7 @@ onMounted(() => {
           >
             <span>Подтверждение</span>
             <v-btn
-                @click="toggleChangedDocument"
+                @click="showConfirmModal = false"
                 variant="text"
                 :size="32"
                 class="pt-2 pl-1"
@@ -124,14 +131,14 @@ onMounted(() => {
           >
           <v-card-actions class="d-flex justify-end align-end">
             <v-btn
-                @click="toggleChangedDocument"
+                @click="toggleChangedDocument('cancel')"
                 class="text-none w-[200px] h-[20px]"
                 color="red"
                 variant="flat"
             >Нет</v-btn
             >
             <v-btn
-                @click=""
+                @click="toggleChangedDocument('updateOrCreate')"
                 class="text-none w-[200px] h-[20px]"
                 color="green"
                 variant="flat"

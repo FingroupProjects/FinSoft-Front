@@ -1,5 +1,5 @@
 <script setup>
-import {computed, defineEmits, onMounted, onUpdated, reactive, ref, watch} from "vue";
+import {computed, defineEmits, defineProps, onMounted, reactive, ref, watch} from "vue";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
@@ -18,13 +18,16 @@ import goodApi from "../../../api/list/goods.js";
 import { editMessage } from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
 import {BASE_COLOR} from "../../../composables/constant/colors.js";
-import {tr} from "vuetify/locale";
+import showDate from "../../../composables/date/showDate.js";
+import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
 
 
 const router = useRouter()
 const route = useRoute()
+const count = ref(0)
 const emits = defineEmits(['changed'])
-
+const props = defineProps(['isUpdateOrCreateDocument'])
+const confirmDocument = useConfirmDocumentStore()
 
 const tempForm = ref({})
 
@@ -68,12 +71,10 @@ const headers = ref([
 ])
 
 const getProcurementDetails = async () => {
-  let curr = new Date();
-  console.log('funtion', curr.getSeconds(), curr.getMilliseconds())
   try {
     const { data } = await procurementApi.getById(route.params.id)
     form.doc_number = data.result.doc_number
-    form.date = data.result.date
+    form.date = showDate(data.result.date, '-', true)
     form.organization = {
       id: data.result.organization.id,
       name: data.result.organization.name
@@ -82,10 +83,12 @@ const getProcurementDetails = async () => {
       id: data.result.counterparty.id,
       name: data.result.counterparty.name
     }
+    setTimeout(() => {
       form.cpAgreement = {
         id: data.result.counterpartyAgreement.id,
         name: data.result.counterpartyAgreement.name
       }
+    }, 200)
     form.storage = {
       id: data.result.storage.id,
       name: data.result.storage.name
@@ -95,17 +98,14 @@ const getProcurementDetails = async () => {
     form.comment = data.result.comment
     form.currency = data.result.currency
     goods.value = data.result.goods.map(item => ({
+      id: item.id,
       good_id: item.good.id,
       amount: item.amount,
       price: item.price
     }))
-
     prevForm.value = { ...form };
     prevGoods.value = [...goods.value];
     tempForm.value = Object.assign({}, form);
-
-  console.log(JSON.stringify(prevForm.value), 'TURSUNBOY', JSON.stringify(tempForm.value))
-    console.log(tempForm.value)
 
     loading.value = false
 
@@ -191,39 +191,35 @@ const updateProcurement = async () => {
   const missingData = goods.value.some(validateItem)
   if (missingData) return
 
-  const body = {
-    date: form.date,
-    organization_id: typeof form.organization === 'object' ? form.organization.id : form.organization,
-    counterparty_id: typeof form.counterparty === 'object' ? form.counterparty.id : form.counterparty,
-    counterparty_agreement_id: typeof form.cpAgreement === 'object' ? form.cpAgreement.id : form.cpAgreement,
-    storage_id: typeof form.storage === 'object' ? form.storage.id : form.storage,
-    saleInteger: Number(form.saleInteger),
-    salePercent: Number(form.salePercent),
-    currency_id: typeof form.currency === 'object' ? form.currency.id : form.currency,
-    comment: form.comment,
-    goods: goods.value.map((item) => ({
-      good_id: Number(item.good_id),
-      amount: Number(item.amount),
-      price: Number(item.price),
-    }))
- }
-
  try {
-   const res = await procurementApi.update(route.params.id ,body)
+   const body = {
+     date: form.date,
+     organization_id: typeof form.organization === 'object' ? form.organization.id : form.organization,
+     counterparty_id: typeof form.counterparty === 'object' ? form.counterparty.id : form.counterparty,
+     counterparty_agreement_id: typeof form.cpAgreement === 'object' ? form.cpAgreement.id : form.cpAgreement,
+     storage_id: typeof form.storage === 'object' ? form.storage.id : form.storage,
+     saleInteger: Number(form.saleInteger),
+     salePercent: Number(form.salePercent),
+     currency_id: typeof form.currency === 'object' ? form.currency.id : form.currency,
+     comment: form.comment,
+     goods: goods.value.map((item) => ({
+       id: item.id,
+       good_id: Number(item.good_id),
+       amount: Number(item.amount),
+       price: Number(item.price),
+     }))
+   }
+
+   const res = await procurementApi.update(route.params.id, body)
+   console.log(res)
    if (res.status === 200) {
      showToast(editMessage)
-     router.push('/procurementOfGoods')
+
    }
  } catch (e) {
    console.log(e)
  }
 }
-
-
-const isChanged = () => {
-
-}
-
 
 const totalPrice = computed(() => {
   let sum = 0
@@ -251,21 +247,47 @@ const totalPriceWithSale = computed(() => {
 const isSaleIntegerDisabled = computed(() => !!form.salePercent);
 const isSalePercentDisabled = computed(() => !!form.saleInteger);
 
-watch([form, goods], () => {
-  if (loading.value === true) {
-    return 1
-  } else if (checkDataChanges()) {
-    console.log('Данные изменились');
+
+
+const arraysEqual = (arr1, arr2) => {
+  if (arr1.length !== arr2.length) {
+    return true;
+  }
+
+  for (let i = 0; i < arr1.length; i++) {
+    if (JSON.stringify(arr1[i]) !== JSON.stringify(arr2[i])) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+const checkDataChanges = () => {
+  count.value++
+  const formDataChanged = JSON.stringify(tempForm.value) !== JSON.stringify(prevForm.value);
+  const isArraysEqual = arraysEqual(goods.value, prevGoods.value)
+  return formDataChanged || isArraysEqual
+};
+
+
+watch([goods.value], (newValue) => {
+  console.log(newValue)
+}, {deep: true})
+
+watch(form, () => {
+  if (count.value === 0) {
+    checkDataChanges()
+  } else {
+    if (checkDataChanges()) {
+      emits('changed', true)
+    } else {
+      emits('changed', false)
+    }
   }
 })
 
-const checkDataChanges = () => {
-  const formDataChanged = JSON.stringify(tempForm) !== JSON.stringify(prevForm.value);
-  let curr = new Date();
-  console.log(formDataChanged, curr.getSeconds(), curr.getMilliseconds())
 
-  return formDataChanged
-};
 
 watch(() => form.counterparty, async (data) => {
   form.cpAgreement = null
@@ -274,11 +296,17 @@ watch(() => form.counterparty, async (data) => {
 
   try {
     const res = await cpAgreementApi.getById(id)
-    console.log()
     form.currency = {
       id: res.data.result.currency_id.id,
       name: res.data.result.currency_id.name
     }
+
+    setTimeout(() => {
+      tempForm.value.currency = {
+        id: res.data.result.currency_id.id,
+        name: res.data.result.currency_id.name
+      }
+    }, 500)
 
     const array = Object.prototype.toString.call(res.data.result) === '[object Array]'
     const obj = Object.prototype.toString.call(res.data.result) === '[object Object]'
@@ -290,10 +318,15 @@ watch(() => form.counterparty, async (data) => {
   }
 })
 
+watch(confirmDocument, () => {
+  if (confirmDocument.isUpdateOrCreateDocument) {
+    updateProcurement()
+  }
+})
+
 onMounted( () => {
   form.date = currentDate()
   author.value = JSON.parse(localStorage.getItem('user')).name || null
-
   getProcurementDetails()
   Promise.all([
     getOrganizations(),
@@ -306,6 +339,9 @@ onMounted( () => {
   ])
 
 })
+
+
+
 </script>
 <template>
   <div class="document">
