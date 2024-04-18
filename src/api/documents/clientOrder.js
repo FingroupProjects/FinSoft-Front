@@ -14,4 +14,7 @@ export default {
   update(id, data) {
     return api.patch(`/document/update-order/${id}`, data)
   },
+  getStatuses() {
+    return api.get('document/client/order/statuses')
+  }
 }

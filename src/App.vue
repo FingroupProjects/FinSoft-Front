@@ -116,7 +116,7 @@ const changed = data => {
 .panel {
   position: relative;
   top: 0;
-  left: -20%;
+  left: -100%;
   width: 0px;
   height: 100vh;
   background-color: white;
