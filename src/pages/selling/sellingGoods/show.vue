@@ -17,6 +17,7 @@ import saleApi from "../../../api/documents/sale.js";
 import goodApi from "../../../api/list/goods.js";
 import { editMessage } from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
+import showDate from "../../../composables/date/showDate.js";
 import { BASE_COLOR } from "../../../composables/constant/colors.js";
 
 const document = ref(null);
@@ -61,11 +62,11 @@ const headers = ref([
   { title: "Сумма", key: "currency.name", sortable: false },
 ]);
 
-const getProcurementDetails = async () => {
+const getSellingGoodsDetail = async () => {
   const { data } = await saleApi.getById(route.params.id);
 
   form.doc_number = data.result.doc_number;
-  form.date = data.result.date;
+  form.date = showDate(data.result.date, '-', true);
   form.organization = {
     id: data.result.organization.id,
     name: data.result.organization.name,
@@ -92,6 +93,7 @@ const getProcurementDetails = async () => {
   form.currency = data.result.currency;
 
   goods.value = data.result.goods.map((item) => ({
+    id: item.id,
     good_id: item.good.id,
     amount: item.amount,
     price: item.price,
@@ -237,6 +239,7 @@ const updateProcurement = async () => {
       typeof form.currency === "object" ? form.currency.id : form.currency,
     comment: form.comment,
     goods: goods.value.map((item) => ({
+      id: Number(item.id),
       good_id: Number(item.good_id),
       amount: Number(item.amount),
       price: Number(item.price),
@@ -250,7 +253,7 @@ const updateProcurement = async () => {
       router.push("/sellingGoods");
     }
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -296,9 +299,7 @@ watch(form, () => {
 });
 
 onMounted(() => {
-  form.date = currentDate();
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
-
   Promise.all([
     getOrganizations(),
     getCounterparties(),
@@ -306,7 +307,7 @@ onMounted(() => {
     getStorages(),
     getCurrencies(),
     getGoods(),
-    getProcurementDetails(),
+    getSellingGoodsDetail(),
   ]);
 });
 

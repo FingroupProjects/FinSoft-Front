@@ -44,7 +44,7 @@ const getOrganizationName = async () => {
     const { data } = await programSettingsApi.get();
     if (data) organizationName.value = data.name;
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -66,8 +66,8 @@ onUnmounted(() => {
       <Icons class="ml-2" name="menu" @click="$emit('rale')"></Icons>
     </template>
 
-    <v-app-bar-title @click="$router.push('/')" class="title cursor-pointer">
-      SOHIBKOR / {{ organizationName }}
+    <v-app-bar-title>
+      <span  @click="$router.push('/')" class="title cursor-pointer">SOHIBKOR / {{ organizationName }}</span>
     </v-app-bar-title>
 
     <template v-slot:append>

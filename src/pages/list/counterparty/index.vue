@@ -215,7 +215,7 @@ const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
       markedID.value = [];
     }
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -240,7 +240,7 @@ const massRestoreCounterparty = async ({
       markedID.value = [];
     }
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 

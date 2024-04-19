@@ -102,7 +102,7 @@ const validateItem = (item) => {
 };
 
 const addNewMove = async () => {
-  if (validate(form.date, form.organization, form.storage) !== true) return
+  if (validate(form.date, form.organization, form.sender_storage, form.recipient_storage) !== true) return
 
   const missingData = goods.value.some(validateItem)
   if (missingData) return
@@ -110,17 +110,14 @@ const addNewMove = async () => {
   const body = {
     date: form.date,
     organization_id: form.organization,
-    sender_storage_id: form.storage,
-    recipient_storage_id: form.storage,
-    storage_id: form.storage ,
+    sender_storage_id: form.sender_storage,
+    recipient_storage_id: form.recipient_storage,
     comment : form.comment, 
     goods: goods.value.map((item) => ({
       good_id: Number(item.good_id),
       amount: Number(item.amount),
     }))
  }
-
-  console.log(body)
 
  try {
    const res = await moveApi.add(body)
@@ -129,7 +126,7 @@ const addNewMove = async () => {
      router.push('/moveOfGoods')
    }
  } catch (e) {
-   console.log(e)
+   console.error(e)
  }
 }
 const totalPrice = computed(() => {
@@ -229,7 +226,6 @@ watch(() => form.salePercent, (newValue) => {
           <custom-autocomplete label="Организация" :items="organizations"  v-model="form.organization"/>
           <custom-autocomplete label="Склад-отп" :items="storages" v-model="form.sender_storage"/>
           <custom-autocomplete label="Склад-пол" :items="storages" v-model="form.recipient_storage"/>
-          <custom-autocomplete label="Склад" :items="storages" v-model="form.storage"/> 
         </div>
       </v-col>
       <v-col>
@@ -268,11 +264,11 @@ watch(() => form.salePercent, (newValue) => {
                       <span>{{ index + 1}}</span>
                     </CustomCheckbox>
                   </td>
-                  <td>
-                    <custom-autocomplete v-model="item.good_id" :items="listGoods" min-width="150" />
+                  <td style="width: 40%">
+                    <custom-autocomplete v-model="item.good_id" :items="listGoods"  max-width="200"/>
                   </td>
                   <td>
-                    <custom-text-field v-model="item.amount" v-mask="'########'" min-width="50" max-width="90" />
+                    <custom-text-field v-model="item.amount" v-mask="'########'" min-width="50" max-width="120" />
                   </td>
                  
                 </tr>

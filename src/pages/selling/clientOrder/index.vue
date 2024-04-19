@@ -75,7 +75,6 @@ const getClientOrderData = async ({page, itemsPerPage, sortBy, search}) => {
     paginations.value = data.result.pagination
     procurements.value = data.result.data
     loading.value = false
-    console.log(data)
   } catch (e) {
   }
 }
@@ -205,7 +204,6 @@ const getAuthors = async () => {
 const getOrganizations = async () => {
   const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   organizations.value = data.result.data
-  console.log(data)
 }
 
 const getCounterparties = async () => {

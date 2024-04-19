@@ -64,19 +64,14 @@ const filterForm = ref({
 
 
 const headers = ref([
-  {title: 'Номер', key: 'name'},
-  {title: 'Дата', key: 'currency.name'},
-  {title: 'Поставщик', key: 'currency.name'},
-  {title: 'Организация', key: 'currency.name'},
-  {title: 'Склад', key: 'currency.name'},
-  {title: 'Автор', key: 'currency.name'},
+  {title: 'Номер', key: 'doc_number'},
+  {title: 'Дата', key: 'date'},
+  {title: 'Поставщик', key: 'counterparty.name'},
+  {title: 'Организация', key: 'organization.name'},
+  {title: 'Склад', key: 'storage.name'},
+  {title: 'Автор', key: 'author.name'},
   {title: 'Валюта', key: 'currency.name'},
 ])
-
-const rules = {
-  required: v => !!v,
-}
-
 
 const getProcurementData = async ({page, itemsPerPage, sortBy, search}) => {
   count.value = 0;

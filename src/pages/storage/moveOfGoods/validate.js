@@ -8,7 +8,8 @@ const rules = {
 export default function validate(
   date,
   organization,
-  storage,
+  sender_storage,
+  recipient_storage,
 ) {
 
   if (!date) {
@@ -17,9 +18,12 @@ export default function validate(
   if (!organization) {
     return showToast("Поле Организации не может быть пустым", "warning")
   }
-  if (!storage || storage.id === null) {
+  if (!sender_storage || sender_storage.id === null) {
     return showToast("Поле Склад не может быть пустым", "warning")
   }
-
+  if (!recipient_storage || recipient_storage.id === null) {
+    return showToast("Поле Склад не может быть пустым", "warning")
+  }
+  
   return true
 }

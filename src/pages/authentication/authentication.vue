@@ -30,7 +30,7 @@ const authentication = async () => {
       }, 1000)
     }
   } catch (e) {
-    console.log(e)
+    console.error(e)
 
     if (e.response.data.errors.login) {
       loginError.value = 'Неверный логин!'

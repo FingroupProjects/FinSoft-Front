@@ -88,6 +88,7 @@ const getClientOrderDetails = async () => {
   form.comment = data.result.comment
   form.currency = data.result.currency
   goods.value = data.result.orderGoods.map(item => ({
+    id: item.id,
     good_id: item.good.id,
     amount: item.amount,
     auto_sale_percent: item.auto_sale_percent,
@@ -181,6 +182,7 @@ const updateProcurement = async () => {
     summa: totalPrice.value,
     order_status_id: 1,
     goods: goods.value.map((item) => ({
+      id: Number(item.id),
       good_id: Number(item.good_id),
       amount: Number(item.amount),
       price: Number(item.price),

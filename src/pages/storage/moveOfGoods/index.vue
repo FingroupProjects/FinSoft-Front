@@ -4,6 +4,8 @@ import {useRouter} from "vue-router";
 import showToast from '../../../composables/toast/index.js'
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
+import CustomTextField from "../../../components/formElements/CustomTextField.vue";
+import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 import {
   removeMessage,
@@ -14,7 +16,7 @@ import {
 import debounce from "lodash.debounce";
 import organizationApi from "../../../api/list/organizations.js";
 import storageApi from "../../../api/list/storage.js";
-import providerApi from '../../../api/documents/provider.js'; 
+import moveApi from '../../../api/documents/move.js'; 
 import showDate from "../../../composables/date/showDate.js";
 const router = useRouter()
 
@@ -53,12 +55,12 @@ const filterForm = ref({
 
 
 const headers = ref([
-  {title: 'Номер', key: 'name'},
-  {title: 'Дата', key: 'currency.name'},
-  {title: 'Склад-отправитель', key: 'currency.name'},
-  {title: 'Склад-получатель', key: 'currency.name'},
-  {title: 'Организация', key: 'currency.name'},
-  {title: 'Автор', key: 'currency.name'},
+  {title: 'Номер', key: 'doc_number'},
+  {title: 'Дата', key: 'date'},
+  {title: 'Склад-отправитель', key: 'storage.name'},
+  {title: 'Склад-получатель', key: 'storage.name'},
+  {title: 'Организация', key: 'organization.name'},
+  {title: 'Автор', key: 'author.name'},
 ])
 
 const rules = {
@@ -73,7 +75,8 @@ const getMoveData = async ({page, itemsPerPage, sortBy, search}) => {
   filterModal.value = false
   loading.value = true
   try {
-    const { data } = await providerApi.get({page, itemsPerPage, sortBy}, search, filterData)
+    const { data } = await moveApi.get({page, itemsPerPage, sortBy}, search, filterData)
+    console.log(data);
     paginations.value = data.result.pagination
     procurements.value = data.result.data
     loading.value = false
@@ -109,7 +112,7 @@ function countFilter() {
 
 const massDel = async () => {
   try {
-    const {status} = await providerApi.massDeletion({ids: markedID.value})
+    const {status} = await moveApi.massDeletion({ids: markedID.value})
 
     if (status === 200) {
 
@@ -126,7 +129,7 @@ const massDel = async () => {
 const massRestore = async () => {
 
   try {
-    const {status} = await providerApi.massRestore({ids: markedID.value})
+    const {status} = await moveApi.massRestore({ids: markedID.value})
 
     if (status === 200) {
       showToast(restoreMessage)
@@ -304,10 +307,10 @@ watch(search, debounce((newValue) => {
               </td>
               <td>{{ item.doc_number }}</td>
               <td>{{ showDate(item.date) }}</td>
-              <td>{{ item.storage.name }}</td>
-              <td>{{ item.storage.name }}</td>
-              <td>{{ item.organization.name }}</td>
-              <td>{{ item.author.name }}</td>
+              <td>{{ item.sender_storage_id.name }}</td>
+              <td>{{ item.recipient_storage_id.name }}</td>
+              <td>{{ item.organization_id.name }}</td>
+              <td>{{ item.author_id.name }}</td>
             </tr>
           </template>
         </v-data-table-server>

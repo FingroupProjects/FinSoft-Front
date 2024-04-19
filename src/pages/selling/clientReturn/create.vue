@@ -72,8 +72,8 @@ const getOrganizations = async () => {
 }
 
 const getCounterparties = async () => {
-  const { data } = await counterpartyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  counterparties.value = data.result.data
+  const { data } = await counterpartyApi.getClientCounterparty({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  counterparties.value = data.result
 }
 
 const getCpAgreements = async () => {
@@ -158,7 +158,6 @@ const addNewClientReturn = async () => {
     }))
  }
 
-  console.log(body)
 
  try {
    const res = await clientReturnApi.add(body)
@@ -167,7 +166,7 @@ const addNewClientReturn = async () => {
      router.push('/clientReturn')
    }
  } catch (e) {
-   console.log(e)
+   console.error(e)
  }
 }
 
@@ -313,23 +312,23 @@ watch(() => form.salePercent, (newValue) => {
                       <span>{{ index + 1}}</span>
                     </CustomCheckbox>
                   </td>
-                  <td>
-                    <custom-autocomplete v-model="item.good_id" :items="listGoods" min-width="150" />
+                  <td style="width: 30%">
+                    <custom-autocomplete v-model="item.good_id" :items="listGoods" min-width="150" max-width="100%"/>
                   </td>
                   <td>
-                    <custom-text-field v-model="item.amount" v-mask="'########'" min-width="50" max-width="90" />
+                    <custom-text-field v-model="item.amount" v-mask="'########'" min-width="50" max-width="130" />
                   </td>
                   <td>
-                    <custom-text-field v-model="item.auto_sale_percent" v-mask="'##########'" min-width="80" max-width="110"/>
+                    <custom-text-field v-model="item.auto_sale_percent" v-mask="'##########'" min-width="80" max-width="150"/>
                   </td>
                   <td>
-                    <custom-text-field v-model="item.auto_sale_sum" v-mask="'##########'" min-width="80" max-width="110"/>
+                    <custom-text-field v-model="item.auto_sale_sum" v-mask="'##########'" min-width="80" max-width="140"/>
                   </td>
                   <td>
-                    <custom-text-field v-model="item.price" v-mask="'##########'" min-width="80" max-width="110"/>
+                    <custom-text-field v-model="item.price" v-mask="'##########'" min-width="80" max-width="150"/>
                   </td>
                   <td>
-                    <custom-text-field readonly :value="item.amount * item.price"  min-width="100" max-width="110"/>
+                    <custom-text-field readonly :value="item.amount * item.price"  min-width="100" max-width="150"/>
                   </td>
                 </tr>
               </template>

@@ -211,7 +211,6 @@ const updateProcurement = async () => {
    }
 
    const res = await procurementApi.update(route.params.id, body)
-   console.log(res)
    if (res.status === 200) {
      showToast(editMessage)
 
@@ -325,7 +324,6 @@ watch(confirmDocument, () => {
 })
 
 onMounted( () => {
-  form.date = currentDate()
   author.value = JSON.parse(localStorage.getItem('user')).name || null
   getProcurementDetails()
   Promise.all([
@@ -366,7 +364,7 @@ onMounted( () => {
     <div style="background: #fff;">
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
-          <custom-text-field  :value="form.doc_number"/>
+          <custom-text-field readonly label="Номер"  :value="form.doc_number"/>
           <custom-text-field label="Дата" type="date" v-model="form.date"/>
           <custom-autocomplete label="Организация" :items="organizations"  v-model="form.organization"/>
           <custom-autocomplete label="Поставщик" :items="counterparties" v-model="form.counterparty"/>

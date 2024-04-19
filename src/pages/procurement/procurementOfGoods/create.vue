@@ -353,7 +353,7 @@ onMounted(() => {
         </div>
         <div class="d-flex justify-space-between w-100 mt-2 bottomField">
           <div class="d-flex ga-10">
-            <custom-text-field readonly :value="author" min-width="140" max-width="110"/>
+            <custom-text-field readonly :value="author" min-width="110"/>
             <custom-text-field label="Комментарий" v-model="form.comment" min-width="310"/>
           </div>
           <div class="d-flex ga-6">
