@@ -24,7 +24,6 @@ watch(props.admins, (newVal) => {
 
 watch(props.lists, (newVal) => {
   if (newVal) {
-    console.log("lists");
     filteredLists.value = props.lists.map((list) => {
       return {
         ...list,

@@ -17,6 +17,7 @@ import providerApi from "../../../api/documents/procurement.js";
 import goodApi from "../../../api/list/goods.js";
 import { editMessage } from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
+import showDate from "../../../composables/date/showDate.js";
 import {BASE_COLOR} from "../../../composables/constant/colors.js";
 
 const router = useRouter()
@@ -66,9 +67,8 @@ const headers = ref([
 
 const getProviderDetails = async () => {
   const { data } = await providerApi.getById(route.params.id)
-  console.log(data);
   form.doc_number = data.result.doc_number
-  form.date = data.result.date
+  form.date = showDate(data.result.date, '-', true);
   form.organization = {
     id: data.result.organization.id,
     name: data.result.organization.name
@@ -93,6 +93,7 @@ const getProviderDetails = async () => {
   form.currency = data.result.currency
 
   goods.value = data.result.goods.map(item => ({
+    id: item.id,
     good_id: item.good.id,
     amount: item.amount,
     price: item.price
@@ -183,6 +184,7 @@ const updateProvider = async () => {
     salePercent: Number(form.salePercent),
     currency_id: typeof form.currency === 'object' ? form.currency.id : form.currency,
     goods: goods.value.map((item) => ({
+      id: Number(item.id),
       good_id: Number(item.good_id),
       amount: Number(item.amount),
       price: Number(item.price),
@@ -196,7 +198,7 @@ const updateProvider = async () => {
      router.push('/providerOfGoods')
    }
  } catch (e) {
-   console.log(e)
+   console.error(e)
  }
 }
 
@@ -225,7 +227,6 @@ const totalPriceWithSale = computed(() => {
 
 
 onMounted( () => {
-  form.date = currentDate()
   author.value = JSON.parse(localStorage.getItem('user')).name || null
 
   Promise.all([
@@ -345,20 +346,37 @@ watch(() => form.salePercent, (newValue) => {
                       @change="lineMarking(item)"
                       :checked="markedID.includes(item.id)"
                     >
-                      <span>{{ index + 1}}</span>
+                      <span>{{ index + 1 }}</span>
                     </CustomCheckbox>
                   </td>
-                  <td>
-                    <custom-autocomplete v-model="item.good_id" :items="listGoods" min-width="150" />
+                  <td style="width: 40%">
+                    <custom-autocomplete
+                      v-model="item.good_id"
+                      :items="listGoods"
+                      min-width="150"
+                      max-width="100%"
+                    />
                   </td>
                   <td>
-                    <custom-text-field v-model="item.amount" v-mask="'########'" min-width="50" max-width="90" />
+                    <custom-text-field
+                      v-model="item.amount"
+                      v-mask="'########'"
+                      min-width="50"
+                    />
                   </td>
                   <td>
-                    <custom-text-field v-model="item.price" v-mask="'##########'" min-width="80" max-width="110"/>
+                    <custom-text-field
+                      v-model="item.price"
+                      v-mask="'##########'"
+                      min-width="80"
+                    />
                   </td>
                   <td>
-                    <custom-text-field readonly :value="item.amount * item.price"  min-width="100" max-width="110"/>
+                    <custom-text-field
+                      readonly
+                      :value="item.amount * item.price"
+                      min-width="100"
+                    />
                   </td>
                 </tr>
               </template>

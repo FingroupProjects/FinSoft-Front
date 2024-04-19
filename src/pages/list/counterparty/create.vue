@@ -257,7 +257,7 @@ const cpAgreementGetById = async (item) => {
     };
     counterpartyAgreements.value = form.value
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -266,7 +266,7 @@ const getOrganization = async (page, items) => {
     const { data } = await organizationApi.get({ page, items });
     organizations.value = data.result.data;
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -275,7 +275,7 @@ const getPriceType = async ({ page, itemsPerPage }) => {
     const { data } = await priceTypeApi.get({ page, itemsPerPage });
     priceTypes.value = data.result.data;
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -284,7 +284,7 @@ const getCounterparties = async ({ page, itemsPerPage }) => {
     const { data } = await counterpartyApi.get({ page, itemsPerPage });
     counterparties.value = data.result.data;
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -293,7 +293,7 @@ const getCurrencies = async ({ page, itemsPerPage }) => {
     const { data } = await currencyApi.get({ page, itemsPerPage });
     currencies.value = data.result.data;
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -331,7 +331,7 @@ const getId = async () => {
       });
     }
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -352,7 +352,7 @@ const CreateCounterparty = async () => {
     emits("toggleIsOpen");
     clearForm();
   } catch (error) {
-    console.log(error);
+    console.error(error);
     if (error.response.data.errors.email) {
       showToast("Такой email уже существует", "warning");
     } else if (error.response.data.errors.phone) {
@@ -388,7 +388,7 @@ const getDocuments = async ({ page, itemsPerPage, sortBy, search }) => {
 
     loading.value = false;
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -408,7 +408,7 @@ const del = async ({ page, itemsPerPage, sortBy, search }) => {
       markedID.value = [];
     }
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -428,7 +428,7 @@ const restore = async ({ page, itemsPerPage, sortBy }) => {
       markedID.value = [];
     }
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -447,12 +447,12 @@ const updateCounterparty = async () => {
       showToast("Выберите одну роль!", "warning");
       return;
     }
-    console.log(body);
+    console.error(body);
     await counterpartyApi.update(props.item.id, body);
     showToast("Успешно изменено", "green");
     emits("toggleIsOpen");
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
 
@@ -531,8 +531,8 @@ const closeDialogWithoutSaving = () => {
 
 const isDataChangedAgreement = () => {
   const item = counterpartyAgreements.value
-  console.log(item);
-  console.log(form.value);
+  console.error(item);
+  console.error(form.value);
   const isChanged =
     form.value.name !== item.name ||
     form.value.currency_id !== item.currency_id ||
@@ -628,7 +628,7 @@ const createCpAgreement = async () => {
     if (error.response && error.response.status === 422) {
       showToast("Заполните все поля!", "warning");
     }
-    console.log(error);
+    console.error(error);
   }
 };
 
@@ -652,7 +652,7 @@ const updateCpAgreement = async () => {
     agreementDialog.value = false;
     editAgreementDialog.value = false;
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
