@@ -138,6 +138,16 @@ const routes = [
     component: () => import("../pages/hr/dismissal/index.vue"),
   },
   {
+    path: "/hr/personnelMovement",
+    name: "personnelMovement",
+    component: () => import("../pages/hr/personnelMovement/index.vue"),
+  },
+  {
+    path: "/hr/personnelMovementCreate",
+    name: "personnelMovementCreate",
+    component: () => import("../pages/hr/personnelMovement/create.vue"),
+  },
+  {
     path: "/hr/payroll",
     name: "payroll",
     component: () => import("../pages/hr/payingSalaries/index.vue"),

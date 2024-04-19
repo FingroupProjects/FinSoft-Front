@@ -58,6 +58,7 @@ const addRecruitment = async () => {
 onMounted(() => {
   form.date = form.dateOfReceipt = currentDate()
   form.author = JSON.parse(localStorage.getItem('user')).name || null
+
   getOrganizations()
   getEmployees()
   getPositions()
@@ -70,7 +71,7 @@ onMounted(() => {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Приём на работу (создание)</span>
+          <span>Кадровое перемещение (создание)</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
