@@ -128,9 +128,49 @@ const routes = [
     component: () => import("../pages/cash/moneyComing/show.vue"),
   },
   {
-    path: "/salary",
-    name: "salary",
-    component: () => import("../pages/salary/index.vue"),
+    path: "/hr/recruitment",
+    name: "recruitment",
+    component: () => import("../pages/hr/recruitment/index.vue"),
+  },
+  {
+    path: "/hr/dismissal",
+    name: "dismissal",
+    component: () => import("../pages/hr/dismissal/index.vue"),
+  },
+  {
+    path: "/hr/personnelMovement",
+    name: "personnelMovement",
+    component: () => import("../pages/hr/personnelMovement/index.vue"),
+  },
+  {
+    path: "/hr/personnelMovementCreate",
+    name: "personnelMovementCreate",
+    component: () => import("../pages/hr/personnelMovement/create.vue"),
+  },
+  {
+    path: "/hr/payroll",
+    name: "payroll",
+    component: () => import("../pages/hr/payingSalaries/index.vue"),
+  },
+  {
+    path: "/hr/payingSalaries",
+    name: "payingSalaries",
+    component: () => import("../pages/hr/payingSalaries/index.vue"),
+  },
+  {
+    path: "/hr/recruitmentCreate",
+    name: "recruitmentCreate",
+    component: () => import("../pages/hr/recruitment/create.vue"),
+  },
+  {
+    path: "/hr/recruitment/:id",
+    name: "recruitmentShow",
+    component: () => import("../pages/hr/recruitment/show.vue"),
+  },
+  {
+    path: "/hr/salaryInformation",
+    name: "salaryInformation",
+    component: () => import("../pages/hr/salaryInformation/index.vue"),
   },
   {
     path: "/list/currency",
