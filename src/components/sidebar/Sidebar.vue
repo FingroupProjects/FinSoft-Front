@@ -163,7 +163,7 @@ const salary = ref({
       id: 1,
       title: "Отчеты",
       link: "/",
-      child: [{ id: 1, title: "Ведомость зарплаты", link: "" }],
+      child: [{ id: 1, title: "Ведомость зарплаты", link: "/hr/salaryInformation" }],
     },
   ],
   lists: [
@@ -171,17 +171,17 @@ const salary = ref({
       id: 1,
       title: "Кадр",
       child: [
-        { id: 1, title: "Прием на работу", link: "/" },
-        { id: 2, title: "Кадровое перемещение", link: "/" },
-        { id: 2, title: "Увольнение", link: "/" },
+        { id: 1, title: "Прием на работу", link: "/hr/recruitment" },
+        { id: 2, title: "Кадровое перемещение", link: "/hr/personnelMovement" },
+        { id: 2, title: "Увольнение", link: "/hr/dismissal" },
       ],
     },
     {
       id: 2,
       title: "Зарплата",
       child: [
-        { id: 1, title: "Начисление зарплаты", link: "/" },
-        { id: 2, title: "Оплата зарплаты", link: "/" },
+        { id: 1, title: "Начисление зарплаты", link: "/hr/payroll" },
+        { id: 2, title: "Оплата зарплаты", link: "/hr/payingSalaries" },
       ],
     },
   ],
