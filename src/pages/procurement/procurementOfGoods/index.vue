@@ -241,6 +241,10 @@ onMounted(() => {
  
 })
 
+const show = (item) => {
+  window.open(`/procurementOfGoods/${item.id}`, '_blank')
+}
+
 watch(markedID, (newVal) => {
   markedItem.value = procurements.value.find((el) => el.id === newVal[0]);
 })
@@ -325,7 +329,7 @@ watch(search, debounce((newValue) => {
             <tr
                 @mouseenter="hoveredRowIndex = index"
                 @mouseleave="hoveredRowIndex = null"
-                @dblclick="$router.push(`/procurementOfGoods/${item.id}`)"
+                @dblclick="show(item)"
                 :class="{'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
               <td>

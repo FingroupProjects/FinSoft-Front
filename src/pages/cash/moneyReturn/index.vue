@@ -17,8 +17,7 @@ import {
   restoreMessage,
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
-import clientPaymentApi from "../../../api/documents/clientPayment.js";
-("../../../api/documents/sale.js");
+import pkoApi from "../../../api/documents/pko.js";
 import showDate from "../../../composables/date/showDate.js";
 
 const router = useRouter();
@@ -83,11 +82,12 @@ const getSellingGoods = async ({ page, itemsPerPage, sortBy, search }) => {
   filterModal.value = false;
   loading.value = true;
   try {
-    const { data } = await clientPaymentApi.get(
+    const { data } = await pkoApi.get(
       { page, itemsPerPage, sortBy },
       search,
       filterData
     );
+    console.log(data);
     paginations.value = data.result.pagination;
     moneyComing.value = data.result.data;
     loading.value = false;
@@ -190,7 +190,6 @@ watch(dialog, (newVal) => {
   }
 });
 
-
 watch(markedID, (newVal) => {
   markedItem.value = procurements.value.find((el) => el.id === newVal[0]);
 });
@@ -215,7 +214,7 @@ watch(
             <div class="d-flex ga-2 mt-1 me-3">
               <Icons
                 title="Добавить"
-                @click="$router.push('/moneyReturnCreate')"
+                @click="$router.push('/moneyComingCreate')"
                 name="add"
               />
               <Icons title="Скопировать" name="copy" />
@@ -314,7 +313,7 @@ watch(
               <td>{{ item.cashRegister.responsiblePerson.name }}</td>
               <td>{{ item.sum }}</td>
               <td>{{ item.currency }}</td>
-              <td>{{ item.sender.name }}</td>
+              <!-- <td>{{ item.sender.name }}</td> -->
             </tr>
           </template>
         </v-data-table-server>

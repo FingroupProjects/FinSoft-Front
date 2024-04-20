@@ -5,6 +5,7 @@ import {
 } from "../../../composables/constant/colors.js";
 import validate from "./validate.js";
 import { useRouter } from "vue-router";
+import pkoApi from "../../../api/documents/pko.js";
 import { ref, reactive, onMounted, watch } from "vue";
 import employeeApi from "../../../api/list/employee.js";
 import Icons from "../../../composables/Icons/Icons.vue";
@@ -13,7 +14,6 @@ import counterpartyApi from "../../../api/list/counterparty.js";
 import cashRegisterApi from "../../../api/list/cashRegister.js";
 import organizationApi from "../../../api/list/organizations.js";
 import currentDate from "../../../composables/date/currentDate.js";
-import clientPaymentApi from "../../../api/documents/clientPayment.js";
 import organizationBillApi from "../../../api/list/organizationBill.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import { add, addMessage } from "../../../composables/constant/buttons.js";
@@ -26,7 +26,7 @@ const author = ref("");
 
 const typeOperations = ref([
   { id: 1, title: "Оплата от клиента" },
-  { id: 2, title: "Снятие с P/C" },
+  { id: 2, title: "Снятие с Р/С" },
   { id: 3, title: "Получение с другой кассы" },
   { id: 4, title: "Вложение" },
   { id: 5, title: "Получение кредита" },
@@ -117,9 +117,9 @@ const firstAccess = async (paymentType) => {
           basis: form.base,
           comment: form.comment,
           type_operation: form.typeOperation,
-          type: "ПKO",
+          type: "PKO",
         };
-        res = await clientPaymentApi.paymentFromClient(paymentFromClientBody);
+        res = await pkoApi.paymentFromClient(paymentFromClientBody);
         break;
       case 2:
         const writeOffBody = {
@@ -133,13 +133,12 @@ const firstAccess = async (paymentType) => {
           type_operation: form.typeOperation,
           type: "PKO",
         };
-        res = await clientPaymentApi.writeOff(writeOffBody);
+        res = await pkoApi.writeOff(writeOffBody);
         break;
 
       default:
         throw new Error("Unsupported payment type");
     }
-    console.log(res);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -268,7 +267,7 @@ onMounted(async () => {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase">
         <div class="d-flex align-center ga-2 ms-4">
-          <span>ПКО (создание)</span>
+          <span>РКО (создание)</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
