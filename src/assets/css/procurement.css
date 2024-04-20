@@ -24,3 +24,7 @@
 .document .v-field__input {
   max-height: 20px !important;
 }
+
+.document input[type="date"] {
+  width: 100px !important;
+}
