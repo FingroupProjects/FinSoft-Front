@@ -20,7 +20,7 @@ import {
   restoreMessage
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
-import providerApi from '../../../api/documents/provider.js';
+import providerApi from '../../../api/documents/providerReturn.js';
 import showDate from "../../../composables/date/showDate.js";
 const router = useRouter()
 
@@ -42,7 +42,6 @@ const showConfirmDialog = ref(false);
 const showModal = ref(false);
 const count = ref(0);
 const organizations = ref([])
-const providers = ref([])
 const storages = ref([])
 const authors = ref([])
 const currencies = ref([])
@@ -364,7 +363,7 @@ onMounted(() => {
             </div>
             <v-form class="d-flex w-100" @submit.prevent="">
               <v-row class="w-100">
-                <v-col class="d-flex flex-column w-100">
+                <v-col class="d-flex flex-column w-100 ga-4">
                   <div class="d-flex ga-2 w-100">
                   <custom-text-field label="Дата" type="date" min-width="508"  v-model="filterForm.date"/>
                   </div>

@@ -22,6 +22,36 @@ const routes = [
       import("../pages/procurement/procurementOfGoods/create.vue"),
   },
   {
+    path: "/providerOfGoods",
+    name: "providerOfGoods",
+    component: () => import("../pages/procurement/providerOfGoods/index.vue"),
+  },
+  {
+    path: "/providerOfGoods/:id",
+    name: "providerOfGoodsShow",
+    component: () => import("../pages/procurement/providerOfGoods/show.vue"),
+  },
+  {
+    path: "/providerOfGoods/create",
+    name: "providerOfGoodsCreate",
+    component: () => import("../pages/procurement/providerOfGoods/create.vue"),
+  },
+  {
+    path: "/providerOrder",
+    name: "providerOrder",
+    component: () => import("../pages/procurement/providerOrder/index.vue"),
+  },
+  {
+    path: "/providerOrder/:id",
+    name: "providerOrderShow",
+    component: () => import("../pages/procurement/providerOrder/show.vue"),
+  },
+  {
+    path: "/providerOrder/create",
+    name: "providerOrderCreate",
+    component: () => import("../pages/procurement/providerOrder/create.vue"),
+  },
+  {
     path: "/clientOrder",
     name: "clientOrder",
     component: () => import("../pages/selling/clientOrder/index.vue"),
@@ -51,21 +81,6 @@ const routes = [
     path: "/clientReturn/create",
     name: "clientReturnCreate",
     component: () => import("../pages/selling/clientReturn/create.vue"),
-  },
-  {
-    path: "/providerOfGoods",
-    name: "providerOfGoods",
-    component: () => import("../pages/procurement/providerOfGoods/index.vue"),
-  },
-  {
-    path: "/providerOfGoods/:id",
-    name: "providerOfGoodsShow",
-    component: () => import("../pages/procurement/providerOfGoods/show.vue"),
-  },
-  {
-    path: "/providerOfGoods/create",
-    name: "providerOfGoodsCreate",
-    component: () => import("../pages/procurement/providerOfGoods/create.vue"),
   },
   {
     path: "/moveOfGoods",
