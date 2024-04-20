@@ -213,7 +213,10 @@ const updateProcurement = async () => {
    const res = await procurementApi.update(route.params.id, body)
    if (res.status === 200) {
      showToast(editMessage)
-
+    //  how to close current page in browser  
+    setTimeout(() => {
+      window.close()
+    }, 1000);
    }
  } catch (e) {
    console.log(e)
@@ -343,8 +346,8 @@ onMounted( () => {
 </script>
 <template>
   <div class="document">
-    <v-col>
-      <div class="d-flex justify-space-between text-uppercase ">
+    
+      <div class="d-flex justify-space-between text-uppercase pa-1">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
           <span>Покупка (просмотр)</span>
         </div>
@@ -358,7 +361,7 @@ onMounted( () => {
           </div>
         </v-card>
       </div>
-    </v-col>
+    
     <v-divider/>
     <v-divider/>
     <div style="background: #fff;">

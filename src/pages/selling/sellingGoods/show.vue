@@ -64,7 +64,7 @@ const headers = ref([
 
 const getSellingGoodsDetail = async () => {
   const { data } = await saleApi.getById(route.params.id);
-
+console.log(data);
   form.doc_number = data.result.doc_number;
   form.date = showDate(data.result.date, '-', true);
   form.organization = {
