@@ -1,5 +1,5 @@
 <script setup>
-import {computed, onMounted, reactive, ref, watch} from "vue";
+import {computed, defineEmits, onMounted, reactive, ref, watch} from "vue";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
@@ -17,19 +17,20 @@ import goodApi from "../../../api/list/goods.js";
 import { addMessage } from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
 import {BASE_COLOR} from "../../../composables/constant/colors.js";
+import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
 
 
 const router = useRouter()
+const emits = defineEmits(['changed'])
+const confirmDocument = useConfirmDocumentStore()
+const countRef = ref(0)
 
 const form = reactive({
   date: null,
   shipping_date: null,
   organization: null,
-  organizations: [],
   counterparty: null,
-  counterparties: [],
   cpAgreement: null,
-  cpAgreements: [],
   comment: null,
   summa: null,
   currency: null,
@@ -169,6 +170,17 @@ const addNewClientOrder = async () => {
  }
 }
 
+const isChanged = () => {
+  countRef.value++
+  const {date, shipping_date, organization, counterparty, cpAgreement, comment, summa, currency} = form;
+
+  const goodsValues = goods.value.flatMap(good => [good.good_id, good.amount, good.price, good.price, good.auto_sale_percent, good.auto_sale_sum]);
+  const cleanedGoodsValues = goodsValues.filter(val => val !== undefined)
+
+  const valuesToCheck = [date, shipping_date, organization, counterparty, cpAgreement, comment, summa, currency, ...cleanedGoodsValues];
+
+  return valuesToCheck.every(val => val === null || val === '' || val === currentDate() || val === "1");
+}
 
 const totalPrice = computed(() => {
   let sum = 0
@@ -178,11 +190,32 @@ const totalPrice = computed(() => {
   return sum
 })
 
+watch(confirmDocument, () => {
+  if (confirmDocument.isUpdateOrCreateDocument) {
+    addNewClientOrder()
+  }
+})
+
+watch([form, goods.value], () => {
+  if (countRef.value === 0) {
+    isChanged()
+  } else {
+    if (!isChanged()) {
+      emits('changed', true);
+    } else {
+      emits('changed', false);
+    }
+  }
+
+});
+
 
 onMounted(() => {
   form.date = currentDate()
   form.shipping_date = currentDate()
+
   author.value = JSON.parse(localStorage.getItem('user')).name || null
+
   getCounterparties()
   getOrganizations()
   getCpAgreements()

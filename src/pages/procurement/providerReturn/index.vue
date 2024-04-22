@@ -255,7 +255,7 @@ onMounted(() => {
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="$router.push('/providerOfGoods/create')" name="add"/>
+              <Icons title="Добавить" @click="$router.push('/providerReturn/create')" name="add"/>
               <Icons title="Скопировать" @click="" name="copy"/>
               <Icons title="Удалить" @click="compute" name="delete"/>
             </div>
@@ -319,7 +319,7 @@ onMounted(() => {
             <tr
                 @mouseenter="hoveredRowIndex = index"
                 @mouseleave="hoveredRowIndex = null"
-                @dblclick="$router.push(`/providerOfGoods/${item.id}`)"
+                @dblclick="$router.push(`/providerReturn/${item.id}`)"
                 :class="{'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
               <td>

@@ -22,19 +22,19 @@ const routes = [
       import("../pages/procurement/procurementOfGoods/create.vue"),
   },
   {
-    path: "/providerOfGoods",
-    name: "providerOfGoods",
-    component: () => import("../pages/procurement/providerOfGoods/index.vue"),
+    path: "/providerReturn",
+    name: "providerReturn",
+    component: () => import("../pages/procurement/providerReturn/index.vue"),
   },
   {
-    path: "/providerOfGoods/:id",
-    name: "providerOfGoodsShow",
-    component: () => import("../pages/procurement/providerOfGoods/show.vue"),
+    path: "/providerReturn/:id",
+    name: "providerReturnShow",
+    component: () => import("../pages/procurement/providerReturn/show.vue"),
   },
   {
-    path: "/providerOfGoods/create",
-    name: "providerOfGoodsCreate",
-    component: () => import("../pages/procurement/providerOfGoods/create.vue"),
+    path: "/providerReturn/create",
+    name: "providerReturnCreate",
+    component: () => import("../pages/procurement/providerReturn/create.vue"),
   },
   {
     path: "/providerOrder",
@@ -166,6 +166,11 @@ const routes = [
     path: "/hr/dismissal",
     name: "dismissal",
     component: () => import("../pages/hr/dismissal/index.vue"),
+  },
+  {
+    path: "/hr/dismissalCreate",
+    name: "dismissalCreate",
+    component: () => import("../pages/hr/dismissal/create.vue"),
   },
   {
     path: "/hr/personnelMovement",

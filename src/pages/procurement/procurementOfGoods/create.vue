@@ -27,20 +27,15 @@ const confirmDocument = useConfirmDocumentStore()
 const form = reactive({
   date: null,
   organization: null,
-  organizations: [],
   counterparty: null,
-  counterparties: [],
   cpAgreement: null,
-  cpAgreements: [],
   storage: null,
-  storages: [],
   saleInteger: null,
   salePercent: null,
   comment: null,
   currency: null,
 })
 
-const loading = ref(false)
 const author = ref(null)
 const markedID = ref([])
 const goods = ref([{
@@ -235,7 +230,7 @@ watch(() => form.salePercent, (newValue) => {
   }
 })
 
-watch(confirmDocument, (newValue) => {
+watch(confirmDocument, () => {
   if (confirmDocument.isUpdateOrCreateDocument) {
     addNewProcurement()
   }
