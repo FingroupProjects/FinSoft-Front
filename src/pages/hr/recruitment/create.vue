@@ -7,6 +7,13 @@ import {onMounted, reactive, ref} from "vue";
 import organizationApi from "../../../api/list/organizations.js";
 import employee from "../../../api/list/employee.js";
 import currentDate from "../../../composables/date/currentDate.js";
+import recruitment from "../../../api/documents/recruitment.js";
+import changeTheDateForSending from "../../../composables/date/changeTheDateForSending.js";
+import {useRouter} from "vue-router";
+import {addMessage} from "../../../composables/constant/buttons.js";
+import showDate from "../../../composables/date/showDate.js";
+
+const router = useRouter()
 
 const form = reactive({
   date: null,
@@ -16,7 +23,7 @@ const form = reactive({
   department: null,
   employee: null,
   salary: null,
-  description: null,
+  basis: null,
   comment: null,
   author: null,
 })
@@ -49,14 +56,32 @@ const getDepartments = async () => {
 
 const addRecruitment = async () => {
   const body = {
-    ...form
+    "date": changeTheDateForSending(form.date, '-'),
+    "organization_id": form.organization,
+    "basis": form.basis,
+    "department_id": 1,
+    "position_id": 1,
+    "employee_id": form.employee,
+    "salary": form.salary,
+    "hiring_date": changeTheDateForSending(form.date, '-')
+  }
+
+  try {
+    const res = await recruitment.add(body)
+    console.log(res)
+    if (res.status === 201) {
+      showDate(addMessage)
+      router.push('/hr/recruitment')
+    }
+  } catch (e) {
+    console.log(e)
   }
 
   console.log(body)
 }
 
 onMounted(() => {
-  form.date = form.dateOfReceipt = currentDate()
+  form.date = form.dateOfDismissal = currentDate()
   form.author = JSON.parse(localStorage.getItem('user')).name || null
   getOrganizations()
   getEmployees()
@@ -90,16 +115,17 @@ onMounted(() => {
           <custom-text-field label="Дата" type="date" v-model="form.date"/>
           <custom-autocomplete label="Организация" :items="organizations" v-model="form.organization"/>
           <custom-autocomplete label="Сотрудник" :items="employees" v-model="form.employee"/>
-          <custom-text-field label="Дата приёма" type="date" v-model="form.dateOfReceipt"/>
+          <custom-text-field label="Оклад" v-model="form.salary"/>
+          <custom-text-field label="Дата приёма" type="date" v-model="form.dateOfDismissal"/>
           <custom-autocomplete label="Должность" :items="positions" v-model="form.position"/>
           <custom-autocomplete label="Отдел" :items="departments" v-model="form.department"/>
           <custom-autocomplete label="График работы" :items="[]"/>
         </div>
         <v-textarea
-            label="Описание"
+            label="Основание"
             :color="BASE_COLOR"
             :base-color="FIELD_COLOR"
-            v-model="form.description"
+            v-model="form.basis"
             hide-details
             rounded="lg"
             variant="outlined"

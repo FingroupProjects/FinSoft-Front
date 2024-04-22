@@ -10,7 +10,7 @@ import currentDate from "../../../composables/date/currentDate.js";
 
 const form = reactive({
   date: null,
-  dateOfReceipt: null,
+  dateOfDismissal: null,
   organization: null,
   position: null,
   department: null,
@@ -23,8 +23,6 @@ const form = reactive({
 
 const organizations = ref([])
 const employees = ref([])
-const positions = ref([])
-const departments = ref([])
 
 
 const getOrganizations = async () => {
@@ -37,17 +35,7 @@ const getEmployees = async () => {
   employees.value = data.result.data
 }
 
-const getPositions = async () => {
-  const {data} = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  positions.value = data.result.data
-}
-
-const getDepartments = async () => {
-  const {data} = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  departments.value = data.result.data
-}
-
-const addRecruitment = async () => {
+const addDismissal = async () => {
   const body = {
     ...form
   }
@@ -61,8 +49,6 @@ onMounted(() => {
 
   getOrganizations()
   getEmployees()
-  getPositions()
-  getDepartments()
 })
 </script>
 
@@ -71,12 +57,12 @@ onMounted(() => {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Кадровое перемещение (создание)</span>
+          <span>Увольнение кадра (создание)</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1">
-              <Icons title="Добавить" @click="addRecruitment" name="add"/>
+              <Icons title="Добавить" @click="addDismissal" name="add"/>
             </div>
           </div>
         </v-card>
@@ -91,16 +77,13 @@ onMounted(() => {
           <custom-text-field label="Дата" type="date" v-model="form.date"/>
           <custom-autocomplete label="Организация" :items="organizations" v-model="form.organization"/>
           <custom-autocomplete label="Сотрудник" :items="employees" v-model="form.employee"/>
-          <custom-text-field label="Дата приёма" type="date" v-model="form.dateOfDismissal"/>
-          <custom-autocomplete label="Должность" :items="positions" v-model="form.position"/>
-          <custom-autocomplete label="Отдел" :items="departments" v-model="form.department"/>
-          <custom-autocomplete label="График работы" :items="[]"/>
+          <custom-text-field label="Дата увольнение" type="date" v-model="form.dateOfDismissal"/>
         </div>
         <v-textarea
             label="Описание"
             :color="BASE_COLOR"
             :base-color="FIELD_COLOR"
-            v-model="form.basis"
+            v-model="form.description"
             hide-details
             rounded="lg"
             variant="outlined"
