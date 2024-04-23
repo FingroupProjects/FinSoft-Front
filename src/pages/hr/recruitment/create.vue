@@ -7,11 +7,13 @@ import {onMounted, reactive, ref} from "vue";
 import organizationApi from "../../../api/list/organizations.js";
 import employee from "../../../api/list/employee.js";
 import currentDate from "../../../composables/date/currentDate.js";
-import recruitment from "../../../api/documents/recruitment.js";
+import recruitment from "../../../api/hr/recruitment.js";
 import changeTheDateForSending from "../../../composables/date/changeTheDateForSending.js";
 import {useRouter} from "vue-router";
 import {addMessage} from "../../../composables/constant/buttons.js";
 import showDate from "../../../composables/date/showDate.js";
+import validate from "../../../composables/validate/validate.js";
+import showToast from "../../../composables/toast/index.js";
 
 const router = useRouter()
 
@@ -55,6 +57,36 @@ const getDepartments = async () => {
 }
 
 const addRecruitment = async () => {
+
+  const validateValue = [
+    {
+      "Дата": form.date
+    },
+    {
+      "Организация": form.organization
+    },
+    {
+      "Сотрудник": form.employee
+    },
+    {
+      "Оклад": form.salary
+    },
+    {
+      "Дата приёма": form.dateOfReceipt
+    },
+    {
+      "Должность": form.position
+    },
+    {
+      "Отдел": form.department
+    },
+    {
+      "Основание": form.basis
+    },
+  ]
+
+  if (validate(validateValue) !== true ) return
+
   const body = {
     "date": changeTheDateForSending(form.date, '-'),
     "organization_id": form.organization,
@@ -62,15 +94,16 @@ const addRecruitment = async () => {
     "department_id": 1,
     "position_id": 1,
     "employee_id": form.employee,
-    "salary": form.salary,
-    "hiring_date": changeTheDateForSending(form.date, '-')
+    "salary": Number(form.salary),
+    "hiring_date": changeTheDateForSending(form.date, '-'),
+    "comment": form.comment
   }
 
   try {
     const res = await recruitment.add(body)
     console.log(res)
     if (res.status === 201) {
-      showDate(addMessage)
+      showToast(addMessage)
       router.push('/hr/recruitment')
     }
   } catch (e) {
@@ -81,7 +114,7 @@ const addRecruitment = async () => {
 }
 
 onMounted(() => {
-  form.date = form.dateOfDismissal = currentDate()
+  form.date = form.dateOfReceipt = currentDate()
   form.author = JSON.parse(localStorage.getItem('user')).name || null
   getOrganizations()
   getEmployees()
@@ -116,7 +149,7 @@ onMounted(() => {
           <custom-autocomplete label="Организация" :items="organizations" v-model="form.organization"/>
           <custom-autocomplete label="Сотрудник" :items="employees" v-model="form.employee"/>
           <custom-text-field label="Оклад" v-model="form.salary"/>
-          <custom-text-field label="Дата приёма" type="date" v-model="form.dateOfDismissal"/>
+          <custom-text-field label="Дата приёма" type="date" v-model="form.dateOfReceipt"/>
           <custom-autocomplete label="Должность" :items="positions" v-model="form.position"/>
           <custom-autocomplete label="Отдел" :items="departments" v-model="form.department"/>
           <custom-autocomplete label="График работы" :items="[]"/>

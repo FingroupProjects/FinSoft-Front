@@ -7,6 +7,14 @@ import {onMounted, reactive, ref} from "vue";
 import organizationApi from "../../../api/list/organizations.js";
 import employee from "../../../api/list/employee.js";
 import currentDate from "../../../composables/date/currentDate.js";
+import dismissal from "../../../api/hr/dismissal.js";
+import changeTheDateForSending from "../../../composables/date/changeTheDateForSending.js";
+import showDate from "../../../composables/date/showDate.js";
+import {addMessage} from "../../../composables/constant/buttons.js";
+import {useRouter} from "vue-router";
+import validate from "../../../composables/validate/validate.js";
+
+const router = useRouter()
 
 const form = reactive({
   date: null,
@@ -16,7 +24,7 @@ const form = reactive({
   department: null,
   employee: null,
   salary: null,
-  description: null,
+  basis: null,
   comment: null,
   author: null,
 })
@@ -36,11 +44,44 @@ const getEmployees = async () => {
 }
 
 const addDismissal = async () => {
-  const body = {
-    ...form
-  }
 
-  console.log(body)
+  const validateValue = [
+    {
+      "Дата": form.date
+    },
+    {
+      "Дата увольнения": form.dateOfDismissal
+    },
+    {
+      "Организация": form.organization
+    },
+    {
+      "Сотрудник": form.employee
+    },
+    {
+      "Основание": form.basis
+    },
+  ]
+
+  if (validate(validateValue) !== true ) return
+
+  try {
+    const body = {
+      "date": changeTheDateForSending(form.date, '-'),
+      "firing_date": changeTheDateForSending(form.dateOfDismissal, '-'),
+      "organization_id": form.organization,
+      "basis": form.basis,
+      "employee_id": form.employee,
+      "comment": form.comment
+    }
+    const res = await dismissal.add(body)
+    if (res.status === 201) {
+      showDate(addMessage)
+      router.push('/hr/dismissal')
+    }
+  } catch (e) {
+    console.log(e)
+  }
 }
 
 onMounted(() => {
@@ -83,7 +124,7 @@ onMounted(() => {
             label="Описание"
             :color="BASE_COLOR"
             :base-color="FIELD_COLOR"
-            v-model="form.description"
+            v-model="form.basis"
             hide-details
             rounded="lg"
             variant="outlined"

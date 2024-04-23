@@ -19,7 +19,7 @@ import {
 import debounce from "lodash.debounce";
 import clientOrderApi from '../../../api/documents/clientOrder.js';
 import showDate from "../../../composables/date/showDate.js";
-import recruitment from "../../../api/documents/recruitment.js";
+import recruitment from "../../../api/hr/recruitment.js";
 
 const router = useRouter()
 
@@ -35,7 +35,7 @@ const search = ref('')
 const debounceSearch = ref('')
 const nameRef = ref(null)
 const descriptionRef = ref(null)
-const procurements = ref([])
+const recruitments = ref([])
 const paginations = ref([])
 const showConfirmDialog = ref(false);
 const showModal = ref(false);
@@ -53,11 +53,9 @@ const filterForm = ref({
 const headers = ref([
   {title: 'Номер', key: 'name'},
   {title: 'Дата', key: 'currency.name'},
-  {title: 'Поставщик', key: 'currency.name'},
-  {title: 'Организация', key: 'currency.name'},
-  {title: 'Дата отгрузки', key: 'currency.name'},
+  {title: 'Дата приёма', key: 'currency.name'},
+  {title: 'Сотрудник', key: 'currency.name'},
   {title: 'Автор', key: 'currency.name'},
-  {title: 'Валюта', key: 'currency.name'},
 ])
 
 const rules = {
@@ -72,14 +70,11 @@ const getRecruitmentData = async ({page, itemsPerPage, sortBy, search}) => {
   filterModal.value = false
   loading.value = true
   try {
-    // const { data } = await recruitment.get({page, itemsPerPage, sortBy}, search, filterData)
-    // console.log(data)
-    // paginations.value = data.result.pagination
-    // procurements.value = data.result.data
+    const { data } = await recruitment.get({page, itemsPerPage, sortBy}, search, filterData)
+    console.log(data)
+    paginations.value = data.result.pagination
+    recruitments.value = data.result.data
   } catch (e) {
-    procurements.value = []
-    paginations.value = []
-
 
   } finally {
     loading.value = false
@@ -147,7 +142,7 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
 
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
-    const firstMarkedItem = procurements.value.find(el => el.id === markedID.value[0]);
+    const firstMarkedItem = recruitments.value.find(el => el.id === markedID.value[0]);
     if (firstMarkedItem && firstMarkedItem.deleted_at) {
       if(item.deleted_at === null) {
         showToast(ErrorSelectMessage, 'warning')
@@ -194,7 +189,7 @@ watch(dialog, newVal => {
 })
 
 watch(markedID, (newVal) => {
-  markedItem.value = procurements.value.find((el) => el.id === newVal[0]);
+  markedItem.value = recruitments.value.find((el) => el.id === newVal[0]);
 })
 
 watch(search, debounce((newValue) => {
@@ -280,7 +275,7 @@ onMounted(() => {
             :loading="loading"
             :headers="headers"
             :items-length="paginations.total || 0"
-            :items="procurements"
+            :items="recruitments"
             :item-value="headers.title"
             :search="debounceSearch"
             v-model="markedID"
@@ -324,10 +319,9 @@ onMounted(() => {
               </td>
               <td>{{ item.doc_number }}</td>
               <td>{{ showDate(item.date) }}</td>
-              <td>{{ item.counterparty.name }}</td>
-              <td>{{ item.organization.name }}</td>
-              <td>{{ showDate(item.shippingDate) }}</td>
-              <td>{{ item.author.name }}</td>
+              <td>{{ showDate(item.hiring_date) }}</td>
+              <td>{{ item.employee.name }}</td>
+              <td>{{ item?.author?.name }}</td>
             </tr>
           </template>
         </v-data-table-server>
