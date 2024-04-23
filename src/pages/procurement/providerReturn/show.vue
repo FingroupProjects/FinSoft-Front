@@ -1,11 +1,10 @@
 <script setup>
-import {computed, onMounted, reactive, ref, watch} from "vue";
+import {computed, defineEmits, defineProps, onMounted, reactive, ref, watch} from "vue";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../../composables/toast/index.js";
-import currentDate from "../../../composables/date/currentDate.js";
 import validate from "./validate.js";
 import {useRoute, useRouter} from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
@@ -13,42 +12,40 @@ import counterpartyApi from "../../../api/list/counterparty.js";
 import storageApi from "../../../api/list/storage.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import currencyApi from "../../../api/list/currency.js";
-import providerApi from "../../../api/documents/procurement.js";
+import providerReturnApi from "../../../api/documents/providerReturn.js";
 import goodApi from "../../../api/list/goods.js";
 import { editMessage } from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
 import showDate from "../../../composables/date/showDate.js";
 import {BASE_COLOR} from "../../../composables/constant/colors.js";
+import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
 
 const router = useRouter()
 const route = useRoute()
+
+const count = ref(0)
+const emits = defineEmits(['changed'])
+const props = defineProps(['isUpdateOrCreateDocument'])
+const confirmDocument = useConfirmDocumentStore()
+const tempForm = ref({})
 
 const form = reactive({
   doc_number: null,
   date: null,
   organization: null,
-  organizations: [],
   counterparty: null,
-  counterparties: [],
   cpAgreement: null,
-  cpAgreements: [],
   storage: null,
-  storages: [],
   saleInteger: null,
   salePercent: null,
   comment: null,
   currency: null,
 })
 
-const loading = ref(false)
+const loading = ref(true)
 const author = ref(null)
 const markedID = ref([])
-const goods = ref([{
-  id: 1,
-  good_id: null,
-  amount: 1,
-  price: null,
-}])
+const goods = ref([])
 
 const organizations = ref([])
 const counterparties = ref([])
@@ -56,6 +53,8 @@ const cpAgreements = ref([])
 const storages = ref([])
 const currencies = ref([])
 const listGoods = ref([])
+const prevForm = ref({})
+const prevGoods = ref([])
 
 const headers = ref([
   {title: 'Товары', key: 'goods', sortable: false},
@@ -66,38 +65,52 @@ const headers = ref([
 
 
 const getProviderDetails = async () => {
-  const { data } = await providerApi.getById(route.params.id)
-  form.doc_number = data.result.doc_number
-  form.date = showDate(data.result.date, '-', true);
-  form.organization = {
-    id: data.result.organization.id,
-    name: data.result.organization.name
-  }
-  form.counterparty = {
-    id: data.result.counterparty.id,
-    name: data.result.counterparty.name
-  }
-  setTimeout(() => {
-    form.cpAgreement = {
-      id: data.result.counterpartyAgreement.id,
-      name: data.result.counterpartyAgreement.name
+  try {
+    const {data} = await providerReturnApi.getById(route.params.id)
+    form.doc_number = data.result.doc_number
+    form.date = showDate(data.result.date, '-', true);
+    form.organization = {
+      id: data.result.organization.id,
+      name: data.result.organization.name
     }
-  }, 300)
-  form.storage = {
-    id: data.result.storage.id,
-    name: data.result.storage.name
-  }
-  form.saleInteger = data.result.saleInteger != 0 ? data.result.saleInteger : null
-  form.salePercent = data.result.salePercent != 0 ? data.result.salePercent : null
-  form.comment = data.result.comment
-  form.currency = data.result.currency
+    form.counterparty = {
+      id: data.result.counterparty.id,
+      name: data.result.counterparty.name
+    }
+    setTimeout(() => {
+      form.cpAgreement = {
+        id: data.result.counterpartyAgreement.id,
+        name: data.result.counterpartyAgreement.name
+      }
+    }, 300)
+    form.storage = {
+      id: data.result.storage.id,
+      name: data.result.storage.name
+    }
+    form.saleInteger = data.result.saleInteger !== 0 ? data.result.saleInteger : null
+    form.salePercent = data.result.salePercent !== 0 ? data.result.salePercent : null
+    form.comment = data.result.comment
+    form.currency = data.result.currency
 
-  goods.value = data.result.goods.map(item => ({
-    id: item.id,
-    good_id: item.good.id,
-    amount: item.amount,
-    price: item.price
-  }))
+    goods.value = data.result.goods.map(item => ({
+      id: item.id,
+      good_id: item.good.id,
+      amount: item.amount,
+      price: item.price
+    }))
+
+    prevForm.value = {...form};
+    prevGoods.value = [...goods.value];
+    tempForm.value = Object.assign({}, form);
+
+    loading.value = false
+
+  } catch (e) {
+
+  } finally {
+
+  }
+
 }
 
 const getOrganizations = async () => {
@@ -192,10 +205,10 @@ const updateProvider = async () => {
  }
 
  try {
-   const res = await providerApi.update(route.params.id ,body)
+   const res = await providerReturnApi.update(route.params.id, body)
    if (res.status === 200) {
      showToast(editMessage)
-     router.push('/providerOfGoods')
+     router.push('/providerReturn')
    }
  } catch (e) {
    console.error(e)
@@ -226,20 +239,48 @@ const totalPriceWithSale = computed(() => {
 })
 
 
-onMounted( () => {
-  author.value = JSON.parse(localStorage.getItem('user')).name || null
+const isSaleIntegerDisabled = computed(() => !!form.salePercent);
+const isSalePercentDisabled = computed(() => !!form.saleInteger);
 
-  Promise.all([
-      getOrganizations(),
-      getCounterparties(),
-      getCpAgreements(),
-      getStorages(),
-      getCurrencies(),
-      getGoods(),
-      getProviderDetails()
-  ])
 
+const arraysEqual = (arr1, arr2) => {
+  if (arr1.length !== arr2.length) {
+    return true;
+  }
+
+  for (let i = 0; i < arr1.length; i++) {
+    if (JSON.stringify(arr1[i]) !== JSON.stringify(arr2[i])) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+const checkDataChanges = () => {
+  count.value++
+  const formDataChanged = JSON.stringify(tempForm.value) !== JSON.stringify(prevForm.value);
+  const isArraysEqual = arraysEqual(goods.value, prevGoods.value)
+  return formDataChanged || isArraysEqual
+};
+
+
+watch([goods.value], (newValue) => {
+  console.log(newValue)
+}, {deep: true})
+
+watch(form, () => {
+  if (count.value === 0) {
+    checkDataChanges()
+  } else {
+    if (checkDataChanges()) {
+      emits('changed', true)
+    } else {
+      emits('changed', false)
+    }
+  }
 })
+
 
 
 watch(() => form.counterparty, async (data) => {
@@ -264,19 +305,25 @@ watch(() => form.counterparty, async (data) => {
   }
 })
 
-const isSaleIntegerDisabled = computed(() => !!form.salePercent);
-const isSalePercentDisabled = computed(() => !!form.saleInteger);
-
-watch(() => form.saleInteger, (newValue) => {
-  if (!newValue) {
-    form.salePercent = ''
+watch(confirmDocument, () => {
+  if (confirmDocument.isUpdateOrCreateDocument) {
+    updateProvider()
   }
 })
 
-watch(() => form.salePercent, (newValue) => {
-  if (!newValue) {
-    form.saleInteger = ''
-  }
+onMounted( () => {
+  author.value = JSON.parse(localStorage.getItem('user')).name || null
+  getProviderDetails()
+
+  Promise.all([
+    getOrganizations(),
+    getCounterparties(),
+    getCpAgreements(),
+    getStorages(),
+    getCurrencies(),
+    getGoods(),
+  ])
+
 })
 
 </script>

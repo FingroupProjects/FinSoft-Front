@@ -5,7 +5,6 @@ import CustomTextField from "../../../components/formElements/CustomTextField.vu
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../../composables/toast/index.js";
-import currentDate from "../../../composables/date/currentDate.js";
 import validate from "./validate.js";
 import {useRoute, useRouter} from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
@@ -35,20 +34,15 @@ const form = reactive({
   doc_number: null,
   date: null,
   organization: null,
-  organizations: [],
   counterparty: null,
-  counterparties: [],
   cpAgreement: null,
-  cpAgreements: [],
   storage: null,
-  storages: [],
   saleInteger: null,
   salePercent: null,
   comment: null,
   currency: null
 })
 
-const loading = ref(true)
 const author = ref(null)
 const markedID = ref([])
 const goods = ref([])
@@ -61,7 +55,6 @@ const currencies = ref([])
 const listGoods = ref([])
 const prevForm = ref({})
 const prevGoods = ref([])
-const isDataChanged = ref(false)
 
 const headers = ref([
   {title: 'Товары', key: 'goods', sortable: false},
@@ -107,7 +100,6 @@ const getProcurementDetails = async () => {
     prevGoods.value = [...goods.value];
     tempForm.value = Object.assign({}, form);
 
-    loading.value = false
 
   } catch (e) {
 
@@ -213,10 +205,7 @@ const updateProcurement = async () => {
    const res = await procurementApi.update(route.params.id, body)
    if (res.status === 200) {
      showToast(editMessage)
-    //  how to close current page in browser  
-    setTimeout(() => {
-      window.close()
-    }, 1000);
+     router.push('/procurement')
    }
  } catch (e) {
    console.log(e)

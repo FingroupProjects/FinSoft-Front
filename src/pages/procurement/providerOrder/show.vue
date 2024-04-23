@@ -22,11 +22,11 @@ import "../../../assets/css/procurement.css";
 
 const router = useRouter()
 const route = useRoute()
-const count = ref(0)
+
+const countRef = ref(0)
 const emits = defineEmits(['changed'])
 const props = defineProps(['isUpdateOrCreateDocument'])
 const confirmDocument = useConfirmDocumentStore()
-
 const tempForm = ref({})
 
 const form = reactive({
@@ -41,7 +41,6 @@ const form = reactive({
   currency: null
 })
 
-const loading = ref(true)
 const author = ref(null)
 const markedID = ref([])
 const goods = ref([])
@@ -53,7 +52,6 @@ const currencies = ref([])
 const listGoods = ref([])
 const prevForm = ref({})
 const prevGoods = ref([])
-const isDataChanged = ref(false)
 
 const headers = ref([
   {title: 'Товары', key: 'goods', sortable: false},
@@ -65,7 +63,6 @@ const headers = ref([
 const getProviderOrderDetails = async () => {
   try {
     const { data } = await providerOrderApi.getById(route.params.id)
-    console.log(data)
     form.doc_number = data.result.doc_number
     form.date = showDate(data.result.date, '-', true)
     form.organization = {
@@ -92,11 +89,10 @@ const getProviderOrderDetails = async () => {
       amount: item.amount,
       price: item.price
     }))
+
     prevForm.value = { ...form };
     prevGoods.value = [...goods.value];
     tempForm.value = Object.assign({}, form);
-
-    loading.value = false
 
   } catch (e) {
 
@@ -232,19 +228,18 @@ const arraysEqual = (arr1, arr2) => {
 }
 
 const checkDataChanges = () => {
-  count.value++
+  countRef.value++
   const formDataChanged = JSON.stringify(tempForm.value) !== JSON.stringify(prevForm.value);
   const isArraysEqual = arraysEqual(goods.value, prevGoods.value)
   return formDataChanged || isArraysEqual
 };
-
 
 watch([goods.value], (newValue) => {
   console.log(newValue)
 }, {deep: true})
 
 watch(form, () => {
-  if (count.value === 0) {
+  if (countRef.value === 0) {
     checkDataChanges()
   } else {
     if (checkDataChanges()) {
@@ -254,8 +249,6 @@ watch(form, () => {
     }
   }
 })
-
-
 
 watch(() => form.counterparty, async (data) => {
   form.cpAgreement = null
@@ -294,13 +287,14 @@ watch(confirmDocument, () => {
 
 onMounted( () => {
   author.value = JSON.parse(localStorage.getItem('user')).name || null
-  getProviderOrderDetails()
+
   Promise.all([
     getOrganizations(),
     getCounterparties(),
     getCpAgreements(),
     getCurrencies(),
     getGoods(),
+    getProviderOrderDetails()
   ])
 })
 
