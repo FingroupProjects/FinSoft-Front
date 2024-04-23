@@ -6,20 +6,20 @@ import {BASE_COLOR, FIELD_COLOR} from "../../../composables/constant/colors.js";
 import {onMounted, reactive, ref} from "vue";
 import organizationApi from "../../../api/list/organizations.js";
 import employee from "../../../api/list/employee.js";
-import recruitment from "../../../api/hr/recruitment.js";
+import currentDate from "../../../composables/date/currentDate.js";
+import dismissal from "../../../api/hr/dismissal.js";
 import changeTheDateForSending from "../../../composables/date/changeTheDateForSending.js";
-import {useRoute, useRouter} from "vue-router";
-import {editMessage} from "../../../composables/constant/buttons.js";
-import validate from "../../../composables/validate/validate.js";
-import showToast from "../../../composables/toast/index.js";
 import showDate from "../../../composables/date/showDate.js";
+import {addMessage} from "../../../composables/constant/buttons.js";
+import {useRoute, useRouter} from "vue-router";
+import validate from "../../../composables/validate/validate.js";
 
 const router = useRouter()
 const route = useRoute()
 
 const form = reactive({
   date: null,
-  dateOfReceipt: null,
+  dateOfDismissal: null,
   organization: null,
   position: null,
   department: null,
@@ -32,23 +32,14 @@ const form = reactive({
 
 const organizations = ref([])
 const employees = ref([])
-const positions = ref([])
-const departments = ref([])
-
 
 const getDismissalDetails = async () => {
   try {
-    const {data} = await recruitment.getById(route.params.id)
+    const {data} = await dismissal.getById(route.params.id)
     console.log(data)
     form.date = showDate(data.data.date, '-', true)
-    form.dateOfReceipt = showDate(data.data.hiring_date, '-', true)
-    form.organization = data.data.organization
-    form.position = data.data.position
-    form.department = data.data.department
-    form.employee = data.data.employee
-    form.salary = data.data.salary
-    form.basis = data.data.basis
-    form.comment = data.data.comment
+    form.dateOfDismissal = data.data.firing_date
+
   } catch (e) {
     console.log(e)
   }
@@ -64,21 +55,14 @@ const getEmployees = async () => {
   employees.value = data.result.data
 }
 
-const getPositions = async () => {
-  const {data} = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  positions.value = data.result.data
-}
-
-const getDepartments = async () => {
-  const {data} = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  departments.value = data.result.data
-}
-
-const updateRecruitment = async () => {
+const addDismissal = async () => {
 
   const validateValue = [
     {
       "Дата": form.date
+    },
+    {
+      "Дата увольнения": form.dateOfDismissal
     },
     {
       "Организация": form.organization
@@ -87,57 +71,37 @@ const updateRecruitment = async () => {
       "Сотрудник": form.employee
     },
     {
-      "Оклад": form.salary
-    },
-    {
-      "Дата приёма": form.dateOfReceipt
-    },
-    {
-      "Должность": form.position
-    },
-    {
-      "Отдел": form.department
-    },
-    {
       "Основание": form.basis
     },
   ]
 
-  if (validate(validateValue) !== true ) return
-
-  const body = {
-    "date": changeTheDateForSending(form.date, '-'),
-    "organization_id": typeof(form.organization) === 'object' ? form.organization.id : form.organization,
-    "basis": form.basis,
-    "department_id": 1,
-    "position_id": 1,
-    "employee_id": typeof(form.employee) === 'object' ? form.employee.id : form.employee,
-    "salary": Number(form.salary),
-    "hiring_date": changeTheDateForSending(form.date, '-'),
-    "comment": form.comment
-  }
+  if (validate(validateValue) !== true) return
 
   try {
-    const res = await recruitment.update(route.params.id, body)
-    console.log(res)
-    if (res.status === 200) {
-      showToast(editMessage)
-      router.push('/hr/recruitment')
+    const body = {
+      "date": changeTheDateForSending(form.date, '-'),
+      "firing_date": changeTheDateForSending(form.dateOfDismissal, '-'),
+      "organization_id": form.organization,
+      "basis": form.basis,
+      "employee_id": form.employee,
+      "comment": form.comment
+    }
+    const res = await dismissal.add(body)
+    if (res.status === 201) {
+      showDate(addMessage)
+      router.push('/hr/dismissal')
     }
   } catch (e) {
     console.log(e)
   }
-
-  console.log(body)
 }
 
 onMounted(() => {
   form.author = JSON.parse(localStorage.getItem('user')).name || null
+
   getDismissalDetails()
   getOrganizations()
   getEmployees()
-  getPositions()
-  getDepartments()
 })
 </script>
 
@@ -146,12 +110,12 @@ onMounted(() => {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Приём на работу (изменение)</span>
+          <span>Увольнение кадра (Изменение)</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1">
-              <Icons title="Добавить" @click="updateRecruitment" name="add"/>
+              <Icons title="Добавить" @click="addDismissal" name="add"/>
             </div>
           </div>
         </v-card>
@@ -166,14 +130,10 @@ onMounted(() => {
           <custom-text-field label="Дата" type="date" v-model="form.date"/>
           <custom-autocomplete label="Организация" :items="organizations" v-model="form.organization"/>
           <custom-autocomplete label="Сотрудник" :items="employees" v-model="form.employee"/>
-          <custom-text-field label="Оклад" v-model="form.salary"/>
-          <custom-text-field label="Дата приёма" type="date" v-model="form.dateOfReceipt"/>
-          <custom-autocomplete label="Должность" :items="positions" v-model="form.position"/>
-          <custom-autocomplete label="Отдел" :items="departments" v-model="form.department"/>
-          <custom-autocomplete label="График работы" :items="[]"/>
+          <custom-text-field label="Дата увольнение" type="date" v-model="form.dateOfDismissal"/>
         </div>
         <v-textarea
-            label="Основание"
+            label="Описание"
             :color="BASE_COLOR"
             :base-color="FIELD_COLOR"
             v-model="form.basis"

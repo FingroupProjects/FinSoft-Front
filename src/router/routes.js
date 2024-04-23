@@ -168,6 +168,11 @@ const routes = [
     component: () => import("../pages/hr/dismissal/index.vue"),
   },
   {
+    path: "/hr/dismissal/:id",
+    name: "dismissalShow",
+    component: () => import("../pages/hr/dismissal/show.vue"),
+  },
+  {
     path: "/hr/dismissalCreate",
     name: "dismissalCreate",
     component: () => import("../pages/hr/dismissal/create.vue"),
