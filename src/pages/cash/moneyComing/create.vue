@@ -9,6 +9,7 @@ import { ref, reactive, onMounted, watch } from "vue";
 import employeeApi from "../../../api/list/employee.js";
 import Icons from "../../../composables/Icons/Icons.vue";
 import showToast from "../../../composables/toast/index.js";
+import incomeItemApi from "../../../api/list/incomeItem.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import cashRegisterApi from "../../../api/list/cashRegister.js";
 import organizationApi from "../../../api/list/organizations.js";
@@ -47,14 +48,15 @@ const form = reactive({
   incomeItem: null,
   balanceItem: null,
   cpAgreement: null,
-  bankAccount: null,
   sender_cash: null,
   counterparty: null,
   organization: null,
+  organization_bill: null,
   typeOperation: typeOperations.value[0].title,
 });
 
 const employees = ref([]);
+const incomeItems = ref([]);
 const cpAgreements = ref([]);
 const cashRegisters = ref([]);
 const organizations = ref([]);
@@ -78,68 +80,38 @@ watch(
 );
 
 const resetFields = () => {
-  form.base = null;
   form.employee = null;
   form.incomeItem = null;
   form.balanceItem = null;
   form.cpAgreement = null;
-  form.bankAccount = null;
+  form.organization_bill = null;
   form.sender_cash = null;
   form.cpAgreement = null;
-  form.organization = null;
   form.counterparty = null;
 };
 
-const firstAccess = async (paymentType) => {
-  // if (
-  //   validate(
-  //     form.sum,
-  //     form.base,
-  //     form.date,
-  //     form.organization,
-  //     form.cash,
-  //     form.counterparty,
-  //     form.cpAgreement
-  //   ) !== true
-  // )
-  //   return;
+const firstAccess = async () => {
+  if (
+    !validate(form.sum, form.base, form.date, form.organization, form.cash) ||
+    isValid(form.counterparty, "Контрагент", form.cpAgreement, "Договор") !==
+      true
+  ) {
+    return;
+  }
+  const body = {
+    date: form.date,
+    organization_id: form.organization,
+    cash_register_id: form.cash,
+    sum: form.sum,
+    counterparty_id: form.counterparty,
+    counterparty_agreement_id: form.cpAgreement,
+    basis: form.base,
+    comment: form.comment,
+    type_operation: form.typeOperation,
+    type: "PKO",
+  };
   try {
-    let res;
-    switch (paymentType) {
-      case 1:
-        const paymentFromClientBody = {
-          date: form.date,
-          organization_id: form.organization,
-          cashRegister_id: form.cash,
-          sum: form.sum,
-          counterparty_id: form.counterparty,
-          counterparty_agreement_id: form.cpAgreement,
-          basis: form.base,
-          comment: form.comment,
-          type_operation: form.typeOperation,
-          type: "ПKO",
-        };
-        res = await clientPaymentApi.paymentFromClient(paymentFromClientBody);
-        break;
-      case 2:
-        const writeOffBody = {
-          date: form.date,
-          organization_id: form.organization,
-          cashRegister_id: form.cash,
-          sum: form.sum,
-          organization_bill_id: form.bankAccount,
-          basis: form.base,
-          comment: form.comment,
-          type_operation: form.typeOperation,
-          type: "PKO",
-        };
-        res = await clientPaymentApi.writeOff(writeOffBody);
-        break;
-
-      default:
-        throw new Error("Unsupported payment type");
-    }
-    console.log(res);
+    const res = await clientPaymentApi.paymentFromClient(body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -147,54 +119,274 @@ const firstAccess = async (paymentType) => {
   }
 };
 
-const secondAccess = () => {
-  console.log(2);
+const secondAccess = async () => {
+  if (
+    !validate(form.sum, form.base, form.date, form.organization, form.cash) ||
+    isValid(form.organization_bill, "Банковский счет") !== true
+  ) {
+    return;
+  }
+  const body = {
+    date: form.date,
+    organization_id: form.organization,
+    cash_register_id: form.cash,
+    sum: form.sum,
+    organization_bill_id: form.organization_bill,
+    basis: form.base,
+    comment: form.comment,
+    type_operation: form.typeOperation,
+    type: "PKO",
+  };
+  try {
+    const res = await clientPaymentApi.writeOff(body);
+    showToast(addMessage, "green");
+    router.push("/moneyComing");
+  } catch (e) {
+    console.error(e);
+  }
 };
-const thirdAccess = () => {
-  console.log(3);
+const thirdAccess = async () => {
+  if (
+    !validate(form.sum, form.base, form.date, form.organization, form.cash) ||
+    isValid(form.sender_cash, "Касса отправителя") !== true
+  ) {
+    return;
+  }
+  const body = {
+    date: form.date,
+    organization_id: form.organization,
+    cash_register_id: form.cash,
+    sum: form.sum,
+    sender_cash_register_id: form.sender_cash,
+    basis: form.base,
+    comment: form.comment,
+    type_operation: form.typeOperation,
+    type: "PKO",
+  };
+  try {
+    const res = await clientPaymentApi.anotherCashRegister(body);
+    showToast(addMessage, "green");
+    router.push("/moneyComing");
+  } catch (e) {
+    console.error(e);
+  }
 };
-const fourthAccess = () => {
-  console.log(4);
+const fourthAccess = async () => {
+  if (
+    !validate(form.sum, form.base, form.date, form.organization, form.cash) ||
+    isValid(form.counterparty, "Контрагент", form.cpAgreement, "Договор") !==
+      true
+  ) {
+    return;
+  }
+  const body = {
+    date: form.date,
+    organization_id: form.organization,
+    cash_register_id: form.cash,
+    sum: form.sum,
+    counterparty_id: form.counterparty,
+    counterparty_agreement_id: form.cpAgreement,
+    basis: form.base,
+    comment: form.comment,
+    type_operation: form.typeOperation,
+    type: "PKO",
+  };
+  try {
+    const res = await clientPaymentApi.investment(body);
+    showToast(addMessage, "green");
+    router.push("/moneyComing");
+  } catch (e) {
+    console.error(e);
+  }
 };
 
-const fifthAccess = () => {
-  console.log(5);
+const fifthAccess = async () => {
+  if (
+    !validate(form.sum, form.base, form.date, form.organization, form.cash) ||
+    isValid(form.counterparty, "Контрагент", form.cpAgreement, "Договор") !==
+      true
+  ) {
+    return;
+  }
+  const body = {
+    date: form.date,
+    organization_id: form.organization,
+    cash_register_id: form.cash,
+    sum: form.sum,
+    counterparty_id: form.counterparty,
+    counterparty_agreement_id: form.cpAgreement,
+    basis: form.base,
+    comment: form.comment,
+    type_operation: form.typeOperation,
+    type: "PKO",
+  };
+  try {
+    const res = await clientPaymentApi.creditReceive(body);
+    showToast(addMessage, "green");
+    router.push("/moneyComing");
+  } catch (e) {
+    console.error(e);
+  }
 };
 
-const sixthAccess = () => {
-  console.log(6);
+const sixthAccess = async () => {
+  if (
+    !validate(form.sum, form.base, form.date, form.organization, form.cash) ||
+    isValid(form.counterparty, "Контрагент", form.cpAgreement, "Договор") !==
+      true
+  ) {
+    return;
+  }
+  const body = {
+    date: form.date,
+    organization_id: form.organization,
+    cash_register_id: form.cash,
+    sum: form.sum,
+    counterparty_id: form.counterparty,
+    counterparty_agreement_id: form.cpAgreement,
+    basis: form.base,
+    comment: form.comment,
+    type_operation: form.typeOperation,
+    type: "PKO",
+  };
+  try {
+    const res = await clientPaymentApi.providerRefund(body);
+    showToast(addMessage, "green");
+    router.push("/moneyComing");
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const seventhAccess = async () => {
+  if (
+    !validate(form.sum, form.base, form.date, form.organization, form.cash) ||
+    isValid(form.employee, "Сотрудник") !== true
+  ) {
+    return;
+  }
+  const body = {
+    date: form.date,
+    organization_id: form.organization,
+    cash_register_id: form.cash,
+    sum: form.sum,
+    employee: form.employee,
+    basis: form.base,
+    comment: form.comment,
+    type_operation: form.typeOperation,
+    type: "PKO",
+  };
+  try {
+    const res = await clientPaymentApi.accountablePersonRefund(body);
+    showToast(addMessage, "green");
+    router.push("/moneyComing");
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const eighthAccess = async () => {
+  if (
+    !validate(form.sum, form.base, form.date, form.organization, form.cash) ||
+    isValid(form.incomeItem, "Статья дохода") !== true
+  ) {
+    return;
+  }
+  const body = {
+    date: form.date,
+    organization_id: form.organization,
+    cash_register_id: form.cash,
+    sum: form.sum,
+    balance_article_id: form.incomeItem,
+    basis: form.base,
+    comment: form.comment,
+    type_operation: form.typeOperation,
+    type: "PKO",
+  };
+  try {
+    const res = await clientPaymentApi.otherExpenses(body);
+    showToast(addMessage, "green");
+    router.push("/moneyComing");
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const ninthAccess = async () => {
+  if (
+    !validate(form.sum, form.base, form.date, form.organization, form.cash) ||
+    isValid(form.balanceItem, "Статья баланса") !== true
+  ) {
+    return;
+  }
+
+  const body = {
+    date: form.date,
+    organization_id: form.organization,
+    cash_register_id: form.cash,
+    sum: form.sum,
+    balance_article_id: form.balanceItem,
+    basis: form.base,
+    comment: form.comment,
+    type_operation: form.typeOperation,
+    type: "PKO",
+  };
+  try {
+    const res = await clientPaymentApi.otherExpenses(body);
+    showToast(addMessage, "green");
+    router.push("/moneyComing");
+  } catch (e) {
+    console.error(e);
+  }
 };
 
 const getAccess = () => {
   switch (form.typeOperation) {
     case "Оплата от клиента":
-      firstAccess(1);
+      firstAccess();
       break;
-    case "Снятие с Р/С":
-      firstAccess(2);
+    case "Снятие с P/C":
+      secondAccess();
       break;
     case "Получение с другой кассы":
       thirdAccess();
       break;
     case "Вложение":
-      firstAccess();
-      break;
-    case "Получение кредита":
-      firstAccess();
-      break;
-    case "Возврат от поставщика":
-      firstAccess();
-      break;
-    case "Возврат от подотчетника":
       fourthAccess();
       break;
-    case "Прочие доходы":
+    case "Получение кредита":
       fifthAccess();
       break;
-    case "Прочие приходы":
+    case "Возврат от поставщика":
       sixthAccess();
       break;
+    case "Возврат от подотчетника":
+      seventhAccess();
+      break;
+    case "Прочие доходы":
+      eighthAccess();
+      break;
+    case "Прочие приходы":
+      ninthAccess();
+      break;
   }
+};
+
+const isValid = (
+  firstField,
+  firstFieldName,
+  secondField = undefined,
+  secondFieldName
+) => {
+  if (!firstField) {
+    showToast(`Поле ${firstFieldName} не может быть пустым`, "warning");
+    return false;
+  }
+  if (secondField !== undefined && !secondField) {
+    showToast(`Поле ${secondFieldName} не может быть пустым`, "warning");
+    return false;
+  }
+  return true;
 };
 
 const getOrganizations = async () => {
@@ -212,7 +404,6 @@ const getOrganizationBills = async () => {
     itemsPerPage: 100000,
     sortBy: "name",
   });
-  console.log(data);
   organizationBills.value = data.result.data;
 };
 
@@ -241,6 +432,17 @@ const getCpAgreements = async (id) => {
   } catch (e) {}
 };
 
+const getIncomeItems = async () => {
+  try {
+    const { data } = await incomeItemApi.get({
+      page: 1,
+      itemsPerPage: 100000,
+      sortBy: "name",
+    });
+    incomeItems.value = data.result.data;
+  } catch (e) {}
+};
+
 const getEmployees = async () => {
   const { data } = await employeeApi.get({
     page: 1,
@@ -255,12 +457,19 @@ onMounted(async () => {
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
   await Promise.all([
     getEmployees(),
+    getIncomeItems(),
     getCashregisters(),
     getOrganizations(),
     getCounterparties(),
     getOrganizationBills(),
   ]);
 });
+
+function validateNumberInput(event) {
+  let inputValue = event.target.value;
+  inputValue = inputValue.replace(/[^0-9.]/g, "");
+  form.sum = inputValue;
+}
 </script>
 
 <template>
@@ -316,7 +525,11 @@ onMounted(async () => {
             :items="cashRegisters"
             v-model="form.cash"
           />
-          <custom-text-field label="Сумма" v-model="form.sum" />
+          <custom-text-field
+            label="Сумма"
+            @input="validateNumberInput"
+            v-model="form.sum"
+          />
         </div>
 
         <div class="d-flex ga-6">
@@ -346,17 +559,17 @@ onMounted(async () => {
             </div>
           </div>
           <div class="d-flex flex-column ga-4">
-            <div v-if="form.typeOperation === 'Снятие с Р/С'">
+            <div v-if="form.typeOperation === 'Снятие с P/C'">
               <custom-autocomplete
                 label="Банковский счет"
                 :items="organizationBills"
-                v-model="form.bankAccount"
+                v-model="form.organization_bill"
               />
             </div>
             <div v-else-if="form.typeOperation === 'Получение с другой кассы'">
               <custom-autocomplete
                 label="Касса отправителя"
-                :items="organizations"
+                :items="cashRegisters"
                 v-model="form.sender_cash"
               />
             </div>
@@ -370,14 +583,14 @@ onMounted(async () => {
             <div v-else-if="form.typeOperation === 'Прочие доходы'">
               <custom-autocomplete
                 label="Статья дохода"
-                :items="organizations"
+                :items="incomeItems"
                 v-model="form.incomeItem"
               />
             </div>
             <div v-else-if="form.typeOperation === 'Прочие приходы'">
               <custom-autocomplete
                 label="Статья баланса"
-                :items="organizations"
+                :items="incomeItems"
                 v-model="form.balanceItem"
               />
             </div>

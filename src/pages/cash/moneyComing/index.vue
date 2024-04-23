@@ -88,6 +88,7 @@ const getSellingGoods = async ({ page, itemsPerPage, sortBy, search }) => {
       search,
       filterData
     );
+    console.log(data);
     paginations.value = data.result.pagination;
     moneyComing.value = data.result.data;
     loading.value = false;
@@ -190,7 +191,6 @@ watch(dialog, (newVal) => {
   }
 });
 
-
 watch(markedID, (newVal) => {
   markedItem.value = procurements.value.find((el) => el.id === newVal[0]);
 });
@@ -215,7 +215,7 @@ watch(
             <div class="d-flex ga-2 mt-1 me-3">
               <Icons
                 title="Добавить"
-                @click="$router.push('/moneyReturnCreate')"
+                @click="$router.push('/moneyComingCreate')"
                 name="add"
               />
               <Icons title="Скопировать" name="copy" />
@@ -314,7 +314,7 @@ watch(
               <td>{{ item.cashRegister.responsiblePerson.name }}</td>
               <td>{{ item.sum }}</td>
               <td>{{ item.currency }}</td>
-              <td>{{ item.sender.name }}</td>
+              <td>{{ item.author.name }}</td>
             </tr>
           </template>
         </v-data-table-server>

@@ -5,8 +5,6 @@ export default function validate(
   date,
   organization,
   cash,
-  counterparty,
-  cpAgreement
 ) {
   if (!date) {
     return showToast("Поле Дата не может быть пустым", "warning");
@@ -20,16 +18,9 @@ export default function validate(
   if (!sum) {
     return showToast("Поле Сумма не может быть пустым", "warning");
   }
-  if (!counterparty) {
-    return showToast("Поле Поставщик не может быть пустым", "warning");
-  }
-  if (!cpAgreement) {
-    return showToast("Поле Договор не может быть пустым", "warning");
-  }
   if (!base) {
     return showToast("Поле Основание не может быть пустым", "warning");
   }
-
   return true;
 }
 
