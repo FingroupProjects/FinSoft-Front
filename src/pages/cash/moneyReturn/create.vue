@@ -86,7 +86,7 @@ const resetFields = () => {
   form.bankAccount = null;
   form.sender_cash = null;
   form.cpAgreement = null;
-  form.organization = null;
+  // form.organization = null;
   form.counterparty = null;
 };
 

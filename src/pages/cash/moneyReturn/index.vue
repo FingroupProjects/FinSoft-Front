@@ -207,14 +207,14 @@ watch(
     <v-col>
       <div class="d-flex justify-space-between text-uppercase">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>ПКО</span>
+          <span>РКО</span>
         </div>
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
               <Icons
                 title="Добавить"
-                @click="$router.push('/moneyComingCreate')"
+                @click="$router.push('/moneyReturnCreate')"
                 name="add"
               />
               <Icons title="Скопировать" name="copy" />
