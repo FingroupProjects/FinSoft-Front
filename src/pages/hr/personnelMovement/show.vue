@@ -8,15 +8,16 @@ import organizationApi from "../../../api/list/organizations.js";
 import positionApi from "../../../api/list/position.js";
 import departmentApi from "../../../api/list/department.js";
 import employee from "../../../api/list/employee.js";
-import currentDate from "../../../composables/date/currentDate.js";
 import personnelMovement from "../../../api/hr/personnelMovement.js";
 import changeTheDateForSending from "../../../composables/date/changeTheDateForSending.js";
 import showToast from "../../../composables/toast/index.js";
-import {addMessage} from "../../../composables/constant/buttons.js";
+import {editMessage} from "../../../composables/constant/buttons.js";
 import validate from "../../../composables/validate/validate.js";
-import {useRouter} from "vue-router";
+import {useRoute, useRouter} from "vue-router";
+import showDate from "../../../composables/date/showDate.js";
 
 const router = useRouter()
+const route = useRoute()
 
 const form = reactive({
   date: null,
@@ -36,7 +37,23 @@ const employees = ref([])
 const positions = ref([])
 const departments = ref([])
 
+const getPersonnelMovementDetails = async () => {
+  const {data} = await personnelMovement.getById(route.params.id);
+  console.log(data)
+  form.doc_number = data.data.doc_number
+  form.date = showDate(data.data.date, '-', true)
+  form.dateOfMovement = showDate(data.data.movement_date, '-', true)
+  form.organization = data.data.organization
+  form.position = data.data.position
+  form.department = data.data.department
+  form.employee = data.data.employee
+  form.salary = data.data.salary
+  form.basis = data.data.basis
+  form.comment = data.data.comment
+  form.author = data.data.author?.name
+  console.log(form)
 
+}
 const getOrganizations = async () => {
   const {data} = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   organizations.value = data.result.data
@@ -57,7 +74,7 @@ const getDepartments = async () => {
   departments.value = data.result.data
 }
 
-const addPersonalMovement = async () => {
+const updatePersonalMovement = async () => {
 
   const validateValue = [
     {
@@ -90,18 +107,19 @@ const addPersonalMovement = async () => {
   const body = {
     "date": changeTheDateForSending(form.date, '-'),
     "movement_date": changeTheDateForSending(form.dateOfMovement, '-'),
-    "organization_id": form.organization,
+    "organization_id": typeof form.organization === 'object' ? form.organization.id : form.organization,
     "basis": form.basis,
-    "department_id": form.department,
-    "position_id": form.position,
-    "employee_id": form.employee,
+    "department_id": typeof form.department === 'object' ? form.department.id : form.department,
+    "position_id": typeof form.position === 'object' ? form.position.id : form.position,
+    "employee_id": typeof form.employee === 'object' ? form.employee.id : form.employee,
     "salary": form.salary
   }
 
   try {
-    const res = await personnelMovement.add(body)
-    if (res.status === 201) {
-      showToast(addMessage)
+    const res = await personnelMovement.update(route.params.id, body)
+    console.log(res)
+    if (res.status === 200 || res.status === 201) {
+      showToast(editMessage)
       router.push('/hr/personnelMovement')
     }
   } catch (e) {
@@ -111,13 +129,14 @@ const addPersonalMovement = async () => {
 }
 
 onMounted(() => {
-  form.date = form.dateOfMovement = currentDate()
   form.author = JSON.parse(localStorage.getItem('user')).name || null
 
   getOrganizations()
   getEmployees()
   getPositions()
   getDepartments()
+
+  getPersonnelMovementDetails()
 })
 </script>
 
@@ -126,12 +145,12 @@ onMounted(() => {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Кадровое перемещение (создание)</span>
+          <span>Кадровое перемещение (просмотр)</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1">
-              <Icons title="Добавить" @click="addPersonalMovement" name="add"/>
+              <Icons title="Добавить" @click="updatePersonalMovement" name="add"/>
             </div>
           </div>
         </v-card>
@@ -142,7 +161,7 @@ onMounted(() => {
     <div style="height: 82.4vh; background: #fff;">
       <v-col style="height: 72vh" class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
-          <custom-text-field disabled value="Номер"/>
+          <custom-text-field readonly v-model="form.doc_number"/>
           <custom-text-field label="Дата" type="date" v-model="form.date"/>
           <custom-autocomplete label="Организация" :items="organizations" v-model="form.organization"/>
           <custom-autocomplete label="Сотрудник" :items="employees" v-model="form.employee"/>

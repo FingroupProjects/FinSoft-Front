@@ -69,7 +69,6 @@ const getDismissalData = async ({page, itemsPerPage, sortBy, search}) => {
   loading.value = true
   try {
     const { data } = await dismissal.get({page, itemsPerPage, sortBy}, search, filterData)
-    console.log(data)
     paginations.value = data.result.pagination
     dismissals.value = data.result.data
   } catch (e) {
@@ -298,9 +297,9 @@ onMounted(() => {
               <td>
                 <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
                   <CustomCheckbox
-                      v-model="markedID"
-                      :checked="markedID.includes(item.id)"
-                      @change="lineMarking(item)"
+                    v-model="markedID"
+                    :checked="markedID.includes(item.id)"
+                    @change="lineMarking(item)"
                   >
                     <span>{{ index + 1 }}</span>
                   </CustomCheckbox>

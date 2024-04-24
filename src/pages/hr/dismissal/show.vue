@@ -10,7 +10,7 @@ import currentDate from "../../../composables/date/currentDate.js";
 import dismissal from "../../../api/hr/dismissal.js";
 import changeTheDateForSending from "../../../composables/date/changeTheDateForSending.js";
 import showDate from "../../../composables/date/showDate.js";
-import {addMessage} from "../../../composables/constant/buttons.js";
+import {addMessage, editMessage} from "../../../composables/constant/buttons.js";
 import {useRoute, useRouter} from "vue-router";
 import validate from "../../../composables/validate/validate.js";
 
@@ -38,7 +38,15 @@ const getDismissalDetails = async () => {
     const {data} = await dismissal.getById(route.params.id)
     console.log(data)
     form.date = showDate(data.data.date, '-', true)
-    form.dateOfDismissal = data.data.firing_date
+    form.dateOfDismissal = showDate(data.data.firing_date, '-', true)
+    form.organization = data.data.organization
+    form.position = data.data.position
+    form.department = data.data.department
+    form.employee = data.data.employee
+    form.salary = data.data.salary
+    form.basis = data.data.basis
+    form.comment = data.data.comment
+    form.author = data.data.author.name
 
   } catch (e) {
     console.log(e)
@@ -55,7 +63,7 @@ const getEmployees = async () => {
   employees.value = data.result.data
 }
 
-const addDismissal = async () => {
+const updateDismissal = async () => {
 
   const validateValue = [
     {
@@ -81,14 +89,14 @@ const addDismissal = async () => {
     const body = {
       "date": changeTheDateForSending(form.date, '-'),
       "firing_date": changeTheDateForSending(form.dateOfDismissal, '-'),
-      "organization_id": form.organization,
+      "organization_id": typeof form.organization === 'object' ? form.organization.id : form.organization,
       "basis": form.basis,
-      "employee_id": form.employee,
+      "employee_id": typeof form.employee === 'object' ? form.employee.id : form.employee,
       "comment": form.comment
     }
-    const res = await dismissal.add(body)
-    if (res.status === 201) {
-      showDate(addMessage)
+    const res = await dismissal.update(route.params.id, body)
+    if (res.status === 200 || res.status === 201) {
+      showDate(editMessage)
       router.push('/hr/dismissal')
     }
   } catch (e) {
@@ -115,7 +123,7 @@ onMounted(() => {
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1">
-              <Icons title="Добавить" @click="addDismissal" name="add"/>
+              <Icons title="Добавить" @click="updateDismissal" name="add"/>
             </div>
           </div>
         </v-card>
