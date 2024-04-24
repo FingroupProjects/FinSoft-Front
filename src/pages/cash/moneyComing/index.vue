@@ -17,7 +17,7 @@ import {
   restoreMessage,
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
-import clientPaymentApi from "../../../api/documents/clientPayment.js";
+import clientPaymentApi from "../../../api/documents/cashRegister.js";
 ("../../../api/documents/sale.js");
 import showDate from "../../../composables/date/showDate.js";
 
@@ -84,6 +84,7 @@ const getSellingGoods = async ({ page, itemsPerPage, sortBy, search }) => {
   loading.value = true;
   try {
     const { data } = await clientPaymentApi.get(
+      'PKO',
       { page, itemsPerPage, sortBy },
       search,
       filterData
