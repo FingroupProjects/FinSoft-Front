@@ -17,7 +17,8 @@ import {
   restoreMessage,
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
-import pkoApi from "../../../api/documents/pko.js";
+import clientPaymentApi from "../../../api/documents/cashRegister.js";
+("../../../api/documents/sale.js");
 import showDate from "../../../composables/date/showDate.js";
 
 const router = useRouter();
@@ -65,7 +66,7 @@ const headers = ref([
   { title: "Касса", key: "cashRegister.name" },
   { title: "Организация", key: "organization.name" },
   { title: "Операция", key: "storage.name" },
-  { title: "Плательщик", key: "cashRegister.responsiblePerson.name" },
+  { title: "Получатель", key: "cashRegister.responsiblePerson.name" },
   { title: "Сумма", key: "currency.name" },
   { title: "Валюта", key: "currency.name" },
   { title: "Автор", key: "sender.name" },
@@ -82,7 +83,8 @@ const getSellingGoods = async ({ page, itemsPerPage, sortBy, search }) => {
   filterModal.value = false;
   loading.value = true;
   try {
-    const { data } = await pkoApi.get(
+    const { data } = await clientPaymentApi.get(
+      "RKO",
       { page, itemsPerPage, sortBy },
       search,
       filterData
@@ -280,9 +282,10 @@ watch(
             <tr
               @mouseenter="hoveredRowIndex = index"
               @mouseleave="hoveredRowIndex = null"
-              @dblclick="$router.push(`/moneyComingEdit/${item.id}`)"
+            
               :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
+            <!-- @dblclick="$router.push(`/moneyComingEdit/${item.id}`)" -->
               <td>
                 <template
                   v-if="hoveredRowIndex === index || markedID.includes(item.id)"
@@ -313,7 +316,7 @@ watch(
               <td>{{ item.cashRegister.responsiblePerson.name }}</td>
               <td>{{ item.sum }}</td>
               <td>{{ item.currency }}</td>
-              <!-- <td>{{ item.sender.name }}</td> -->
+              <td>{{ item.author.name }}</td>
             </tr>
           </template>
         </v-data-table-server>

@@ -14,7 +14,7 @@ import counterpartyApi from "../../../api/list/counterparty.js";
 import cashRegisterApi from "../../../api/list/cashRegister.js";
 import organizationApi from "../../../api/list/organizations.js";
 import currentDate from "../../../composables/date/currentDate.js";
-import clientPaymentApi from "../../../api/documents/clientPayment.js";
+import clientPaymentApi from "../../../api/documents/cashRegister.js";
 import organizationBillApi from "../../../api/list/organizationBill.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import { add, addMessage } from "../../../composables/constant/buttons.js";
