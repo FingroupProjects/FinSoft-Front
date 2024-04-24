@@ -183,6 +183,11 @@ const routes = [
     component: () => import("../pages/hr/personnelMovement/index.vue"),
   },
   {
+    path: "/hr/personnelMovement/:id",
+    name: "personnelMovementShow",
+    component: () => import("../pages/hr/personnelMovement/show.vue"),
+  },
+  {
     path: "/hr/personnelMovementCreate",
     name: "personnelMovementCreate",
     component: () => import("../pages/hr/personnelMovement/create.vue"),
