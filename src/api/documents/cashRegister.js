@@ -15,7 +15,7 @@ export default {
     return api.get(`/cash-store/show/${id}`);
   },
   getTypes(type = "RKO") {
-    return api.get(`/cash-store/operationTypes`, {
+    return api.get(`/operationTypes`, {
       params: {
         type: type,
       },
@@ -55,29 +55,29 @@ export default {
   updatePaymentFromClient(id, data) {
     return api.patch(`cash-store/client-payment/${id}`, data);
   },
-  updateWriteOff(data) {
-    return api.patch("cash-store/withdrawal", data);
+  updateWriteOff(id, data) {
+    return api.patch(`cash-store/withdrawal/${id}`, data);
   },
-  anotherCashRegister(data) {
-    return api.patch("cash-store/another-cash-register", data);
+  updateAnotherCashRegister(id, data) {
+    return api.patch(`cash-store/another-cash-register/${id}`, data);
   },
-  investment(data) {
-    return api.patch("cash-store/investment", data);
+  updateInvestment(id, data) {
+    return api.patch(`cash-store/investment/${id}`, data);
   },
-  creditReceive(data) {
-    return api.patch("cash-store/credit-receive", data);
+  updateCreditReceive(id, data) {
+    return api.patch(`cash-store/credit-receive/${id}`, data);
   },
-  providerRefund(data) {
-    return api.patch("cash-store/provider-refund", data);
+  updateProviderRefund(id, data) {
+    return api.patch(`cash-store/provider-refund/${id}`, data);
   },
-  accountablePersonRefund(data) {
-    return api.patch("cash-store/accountable-person-refund", data);
+  updateAccountablePersonRefund(id, data) {
+    return api.patch(`cash-store/accountable-person-refund/${id}`, data);
   },
-  otherExpenses(data) {
-    return api.patch("cash-store/other-expenses", data);
+  updateOtherExpenses(id, data) {
+    return api.patch(`cash-store/other-expenses/${id}`, data);
   },
-  otherIncomes(data) {
-    return api.patch("cash-store/other-incomes", data);
+  updateOtherIncomes(id, data) {
+    return api.patch(`cash-store/other-incomes/${id}`, data);
   },
   // update(id, data) {
   //   return api.patch(`/document/update/${id}`, data)

@@ -89,7 +89,6 @@ const getSellingGoods = async ({ page, itemsPerPage, sortBy, search }) => {
       search,
       filterData
     );
-    console.log(data);
     paginations.value = data.result.pagination;
     moneyComing.value = data.result.data;
     loading.value = false;
@@ -282,10 +281,9 @@ watch(
             <tr
               @mouseenter="hoveredRowIndex = index"
               @mouseleave="hoveredRowIndex = null"
-            
+              @dblclick="$router.push(`/moneyReturnEdit/${item.id}`)"
               :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
-            <!-- @dblclick="$router.push(`/moneyComingEdit/${item.id}`)" -->
               <td>
                 <template
                   v-if="hoveredRowIndex === index || markedID.includes(item.id)"

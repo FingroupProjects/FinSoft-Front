@@ -152,11 +152,11 @@ const routes = [
     name: "moneyReturnCreate",
     component: () => import("../pages/cash/moneyReturn/create.vue"),
   },
-  // {
-  //   path: "/moneyReturnEdit/:id",
-  //   name: "moneyReturnEdit",
-  //   component: () => import("../pages/cash/moneyReturn/show.vue"),
-  // },
+  {
+    path: "/moneyReturnEdit/:id",
+    name: "moneyReturnEdit",
+    component: () => import("../pages/cash/moneyReturn/show.vue"),
+  },
   {
     path: "/hr/recruitment",
     name: "recruitment",

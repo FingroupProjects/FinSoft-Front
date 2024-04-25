@@ -3,8 +3,8 @@ import {
   BASE_COLOR,
   FIELD_COLOR,
 } from "../../../composables/constant/colors.js";
-import validate from "./validate.js";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
+import validate from "../moneyComing/validate.js";
 import { ref, reactive, onMounted, watch } from "vue";
 import employeeApi from "../../../api/list/employee.js";
 import Icons from "../../../composables/Icons/Icons.vue";
@@ -20,10 +20,14 @@ import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import { add, addMessage } from "../../../composables/constant/buttons.js";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
+import showDate from "../../../composables/date/showDate.js";
 
+const route = useRoute();
 const router = useRouter();
 
 const author = ref("");
+
+const id = ref(null);
 
 const typeOperations = ref([
   { id: 1, title: "Оплата от клиента" },
@@ -46,6 +50,7 @@ const form = reactive({
   comment: null,
   employee: null,
   incomeItem: null,
+  doc_number: "Номер",
   balanceItem: null,
   cpAgreement: null,
   sender_cash: null,
@@ -73,9 +78,14 @@ watch(
 watch(
   () => form.counterparty,
   (newValue) => {
+    if (form.counterparty === null) return;
     form.cpAgreement = null;
     cpAgreements.value = [];
-    getCpAgreements(form.counterparty);
+    getCpAgreements(
+      typeof form.counterparty === "object"
+        ? form.counterparty.id
+        : form.counterparty
+    );
   }
 );
 
@@ -90,6 +100,44 @@ const resetFields = () => {
   form.counterparty = null;
 };
 
+const getTypes = async () => {
+  try {
+    const {
+      data: { result },
+    } = await clientPaymentApi.getTypes("RKO");
+    typeOperations.value = result;
+    form.typeOperation = typeOperations.value[0].title_ru;
+    console.log(result);
+  } catch (e) {
+    console.error(e);
+  }
+};
+const getSellingGoods = async () => {
+  try {
+    const {
+      data: { result },
+    } = await clientPaymentApi.getById(route.params.id);
+    (form.sum = result.sum), (author.value = result.author.name);
+    (form.base = result.basis),
+      (form.doc_number = result.doc_number),
+      (form.date = showDate(result.created_at, "-", true)),
+      (form.cash = result.cashRegister),
+      (form.comment = result.comment),
+      (form.employee = result.employee),
+      (form.incomeItem = result.incomeItem),
+      (form.balanceItem = result.balanceItem),
+      (form.counterparty = result.counterparty),
+      (form.sender_cash = result.sender_cash),
+      (form.organization = result.organization),
+      (form.organization_bill = result.organization_bill),
+      setTimeout(() => {
+        form.cpAgreement = result.counterpartyAgreement;
+      });
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 const firstAccess = async () => {
   if (
     !validate(form.sum, form.base, form.date, form.organization, form.cash) ||
@@ -100,19 +148,28 @@ const firstAccess = async () => {
   }
   const body = {
     date: form.date,
-    organization_id: form.organization,
-    cash_register_id: form.cash,
+    organization_id:
+      typeof form.organization === "object"
+        ? form.organization.id
+        : form.organization,
+    cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    counterparty_id: form.counterparty,
-    counterparty_agreement_id: form.cpAgreement,
+    counterparty_id:
+      typeof form.counterparty === "object"
+        ? form.counterparty.id
+        : form.counterparty,
+    counterparty_agreement_id:
+      typeof form.cpAgreement === "object"
+        ? form.cpAgreement.id
+        : form.cpAgreement,
     basis: form.base,
     comment: form.comment,
-    type: "PKO",
+    type: "RKO",
   };
   try {
-    const res = await clientPaymentApi.paymentFromClient(body);
+    const res = await clientPaymentApi.updatePaymentFromClient(id.value, body);
     showToast(addMessage, "green");
-    router.push("/moneyComing");
+    router.push("/moneyReturn");
   } catch (e) {
     console.error(e);
   }
@@ -127,18 +184,24 @@ const secondAccess = async () => {
   }
   const body = {
     date: form.date,
-    organization_id: form.organization,
-    cash_register_id: form.cash,
+    organization_id:
+      typeof form.organization === "object"
+        ? form.organization.id
+        : form.organization,
+    cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    organization_bill_id: form.organization_bill,
+    organization_bill_id:
+      typeof form.organization_bill === "object"
+        ? form.organization_bill.id
+        : form.organization_bill,
     basis: form.base,
     comment: form.comment,
-    type: "PKO",
+    type: "RKO",
   };
   try {
-    const res = await clientPaymentApi.writeOff(body);
+    const res = await clientPaymentApi.updateWriteOff(id.value, body);
     showToast(addMessage, "green");
-    router.push("/moneyComing");
+    router.push("/moneyReturn");
   } catch (e) {
     console.error(e);
   }
@@ -152,18 +215,24 @@ const thirdAccess = async () => {
   }
   const body = {
     date: form.date,
-    organization_id: form.organization,
-    cash_register_id: form.cash,
+    organization_id:
+      typeof form.organization === "object"
+        ? form.organization.id
+        : form.organization,
+    cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    sender_cash_register_id: form.sender_cash,
+    sender_cash_register_id:
+      typeof form.sender_cash === "object"
+        ? form.sender_cash.id
+        : form.sender_cash,
     basis: form.base,
     comment: form.comment,
-    type: "PKO",
+    type: "RKO",
   };
   try {
-    const res = await clientPaymentApi.anotherCashRegister(body);
+    const res = await clientPaymentApi.updateAnotherCashRegister(id.value, body);
     showToast(addMessage, "green");
-    router.push("/moneyComing");
+    router.push("/moneyReturn");
   } catch (e) {
     console.error(e);
   }
@@ -178,19 +247,28 @@ const fourthAccess = async () => {
   }
   const body = {
     date: form.date,
-    organization_id: form.organization,
-    cash_register_id: form.cash,
+    organization_id:
+      typeof form.organization === "object"
+        ? form.organization.id
+        : form.organization,
+    cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    counterparty_id: form.counterparty,
-    counterparty_agreement_id: form.cpAgreement,
+    counterparty_id:
+      typeof form.counterparty === "object"
+        ? form.counterparty.id
+        : form.counterparty,
+    counterparty_agreement_id:
+      typeof form.cpAgreement === "object"
+        ? form.cpAgreement.id
+        : form.cpAgreement,
     basis: form.base,
     comment: form.comment,
-    type: "PKO",
+    type: "RKO",
   };
   try {
-    const res = await clientPaymentApi.investment(body);
+    const res = await clientPaymentApi.updateInvestment(id.value, body);
     showToast(addMessage, "green");
-    router.push("/moneyComing");
+    router.push("/moneyReturn");
   } catch (e) {
     console.error(e);
   }
@@ -206,19 +284,28 @@ const fifthAccess = async () => {
   }
   const body = {
     date: form.date,
-    organization_id: form.organization,
-    cash_register_id: form.cash,
+    organization_id:
+      typeof form.organization === "object"
+        ? form.organization.id
+        : form.organization,
+    cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    counterparty_id: form.counterparty,
-    counterparty_agreement_id: form.cpAgreement,
+    counterparty_id:
+      typeof form.counterparty === "object"
+        ? form.counterparty.id
+        : form.counterparty,
+    counterparty_agreement_id:
+      typeof form.cpAgreement === "object"
+        ? form.cpAgreement.id
+        : form.cpAgreement,
     basis: form.base,
     comment: form.comment,
-    type: "PKO",
+    type: "RKO",
   };
   try {
-    const res = await clientPaymentApi.creditReceive(body);
+    const res = await clientPaymentApi.updateCreditReceive(id.value, body);
     showToast(addMessage, "green");
-    router.push("/moneyComing");
+    router.push("/moneyReturn");
   } catch (e) {
     console.error(e);
   }
@@ -234,19 +321,28 @@ const sixthAccess = async () => {
   }
   const body = {
     date: form.date,
-    organization_id: form.organization,
-    cash_register_id: form.cash,
+    organization_id:
+      typeof form.organization === "object"
+        ? form.organization.id
+        : form.organization,
+    cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    counterparty_id: form.counterparty,
-    counterparty_agreement_id: form.cpAgreement,
+    counterparty_id:
+      typeof form.counterparty === "object"
+        ? form.counterparty.id
+        : form.counterparty,
+    counterparty_agreement_id:
+      typeof form.cpAgreement === "object"
+        ? form.cpAgreement.id
+        : form.cpAgreement,
     basis: form.base,
     comment: form.comment,
-    type: "PKO",
+    type: "RKO",
   };
   try {
-    const res = await clientPaymentApi.providerRefund(body);
+    const res = await clientPaymentApi.updateProviderRefund(id.value, body);
     showToast(addMessage, "green");
-    router.push("/moneyComing");
+    router.push("/moneyReturn");
   } catch (e) {
     console.error(e);
   }
@@ -261,18 +357,21 @@ const seventhAccess = async () => {
   }
   const body = {
     date: form.date,
-    organization_id: form.organization,
-    cash_register_id: form.cash,
+    organization_id:
+      typeof form.organization === "object"
+        ? form.organization.id
+        : form.organization,
+    cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    employee: form.employee,
+    employee_id: typeof form.employee === "object" ? form.employee.id : form.employee,
     basis: form.base,
     comment: form.comment,
-    type: "PKO",
+    type: "RKO",
   };
   try {
-    const res = await clientPaymentApi.accountablePersonRefund(body);
+    const res = await clientPaymentApi.updateAccountablePersonRefund(id.value, body);
     showToast(addMessage, "green");
-    router.push("/moneyComing");
+    router.push("/moneyReturn");
   } catch (e) {
     console.error(e);
   }
@@ -287,18 +386,21 @@ const eighthAccess = async () => {
   }
   const body = {
     date: form.date,
-    organization_id: form.organization,
-    cash_register_id: form.cash,
+    organization_id:
+      typeof form.organization === "object"
+        ? form.organization.id
+        : form.organization,
+    cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    balance_article_id: form.incomeItem,
+    balance_article_id: typeof form.incomeItem === "object" ? form.incomeItem.id : form.incomeItem,
     basis: form.base,
     comment: form.comment,
-    type: "PKO",
+    type: "RKO",
   };
   try {
-    const res = await clientPaymentApi.otherExpenses(body);
+    const res = await clientPaymentApi.updateOtherExpenses(id.value, body);
     showToast(addMessage, "green");
-    router.push("/moneyComing");
+    router.push("/moneyReturn");
   } catch (e) {
     console.error(e);
   }
@@ -314,18 +416,21 @@ const ninthAccess = async () => {
 
   const body = {
     date: form.date,
-    organization_id: form.organization,
-    cash_register_id: form.cash,
+    organization_id:
+      typeof form.organization === "object"
+        ? form.organization.id
+        : form.organization,
+    cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    balance_article_id: form.balanceItem,
+    balance_article_id: typeof form.balanceItem === "object" ? form.balanceItem.id : form.balanceItem,
     basis: form.base,
     comment: form.comment,
-    type: "PKO",
+    type: "RKO",
   };
   try {
-    const res = await clientPaymentApi.otherExpenses(body);
+    const res = await clientPaymentApi.updateOtherIncomes(id.value, body);
     showToast(addMessage, "green");
-    router.push("/moneyComing");
+    router.push("/moneyReturn");
   } catch (e) {
     console.error(e);
   }
@@ -333,31 +438,31 @@ const ninthAccess = async () => {
 
 const getAccess = () => {
   switch (form.typeOperation) {
-    case "Оплата от клиента":
+    case "Возврат клиенту":
       firstAccess();
       break;
-    case "Снятие с P/C":
+    case "Пополнение с Р/С":
       secondAccess();
       break;
-    case "Получение с другой кассы":
+    case "Отправка на другую кассу":
       thirdAccess();
       break;
-    case "Вложение":
+    case "Возврат вложения":
       fourthAccess();
       break;
-    case "Получение кредита":
+    case "Оплата кредита":
       fifthAccess();
       break;
-    case "Возврат от поставщика":
+    case "Возврат поставщику":
       sixthAccess();
       break;
-    case "Возврат от подотчетника":
+    case "Оплата аванс подотчетнику":
       seventhAccess();
       break;
-    case "Прочие доходы":
+    case "Прочие расходы":
       eighthAccess();
       break;
-    case "Прочие приходы":
+    case "Прочие оплаты":
       ninthAccess();
       break;
   }
@@ -444,9 +549,10 @@ const getEmployees = async () => {
 };
 
 onMounted(async () => {
-  form.date = currentDate();
-  author.value = JSON.parse(localStorage.getItem("user")).name || null;
+  id.value = route.params.id;
   await Promise.all([
+    getTypes(),
+    getSellingGoods(),
     getEmployees(),
     getIncomeItems(),
     getCashregisters(),
@@ -468,7 +574,7 @@ function validateNumberInput(event) {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase">
         <div class="d-flex align-center ga-2 ms-4">
-          <span>ПКО (создание)</span>
+          <span>РКО (изменение)</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
@@ -488,7 +594,7 @@ function validateNumberInput(event) {
         <div class="d-flex flex-wrap ga-4 mb-2">
           <custom-text-field
             readonly
-            :value="'Номер'"
+            :value="form.doc_number"
             min-width="140"
             max-width="110"
           />
@@ -542,43 +648,42 @@ function validateNumberInput(event) {
                   v-for="typeOperation in typeOperations"
                   :color="BASE_COLOR"
                   :key="typeOperation.id"
-                  :label="typeOperation.title"
-                  :value="typeOperation.title"
-                  @change="form.typeOperation = typeOperation.title"
+                  :label="typeOperation.title_ru"
+                  :value="typeOperation.title_ru"
                 ></v-radio>
               </v-radio-group>
             </div>
           </div>
           <div class="d-flex flex-column ga-4">
-            <div v-if="form.typeOperation === 'Снятие с P/C'">
+            <div v-if="form.typeOperation === 'Пополнение с Р/С'">
               <custom-autocomplete
                 label="Банковский счет"
                 :items="organizationBills"
                 v-model="form.organization_bill"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Получение с другой кассы'">
+            <div v-else-if="form.typeOperation === 'Отправка на другую кассу'">
               <custom-autocomplete
                 label="Касса отправителя"
                 :items="cashRegisters"
                 v-model="form.sender_cash"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Возврат от подотчетника'">
+            <div v-else-if="form.typeOperation === 'Оплата аванс подотчетнику'">
               <custom-autocomplete
                 label="Сотрудник"
                 :items="employees"
                 v-model="form.employee"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Прочие доходы'">
+            <div v-else-if="form.typeOperation === 'Прочие расходы'">
               <custom-autocomplete
                 label="Статья дохода"
                 :items="incomeItems"
                 v-model="form.incomeItem"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Прочие приходы'">
+            <div v-else-if="form.typeOperation === 'Прочие оплаты'">
               <custom-autocomplete
                 label="Статья баланса"
                 :items="incomeItems"
