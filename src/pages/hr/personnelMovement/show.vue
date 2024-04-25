@@ -39,7 +39,6 @@ const departments = ref([])
 
 const getPersonnelMovementDetails = async () => {
   const {data} = await personnelMovement.getById(route.params.id);
-  console.log(data)
   form.doc_number = data.data.doc_number
   form.date = showDate(data.data.date, '-', true)
   form.dateOfMovement = showDate(data.data.movement_date, '-', true)
@@ -51,8 +50,6 @@ const getPersonnelMovementDetails = async () => {
   form.basis = data.data.basis
   form.comment = data.data.comment
   form.author = data.data.author?.name
-  console.log(form)
-
 }
 const getOrganizations = async () => {
   const {data} = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
