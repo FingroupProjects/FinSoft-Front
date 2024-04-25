@@ -6,12 +6,12 @@ import Icons from "../../../composables/Icons/Icons.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
+import {BASE_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 import {
-  removeMessage,
-  warningMessage,
   ErrorSelectMessage,
-  restoreMessage
+  removeMessage,
+  restoreMessage,
+  warningMessage
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
 import procurementApi from '../../../api/documents/procurement.js';
@@ -22,6 +22,7 @@ import storageApi from "../../../api/list/storage.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import currencyApi from "../../../api/list/currency.js";
 import user from "../../../api/list/user.js";
+
 const router = useRouter()
 
 const loading = ref(true)
@@ -34,13 +35,11 @@ const markedID = ref([]);
 const markedItem = ref([])
 const search = ref('')
 const debounceSearch = ref('')
-const nameRef = ref(null)
-const descriptionRef = ref(null)
 const procurements = ref([])
 const paginations = ref([])
 const showConfirmDialog = ref(false);
 const showModal = ref(false);
-const count = ref(0);
+const counterFilter = ref(0);
 
 
 const organizations = ref([])
@@ -73,8 +72,8 @@ const headers = ref([
   {title: 'Валюта', key: 'currency.name'},
 ])
 
-const getProcurementData = async ({page, itemsPerPage, sortBy, search}) => {
-  count.value = 0;
+const getProcurementData = async ({page, itemsPerPage, sortBy, search} = {}) => {
+  counterFilter.value = 0;
   countFilter()
   const filterData = filterForm.value
   filterModal.value = false
@@ -88,27 +87,21 @@ const getProcurementData = async ({page, itemsPerPage, sortBy, search}) => {
   }
 }
 
-function countFilter() {
-
+const  countFilter = () => {
   for (const key in filterForm.value) {
     if (filterForm.value[key] !== null) {
-      count.value++;
+      counterFilter.value++;
     }
   }
-
-  return count;
 }
 
 
 
 
 const massDel = async () => {
-
   try {
     const {status} = await procurementApi.massDeletion({ids: markedID.value})
-
     if (status === 200) {
-
       showToast(removeMessage, 'red')
       await getProcurementData({})
       markedID.value = []
@@ -174,34 +167,19 @@ const lineMarking = (item) => {
   markedItem.value = item;
 }
 
-const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
-  filterModal.value = {}
+const closeFilterModal = async () => {
+  filterModal.value = false
   cleanFilterForm()
-  await getProcurementData({page, itemsPerPage, sortBy, search})
-
+  await getProcurementData()
 }
 
 const cleanFilterForm = () => {
   filterForm.value = {}
 }
 
-
-watch(dialog, newVal => {
-  if (!newVal) {
-    nameRef.value = null
-    descriptionRef.value = null
-    loadingRate.value = true
-  } else {
-    markedID.value = [markedID.value[markedID.value.length - 1]];
-  }
-})
-
-
 const getAuthors = async () => {
   const { data } = await user.getAuthors();
-  
-  authors.value = data.result
-  
+  authors.value = data.result.data
 }
 
 const getOrganizations = async () => {
@@ -228,7 +206,10 @@ const getCurrencies = async () => {
   const { data } = await currencyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   
   currencies.value = data.result.data
- 
+}
+
+const show = (item) => {
+  window.open(`/procurementOfGoods/${item.id}`, '_blank')
 }
 
 onMounted(() => {
@@ -238,12 +219,13 @@ onMounted(() => {
   getStorages()
   getCurrencies()
   getAuthors()
- 
 })
 
-const show = (item) => {
-  window.open(`/procurementOfGoods/${item.id}`, '_blank')
-}
+watch(dialog, newVal => {
+  if (newVal) {
+    markedID.value = [markedID.value[markedID.value.length - 1]]
+  }
+})
 
 watch(markedID, (newVal) => {
   markedItem.value = procurements.value.find((el) => el.id === newVal[0]);
@@ -296,7 +278,7 @@ watch(search, debounce((newValue) => {
                 @click="filterModal = true"
                 class="mt-1"
             />
-            <span v-if="count !== 0" class="countFilter">{{ count }}</span>
+            <span v-if="counterFilter !== 0" class="countFilter">{{ counterFilter }}</span>
           </div>
         </v-card>
       </div>
@@ -363,7 +345,6 @@ watch(search, debounce((newValue) => {
           </template>
         </v-data-table-server>
       </v-card>
-
       <v-card>
         <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup.esc="closeFilterModal">
           <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="450"
@@ -379,8 +360,8 @@ watch(search, debounce((newValue) => {
                   </div>
                   <div class="d-flex ga-2">
                     <custom-autocomplete label="Организация" :items="organizations"  v-model="filterForm.organization_id"/>
-                  <custom-autocomplete label="Поставщик" :items="counterparties" v-model="filterForm.counterparty_id"/>               
-                 </div>
+                    <custom-autocomplete label="Поставщик" :items="counterparties" v-model="filterForm.counterparty_id"/>
+                  </div>
                   <div class="d-flex ga-2">
                   <custom-autocomplete label="Склад" :items="storages" v-model="filterForm.storage_id"/>
                   <custom-autocomplete label="Валюта" :items="currencies" v-model="filterForm.currency_id"/>

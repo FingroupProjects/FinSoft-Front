@@ -202,7 +202,7 @@ watch(search, debounce((newValue) => {
 const getAuthors = async () => {
   const { data } = await user.getAuthors();
   
-  authors.value = data.result
+  authors.value = data.result.data
   
 }
 
@@ -228,9 +228,11 @@ const getStorages = async () => {
 
 const getCurrencies = async () => {
   const { data } = await currencyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  
   currencies.value = data.result.data
- 
+}
+
+const show = (item) => {
+  window.open(`/providerReturn/${item.id}`, '_blank')
 }
 
 onMounted(() => {
@@ -319,7 +321,7 @@ onMounted(() => {
             <tr
                 @mouseenter="hoveredRowIndex = index"
                 @mouseleave="hoveredRowIndex = null"
-                @dblclick="$router.push(`/providerReturn/${item.id}`)"
+                @dblclick="show(item)"
                 :class="{'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
               <td>

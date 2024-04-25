@@ -82,21 +82,17 @@ const getProviderOrderData = async ({page, itemsPerPage, sortBy, search}) => {
     const { data } = await providerOrderApi.get({page, itemsPerPage, sortBy}, search, filterData)
     paginations.value = data.result.pagination
     providerOrders.value = data.result.data
-    console.log(providerOrders.value)
     loading.value = false
   } catch (e) {
   }
 }
 
 function countFilter() {
-
   for (const key in filterForm.value) {
     if (filterForm.value[key] !== null) {
       count.value++;
     }
   }
-
-  return count;
 }
 
 
@@ -175,7 +171,7 @@ const lineMarking = (item) => {
 }
 
 const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
-  filterModal.value = {}
+  filterModal.value = false
   cleanFilterForm()
   await getProviderOrderData({page, itemsPerPage, sortBy, search})
 
@@ -200,7 +196,7 @@ watch(dialog, newVal => {
 const getAuthors = async () => {
   const { data } = await user.getAuthors();
   
-  authors.value = data.result
+  authors.value = data.result.data
 }
 
 const getOrganizations = async () => {
@@ -225,9 +221,11 @@ const getCpAgreements = async () => {
 
 const getCurrencies = async () => {
   const { data } = await currencyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  
   currencies.value = data.result.data
- 
+}
+
+const show = (item) => {
+  window.open(`/providerOrder/${item.id}`, '_blank')
 }
 
 onMounted(() => {
@@ -322,7 +320,7 @@ watch(search, debounce((newValue) => {
             <tr
                 @mouseenter="hoveredRowIndex = index"
                 @mouseleave="hoveredRowIndex = null"
-                @dblclick="$router.push(`/providerOrder/${item.id}`)"
+                @dblclick="show(item)"
                 :class="{'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
               <td>
