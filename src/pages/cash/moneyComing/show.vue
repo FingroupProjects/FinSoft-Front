@@ -29,17 +29,7 @@ const author = ref("");
 
 const id = ref(null);
 
-const typeOperations = ref([
-  { id: 1, title: "Оплата от клиента" },
-  { id: 2, title: "Снятие с P/C" },
-  { id: 3, title: "Получение с другой кассы" },
-  { id: 4, title: "Вложение" },
-  { id: 5, title: "Получение кредита" },
-  { id: 6, title: "Возврат от поставщика" },
-  { id: 7, title: "Возврат от подотчетника" },
-  { id: 8, title: "Прочие доходы" },
-  { id: 9, title: "Прочие приходы" },
-]);
+const typeOperations = ref([]);
 
 const form = reactive({
   sum: null,
@@ -57,7 +47,7 @@ const form = reactive({
   counterparty: null,
   organization: null,
   organization_bill: null,
-  typeOperation: typeOperations.value[0].title,
+  typeOperation: null,
 });
 
 const employees = ref([]);
@@ -78,7 +68,7 @@ watch(
 watch(
   () => form.counterparty,
   (newValue) => {
-    if(form.counterparty === null) return
+    if (form.counterparty === null) return;
     form.cpAgreement = null;
     cpAgreements.value = [];
     getCpAgreements(
@@ -104,8 +94,9 @@ const getTypes = async () => {
   try {
     const {
       data: { result },
-    } = await clientPaymentApi.getTypes();
-    // typeOperations.value = result;
+    } = await clientPaymentApi.getTypes("PKO");
+    typeOperations.value = result;
+    form.typeOperation = typeOperations.value[0].title_ru;
   } catch (e) {
     console.error(e);
   }
@@ -115,22 +106,23 @@ const getSellingGoods = async () => {
     const {
       data: { result },
     } = await clientPaymentApi.getById(route.params.id);
-    (form.sum = result.sum), (author.value = result.author.name);
+    (form.sum = result.sum),
+    (author.value = result.author.name);
     (form.base = result.basis),
-      (form.doc_number = result.doc_number),
-      (form.date = showDate(result.created_at, "-", true)),
-      (form.cash = result.cashRegister),
-      (form.comment = result.comment),
-      (form.employee = result.employee),
-      (form.incomeItem = result.incomeItem),
-      (form.balanceItem = result.balanceItem),
-      (form.counterparty = result.counterparty),
-      (form.sender_cash = result.sender_cash),
-      (form.organization = result.organization),
-      (form.organization_bill = result.organization_bill),
-      setTimeout(() => {
-        form.cpAgreement = result.counterpartyAgreement;
-      });
+    (form.doc_number = result.doc_number),
+    (form.date = showDate(result.created_at, "-", true)),
+    (form.cash = result.cashRegister),
+    (form.comment = result.comment),
+    (form.employee = result.employee),
+    (form.incomeItem = result.incomeItem),
+    (form.balanceItem = result.balanceItem),
+    (form.counterparty = result.counterparty),
+    (form.sender_cash = result.sender_cash),
+    (form.organization = result.organization),
+    (form.organization_bill = result.organization_bill),
+    setTimeout(() => {
+      form.cpAgreement = result.counterpartyAgreement;
+    });
   } catch (e) {
     console.error(e);
   }
@@ -162,7 +154,6 @@ const firstAccess = async () => {
         : form.cpAgreement,
     basis: form.base,
     comment: form.comment,
-    type_operation: form.typeOperation,
     type: "PKO",
   };
   try {
@@ -183,17 +174,22 @@ const secondAccess = async () => {
   }
   const body = {
     date: form.date,
-    organization_id: form.organization,
-    cash_register_id: form.cash,
+    organization_id:
+      typeof form.organization === "object"
+        ? form.organization.id
+        : form.organization,
+    cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    organization_bill_id: form.organization_bill,
+    organization_bill_id:
+      typeof form.organization_bill === "object"
+        ? form.organization_bill.id
+        : form.organization_bill,
     basis: form.base,
     comment: form.comment,
-    type_operation: form.typeOperation,
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.writeOff(body);
+    const res = await clientPaymentApi.updateWriteOff(id.value, body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -209,17 +205,22 @@ const thirdAccess = async () => {
   }
   const body = {
     date: form.date,
-    organization_id: form.organization,
-    cash_register_id: form.cash,
+    organization_id:
+      typeof form.organization === "object"
+        ? form.organization.id
+        : form.organization,
+    cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    sender_cash_register_id: form.sender_cash,
+    sender_cash_register_id:
+      typeof form.sender_cash === "object"
+        ? form.sender_cash.id
+        : form.sender_cash,
     basis: form.base,
     comment: form.comment,
-    type_operation: form.typeOperation,
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.anotherCashRegister(body);
+    const res = await clientPaymentApi.updateAnotherCashRegister(id.value, body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -236,18 +237,26 @@ const fourthAccess = async () => {
   }
   const body = {
     date: form.date,
-    organization_id: form.organization,
-    cash_register_id: form.cash,
+    organization_id:
+      typeof form.organization === "object"
+        ? form.organization.id
+        : form.organization,
+    cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    counterparty_id: form.counterparty,
-    counterparty_agreement_id: form.cpAgreement,
+    counterparty_id:
+      typeof form.counterparty === "object"
+        ? form.counterparty.id
+        : form.counterparty,
+    counterparty_agreement_id:
+      typeof form.cpAgreement === "object"
+        ? form.cpAgreement.id
+        : form.cpAgreement,
     basis: form.base,
     comment: form.comment,
-    type_operation: form.typeOperation,
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.investment(body);
+    const res = await clientPaymentApi.updateInvestment(id.value, body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -265,18 +274,26 @@ const fifthAccess = async () => {
   }
   const body = {
     date: form.date,
-    organization_id: form.organization,
-    cash_register_id: form.cash,
+    organization_id:
+      typeof form.organization === "object"
+        ? form.organization.id
+        : form.organization,
+    cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    counterparty_id: form.counterparty,
-    counterparty_agreement_id: form.cpAgreement,
+    counterparty_id:
+      typeof form.counterparty === "object"
+        ? form.counterparty.id
+        : form.counterparty,
+    counterparty_agreement_id:
+      typeof form.cpAgreement === "object"
+        ? form.cpAgreement.id
+        : form.cpAgreement,
     basis: form.base,
     comment: form.comment,
-    type_operation: form.typeOperation,
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.creditReceive(body);
+    const res = await clientPaymentApi.updateCreditReceive(id.value, body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -294,18 +311,26 @@ const sixthAccess = async () => {
   }
   const body = {
     date: form.date,
-    organization_id: form.organization,
-    cash_register_id: form.cash,
+    organization_id:
+      typeof form.organization === "object"
+        ? form.organization.id
+        : form.organization,
+    cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    counterparty_id: form.counterparty,
-    counterparty_agreement_id: form.cpAgreement,
+    counterparty_id:
+      typeof form.counterparty === "object"
+        ? form.counterparty.id
+        : form.counterparty,
+    counterparty_agreement_id:
+      typeof form.cpAgreement === "object"
+        ? form.cpAgreement.id
+        : form.cpAgreement,
     basis: form.base,
     comment: form.comment,
-    type_operation: form.typeOperation,
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.providerRefund(body);
+    const res = await clientPaymentApi.updateProviderRefund(id.value, body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -322,17 +347,19 @@ const seventhAccess = async () => {
   }
   const body = {
     date: form.date,
-    organization_id: form.organization,
-    cash_register_id: form.cash,
+    organization_id:
+      typeof form.organization === "object"
+        ? form.organization.id
+        : form.organization,
+    cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    employee: form.employee,
+    employee_id: typeof form.employee === "object" ? form.employee.id : form.employee,
     basis: form.base,
     comment: form.comment,
-    type_operation: form.typeOperation,
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.accountablePersonRefund(body);
+    const res = await clientPaymentApi.updateAccountablePersonRefund(id.value, body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -349,17 +376,19 @@ const eighthAccess = async () => {
   }
   const body = {
     date: form.date,
-    organization_id: form.organization,
-    cash_register_id: form.cash,
+    organization_id:
+      typeof form.organization === "object"
+        ? form.organization.id
+        : form.organization,
+    cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    balance_article_id: form.incomeItem,
+    balance_article_id: typeof form.incomeItem === "object" ? form.incomeItem.id : form.incomeItem,
     basis: form.base,
     comment: form.comment,
-    type_operation: form.typeOperation,
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.otherExpenses(body);
+    const res = await clientPaymentApi.updateOtherExpenses(id.value, body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -377,17 +406,19 @@ const ninthAccess = async () => {
 
   const body = {
     date: form.date,
-    organization_id: form.organization,
-    cash_register_id: form.cash,
+    organization_id:
+      typeof form.organization === "object"
+        ? form.organization.id
+        : form.organization,
+    cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    balance_article_id: form.balanceItem,
+    balance_article_id: typeof form.balanceItem === "object" ? form.balanceItem.id : form.balanceItem,
     basis: form.base,
     comment: form.comment,
-    type_operation: form.typeOperation,
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.otherExpenses(body);
+    const res = await clientPaymentApi.updateOtherIncomes(id.value, body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -509,11 +540,9 @@ const getEmployees = async () => {
 
 onMounted(async () => {
   id.value = route.params.id;
-  await getTypes();
-  await getSellingGoods();
-  // form.date = currentDate();
-  // author.value = JSON.parse(localStorage.getItem("user")).name || null;
   await Promise.all([
+    getTypes(),
+    getSellingGoods(),
     getEmployees(),
     getIncomeItems(),
     getCashregisters(),
@@ -535,7 +564,7 @@ function validateNumberInput(event) {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase">
         <div class="d-flex align-center ga-2 ms-4">
-          <span>ПКО (создание)</span>
+          <span>ПКО (изменение)</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
@@ -609,9 +638,8 @@ function validateNumberInput(event) {
                   v-for="typeOperation in typeOperations"
                   :color="BASE_COLOR"
                   :key="typeOperation.id"
-                  :label="typeOperation.title"
-                  :value="typeOperation.title"
-                  @change="form.typeOperation = typeOperation.title"
+                  :label="typeOperation.title_ru"
+                  :value="typeOperation.title_ru"
                 ></v-radio>
               </v-radio-group>
             </div>

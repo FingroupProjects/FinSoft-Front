@@ -20,6 +20,7 @@ import debounce from "lodash.debounce";
 import clientPaymentApi from "../../../api/documents/cashRegister.js";
 ("../../../api/documents/sale.js");
 import showDate from "../../../composables/date/showDate.js";
+import cashRegisterApi from "../../../api/list/cashRegister.js";
 
 const router = useRouter();
 
@@ -48,11 +49,13 @@ const authors = ref([]);
 const currencies = ref([]);
 const counterparties = ref([]);
 const counterpartyAgreements = ref([]);
+const cashRegisters = ref([]);
 
 const filterForm = ref({
   date: null,
   provider_id: null,
   counterparty_id: null,
+  cash_register_id: null,
   counterparty_agreement_id: null,
   organization_id: null,
   storage_id: null,
@@ -84,18 +87,26 @@ const getSellingGoods = async ({ page, itemsPerPage, sortBy, search }) => {
   loading.value = true;
   try {
     const { data } = await clientPaymentApi.get(
-      'PKO',
+      "PKO",
       { page, itemsPerPage, sortBy },
       search,
       filterData
     );
-    console.log(data);
     paginations.value = data.result.pagination;
     moneyComing.value = data.result.data;
     loading.value = false;
   } catch (e) {
     console.error(e);
   }
+};
+
+const getCashregisters = async () => {
+  const { data } = await cashRegisterApi.get({
+    page: 1,
+    itemsPerPage: 100000,
+    sortBy: "name",
+  });
+  cashRegisters.value = data.result.data;
 };
 
 function countFilter() {
@@ -202,6 +213,10 @@ watch(
     debounceSearch.value = newValue;
   }, 500)
 );
+
+onMounted(async () => {
+  await getCashregisters();
+});
 </script>
 
 <template>
@@ -339,7 +354,7 @@ watch(
             </div>
             <v-form class="d-flex w-100" @submit.prevent="">
               <v-row class="w-100">
-                <v-col class="d-flex flex-column w-100">
+                <v-col class="d-flex flex-column w-100 ga-4">
                   <div class="d-flex ga-2 w-100">
                     <custom-text-field
                       label="Дата"
@@ -355,21 +370,21 @@ watch(
                       v-model="filterForm.organization_id"
                     />
                     <custom-autocomplete
-                      label="Клиент"
-                      :items="counterparties"
-                      v-model="filterForm.counterparty_id"
+                      label="Касса"
+                      :items="cashRegisters"
+                      v-model="filterForm.cash_register_id"
                     />
                   </div>
                   <div class="d-flex ga-2">
                     <custom-autocomplete
-                      label="Склад"
-                      :items="storages"
-                      v-model="filterForm.storage_id"
+                      label="Клиент"
+                      :items="counterparties"
+                      v-model="filterForm.counterparty_id"
                     />
                     <custom-autocomplete
-                      label="Валюта"
-                      :items="currencies"
-                      v-model="filterForm.currency_id"
+                      label="Договор"
+                      :items="counterpartyAgreements"
+                      v-model="filterForm.counterparty_agreement_id"
                     />
                   </div>
                   <div class="d-flex ga-2">
@@ -379,9 +394,9 @@ watch(
                       v-model="filterForm.author_id"
                     />
                     <custom-autocomplete
-                      label="Договор"
-                      :items="counterpartyAgreements"
-                      v-model="filterForm.counterparty_agreement_id"
+                      label="Валюта"
+                      :items="currencies"
+                      v-model="filterForm.currency_id"
                     />
                   </div>
                   <div class="d-flex justify-end ga-2">
