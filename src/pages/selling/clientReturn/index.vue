@@ -1,5 +1,5 @@
 <script setup>
-import {ref, watch} from "vue";
+import {onMounted, ref, watch} from "vue";
 import {useRouter} from "vue-router";
 import showToast from '../../../composables/toast/index.js'
 import Icons from "../../../composables/Icons/Icons.vue";
@@ -14,12 +14,18 @@ import {
 import debounce from "lodash.debounce";
 import clientReturnApi from '../../../api/documents/clientReturn.js';
 import showDate from "../../../composables/date/showDate.js";
+import CustomTextField from "../../../components/formElements/CustomTextField.vue";
+import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
+import user from "../../../api/list/user.js";
+import organizationApi from "../../../api/list/organizations.js";
+import counterpartyApi from "../../../api/list/counterparty.js";
+import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
+import storageApi from "../../../api/list/storage.js";
+import currencyApi from "../../../api/list/currency.js";
 
 const router = useRouter()
 
 const loading = ref(true)
-const loadingRate = ref(true)
-const dialog = ref(false)
 const filterModal = ref(false)
 const hoveredRowIndex = ref(null)
 
@@ -27,13 +33,16 @@ const markedID = ref([]);
 const markedItem = ref([])
 const search = ref('')
 const debounceSearch = ref('')
-const nameRef = ref(null)
-const descriptionRef = ref(null)
 const clientReturns = ref([])
 const paginations = ref([])
-const showConfirmDialog = ref(false);
-const showModal = ref(false);
 const count = ref(0);
+
+const organizations = ref([])
+const storages = ref([])
+const authors = ref([])
+const currencies = ref([])
+const counterparties = ref([])
+const counterpartyAgreements = ref([])
 
 
 const filterForm = ref({
@@ -41,7 +50,6 @@ const filterForm = ref({
   description: null,
   currency_id: null
 })
-
 
 const headers = ref([
   {title: 'Номер', key: 'name'},
@@ -89,7 +97,6 @@ const massDel = async () => {
       showToast(removeMessage, 'red')
       await getClientReturnData({})
       markedID.value = []
-      dialog.value = false
     }
 
   } catch (e) {
@@ -107,7 +114,6 @@ const massRestore = async () => {
       showToast(restoreMessage)
       await getClientReturnData({})
       markedID.value = []
-      dialog.value = false
     }
   } catch (e) {
 
@@ -152,7 +158,7 @@ const lineMarking = (item) => {
 }
 
 const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
-  filterModal.value = {}
+  filterModal.value = false
   cleanFilterForm()
   await getClientReturnData({page, itemsPerPage, sortBy, search})
 }
@@ -161,16 +167,39 @@ const cleanFilterForm = () => {
   filterForm.value = {}
 }
 
+const getAuthors = async () => {
+  const { data } = await user.getAuthors()
+  authors.value = data.result.data
+}
 
-watch(dialog, newVal => {
-  if (!newVal) {
-    nameRef.value = null
-    descriptionRef.value = null
-    loadingRate.value = true
-  } else {
-    markedID.value = [markedID.value[markedID.value.length - 1]];
-  }
-})
+const getOrganizations = async () => {
+  const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  organizations.value = data.result.data
+}
+
+const getCounterparties = async () => {
+  const { data } = await counterpartyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  counterparties.value = data.result.data
+}
+
+const getCpAgreements = async () => {
+  const { data } = await cpAgreementApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  counterpartyAgreements.value = data.result.data
+}
+
+const getStorages = async () => {
+  const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  storages.value = data.result.data
+}
+
+const getCurrencies = async () => {
+  const { data } = await currencyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  currencies.value = data.result.data
+}
+
+const show = (item) => {
+  window.open(`/clientReturn/${item.id}`, '_blank')
+}
 
 watch(markedID, (newVal) => {
   markedItem.value = clientReturns.value.find((el) => el.id === newVal[0]);
@@ -179,6 +208,16 @@ watch(markedID, (newVal) => {
 watch(search, debounce((newValue) => {
   debounceSearch.value = newValue
 }, 500))
+
+onMounted(() => {
+  getOrganizations()
+  getCounterparties()
+  getCpAgreements()
+  getStorages()
+  getCurrencies()
+  getAuthors()
+})
+
 
 </script>
 
@@ -256,7 +295,7 @@ watch(search, debounce((newValue) => {
             <tr
                 @mouseenter="hoveredRowIndex = index"
                 @mouseleave="hoveredRowIndex = null"
-                @dblclick="$router.push(`/clientReturn/${item.id}`)"
+                @dblclick="show(item)"
                 :class="{'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
               <td>
@@ -300,21 +339,22 @@ watch(search, debounce((newValue) => {
             </div>
             <v-form class="d-flex w-100" @submit.prevent="">
               <v-row class="w-100">
-                <v-col class="d-flex flex-column w-100">
-                  <v-text-field
-                      v-model="filterForm.name"
-                      :color="BASE_COLOR"
-                      rounded="md"
-                      :base-color="FIELD_COLOR"
-                      variant="outlined"
-                      class="w-auto text-sm-body-1"
-                      density="compact"
-                      placeholder="Наименование"
-                      label="Наименование"
-                      clear-icon="close"
-                      clearable
-                      autofocus
-                  />
+                <v-col class="d-flex flex-column w-100 ga-4">
+                  <div class="d-flex ga-2 w-100 ">
+                    <custom-text-field label="Дата" type="date" min-width="508"  v-model="filterForm.date"/>
+                  </div>
+                  <div class="d-flex ga-2">
+                    <custom-autocomplete label="Организация" :items="organizations"  v-model="filterForm.organization_id"/>
+                    <custom-autocomplete label="Клиент" :items="counterparties" v-model="filterForm.counterparty_id"/>
+                  </div>
+                  <div class="d-flex ga-2">
+                    <custom-autocomplete label="Склад" :items="storages" v-model="filterForm.storage_id"/>
+                    <custom-autocomplete label="Валюта" :items="currencies" v-model="filterForm.currency_id"/>
+                  </div>
+                  <div class="d-flex ga-2">
+                    <custom-autocomplete label="Автор" :items="authors" v-model="filterForm.author_id"/>
+                    <custom-autocomplete label="Договор" :items="counterpartyAgreements" v-model="filterForm.counterparty_agreement_id"/>
+                  </div>
                   <div class="d-flex justify-end ga-2">
                     <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
                     <v-btn :color="BASE_COLOR" class="btn"  @click="getClientReturnData">применить</v-btn>

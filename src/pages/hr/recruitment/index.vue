@@ -71,7 +71,6 @@ const getRecruitmentData = async ({page, itemsPerPage, sortBy, search}) => {
   loading.value = true
   try {
     const { data } = await recruitment.get({page, itemsPerPage, sortBy}, search, filterData)
-    console.log(data)
     paginations.value = data.result.pagination
     recruitments.value = data.result.data
   } catch (e) {
@@ -177,6 +176,22 @@ const cleanFilterForm = () => {
   filterForm.value = {}
 }
 
+const getAuthors = async () => {
+  const { data } = await user.getAuthors();
+
+  authors.value = data.result
+}
+
+const getOrganizations = async () => {
+  const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  organizations.value = data.result.data
+}
+
+const getCounterparties = async () => {
+  const { data } = await counterpartyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  counterparties.value = data.result.data
+}
+
 
 watch(dialog, newVal => {
   if (!newVal) {
@@ -196,22 +211,10 @@ watch(search, debounce((newValue) => {
   debounceSearch.value = newValue
 }, 500))
 
-
-const getAuthors = async () => {
-  const { data } = await user.getAuthors();
-
-  authors.value = data.result
+const show = (item) => {
+  window.open(`/hr/recruitment/${item.id}`, '_blank')
 }
 
-const getOrganizations = async () => {
-  const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  organizations.value = data.result.data
-}
-
-const getCounterparties = async () => {
-  const { data } = await counterpartyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  counterparties.value = data.result.data
-}
 
 onMounted(() => {
   getOrganizations()
@@ -294,7 +297,7 @@ onMounted(() => {
             <tr
                 @mouseenter="hoveredRowIndex = index"
                 @mouseleave="hoveredRowIndex = null"
-                @dblclick="$router.push(`/hr/recruitment/${item.id}`)"
+                @dblclick="show(item)"
                 :class="{'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
               <td>

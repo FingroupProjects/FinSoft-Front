@@ -24,8 +24,6 @@ import dismissal from "../../../api/hr/dismissal.js";
 const router = useRouter()
 
 const loading = ref(true)
-const loadingRate = ref(true)
-const dialog = ref(false)
 const filterModal = ref(false)
 const hoveredRowIndex = ref(null)
 
@@ -33,12 +31,8 @@ const markedID = ref([]);
 const markedItem = ref([])
 const search = ref('')
 const debounceSearch = ref('')
-const nameRef = ref(null)
-const descriptionRef = ref(null)
 const dismissals = ref([])
 const paginations = ref([])
-const showConfirmDialog = ref(false);
-const showModal = ref(false);
 const count = ref(0);
 const authors = ref([]);
 const counterparties = ref([])
@@ -92,18 +86,13 @@ function countFilter() {
 
 
 const massDel = async () => {
-
   try {
     const {status} = await clientOrderApi.massDeletion({ids: markedID.value})
-
     if (status === 200) {
-
       showToast(removeMessage, 'red')
       await getDismissalData({})
       markedID.value = []
-      dialog.value = false
     }
-
   } catch (e) {
 
   }
@@ -111,10 +100,8 @@ const massDel = async () => {
 
 
 const massRestore = async () => {
-
   try {
     const {status} = await clientOrderApi.massRestore({ids: markedID.value})
-
     if (status === 200) {
       showToast(restoreMessage)
       await getDismissalData({})
@@ -128,7 +115,6 @@ const massRestore = async () => {
 
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
   if(markedID.value.length === 0) return showToast(warningMessage, 'warning')
-
   if(markedItem.value.deleted_at) {
     return massRestore({ page, itemsPerPage, sortBy })
   }
@@ -164,7 +150,7 @@ const lineMarking = (item) => {
 }
 
 const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
-  filterModal.value = {}
+  filterModal.value = false
   cleanFilterForm()
   await getDismissalData({page, itemsPerPage, sortBy, search})
 
@@ -174,30 +160,9 @@ const cleanFilterForm = () => {
   filterForm.value = {}
 }
 
-
-watch(dialog, newVal => {
-  if (!newVal) {
-    nameRef.value = null
-    descriptionRef.value = null
-    loadingRate.value = true
-  } else {
-    markedID.value = [markedID.value[markedID.value.length - 1]];
-  }
-})
-
-watch(markedID, (newVal) => {
-  markedItem.value = dismissals.value.find((el) => el.id === newVal[0]);
-})
-
-watch(search, debounce((newValue) => {
-  debounceSearch.value = newValue
-}, 500))
-
-
 const getAuthors = async () => {
   const { data } = await user.getAuthors();
-
-  authors.value = data.result
+  authors.value = data.result.data
 }
 
 const getOrganizations = async () => {
@@ -210,11 +175,23 @@ const getCounterparties = async () => {
   counterparties.value = data.result.data
 }
 
+watch(markedID, (newVal) => {
+  markedItem.value = dismissals.value.find((el) => el.id === newVal[0]);
+})
+
+watch(search, debounce((newValue) => {
+  debounceSearch.value = newValue
+}, 500))
+
 onMounted(() => {
   getOrganizations()
   getCounterparties()
   getAuthors()
 })
+
+const show = (item) => {
+  window.open(`/hr/dismissal/${item.id}`, '_blank')
+}
 
 </script>
 
@@ -291,7 +268,7 @@ onMounted(() => {
             <tr
                 @mouseenter="hoveredRowIndex = index"
                 @mouseleave="hoveredRowIndex = null"
-                @dblclick="$router.push(`/hr/dismissal/${item.id}`)"
+                @dblclick="show(item)"
                 :class="{'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
               <td>
@@ -331,13 +308,13 @@ onMounted(() => {
             </div>
             <v-form class="d-flex w-100" @submit.prevent="">
               <v-row class="w-100">
-                <v-col class="d-flex flex-column w-100">
+                <v-col class="d-flex flex-column w-100 ga-4">
                   <div class="d-flex ga-2 w-100">
                     <custom-text-field label="Дата" type="date" min-width="508"  v-model="filterForm.date"/>
                   </div>
                   <div class="d-flex ga-2">
                     <custom-autocomplete label="Организация" :items="organizations"  v-model="filterForm.organization_id"/>
-                    <custom-autocomplete label="Клиент" :items="counterparties" v-model="filterForm.counterparty_id"/>
+                    <custom-autocomplete label="Сотрудник" :items="counterparties" v-model="filterForm.counterparty_id"/>
                   </div>
 
                   <div class="d-flex ga-2 w-100">
@@ -345,7 +322,7 @@ onMounted(() => {
                   </div>
                   <div class="d-flex justify-end ga-2">
                     <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-                    <v-btn :color="BASE_COLOR" class="btn"  @click="getProviderData">применить</v-btn>
+                    <v-btn :color="BASE_COLOR" class="btn"  @click="getDismissalData">применить</v-btn>
                   </div>
                 </v-col>
               </v-row>
