@@ -182,6 +182,7 @@ const salary = ref({
       child: [
         { id: 1, title: "Начисление зарплаты", link: "/hr/payroll" },
         { id: 2, title: "Оплата зарплаты", link: "/hr/payingSalaries" },
+        { id: 3, title: "Табель", link: "/hr/timeSheet" },
       ],
     },
   ],
