@@ -198,6 +198,16 @@ const routes = [
     component: () => import("../pages/hr/payingSalaries/index.vue"),
   },
   {
+    path: "/hr/timeSheet",
+    name: "timeSheet",
+    component: () => import("../pages/hr/timeSheet/index.vue"),
+  },
+  {
+    path: "/hr/timeSheet/create",
+    name: "timeSheetCreate",
+    component: () => import("../pages/hr/timeSheet/create.vue"),
+  },
+  {
     path: "/hr/payingSalaries",
     name: "payingSalaries",
     component: () => import("../pages/hr/payingSalaries/index.vue"),

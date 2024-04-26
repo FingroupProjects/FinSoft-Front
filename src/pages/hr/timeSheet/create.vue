@@ -201,7 +201,7 @@ watch(() => form.counterparty, async (id) => {
   form.cpAgreement = null
 
   try {
-    const res = await cpAgreementApi.getCounterpartyById(id)
+    const res = await cpAgreementApi.getById(id)
 
     form.currency = {
       id: res.data.result.currency_id.id,
@@ -262,7 +262,7 @@ onMounted(() => {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Покупка (создание)</span>
+          <span>Начисление зарплаты (создание)</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
