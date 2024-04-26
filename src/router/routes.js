@@ -158,6 +158,21 @@ const routes = [
     component: () => import("../pages/cash/moneyReturn/show.vue"),
   },
   {
+    path: "/bank",
+    name: "bank",
+    component: () => import("../pages/cash/bank/index.vue"),
+  },
+  {
+    path: "/moneyReturnCreate",
+    name: "moneyReturnCreate",
+    component: () => import("../pages/cash/moneyReturn/create.vue"),
+  },
+  {
+    path: "/moneyReturnEdit/:id",
+    name: "moneyReturnEdit",
+    component: () => import("../pages/cash/moneyReturn/show.vue"),
+  },
+  {
     path: "/hr/recruitment",
     name: "recruitment",
     component: () => import("../pages/hr/recruitment/index.vue"),

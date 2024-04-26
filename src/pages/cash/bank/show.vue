@@ -4,7 +4,7 @@ import {
   FIELD_COLOR,
 } from "../../../composables/constant/colors.js";
 import validate from "./validate.js";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { ref, reactive, onMounted, watch } from "vue";
 import employeeApi from "../../../api/list/employee.js";
 import Icons from "../../../composables/Icons/Icons.vue";
@@ -20,12 +20,16 @@ import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import { add, addMessage } from "../../../composables/constant/buttons.js";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
+import showDate from "../../../composables/date/showDate.js";
 
+const route = useRoute();
 const router = useRouter();
 
 const author = ref("");
 
-const typeOperations = ref();
+const id = ref(null);
+
+const typeOperations = ref([]);
 
 const form = reactive({
   sum: null,
@@ -36,6 +40,7 @@ const form = reactive({
   comment: null,
   employee: null,
   incomeItem: null,
+  doc_number: "Номер",
   balanceItem: null,
   cpAgreement: null,
   sender_cash: null,
@@ -63,9 +68,14 @@ watch(
 watch(
   () => form.counterparty,
   (newValue) => {
+    if (form.counterparty === null) return;
     form.cpAgreement = null;
     cpAgreements.value = [];
-    getCpAgreements(form.counterparty);
+    getCpAgreements(
+      typeof form.counterparty === "object"
+        ? form.counterparty.id
+        : form.counterparty
+    );
   }
 );
 
@@ -80,6 +90,44 @@ const resetFields = () => {
   form.counterparty = null;
 };
 
+const getTypes = async () => {
+  try {
+    const {
+      data: { result },
+    } = await clientPaymentApi.getTypes("PKO");
+    typeOperations.value = result;
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const getSellingGoods = async () => {
+  try {
+    const {
+      data: { result },
+    } = await clientPaymentApi.getById(route.params.id);
+    form.typeOperation = result.operationType;
+    (form.sum = result.sum), (author.value = result.author.name);
+    (form.base = result.basis),
+      (form.doc_number = result.doc_number),
+      (form.date = showDate(result.created_at, "-", true)),
+      (form.cash = result.cashRegister),
+      (form.comment = result.comment),
+      (form.employee = result.employee),
+      (form.incomeItem = result.incomeItem),
+      (form.balanceItem = result.balanceItem),
+      (form.counterparty = result.counterparty),
+      (form.sender_cash = result.sender_cash),
+      (form.organization = result.organization),
+      (form.organization_bill = result.organization_bill),
+      setTimeout(() => {
+        form.cpAgreement = result.counterpartyAgreement;
+      });
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 const firstAccess = async () => {
   if (
     !validate(form.sum, form.base, form.date, form.organization, form.cash) ||
@@ -90,17 +138,26 @@ const firstAccess = async () => {
   }
   const body = {
     date: form.date,
-    organization_id: form.organization,
-    cash_register_id: form.cash,
+    organization_id:
+      typeof form.organization === "object"
+        ? form.organization.id
+        : form.organization,
+    cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    counterparty_id: form.counterparty,
-    counterparty_agreement_id: form.cpAgreement,
+    counterparty_id:
+      typeof form.counterparty === "object"
+        ? form.counterparty.id
+        : form.counterparty,
+    counterparty_agreement_id:
+      typeof form.cpAgreement === "object"
+        ? form.cpAgreement.id
+        : form.cpAgreement,
     basis: form.base,
     comment: form.comment,
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.paymentFromClient(body);
+    const res = await clientPaymentApi.updatePaymentFromClient(id.value, body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -117,16 +174,22 @@ const secondAccess = async () => {
   }
   const body = {
     date: form.date,
-    organization_id: form.organization,
-    cash_register_id: form.cash,
+    organization_id:
+      typeof form.organization === "object"
+        ? form.organization.id
+        : form.organization,
+    cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    organization_bill_id: form.organization_bill,
+    organization_bill_id:
+      typeof form.organization_bill === "object"
+        ? form.organization_bill.id
+        : form.organization_bill,
     basis: form.base,
     comment: form.comment,
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.writeOff(body);
+    const res = await clientPaymentApi.updateWriteOff(id.value, body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -142,16 +205,25 @@ const thirdAccess = async () => {
   }
   const body = {
     date: form.date,
-    organization_id: form.organization,
-    cash_register_id: form.cash,
+    organization_id:
+      typeof form.organization === "object"
+        ? form.organization.id
+        : form.organization,
+    cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    sender_cash_register_id: form.sender_cash,
+    sender_cash_register_id:
+      typeof form.sender_cash === "object"
+        ? form.sender_cash.id
+        : form.sender_cash,
     basis: form.base,
     comment: form.comment,
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.anotherCashRegister(body);
+    const res = await clientPaymentApi.updateAnotherCashRegister(
+      id.value,
+      body
+    );
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -168,17 +240,26 @@ const fourthAccess = async () => {
   }
   const body = {
     date: form.date,
-    organization_id: form.organization,
-    cash_register_id: form.cash,
+    organization_id:
+      typeof form.organization === "object"
+        ? form.organization.id
+        : form.organization,
+    cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    counterparty_id: form.counterparty,
-    counterparty_agreement_id: form.cpAgreement,
+    counterparty_id:
+      typeof form.counterparty === "object"
+        ? form.counterparty.id
+        : form.counterparty,
+    counterparty_agreement_id:
+      typeof form.cpAgreement === "object"
+        ? form.cpAgreement.id
+        : form.cpAgreement,
     basis: form.base,
     comment: form.comment,
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.investment(body);
+    const res = await clientPaymentApi.updateInvestment(id.value, body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -196,17 +277,26 @@ const fifthAccess = async () => {
   }
   const body = {
     date: form.date,
-    organization_id: form.organization,
-    cash_register_id: form.cash,
+    organization_id:
+      typeof form.organization === "object"
+        ? form.organization.id
+        : form.organization,
+    cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    counterparty_id: form.counterparty,
-    counterparty_agreement_id: form.cpAgreement,
+    counterparty_id:
+      typeof form.counterparty === "object"
+        ? form.counterparty.id
+        : form.counterparty,
+    counterparty_agreement_id:
+      typeof form.cpAgreement === "object"
+        ? form.cpAgreement.id
+        : form.cpAgreement,
     basis: form.base,
     comment: form.comment,
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.creditReceive(body);
+    const res = await clientPaymentApi.updateCreditReceive(id.value, body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -224,17 +314,26 @@ const sixthAccess = async () => {
   }
   const body = {
     date: form.date,
-    organization_id: form.organization,
-    cash_register_id: form.cash,
+    organization_id:
+      typeof form.organization === "object"
+        ? form.organization.id
+        : form.organization,
+    cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    counterparty_id: form.counterparty,
-    counterparty_agreement_id: form.cpAgreement,
+    counterparty_id:
+      typeof form.counterparty === "object"
+        ? form.counterparty.id
+        : form.counterparty,
+    counterparty_agreement_id:
+      typeof form.cpAgreement === "object"
+        ? form.cpAgreement.id
+        : form.cpAgreement,
     basis: form.base,
     comment: form.comment,
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.providerRefund(body);
+    const res = await clientPaymentApi.updateProviderRefund(id.value, body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -251,16 +350,23 @@ const seventhAccess = async () => {
   }
   const body = {
     date: form.date,
-    organization_id: form.organization,
-    cash_register_id: form.cash,
+    organization_id:
+      typeof form.organization === "object"
+        ? form.organization.id
+        : form.organization,
+    cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    employee: form.employee,
+    employee_id:
+      typeof form.employee === "object" ? form.employee.id : form.employee,
     basis: form.base,
     comment: form.comment,
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.accountablePersonRefund(body);
+    const res = await clientPaymentApi.updateAccountablePersonRefund(
+      id.value,
+      body
+    );
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -277,16 +383,22 @@ const eighthAccess = async () => {
   }
   const body = {
     date: form.date,
-    organization_id: form.organization,
-    cash_register_id: form.cash,
+    organization_id:
+      typeof form.organization === "object"
+        ? form.organization.id
+        : form.organization,
+    cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    balance_article_id: form.incomeItem,
+    balance_article_id:
+      typeof form.incomeItem === "object"
+        ? form.incomeItem.id
+        : form.incomeItem,
     basis: form.base,
     comment: form.comment,
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.otherExpenses(body);
+    const res = await clientPaymentApi.updateOtherExpenses(id.value, body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -304,16 +416,22 @@ const ninthAccess = async () => {
 
   const body = {
     date: form.date,
-    organization_id: form.organization,
-    cash_register_id: form.cash,
+    organization_id:
+      typeof form.organization === "object"
+        ? form.organization.id
+        : form.organization,
+    cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    balance_article_id: form.balanceItem,
+    balance_article_id:
+      typeof form.balanceItem === "object"
+        ? form.balanceItem.id
+        : form.balanceItem,
     basis: form.base,
     comment: form.comment,
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.otherExpenses(body);
+    const res = await clientPaymentApi.updateOtherIncomes(id.value, body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -371,76 +489,46 @@ const isValid = (
 };
 
 const getOrganizations = async () => {
-  try {
-    const { data } = await organizationApi.get({
-      page: 1,
-      itemsPerPage: 100000,
-      sortBy: "name",
-    });
-    organizations.value = data.result.data;
-  } catch (e) {
-    console.error(e);
-  }
+  const { data } = await organizationApi.get({
+    page: 1,
+    itemsPerPage: 100000,
+    sortBy: "name",
+  });
+  organizations.value = data.result.data;
 };
 
 const getOrganizationBills = async () => {
-  try {
-    const { data } = await organizationBillApi.getAll({
-      page: 1,
-      itemsPerPage: 100000,
-      sortBy: "name",
-    });
-    organizationBills.value = data.result.data;
-  } catch (e) {
-    console.error(e);
-  }
-};
-
-const getTypes = async () => {
-  try {
-    const {
-      data: { result },
-    } = await clientPaymentApi.getTypes("PKO");
-    typeOperations.value = result;
-    form.typeOperation = typeOperations.value[0].title_ru;
-  } catch (e) {
-    console.error(e);
-  }
+  const { data } = await organizationBillApi.getAll({
+    page: 1,
+    itemsPerPage: 100000,
+    sortBy: "name",
+  });
+  organizationBills.value = data.result.data;
 };
 
 const getCashregisters = async () => {
-  try {
-    const { data } = await cashRegisterApi.get({
-      page: 1,
-      itemsPerPage: 100000,
-      sortBy: "name",
-    });
-    cashRegisters.value = data.result.data;
-  } catch (e) {
-    console.error(e);
-  }
+  const { data } = await cashRegisterApi.get({
+    page: 1,
+    itemsPerPage: 100000,
+    sortBy: "name",
+  });
+  cashRegisters.value = data.result.data;
 };
 
 const getCounterparties = async () => {
-  try {
-    const { data } = await counterpartyApi.get({
-      page: 1,
-      itemsPerPage: 100000,
-      sortBy: "name",
-    });
-    counterparties.value = data.result.data;
-  } catch (e) {
-    console.error(e);
-  }
+  const { data } = await counterpartyApi.get({
+    page: 1,
+    itemsPerPage: 100000,
+    sortBy: "name",
+  });
+  counterparties.value = data.result.data;
 };
 
 const getCpAgreements = async (id) => {
   try {
     const { data } = await cpAgreementApi.getCounterpartyById(id);
-    cpAgreements.value = data.result.data;
-  } catch (e) {
-    console.error(e);
-  }
+    cpAgreements.value = data.result.counterparty_id.counterpartyAgreement;
+  } catch (e) {}
 };
 
 const getIncomeItems = async () => {
@@ -451,29 +539,23 @@ const getIncomeItems = async () => {
       sortBy: "name",
     });
     incomeItems.value = data.result.data;
-  } catch (e) {
-    console.error(e);
-  }
+  } catch (e) {}
 };
 
 const getEmployees = async () => {
-  try {
-    const { data } = await employeeApi.get({
-      page: 1,
-      itemsPerPage: 100000,
-      sortBy: "name",
-    });
-    employees.value = data.result.data;
-  } catch (e) {
-    console.error(e);
-  }
+  const { data } = await employeeApi.get({
+    page: 1,
+    itemsPerPage: 100000,
+    sortBy: "name",
+  });
+  employees.value = data.result.data;
 };
 
 onMounted(async () => {
-  form.date = currentDate();
-  author.value = JSON.parse(localStorage.getItem("user")).name || null;
+  id.value = route.params.id;
   await Promise.all([
     getTypes(),
+    getSellingGoods(),
     getEmployees(),
     getIncomeItems(),
     getCashregisters(),
@@ -495,7 +577,7 @@ function validateNumberInput(event) {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase">
         <div class="d-flex align-center ga-2 ms-4">
-          <span>ПКО (создание)</span>
+          <span>БАНК (изменение)</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
@@ -515,7 +597,7 @@ function validateNumberInput(event) {
         <div class="d-flex flex-wrap ga-4 mb-2">
           <custom-text-field
             readonly
-            :value="'Номер'"
+            :value="form.doc_number"
             min-width="140"
             max-width="110"
           />

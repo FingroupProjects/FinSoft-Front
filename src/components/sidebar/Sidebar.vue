@@ -151,7 +151,7 @@ const cash = ref({
       child: [
         { id: 1, title: "Приход деньги", link: "/moneyComing" },
         { id: 2, title: "Расход деньги", link: "/moneyReturn" },
-        { id: 2, title: "Приход и расход рас. счета", link: "/" },
+        { id: 2, title: "Приход и расход рас. счета", link: "/" },//bank
       ],
     },
   ],
@@ -301,7 +301,7 @@ const push = (item) => {
 }
 
 .title {
-  color: #D4BFBF;
+  color: #E8D9D9;
   font-family: "Inter", sans-serif;
   font-weight: 300;
 }

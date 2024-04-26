@@ -25,17 +25,7 @@ const router = useRouter();
 
 const author = ref("");
 
-const typeOperations = ref([
-  { id: 1, title: "Оплата от клиента" },
-  { id: 2, title: "Снятие с P/C" },
-  { id: 3, title: "Получение с другой кассы" },
-  { id: 4, title: "Вложение" },
-  { id: 5, title: "Получение кредита" },
-  { id: 6, title: "Возврат от поставщика" },
-  { id: 7, title: "Возврат от подотчетника" },
-  { id: 8, title: "Прочие доходы" },
-  { id: 9, title: "Прочие приходы" },
-]);
+const typeOperations = ref([]);
 
 const form = reactive({
   sum: null,
@@ -52,7 +42,7 @@ const form = reactive({
   counterparty: null,
   organization: null,
   organization_bill: null,
-  typeOperation: typeOperations.value[0].title,
+  typeOperation: null
 });
 
 const employees = ref([]);
@@ -343,31 +333,31 @@ const ninthAccess = async () => {
 
 const getAccess = () => {
   switch (form.typeOperation) {
-    case "Оплата от клиента":
+    case "Возврат клиенту":
       firstAccess();
       break;
-    case "Снятие с P/C":
+    case "Пополнение с Р/С":
       secondAccess();
       break;
-    case "Получение с другой кассы":
+    case "Отправка на другую кассу":
       thirdAccess();
       break;
-    case "Вложение":
+    case "Возврат вложения":
       fourthAccess();
       break;
-    case "Получение кредита":
+    case "Оплата кредита":
       fifthAccess();
       break;
-    case "Возврат от поставщика":
+    case "Возврат поставщику":
       sixthAccess();
       break;
-    case "Возврат от подотчетника":
+    case "Оплата аванс подотчетнику":
       seventhAccess();
       break;
-    case "Прочие доходы":
+    case "Прочие расходы":
       eighthAccess();
       break;
-    case "Прочие приходы":
+    case "Прочие оплаты":
       ninthAccess();
       break;
   }
@@ -463,6 +453,18 @@ const getIncomeItems = async () => {
   }
 };
 
+const getTypes = async () => {
+  try {
+    const {
+      data: { result },
+    } = await clientPaymentApi.getTypes("RKO");
+    typeOperations.value = result;
+    form.typeOperation = typeOperations.value[0].title_ru;
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 const getEmployees = async () => {
   try {
     const { data } = await employeeApi.get({
@@ -480,6 +482,7 @@ onMounted(async () => {
   form.date = currentDate();
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
   await Promise.all([
+    getTypes(),
     getEmployees(),
     getIncomeItems(),
     getCashregisters(),
@@ -575,43 +578,42 @@ function validateNumberInput(event) {
                   v-for="typeOperation in typeOperations"
                   :color="BASE_COLOR"
                   :key="typeOperation.id"
-                  :label="typeOperation.title"
-                  :value="typeOperation.title"
-                  @change="form.typeOperation = typeOperation.title"
+                  :label="typeOperation.title_ru"
+                  :value="typeOperation.title_ru"
                 ></v-radio>
               </v-radio-group>
             </div>
           </div>
           <div class="d-flex flex-column ga-4">
-            <div v-if="form.typeOperation === 'Снятие с P/C'">
+            <div v-if="form.typeOperation === 'Пополнение с Р/С'">
               <custom-autocomplete
                 label="Банковский счет"
                 :items="organizationBills"
                 v-model="form.organization_bill"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Получение с другой кассы'">
+            <div v-else-if="form.typeOperation === 'Отправка на другую кассу'">
               <custom-autocomplete
                 label="Касса отправителя"
                 :items="cashRegisters"
                 v-model="form.sender_cash"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Возврат от подотчетника'">
+            <div v-else-if="form.typeOperation === 'Оплата аванс подотчетнику'">
               <custom-autocomplete
                 label="Сотрудник"
                 :items="employees"
                 v-model="form.employee"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Прочие доходы'">
+            <div v-else-if="form.typeOperation === 'Прочие расходы'">
               <custom-autocomplete
                 label="Статья дохода"
                 :items="incomeItems"
                 v-model="form.incomeItem"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Прочие приходы'">
+            <div v-else-if="form.typeOperation === 'Прочие оплаты'">
               <custom-autocomplete
                 label="Статья баланса"
                 :items="incomeItems"
