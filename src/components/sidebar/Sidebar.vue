@@ -300,7 +300,7 @@ const push = (item) => {
 }
 
 .title {
-  color: #D4BFBF;
+  color: #E8D9D9;
   font-family: "Inter", sans-serif;
   font-weight: 300;
 }

@@ -96,33 +96,33 @@ const getTypes = async () => {
       data: { result },
     } = await clientPaymentApi.getTypes("PKO");
     typeOperations.value = result;
-    form.typeOperation = typeOperations.value[0].title_ru;
   } catch (e) {
     console.error(e);
   }
 };
+
 const getSellingGoods = async () => {
   try {
     const {
       data: { result },
     } = await clientPaymentApi.getById(route.params.id);
-    (form.sum = result.sum),
-    (author.value = result.author.name);
+    form.typeOperation = result.operationType;
+    (form.sum = result.sum), (author.value = result.author.name);
     (form.base = result.basis),
-    (form.doc_number = result.doc_number),
-    (form.date = showDate(result.created_at, "-", true)),
-    (form.cash = result.cashRegister),
-    (form.comment = result.comment),
-    (form.employee = result.employee),
-    (form.incomeItem = result.incomeItem),
-    (form.balanceItem = result.balanceItem),
-    (form.counterparty = result.counterparty),
-    (form.sender_cash = result.sender_cash),
-    (form.organization = result.organization),
-    (form.organization_bill = result.organization_bill),
-    setTimeout(() => {
-      form.cpAgreement = result.counterpartyAgreement;
-    });
+      (form.doc_number = result.doc_number),
+      (form.date = showDate(result.created_at, "-", true)),
+      (form.cash = result.cashRegister),
+      (form.comment = result.comment),
+      (form.employee = result.employee),
+      (form.incomeItem = result.incomeItem),
+      (form.balanceItem = result.balanceItem),
+      (form.counterparty = result.counterparty),
+      (form.sender_cash = result.sender_cash),
+      (form.organization = result.organization),
+      (form.organization_bill = result.organization_bill),
+      setTimeout(() => {
+        form.cpAgreement = result.counterpartyAgreement;
+      });
   } catch (e) {
     console.error(e);
   }
@@ -220,7 +220,10 @@ const thirdAccess = async () => {
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.updateAnotherCashRegister(id.value, body);
+    const res = await clientPaymentApi.updateAnotherCashRegister(
+      id.value,
+      body
+    );
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -353,13 +356,17 @@ const seventhAccess = async () => {
         : form.organization,
     cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    employee_id: typeof form.employee === "object" ? form.employee.id : form.employee,
+    employee_id:
+      typeof form.employee === "object" ? form.employee.id : form.employee,
     basis: form.base,
     comment: form.comment,
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.updateAccountablePersonRefund(id.value, body);
+    const res = await clientPaymentApi.updateAccountablePersonRefund(
+      id.value,
+      body
+    );
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -382,7 +389,10 @@ const eighthAccess = async () => {
         : form.organization,
     cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    balance_article_id: typeof form.incomeItem === "object" ? form.incomeItem.id : form.incomeItem,
+    balance_article_id:
+      typeof form.incomeItem === "object"
+        ? form.incomeItem.id
+        : form.incomeItem,
     basis: form.base,
     comment: form.comment,
     type: "PKO",
@@ -412,7 +422,10 @@ const ninthAccess = async () => {
         : form.organization,
     cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    balance_article_id: typeof form.balanceItem === "object" ? form.balanceItem.id : form.balanceItem,
+    balance_article_id:
+      typeof form.balanceItem === "object"
+        ? form.balanceItem.id
+        : form.balanceItem,
     basis: form.base,
     comment: form.comment,
     type: "PKO",
@@ -513,7 +526,7 @@ const getCounterparties = async () => {
 
 const getCpAgreements = async (id) => {
   try {
-    const { data } = await cpAgreementApi.getById(id);
+    const { data } = await cpAgreementApi.getCounterpartyById(id);
     cpAgreements.value = data.result.counterparty_id.counterpartyAgreement;
   } catch (e) {}
 };

@@ -189,7 +189,7 @@ onMounted(() => {
   color: #848484;
   font-size: 14px;
   font-family: "Inter", sans-serif;
-  font-weight: 300;
+  font-weight: 400;
   max-height: 92vh;
   overflow: auto;
 }
@@ -210,7 +210,7 @@ li {
 li:hover {
   background: rgb(210, 211, 215);
   color: #08072e;
-  font-weight: normal;
+  /* font-weight: normal; */
   cursor: pointer;
 }
 </style>

@@ -106,8 +106,6 @@ const getTypes = async () => {
       data: { result },
     } = await clientPaymentApi.getTypes("RKO");
     typeOperations.value = result;
-    form.typeOperation = typeOperations.value[0].title_ru;
-    console.log(result);
   } catch (e) {
     console.error(e);
   }
@@ -117,6 +115,7 @@ const getSellingGoods = async () => {
     const {
       data: { result },
     } = await clientPaymentApi.getById(route.params.id);
+    form.typeOperation = result.operationType;
     (form.sum = result.sum), (author.value = result.author.name);
     (form.base = result.basis),
       (form.doc_number = result.doc_number),
@@ -523,7 +522,7 @@ const getCounterparties = async () => {
 
 const getCpAgreements = async (id) => {
   try {
-    const { data } = await cpAgreementApi.getById(id);
+    const { data } = await cpAgreementApi.getCounterpartyById(id);
     cpAgreements.value = data.result.counterparty_id.counterpartyAgreement;
   } catch (e) {}
 };

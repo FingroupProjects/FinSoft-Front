@@ -25,17 +25,7 @@ const router = useRouter();
 
 const author = ref("");
 
-const typeOperations = ref([
-  { id: 1, title: "Оплата от клиента" },
-  { id: 2, title: "Снятие с P/C" },
-  { id: 3, title: "Получение с другой кассы" },
-  { id: 4, title: "Вложение" },
-  { id: 5, title: "Получение кредита" },
-  { id: 6, title: "Возврат от поставщика" },
-  { id: 7, title: "Возврат от подотчетника" },
-  { id: 8, title: "Прочие доходы" },
-  { id: 9, title: "Прочие приходы" },
-]);
+const typeOperations = ref();
 
 const form = reactive({
   sum: null,
@@ -52,7 +42,7 @@ const form = reactive({
   counterparty: null,
   organization: null,
   organization_bill: null,
-  typeOperation: typeOperations.value[0].title,
+  typeOperation: null,
 });
 
 const employees = ref([]);
@@ -406,6 +396,18 @@ const getOrganizationBills = async () => {
   }
 };
 
+const getTypes = async () => {
+  try {
+    const {
+      data: { result },
+    } = await clientPaymentApi.getTypes("PKO");
+    typeOperations.value = result;
+    form.typeOperation = typeOperations.value[0].title_ru;
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 const getCashregisters = async () => {
   try {
     const { data } = await cashRegisterApi.get({
@@ -471,6 +473,7 @@ onMounted(async () => {
   form.date = currentDate();
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
   await Promise.all([
+    getTypes(),
     getEmployees(),
     getIncomeItems(),
     getCashregisters(),
@@ -566,9 +569,8 @@ function validateNumberInput(event) {
                   v-for="typeOperation in typeOperations"
                   :color="BASE_COLOR"
                   :key="typeOperation.id"
-                  :label="typeOperation.title"
-                  :value="typeOperation.title"
-                  @change="form.typeOperation = typeOperation.title"
+                  :label="typeOperation.title_ru"
+                  :value="typeOperation.title_ru"
                 ></v-radio>
               </v-radio-group>
             </div>

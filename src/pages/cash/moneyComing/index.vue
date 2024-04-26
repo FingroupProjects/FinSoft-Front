@@ -17,6 +17,9 @@ import {
   restoreMessage,
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
+import userApi from "../../../api/list/user.js";
+import currencyApi from "../../../api/list/currency.js";
+import organizationApi from "../../../api/list/organizations.js";
 import clientPaymentApi from "../../../api/documents/cashRegister.js";
 ("../../../api/documents/sale.js");
 import showDate from "../../../composables/date/showDate.js";
@@ -38,29 +41,24 @@ const nameRef = ref(null);
 const descriptionRef = ref(null);
 const moneyComing = ref([]);
 const paginations = ref([]);
-const showConfirmDialog = ref(false);
-const showModal = ref(false);
 const count = ref(0);
 
+const typeOperations = ref([]);
 const organizations = ref([]);
-const providers = ref([]);
-const storages = ref([]);
 const authors = ref([]);
 const currencies = ref([]);
 const counterparties = ref([]);
-const counterpartyAgreements = ref([]);
 const cashRegisters = ref([]);
 
 const filterForm = ref({
+  sum: null,
   date: null,
-  provider_id: null,
-  counterparty_id: null,
-  cash_register_id: null,
-  counterparty_agreement_id: null,
-  organization_id: null,
-  storage_id: null,
   author_id: null,
   currency_id: null,
+  operationType: null,
+  counterparty_id: null,
+  organization_id: null,
+  cash_register_id: null,
 });
 
 const headers = ref([
@@ -74,10 +72,6 @@ const headers = ref([
   { title: "Валюта", key: "currency.name" },
   { title: "Автор", key: "sender.name" },
 ]);
-
-const rules = {
-  required: (v) => !!v,
-};
 
 const getSellingGoods = async ({ page, itemsPerPage, sortBy, search }) => {
   count.value = 0;
@@ -214,8 +208,50 @@ watch(
   }, 500)
 );
 
+const getOrganizations = async () => {
+  try {
+    const { data } = await organizationApi.get({
+      page: 1,
+      itemsPerPage: 100000,
+      sortBy: "name",
+    });
+    organizations.value = data.result.data;
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const getTypes = async () => {
+  try {
+    const {
+      data: { result },
+    } = await clientPaymentApi.getTypes("PKO");
+    typeOperations.value = result;
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const getCurrencies = async () => {
+  try {
+    const { data } = await currencyApi.get({ page: 1, itemsPerPage: 100000 });
+    currencies.value = data.result.data
+  } catch (e) {}
+};
+
+const getAuthors = async () => {
+  const { data } = await userApi.getAuthors();
+  authors.value = data.result.data
+}
+
 onMounted(async () => {
-  await getCashregisters();
+  await Promise.all([
+    getTypes(),
+    getAuthors(),
+    getCurrencies(),
+    getCashregisters(),
+    getOrganizations(),
+  ]);
 });
 </script>
 
@@ -326,8 +362,8 @@ onMounted(async () => {
               <td>{{ showDate(item.date) }}</td>
               <td>{{ item.cashRegister.name }}</td>
               <td>{{ item.organization.name }}</td>
-              <td></td>
-              <!-- <td>{{ item.cashRegister.responsiblePerson.name }}</td> -->
+              <td>{{ item.operationType }}</td>
+              <td>{{ item.counterparty.name }}</td>
               <td>{{ item.sum }}</td>
               <td>{{ item.currency }}</td>
               <td>{{ item.author.name }}</td>
@@ -352,16 +388,16 @@ onMounted(async () => {
             <div class="d-flex justify-space-between align-center mb-2">
               <span>Фильтр</span>
             </div>
-            <v-form class="d-flex w-100" @submit.prevent="">
+            <v-form class="d-flex w-100">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100 ga-4">
                   <div class="d-flex ga-2 w-100">
                     <custom-text-field
                       label="Дата"
                       type="date"
-                      min-width="508"
                       v-model="filterForm.date"
                     />
+                    <custom-text-field label="Сумма" v-model="filterForm.sum" />
                   </div>
                   <div class="d-flex ga-2">
                     <custom-autocomplete
@@ -377,26 +413,28 @@ onMounted(async () => {
                   </div>
                   <div class="d-flex ga-2">
                     <custom-autocomplete
-                      label="Клиент"
-                      :items="counterparties"
-                      v-model="filterForm.counterparty_id"
+                      label="Тип операции"
+                      :items="typeOperations"
+                      item-title="title_ru"
+                      item-value="id"
+                      v-model="filterForm.operationType"
                     />
                     <custom-autocomplete
-                      label="Договор"
-                      :items="counterpartyAgreements"
-                      v-model="filterForm.counterparty_agreement_id"
+                      label="Плательщик"
+                      :items="counterparties"
+                      v-model="filterForm.counterparty_id"
                     />
                   </div>
                   <div class="d-flex ga-2">
                     <custom-autocomplete
-                      label="Автор"
-                      :items="authors"
-                      v-model="filterForm.author_id"
-                    />
-                    <custom-autocomplete
                       label="Валюта"
                       :items="currencies"
                       v-model="filterForm.currency_id"
+                    />
+                    <custom-autocomplete
+                      label="Автор"
+                      :items="authors"
+                      v-model="filterForm.author_id"
                     />
                   </div>
                   <div class="d-flex justify-end ga-2">
