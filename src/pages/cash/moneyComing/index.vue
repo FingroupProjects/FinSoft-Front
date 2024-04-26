@@ -327,7 +327,7 @@ onMounted(async () => {
               <td>{{ item.cashRegister.name }}</td>
               <td>{{ item.organization.name }}</td>
               <td></td>
-              <td>{{ item.cashRegister.responsiblePerson.name }}</td>
+              <!-- <td>{{ item.cashRegister.responsiblePerson.name }}</td> -->
               <td>{{ item.sum }}</td>
               <td>{{ item.currency }}</td>
               <td>{{ item.author.name }}</td>

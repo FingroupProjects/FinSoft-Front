@@ -389,48 +389,65 @@ const isValid = (
   }
   return true;
 };
-
 const getOrganizations = async () => {
-  const { data } = await organizationApi.get({
-    page: 1,
-    itemsPerPage: 100000,
-    sortBy: "name",
-  });
-  organizations.value = data.result.data;
+  try {
+    const { data } = await organizationApi.get({
+      page: 1,
+      itemsPerPage: 100000,
+      sortBy: "name",
+    });
+    organizations.value = data.result.data;
+  } catch (e) {
+    console.error(e);
+  }
 };
 
 const getOrganizationBills = async () => {
-  const { data } = await organizationBillApi.getAll({
-    page: 1,
-    itemsPerPage: 100000,
-    sortBy: "name",
-  });
-  organizationBills.value = data.result.data;
+  try {
+    const { data } = await organizationBillApi.getAll({
+      page: 1,
+      itemsPerPage: 100000,
+      sortBy: "name",
+    });
+    organizationBills.value = data.result.data;
+  } catch (e) {
+    console.error(e);
+  }
 };
 
 const getCashregisters = async () => {
-  const { data } = await cashRegisterApi.get({
-    page: 1,
-    itemsPerPage: 100000,
-    sortBy: "name",
-  });
-  cashRegisters.value = data.result.data;
+  try {
+    const { data } = await cashRegisterApi.get({
+      page: 1,
+      itemsPerPage: 100000,
+      sortBy: "name",
+    });
+    cashRegisters.value = data.result.data;
+  } catch (e) {
+    console.error(e);
+  }
 };
 
 const getCounterparties = async () => {
-  const { data } = await counterpartyApi.get({
-    page: 1,
-    itemsPerPage: 100000,
-    sortBy: "name",
-  });
-  counterparties.value = data.result.data;
+  try {
+    const { data } = await counterpartyApi.get({
+      page: 1,
+      itemsPerPage: 100000,
+      sortBy: "name",
+    });
+    counterparties.value = data.result.data;
+  } catch (e) {
+    console.error(e);
+  }
 };
 
 const getCpAgreements = async (id) => {
   try {
-    const { data } = await cpAgreementApi.getById(id);
-    cpAgreements.value = data.result.counterparty_id.counterpartyAgreement;
-  } catch (e) {}
+    const { data } = await cpAgreementApi.getCounterpartyById(id);
+    cpAgreements.value = data.result.data;
+  } catch (e) {
+    console.error(e);
+  }
 };
 
 const getIncomeItems = async () => {
@@ -441,16 +458,22 @@ const getIncomeItems = async () => {
       sortBy: "name",
     });
     incomeItems.value = data.result.data;
-  } catch (e) {}
+  } catch (e) {
+    console.error(e);
+  }
 };
 
 const getEmployees = async () => {
-  const { data } = await employeeApi.get({
-    page: 1,
-    itemsPerPage: 100000,
-    sortBy: "name",
-  });
-  employees.value = data.result.data;
+  try {
+    const { data } = await employeeApi.get({
+      page: 1,
+      itemsPerPage: 100000,
+      sortBy: "name",
+    });
+    employees.value = data.result.data;
+  } catch (e) {
+    console.error(e);
+  }
 };
 
 onMounted(async () => {
