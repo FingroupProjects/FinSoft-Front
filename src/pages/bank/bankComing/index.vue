@@ -246,15 +246,15 @@ const getAuthors = async () => {
   authors.value = data.result.data
 }
 
-// onMounted(async () => {
-//   await Promise.all([
-//     getTypes(),
-//     getAuthors(),
-//     getCurrencies(),
-//     getCashregisters(),
-//     getOrganizations(),
-//   ]);
-// });
+onMounted(async () => {
+  await Promise.all([
+    getTypes(),
+    getAuthors(),
+    getCurrencies(),
+    getCashregisters(),
+    getOrganizations(),
+  ]);
+});
 </script>
 
 <template>
@@ -262,14 +262,14 @@ const getAuthors = async () => {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>БАНК</span>
+          <span>БАНК ПРИХОД</span>
         </div>
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
               <Icons
                 title="Добавить"
-                @click="$router.push('/bankCreate')"
+                @click="$router.push('/bankComingCreate')"
                 name="add"
               />
               <Icons title="Скопировать" name="copy" />
@@ -335,7 +335,7 @@ const getAuthors = async () => {
             <tr
               @mouseenter="hoveredRowIndex = index"
               @mouseleave="hoveredRowIndex = null"
-              @dblclick="$router.push(`/moneyComingEdit/${item.id}`)"
+              @dblclick="$router.push(`/bankComingEdit/${item.id}`)"
               :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
               <td>

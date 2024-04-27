@@ -3,8 +3,9 @@ import {
   BASE_COLOR,
   FIELD_COLOR,
 } from "../../../composables/constant/colors.js";
-import validate from "../moneyComing/validate.js";
+import validate from "./validate.js";
 import { useRoute, useRouter } from "vue-router";
+import bankApi from "../../../api/documents/bank.js";
 import { ref, reactive, onMounted, watch } from "vue";
 import employeeApi from "../../../api/list/employee.js";
 import Icons from "../../../composables/Icons/Icons.vue";
@@ -14,7 +15,6 @@ import counterpartyApi from "../../../api/list/counterparty.js";
 import cashRegisterApi from "../../../api/list/cashRegister.js";
 import organizationApi from "../../../api/list/organizations.js";
 import currentDate from "../../../composables/date/currentDate.js";
-import clientPaymentApi from "../../../api/documents/cashRegister.js";
 import organizationBillApi from "../../../api/list/organizationBill.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import { add, addMessage } from "../../../composables/constant/buttons.js";
@@ -94,18 +94,18 @@ const getTypes = async () => {
   try {
     const {
       data: { result },
-    } = await clientPaymentApi.getTypes("PKO");
+    } = await bankApi.getTypes("PKO");
     typeOperations.value = result;
   } catch (e) {
     console.error(e);
   }
 };
 
-const getSellingGoods = async () => {
+const getBangComing = async () => {
   try {
     const {
       data: { result },
-    } = await clientPaymentApi.getById(route.params.id);
+    } = await bankApi.getById(route.params.id);
     form.typeOperation = result.operationType;
     (form.sum = result.sum), (author.value = result.author.name);
     (form.base = result.basis),
@@ -157,7 +157,7 @@ const firstAccess = async () => {
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.updatePaymentFromClient(id.value, body);
+    const res = await bankApi.updatePaymentFromClient(id.value, body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -189,7 +189,7 @@ const secondAccess = async () => {
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.updateWriteOff(id.value, body);
+    const res = await bankApi.updateWriteOff(id.value, body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -220,7 +220,7 @@ const thirdAccess = async () => {
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.updateAnotherCashRegister(
+    const res = await bankApi.updateAnotherCashRegister(
       id.value,
       body
     );
@@ -259,7 +259,7 @@ const fourthAccess = async () => {
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.updateInvestment(id.value, body);
+    const res = await bankApi.updateInvestment(id.value, body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -296,7 +296,7 @@ const fifthAccess = async () => {
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.updateCreditReceive(id.value, body);
+    const res = await bankApi.updateCreditReceive(id.value, body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -333,7 +333,7 @@ const sixthAccess = async () => {
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.updateProviderRefund(id.value, body);
+    const res = await bankApi.updateProviderRefund(id.value, body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -363,7 +363,7 @@ const seventhAccess = async () => {
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.updateAccountablePersonRefund(
+    const res = await bankApi.updateAccountablePersonRefund(
       id.value,
       body
     );
@@ -398,7 +398,7 @@ const eighthAccess = async () => {
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.updateOtherExpenses(id.value, body);
+    const res = await bankApi.updateOtherExpenses(id.value, body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -431,7 +431,7 @@ const ninthAccess = async () => {
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.updateOtherIncomes(id.value, body);
+    const res = await bankApi.updateOtherIncomes(id.value, body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -555,7 +555,7 @@ onMounted(async () => {
   id.value = route.params.id;
   await Promise.all([
     getTypes(),
-    getSellingGoods(),
+    getBangComing(),
     getEmployees(),
     getIncomeItems(),
     getCashregisters(),
@@ -577,7 +577,7 @@ function validateNumberInput(event) {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase">
         <div class="d-flex align-center ga-2 ms-4">
-          <span>БАНК (изменение)</span>
+          <span>БАНК ПРИХОД (изменение)</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
