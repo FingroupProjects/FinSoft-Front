@@ -163,14 +163,14 @@ const routes = [
     component: () => import("../pages/cash/bank/index.vue"),
   },
   {
-    path: "/moneyReturnCreate",
-    name: "moneyReturnCreate",
-    component: () => import("../pages/cash/moneyReturn/create.vue"),
+    path: "/bankCreate",
+    name: "bankCreate",
+    component: () => import("../pages/cash/bank/create.vue"),
   },
   {
-    path: "/moneyReturnEdit/:id",
-    name: "moneyReturnEdit",
-    component: () => import("../pages/cash/moneyReturn/show.vue"),
+    path: "/bankEdit/:id",
+    name: "bankEdit",
+    component: () => import("../pages/cash/bank/show.vue"),
   },
   {
     path: "/hr/recruitment",

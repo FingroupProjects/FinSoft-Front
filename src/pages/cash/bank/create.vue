@@ -3,8 +3,9 @@ import {
   BASE_COLOR,
   FIELD_COLOR,
 } from "../../../composables/constant/colors.js";
-import validate from "./validate.js";
 import { useRouter } from "vue-router";
+import validate from "../moneyComing/validate.js";
+import bankAppi from "../../../api/documents/bank.js";
 import { ref, reactive, onMounted, watch } from "vue";
 import employeeApi from "../../../api/list/employee.js";
 import Icons from "../../../composables/Icons/Icons.vue";
@@ -14,7 +15,6 @@ import counterpartyApi from "../../../api/list/counterparty.js";
 import cashRegisterApi from "../../../api/list/cashRegister.js";
 import organizationApi from "../../../api/list/organizations.js";
 import currentDate from "../../../composables/date/currentDate.js";
-import clientPaymentApi from "../../../api/documents/cashRegister.js";
 import organizationBillApi from "../../../api/list/organizationBill.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import { add, addMessage } from "../../../composables/constant/buttons.js";
@@ -91,7 +91,7 @@ const firstAccess = async () => {
   const body = {
     date: form.date,
     organization_id: form.organization,
-    cash_register_id: form.cash,
+    checking_account_id: form.cash,
     sum: form.sum,
     counterparty_id: form.counterparty,
     counterparty_agreement_id: form.cpAgreement,
@@ -100,9 +100,9 @@ const firstAccess = async () => {
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.paymentFromClient(body);
+    const res = await bankAppi.paymentFromClient(body);
     showToast(addMessage, "green");
-    router.push("/moneyComing");
+    router.push("/bank");
   } catch (e) {
     console.error(e);
   }
@@ -126,7 +126,7 @@ const secondAccess = async () => {
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.writeOff(body);
+    const res = await bankAppi.writeOff(body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -151,7 +151,7 @@ const thirdAccess = async () => {
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.anotherCashRegister(body);
+    const res = await bankAppi.anotherCashRegister(body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -178,7 +178,7 @@ const fourthAccess = async () => {
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.investment(body);
+    const res = await bankAppi.investment(body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -206,7 +206,7 @@ const fifthAccess = async () => {
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.creditReceive(body);
+    const res = await bankAppi.creditReceive(body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -234,7 +234,7 @@ const sixthAccess = async () => {
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.providerRefund(body);
+    const res = await bankAppi.providerRefund(body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -260,7 +260,7 @@ const seventhAccess = async () => {
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.accountablePersonRefund(body);
+    const res = await bankAppi.accountablePersonRefund(body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -286,7 +286,7 @@ const eighthAccess = async () => {
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.otherExpenses(body);
+    const res = await bankAppi.otherExpenses(body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -313,7 +313,7 @@ const ninthAccess = async () => {
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.otherExpenses(body);
+    const res = await bankAppi.otherExpenses(body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -400,22 +400,9 @@ const getTypes = async () => {
   try {
     const {
       data: { result },
-    } = await clientPaymentApi.getTypes("PKO");
+    } = await bankAppi.getTypes("PKO");
     typeOperations.value = result;
     form.typeOperation = typeOperations.value[0].title_ru;
-  } catch (e) {
-    console.error(e);
-  }
-};
-
-const getCashregisters = async () => {
-  try {
-    const { data } = await cashRegisterApi.get({
-      page: 1,
-      itemsPerPage: 100000,
-      sortBy: "name",
-    });
-    cashRegisters.value = data.result.data;
   } catch (e) {
     console.error(e);
   }
@@ -476,7 +463,6 @@ onMounted(async () => {
     getTypes(),
     getEmployees(),
     getIncomeItems(),
-    getCashregisters(),
     getOrganizations(),
     getCounterparties(),
     getOrganizationBills(),
@@ -539,8 +525,8 @@ function validateNumberInput(event) {
             v-model="form.organization"
           />
           <custom-autocomplete
-            label="Касса"
-            :items="cashRegisters"
+            label="PC"
+            :items="organizationBills"
             v-model="form.cash"
           />
           <custom-text-field

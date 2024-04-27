@@ -300,6 +300,7 @@ watch(form, () => {
 
 onMounted(() => {
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
+  getSellingGoodsDetail(),
   Promise.all([
     getOrganizations(),
     getCounterparties(),
@@ -307,7 +308,6 @@ onMounted(() => {
     getStorages(),
     getCurrencies(),
     getGoods(),
-    getSellingGoodsDetail(),
   ]);
 });
 

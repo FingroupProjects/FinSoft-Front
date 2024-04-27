@@ -227,7 +227,7 @@ watch(search, debounce((newValue) => {
 }, 500))
 
 const show = (item) => {
-  window.open(`/sellingGoods/${item.id}`, '_blank')
+  window.open(`/SellingGoodsEdit/${item.id}`, '_blank')
 }
 
 </script>
