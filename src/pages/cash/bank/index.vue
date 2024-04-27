@@ -65,7 +65,7 @@ const filterForm = ref({
 const headers = ref([
   { title: "Номер", key: "doc_number" },
   { title: "Дата", key: "date" },
-  { title: "Касса", key: "cashRegister.name" },
+  { title: "PC", key: "cashRegister.name" },
   { title: "Организация", key: "organization.name" },
   { title: "Операция", key: "storage.name" },
   { title: "Плательщик", key: "cashRegister.responsiblePerson.name" },
@@ -269,7 +269,7 @@ const getAuthors = async () => {
             <div class="d-flex ga-2 mt-1 me-3">
               <Icons
                 title="Добавить"
-                @click="$router.push('/moneyComingCreate')"
+                @click="$router.push('/bankCreate')"
                 name="add"
               />
               <Icons title="Скопировать" name="copy" />
@@ -362,10 +362,14 @@ const getAuthors = async () => {
               </td>
               <td>{{ item.doc_number }}</td>
               <td>{{ showDate(item.date) }}</td>
-              <td>{{ item.cashRegister.name }}</td>
+              <td>
+                <!-- {{ item.cashRegister.name }} -->
+              </td>
               <td>{{ item.organization.name }}</td>
               <td>{{ item.operationType }}</td>
-              <td>{{ item.counterparty.name }}</td>
+              <td>
+                <!-- {{ item.counterparty.name }} -->
+              </td>
               <td>{{ item.sum }}</td>
               <td>{{ item.currency }}</td>
               <td>{{ item.author.name }}</td>

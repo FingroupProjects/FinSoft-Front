@@ -12,7 +12,7 @@ export default {
     return api.get(`checking-account/${type}`, { params });
   },
   getById(id) {
-    return api.get(`/cash-store/show/${id}`);
+    return api.get(`/checking-account/show/${id}`);
   },
   getTypes(type = "RKO") {
     return api.get(`/operationTypes`, {
@@ -24,60 +24,60 @@ export default {
 
   // create
   paymentFromClient(data) {
-    return api.post("cash-store/client-payment", data);
+    return api.post("checking-account/client-payment", data);
   },
   writeOff(data) {
-    return api.post("cash-store/withdrawal", data);
+    return api.post("checking-account/withdrawal", data);
   },
   anotherCashRegister(data) {
-    return api.post("cash-store/another-cash-register", data);
+    return api.post("checking-account/another-cash-register", data);
   },
   investment(data) {
-    return api.post("cash-store/investment", data);
+    return api.post("checking-account/investment", data);
   },
   creditReceive(data) {
-    return api.post("cash-store/credit-receive", data);
+    return api.post("checking-account/credit-receive", data);
   },
   providerRefund(data) {
-    return api.post("cash-store/provider-refund", data);
+    return api.post("checking-account/provider-refund", data);
   },
   accountablePersonRefund(data) {
-    return api.post("cash-store/accountable-person-refund", data);
+    return api.post("checking-account/accountable-person-refund", data);
   },
   otherExpenses(data) {
-    return api.post("cash-store/other-expenses", data);
+    return api.post("checking-account/other-expenses", data);
   },
   otherIncomes(data) {
-    return api.post("cash-store/other-incomes", data);
+    return api.post("checking-account/other-incomes", data);
   },
 
   // update
   updatePaymentFromClient(id, data) {
-    return api.patch(`cash-store/client-payment/${id}`, data);
+    return api.patch(`checking-account/client-payment/${id}`, data);
   },
   updateWriteOff(id, data) {
-    return api.patch(`cash-store/withdrawal/${id}`, data);
+    return api.patch(`checking-account/withdrawal/${id}`, data);
   },
   updateAnotherCashRegister(id, data) {
-    return api.patch(`cash-store/another-cash-register/${id}`, data);
+    return api.patch(`checking-account/another-cash-register/${id}`, data);
   },
   updateInvestment(id, data) {
-    return api.patch(`cash-store/investment/${id}`, data);
+    return api.patch(`checking-account/investment/${id}`, data);
   },
   updateCreditReceive(id, data) {
-    return api.patch(`cash-store/credit-receive/${id}`, data);
+    return api.patch(`checking-account/credit-receive/${id}`, data);
   },
   updateProviderRefund(id, data) {
-    return api.patch(`cash-store/provider-refund/${id}`, data);
+    return api.patch(`checking-account/provider-refund/${id}`, data);
   },
   updateAccountablePersonRefund(id, data) {
-    return api.patch(`cash-store/accountable-person-refund/${id}`, data);
+    return api.patch(`checking-account/accountable-person-refund/${id}`, data);
   },
   updateOtherExpenses(id, data) {
-    return api.patch(`cash-store/other-expenses/${id}`, data);
+    return api.patch(`checking-account/other-expenses/${id}`, data);
   },
   updateOtherIncomes(id, data) {
-    return api.patch(`cash-store/other-incomes/${id}`, data);
+    return api.patch(`checking-account/other-incomes/${id}`, data);
   },
   // update(id, data) {
   //   return api.patch(`/document/update/${id}`, data)
