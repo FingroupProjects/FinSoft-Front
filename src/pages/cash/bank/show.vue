@@ -3,7 +3,7 @@ import {
   BASE_COLOR,
   FIELD_COLOR,
 } from "../../../composables/constant/colors.js";
-import validate from "./validate.js";
+import validate from "../moneyComing/validate.js";
 import { useRoute, useRouter } from "vue-router";
 import { ref, reactive, onMounted, watch } from "vue";
 import employeeApi from "../../../api/list/employee.js";
