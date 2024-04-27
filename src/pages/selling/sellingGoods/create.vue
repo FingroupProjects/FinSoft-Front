@@ -79,21 +79,17 @@ const getCounterparties = async () => {
       itemsPerPage: 100000,
       sortBy: "name",
     });
-    console.log(data);
-    counterparties.value = data.result;
+    counterparties.value = data.result.data;
   } catch (e) {
     console.error(e);
   }
 };
 
-const getCpAgreements = async () => {
-  const { data } = await cpAgreementApi.get({
-    page: 1,
-    itemsPerPage: 100000,
-    sortBy: "name",
-  });
-  cpAgreements.value = data.result.data;
-};
+const getCpAgreements = async (id) => {
+  cpAgreements.value = []
+  const {data} = await cpAgreementApi.getCounterpartyById(id);
+  cpAgreements.value = data.result.data
+}
 
 const getStorages = async () => {
   const { data } = await storageApi.get({
@@ -231,45 +227,57 @@ const totalPriceWithSale = computed(() => {
   return sum;
 });
 
+watch(() => form.counterparty, async (id) => {
+  form.cpAgreement = null
+  getCpAgreements(id)
+})
+
+watch(() => form.cpAgreement, (newValue) => {
+  if (newValue !== null) {
+    const cpAgreement = cpAgreements.value.find((el) => el.id === newValue);
+    form.currency = cpAgreement.currency_id
+  }
+});
+
 onMounted(() => {
   form.date = currentDate();
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
   getOrganizations();
   getCounterparties();
-  getCpAgreements();
+  // getCpAgreements();
   getStorages();
   getCurrencies();
   getGoods();
 });
 
-watch(
-  () => form.counterparty,
-  async (id) => {
-    form.cpAgreement = null;
+// watch(
+//   () => form.counterparty,
+//   async (id) => {
+//     form.cpAgreement = null;
 
-    try {
-      const res = await cpAgreementApi.getById(id);
+//     try {
+//       const res = await cpAgreementApi.getById(id);
 
-      form.currency = {
-        id: res.data.result.currency_id.id,
-        name: res.data.result.currency_id.name,
-      };
+//       form.currency = {
+//         id: res.data.result.currency_id.id,
+//         name: res.data.result.currency_id.name,
+//       };
 
-      const array =
-        Object.prototype.toString.call(res.data.result) === "[object Array]";
-      const obj =
-        Object.prototype.toString.call(res.data.result) === "[object Object]";
+//       const array =
+//         Object.prototype.toString.call(res.data.result) === "[object Array]";
+//       const obj =
+//         Object.prototype.toString.call(res.data.result) === "[object Object]";
 
-      cpAgreements.value = array
-        ? res.data.result
-        : obj
-        ? [res.data.result]
-        : [];
-    } catch (e) {
-      cpAgreements.value = [];
-    }
-  }
-);
+//       cpAgreements.value = array
+//         ? res.data.result
+//         : obj
+//         ? [res.data.result]
+//         : [];
+//     } catch (e) {
+//       cpAgreements.value = [];
+//     }
+//   }
+// );
 
 const isSaleIntegerDisabled = computed(() => !!form.salePercent);
 const isSalePercentDisabled = computed(() => !!form.saleInteger);
