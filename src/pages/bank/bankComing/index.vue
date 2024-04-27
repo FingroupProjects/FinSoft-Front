@@ -17,6 +17,7 @@ import {
   restoreMessage,
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
+import bankApi from "../../../api/documents/bank.js";
 import userApi from "../../../api/list/user.js";
 import currencyApi from "../../../api/list/currency.js";
 import organizationApi from "../../../api/list/organizations.js";
@@ -64,10 +65,10 @@ const filterForm = ref({
 const headers = ref([
   { title: "Номер", key: "doc_number" },
   { title: "Дата", key: "date" },
-  { title: "Касса", key: "cashRegister.name" },
+  { title: "PC", key: "cashRegister.name" },
   { title: "Организация", key: "organization.name" },
   { title: "Операция", key: "storage.name" },
-  { title: "Получатель", key: "cashRegister.responsiblePerson.name" },
+  { title: "Плательщик", key: "cashRegister.responsiblePerson.name" },
   { title: "Сумма", key: "currency.name" },
   { title: "Валюта", key: "currency.name" },
   { title: "Автор", key: "sender.name" },
@@ -80,18 +81,28 @@ const getSellingGoods = async ({ page, itemsPerPage, sortBy, search }) => {
   filterModal.value = false;
   loading.value = true;
   try {
-    const { data } = await clientPaymentApi.get(
-      "RKO",
+    const { data } = await bankApi.get(
+      "PKO",
       { page, itemsPerPage, sortBy },
       search,
       filterData
     );
+    console.log(data);
     paginations.value = data.result.pagination;
     moneyComing.value = data.result.data;
     loading.value = false;
   } catch (e) {
     console.error(e);
   }
+};
+
+const getCashregisters = async () => {
+  const { data } = await cashRegisterApi.get({
+    page: 1,
+    itemsPerPage: 100000,
+    sortBy: "name",
+  });
+  cashRegisters.value = data.result.data;
 };
 
 function countFilter() {
@@ -216,33 +227,24 @@ const getTypes = async () => {
   try {
     const {
       data: { result },
-    } = await clientPaymentApi.getTypes("RKO");
+    } = await clientPaymentApi.getTypes("PKO");
     typeOperations.value = result;
   } catch (e) {
     console.error(e);
   }
 };
 
-const getCashregisters = async () => {
-  const { data } = await cashRegisterApi.get({
-    page: 1,
-    itemsPerPage: 100000,
-    sortBy: "name",
-  });
-  cashRegisters.value = data.result.data;
-};
-
 const getCurrencies = async () => {
   try {
     const { data } = await currencyApi.get({ page: 1, itemsPerPage: 100000 });
-    currencies.value = data.result.data;
+    currencies.value = data.result.data
   } catch (e) {}
 };
 
 const getAuthors = async () => {
   const { data } = await userApi.getAuthors();
-  authors.value = data.result.data;
-};
+  authors.value = data.result.data
+}
 
 onMounted(async () => {
   await Promise.all([
@@ -260,14 +262,14 @@ onMounted(async () => {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>РКО</span>
+          <span>БАНК ПРИХОД</span>
         </div>
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
               <Icons
                 title="Добавить"
-                @click="$router.push('/moneyReturnCreate')"
+                @click="$router.push('/bankComingCreate')"
                 name="add"
               />
               <Icons title="Скопировать" name="copy" />
@@ -333,7 +335,7 @@ onMounted(async () => {
             <tr
               @mouseenter="hoveredRowIndex = index"
               @mouseleave="hoveredRowIndex = null"
-              @dblclick="$router.push(`/moneyReturnEdit/${item.id}`)"
+              @dblclick="$router.push(`/bankComingEdit/${item.id}`)"
               :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
               <td>
@@ -360,10 +362,14 @@ onMounted(async () => {
               </td>
               <td>{{ item.doc_number }}</td>
               <td>{{ showDate(item.date) }}</td>
-              <td>{{ item.cashRegister.name }}</td>
+              <td>
+                <!-- {{ item.cashRegister.name }} -->
+              </td>
               <td>{{ item.organization.name }}</td>
               <td>{{ item.operationType }}</td>
-              <td>{{ item.counterparty ? item.counterparty.name : "" }}</td>
+              <td>
+                <!-- {{ item.counterparty.name }} -->
+              </td>
               <td>{{ item.sum }}</td>
               <td>{{ item.currency }}</td>
               <td>{{ item.author.name }}</td>

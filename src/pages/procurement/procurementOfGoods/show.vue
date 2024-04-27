@@ -280,17 +280,22 @@ watch(form, () => {
 
 
 
-watch(() => form.counterparty, async (data) => {
+watch(() => form.counterparty, async (id) => {
   form.cpAgreement = null
   const id = typeof data === 'object' ? data.id : data
+
 
   try {
     const res = await cpAgreementApi.getCounterpartyById(id)
 
-    const array = Object.prototype.toString.call(res.data.result.data) === '[object Array]'
-    const obj = Object.prototype.toString.call(res.data.result.data) === '[object Object]'
+    form.currency = {
+      id: res.data.result.currency_id,
+      name: res.data.result.currency_id
+    }
+    const array = Object.prototype.toString.call(res.data.result) === '[object Array]'
+    const obj = Object.prototype.toString.call(res.data.result) === '[object Object]'
 
-    cpAgreements.value = array ? res.data.result.data : obj ? [res.data.result.data] : []
+    cpAgreements.value = array ? res.data.result.data : obj ? res.data.result.data : []
 
   } catch (e) {
     cpAgreements.value = []

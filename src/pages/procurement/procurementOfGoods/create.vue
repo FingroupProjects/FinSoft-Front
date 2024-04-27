@@ -69,8 +69,9 @@ const getCounterparties = async () => {
   counterparties.value = data.result.data
 }
 
-const getCpAgreements = async () => {
-  const {data} = await cpAgreementApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+const getCpAgreements = async (id) => {
+  cpAgreements.value = []
+  const {data} = await cpAgreementApi.getCounterpartyById(id);
   cpAgreements.value = data.result.data
 }
 
@@ -199,26 +200,31 @@ const isSalePercentDisabled = computed(() => !!form.saleInteger);
 
 watch(() => form.counterparty, async (id) => {
   form.cpAgreement = null
+  getCpAgreements(id)
+  // try {
+  //   const res = await cpAgreementApi.getCounterpartyById(id)
 
-  try {
-    const res = await cpAgreementApi.getCounterpartyById(id)
+  //   form.currency = {
+  //     id: res.data.result.currency_id.id,
+  //     name: res.data.result.currency_id.name
+  //   }
+  //   const array = Object.prototype.toString.call(res.data.result) === '[object Array]'
+  //   const obj = Object.prototype.toString.call(res.data.result) === '[object Object]'
 
-    const array = Object.prototype.toString.call(res.data.result.data) === '[object Array]'
-    const obj = Object.prototype.toString.call(res.data.result.data) === '[object Object]'
+  //   cpAgreements.value = array ? res.data.result : obj ? [res.data.result] : []
 
-    cpAgreements.value = array ? res.data.result.data : obj ? [res.data.result.data] : []
-  } catch (e) {
-    console.log(e)
-  }
+  // } catch (e) {
+  //   cpAgreements.value = []
+  // }
 })
 
-watch(() => form.cpAgreement, async () => {
-  const {data} = await cpAgreementApi.getById(form.cpAgreement)
-  form.currency = {
-    id: data.result.currency_id.id,
-    name: data.result.currency_id.name
+watch(() => form.cpAgreement, (newValue) => {
+  if (newValue !== null) {
+    const cpAgreement = cpAgreements.value.find((el) => el.id === newValue);
+    form.currency = cpAgreement.currency_id
   }
-})
+});
+
 
 watch(() => form.saleInteger, (newValue) => {
   if (!newValue) {
@@ -252,7 +258,7 @@ onMounted(() => {
 
   getOrganizations()
   getCounterparties()
-  getCpAgreements()
+  // getCpAgreements()
   getStorages()
   getCurrencies()
   getGoods()
@@ -270,8 +276,8 @@ onMounted(() => {
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
               <Icons title="Добавить" @click="addNewProcurement" name="add"/>
-              <Icons title="Скопировать" @click="" name="copy"/>
-              <Icons title="Удалить" @click="" name="delete"/>
+              <Icons title="Скопировать" name="copy"/>
+              <Icons title="Удалить" name="delete"/>
             </div>
           </div>
 
@@ -287,7 +293,7 @@ onMounted(() => {
           <custom-text-field label="Дата" type="date" v-model="form.date"/>
           <custom-autocomplete label="Организация" :items="organizations" v-model="form.organization"/>
           <custom-autocomplete label="Поставщик" :items="counterparties" v-model="form.counterparty"/>
-          <custom-autocomplete label="Договор" :items="cpAgreements" v-model="form.cpAgreement"/>
+          <custom-autocomplete :disabled="!form.counterparty" label="Договор" :items="cpAgreements" v-model="form.cpAgreement"/>
           <custom-autocomplete label="Склад" :items="storages" v-model="form.storage"/>
           <custom-text-field label="Руч. скидка (сумма)" v-mask="'###'" v-model="form.saleInteger"
                              :disabled="isSaleIntegerDisabled"/>

@@ -197,6 +197,9 @@ const updateClientReturn = async () => {
    if (res.status === 200) {
      showToast(editMessage)
      router.push('/clientReturn')
+     setTimeout(() => {
+     window.location.reload()
+     }, 100);
    }
  } catch (e) {
    console.error(e)

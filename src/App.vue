@@ -42,7 +42,7 @@ window.addEventListener("load", () => {
 })
 
 const changed = data => {
-  console.log(data)
+  // console.log(data)
   return isChangedDocument.value = data
 }
 

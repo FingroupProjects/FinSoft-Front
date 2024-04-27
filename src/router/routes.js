@@ -158,6 +158,36 @@ const routes = [
     component: () => import("../pages/cash/moneyReturn/show.vue"),
   },
   {
+    path: "/bankComing",
+    name: "bankComing",
+    component: () => import("../pages/bank/bankComing/index.vue"),
+  },
+  {
+    path: "/bankComingCreate",
+    name: "bankComingCreate",
+    component: () => import("../pages/bank/bankComing/create.vue"),
+  },
+  {
+    path: "/bankComingEdit/:id",
+    name: "bankComingEdit",
+    component: () => import("../pages/bank/bankComing/show.vue"),
+  },
+  {
+    path: "/bankSpend",
+    name: "bankSpend",
+    component: () => import("../pages/bank/bankSpend/index.vue"),
+  },
+  {
+    path: "/bankSpendCreate",
+    name: "bankSpendCreate",
+    component: () => import("../pages/bank/bankSpend/create.vue"),
+  },
+  {
+    path: "/bankSpendEdit/:id",
+    name: "bankSpendEdit",
+    component: () => import("../pages/bank/bankSpend/show.vue"),
+  },
+  {
     path: "/hr/recruitment",
     name: "recruitment",
     component: () => import("../pages/hr/recruitment/index.vue"),
