@@ -472,7 +472,7 @@ watch(search, debounce(newValue => {
         <template v-slot:item="{ item, index }">
               <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)"
                   @dblclick="openDialog(item)"
-                  :class="{'bg-grey-lighten-2': markedID.includes(item.id) }">
+                  :class="{'bg-grey-lighten-1': markedID.includes(item.id) }">
                 <td>
                   <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
                     <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)"
@@ -518,6 +518,9 @@ watch(search, debounce(newValue => {
             <v-form class="d-flex w-100" :disabled="!updateAccess('unit') && isExistsSchedule" @submit.prevent="addSchedule">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100 mt-2">
+                  <div class="d-flex ga-10 mb-4">
+                    <custom-text-field v-for="week in weeks" :label="week.week" aria-valuemax="24" v-model="week.hour" min-width="10px" max-width="10px" />
+                  </div>
                   <v-text-field
                       v-model="nameRef"
                       :rules="[rules.required]"
@@ -534,9 +537,6 @@ watch(search, debounce(newValue => {
                       clearable
                       autofocus
                   />
-                  <div class="d-flex ga-10 mb-4">
-                    <custom-text-field v-for="week in weeks" :label="week.week" aria-valuemax="24" v-model="week.hour" min-width="10px" max-width="10px" />
-                  </div>
                   <div class="d-flex my-4 justify-end">
                     <v-btn :color="BASE_COLOR" class="text-none" @click="calculate">Вычислить</v-btn>
                   </div>
