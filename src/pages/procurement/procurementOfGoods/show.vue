@@ -282,6 +282,8 @@ watch(form, () => {
 
 watch(() => form.counterparty, async (id) => {
   form.cpAgreement = null
+  const id = typeof data === 'object' ? data.id : data
+
 
   try {
     const res = await cpAgreementApi.getCounterpartyById(id)
@@ -300,6 +302,14 @@ watch(() => form.counterparty, async (id) => {
   }
 })
 
+// watch(() => form.cpAgreement, async () => {
+//   const {data} = await cpAgreementApi.getById(form.cpAgreement)
+//   form.currency = {
+//     id: data.result.currency_id.id,
+//     name: data.result.currency_id.name
+//   }
+// })
+
 watch(confirmDocument, () => {
   if (confirmDocument.isUpdateOrCreateDocument) {
     updateProcurement()
@@ -316,9 +326,7 @@ onMounted( () => {
     getStorages(),
     getCurrencies(),
     getGoods(),
-
   ])
-
 })
 
 

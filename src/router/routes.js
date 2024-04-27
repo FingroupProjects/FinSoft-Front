@@ -263,6 +263,11 @@ const routes = [
     component: () => import("../pages/list/currency/index.vue"),
   },
   {
+    path: "/list/schedule",
+    name: "schedule",
+    component: () => import("../pages/list/schedule/index.vue"),
+  },
+  {
     path: "/list/counterparty",
     name: "counterparty",
     component: () => import("../pages/list/counterparty/index.vue"),
