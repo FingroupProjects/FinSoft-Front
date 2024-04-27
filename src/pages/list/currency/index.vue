@@ -708,7 +708,7 @@ watch(search, debounce((newValue) => {
               </v-btn>
               </div>
             </div>
-            <v-form class="d-flex w-100" :disabled="!updateAccess('unit') && isExistsCurrency" @submit.prevent="addCurrency">
+            <v-form class="d-flex w-100" :disabled="!updateAccess('currency') && isExistsCurrency" @submit.prevent="addCurrency">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100">
                   <v-text-field

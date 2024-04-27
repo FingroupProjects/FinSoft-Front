@@ -205,7 +205,7 @@ const updateProcurement = async () => {
    const res = await procurementApi.update(route.params.id, body)
    if (res.status === 200) {
      showToast(editMessage)
-     router.push('/procurement')
+     router.push('/procurementOfGoods')
    }
  } catch (e) {
    console.log(e)
@@ -282,32 +282,28 @@ watch(form, () => {
 
 watch(() => form.counterparty, async (data) => {
   form.cpAgreement = null
-
   const id = typeof data === 'object' ? data.id : data
 
   try {
-    const res = await cpAgreementApi.getById(id)
-    form.currency = {
-      id: res.data.result.currency_id.id,
-      name: res.data.result.currency_id.name
-    }
+    const res = await cpAgreementApi.getCounterpartyById(id)
 
-    setTimeout(() => {
-      tempForm.value.currency = {
-        id: res.data.result.currency_id.id,
-        name: res.data.result.currency_id.name
-      }
-    }, 500)
+    const array = Object.prototype.toString.call(res.data.result.data) === '[object Array]'
+    const obj = Object.prototype.toString.call(res.data.result.data) === '[object Object]'
 
-    const array = Object.prototype.toString.call(res.data.result) === '[object Array]'
-    const obj = Object.prototype.toString.call(res.data.result) === '[object Object]'
-
-    cpAgreements.value = array ? res.data.result : obj ? [res.data.result] : []
+    cpAgreements.value = array ? res.data.result.data : obj ? [res.data.result.data] : []
 
   } catch (e) {
     cpAgreements.value = []
   }
 })
+
+// watch(() => form.cpAgreement, async () => {
+//   const {data} = await cpAgreementApi.getById(form.cpAgreement)
+//   form.currency = {
+//     id: data.result.currency_id.id,
+//     name: data.result.currency_id.name
+//   }
+// })
 
 watch(confirmDocument, () => {
   if (confirmDocument.isUpdateOrCreateDocument) {
@@ -325,9 +321,7 @@ onMounted( () => {
     getStorages(),
     getCurrencies(),
     getGoods(),
-
   ])
-
 })
 
 

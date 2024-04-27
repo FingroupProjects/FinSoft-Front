@@ -1,0 +1,668 @@
+<script setup>
+import {onMounted, reactive, ref, watch} from "vue";
+import {useRouter} from "vue-router";
+import showToast from '../../../composables/toast'
+import {createAccess, removeAccess, updateAccess} from '../../../composables/access/access.js'
+import {
+  addMessage,
+  editMessage,
+  ErrorSelectMessage,
+  removeMessage,
+  restoreMessage,
+  selectOneItemMessage,
+} from "../../../composables/constant/buttons.js";
+import Icons from "../../../composables/Icons/Icons.vue";
+import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
+import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
+import validate from "./validate.js";
+import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
+import debounce from "lodash.debounce";
+import schedule from "../../../api/list/schedule.js";
+import CustomTextField from "../../../components/formElements/CustomTextField.vue";
+
+const router = useRouter()
+const loading = ref(false);
+const loadingMonth = ref(false)
+const dialog = ref(false)
+
+const showConfirmDialog = ref(false);
+const isExistsSchedule = ref(false)
+const idSchedule = ref(null)
+const scheduleInDialogTitle = ref(null)
+const search = ref('')
+const debounceSearch = ref('')
+const filterModal = ref(null)
+const count = ref(0)
+
+const hoveredRowIndex = ref(null)
+const markedItem = ref(null)
+const markedID = ref([])
+
+const nameRef = ref(null)
+const showModal = ref(false);
+const isShowMonth = ref(false);
+const weeks = reactive([
+  {
+    week_num: 0,
+    week: 'пн',
+    hour: 0
+  },
+  {
+    week_num: 1,
+    week: 'вт',
+    hour: 0
+  },
+  {
+    week_num: 2,
+    week: 'ср',
+    hour: 0
+  },
+  {
+    week_num: 3,
+    week: 'чт',
+    hour: 0
+  },
+  {
+    week_num: 4,
+    week: 'пт',
+    hour: 0
+  },
+  {
+    week_num: 5,
+    week: 'сб',
+    hour: 0
+  },
+  {
+    week_num: 6,
+    week: 'вс',
+    hour: 0
+  }
+]);
+const countMonths = ref(12)
+
+
+const toggleModal = () => {
+  showModal.value = !showModal.value
+}
+
+
+
+const filterForm = ref({
+  name: null,
+  symbol_code: null,
+  digital_code: null
+})
+
+const months = ref([])
+const schedules = ref([]);
+const paginationsMonth = ref([])
+const paginations = ref([]);
+
+const headers = ref([
+  {title: 'Наименование', key: 'name'},
+])
+
+const headersMonths = ref([
+  {title: '№', key: 'month', sortable: false},
+  {title: 'Месяц', key: 'month', sortable: false},
+  {title: 'Кол. часов', key: 'hours', sortable: false},
+])
+
+const rules = {
+  required: v => !!v,
+  date: v => (v && /^\d{2}-\d{2}-\d{4}$/.test(v)) || 'Формат даты должен быть DD-MM-YYYY',
+}
+
+
+const countFilter = () => {
+  for (const key in filterForm.value) {
+    if (filterForm.value[key] !== null) {
+      count.value++;
+    }
+  }
+}
+
+
+
+const getScheduleData = async ({page, itemsPerPage, sortBy, search} = {}) => {
+  filterModal.value = false
+  const filterData = filterForm.value
+  count.value = 0
+  countFilter()
+
+  loading.value = true;
+  try {
+    const {data} = await schedule.get({page, itemsPerPage, sortBy}, search, filterData);
+    paginations.value = data.result.pagination;
+    schedules.value = data.result.data;
+    console.log(data)
+    markedID.value = []
+  } catch (e) {
+
+  } finally {
+    loading.value = false;
+  }
+}
+
+const isDataChanged = () => {
+  const item = schedules.value.find(elem => elem.id === idSchedule.value)
+  return nameRef.value !== item.name
+}
+
+const checkAndClose = () => {
+  if (nameRef.value) {
+    showModal.value = true;
+  } else {
+    dialog.value = false;
+    showModal.value = false;
+  }
+};
+
+
+const closeDialogWithoutSaving = () => {
+  dialog.value = false;
+  showModal.value = false
+  showConfirmDialog.value = false;
+  cleanForm();
+};
+
+const closingWithSaving = async () => {
+  if (isExistsSchedule.value) {
+    await update({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+    showModal.value = false
+  } else {
+    const isValid = validate(
+      nameRef,
+      );
+      showModal.value = false
+    if (isValid === true) {
+      await addSchedule({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      dialog.value = false;
+      showModal.value = false;
+      showConfirmDialog.value = false;
+    }
+  }
+};
+
+
+const checkUpdate = () => {
+  if (isDataChanged()) {
+    showModal.value = true;
+  } else {
+    dialog.value = false;
+  }
+
+};
+
+const cleanForm = () => {
+  nameRef.value = null;
+};
+
+const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
+  filterModal.value = false
+  filterForm.value = {}
+  await getScheduleData({page, itemsPerPage, sortBy, search})
+}
+
+const addSchedule = async () => {
+  const body = {
+    "name" : nameRef.value,
+    "data" : months.value.map(item => ({
+      "month_id": item.id,
+      "number_of_hours" : item.hours
+    }))
+  }
+
+  try {
+    const res = await schedule.add(body)
+    if (res.status === 201) {
+      await getScheduleData()
+      showToast(addMessage)
+      idSchedule.value = res.data.result.id
+      scheduleInDialogTitle.value = res.data.result.name
+      markedID.value.push(res.data.result.id)
+      isExistsSchedule.value = true
+    }
+  } catch (error) {
+    console.error(error);
+  } finally {
+   dialog.value = false
+  }
+}
+
+const update = async ({page, itemsPerPage, sortBy, search}) => {
+  const body = {
+    "name" : nameRef.value,
+    "data" : [
+      {
+        "month_id": 1,
+        "number_of_hours" : 4
+      },
+      {
+        "month_id": 2,
+        "number_of_hours" : 4
+      },
+      {
+        "month_id": 3,
+        "number_of_hours" : 4
+      }
+    ]
+  }
+  try {
+    const {status} = await schedule.update(idSchedule.value, body)
+    if (status === 200) {
+      await getScheduleData({page, itemsPerPage, sortBy, search})
+      showToast(editMessage)
+      cleanForm()
+      dialog.value = false
+    }
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+
+const removeSchedule = async ({page, itemsPerPage, sortBy}) => {
+  try {
+    const {status} = await schedule.remove({ids: markedID.value})
+    if (status === 200) {
+      showToast(removeMessage, 'red')
+      await getScheduleData({page, itemsPerPage, sortBy})
+      dialog.value = false
+      markedID.value = []
+    }
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+const restoreSchedule = async ({page, itemsPerPage, sortBy}) => {
+  try {
+    const {status} = await schedule.restore({ids: markedID.value})
+    if (status === 200) {
+      showToast(restoreMessage)
+      await getScheduleData({page, itemsPerPage, sortBy})
+      markedID.value = []
+    }
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+const openDialog = (item) => {
+  dialog.value = true
+  if (item === 0) {
+    idSchedule.value = 0
+    isExistsSchedule.value = false
+  } else {
+    markedID.value.push(item.id)
+    idSchedule.value = item.id
+    isExistsSchedule.value = true
+    nameRef.value = item.name
+    scheduleInDialogTitle.value = nameRef.value
+  }
+}
+
+const addBasedOnSchedule = () => {
+  if (markedID.value.length !== 1 && !isExistsSchedule.value) return showToast(selectOneItemMessage, 'warning')
+ 
+  dialog.value = true
+
+  schedules.value.forEach(item => {
+    if (markedID.value[0] === item.id) {
+      idSchedule.value = item.id
+      nameRef.value = item.name
+    }
+  })
+}
+
+const lineMarking = (item) => {
+  if (markedID.value.length > 0) {
+    const firstMarkedItem = schedules.value.find(el => el.id === markedID.value[0]);
+    if (firstMarkedItem && firstMarkedItem.deleted_at) {
+      if (item.deleted_at === null) {
+        showToast(ErrorSelectMessage, 'warning')
+        return;
+      }
+    }
+    if (firstMarkedItem && firstMarkedItem.deleted_at === null) {
+      if (item.deleted_at !== null) {
+        showToast(ErrorSelectMessage, 'warning')
+        return;
+      }
+    }
+  }
+
+  const index = markedID.value.indexOf(item.id);
+  if (index !== -1) {
+    markedID.value.splice(index, 1);
+  } else {
+    if (item.id !== null) {
+      markedID.value.push(item.id);
+    }
+  }
+  markedItem.value = item;
+}
+
+const handleCheckboxClick = (item) => {
+  lineMarking(item)
+}
+
+const compute = ({page, itemsPerPage, sortBy, search}) => {
+  if (markedItem.value.deleted_at !== null) {
+    return restoreSchedule({page, itemsPerPage, sortBy})
+  } else {
+    return removeSchedule({page, itemsPerPage, sortBy, search})
+  }
+}
+
+const calculate = async () => {
+  const body = weeks.map(item => ({
+    week: item.week_num,
+    hour: Number(item.hour)
+  }))
+
+  try {
+    const {data} = await schedule.calculateHours({weeks: body})
+    months.value = data.result.map((item, index) => ({
+      ...item,
+      id: index + 1
+    }))
+    isShowMonth.value = true
+  } catch (e) {
+
+  }
+}
+
+onMounted(async () => {
+  await getScheduleData({page: 1, itemsPerPage: 10, sortBy: 'id', search: ''})
+})
+
+watch(markedID, (newVal) => {
+  markedItem.value = schedules.value.find((el) => el.id === newVal[0]);
+})
+
+watch(dialog, newVal => {
+  if (!newVal) {
+    nameRef.value = null;
+    loadingMonth.value = true;
+    isExistsSchedule.value = false;
+    months.value = [];
+  } else {
+    markedID.value = [markedID.value[markedID.value.length - 1]];
+  }
+})
+
+watch(search, debounce(newValue => {
+  debounceSearch.value = newValue
+}, 500))
+
+</script>
+
+<template>
+  <div>
+    <v-col>
+      <div class="d-flex justify-space-between text-uppercase ">
+        <div class="d-flex align-center ga-2 pe-2 ms-4">
+          <span>График работы</span>
+        </div>
+        <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
+          <div class="d-flex w-100">
+            <div class="d-flex ga-2 me-3">
+              <Icons title="Добавить" v-if="createAccess('currency')" @click="openDialog(0)" name="add"/>
+              <Icons title="Копировать" v-if="createAccess('currency')" @click="addBasedOnSchedule" name="copy"/>
+              <Icons title="Удалить" v-if="removeAccess('currency')" @click="compute" name="delete"/>
+            </div>
+
+            <div class="w-100">
+              <v-text-field
+                  v-model="search"
+                  prepend-inner-icon="search"
+                  density="compact"
+                  label="Поиск..."
+                  variant="outlined"
+                  :color="BASE_COLOR"
+                  :base-color="FIELD_OF_SEARCH"
+                  rounded="lg"
+                  clear-icon="close"
+                  hide-details
+                  single-line
+                  clearable
+                  flat
+              ></v-text-field>
+            </div>
+          </div>
+          <div class="filterElement">
+            <Icons
+              name="filter"
+              title="фильтр"
+              @click="filterModal = true"
+              class="mt-1"
+            />
+            <span v-if="count !== 0" class="countFilter">{{ count }}</span>
+          </div>
+        </v-card>
+      </div>
+
+      <v-card class="mt-2 table">
+        <v-data-table-server
+            style="height: 78vh"
+            items-per-page-text="Элементов на странице:"
+            loading-text="Загрузка"
+            no-data-text="Нет данных"
+            v-model:items-per-page="paginations.per_page"
+            :loading="loading"
+            :headers="headers"
+            :items-length="paginations.total || 0"
+            :items="schedules"
+            :item-value="headers.title"
+            :search="debounceSearch"
+            v-model="markedID"
+            @update:options="getScheduleData"
+            page-text='{0}-{1} от {2}'
+            :items-per-page-options="[
+                {value: 25, title: '25'},
+                {value: 50, title: '50'},
+                {value: 100, title: '100'},
+            ]"
+            show-select
+            fixed-header
+            hover
+        >
+        <template v-slot:item="{ item, index }">
+              <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)"
+                  @dblclick="openDialog(item)"
+                  :class="{'bg-grey-lighten-2': markedID.includes(item.id) }">
+                <td>
+                  <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
+                    <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)"
+                                    @change="handleCheckboxClick(item)">
+                      <span>{{ index + 1 }}</span>
+                    </CustomCheckbox>
+                  </template>
+                  <template v-else>
+                    <div class="d-flex align-center">
+                      <Icons style="margin-right: 10px; margin-top: 4px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
+                      <span>{{ index + 1 }}</span>
+                    </div>
+                  </template>
+                </td>
+                <td>{{ item.name }}</td>
+              </tr>
+            </template>
+        </v-data-table-server>
+      </v-card>
+      <!-- Modal -->
+      <v-card>
+        <v-dialog persistent class="mt-2 pa-2" v-model="dialog" @keyup.esc="isExistsSchedule ? checkUpdate() : checkAndClose()">
+          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="300"
+                  class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
+            <div class="d-flex justify-space-between align-center mb-2">
+              <span>{{ isExistsSchedule ? 'График работы: ' + scheduleInDialogTitle : 'Добавление' }}</span>
+              <div class="d-flex align-center justify-space-between">
+                <div class="d-flex ga-3 align-center mt-2 me-4">
+                  <Icons title="Удалить" v-if="removeAccess('currency') && isExistsSchedule" @click="compute" name="delete"/>
+                  <Icons title="Сохранить" v-if="createAccess('currency') && !isExistsSchedule" @click="addSchedule" name="save"/>
+                  <Icons title="Сохранить" v-if="updateAccess('currency') && isExistsSchedule" @click="update" name="save"/>
+                </div>
+                <v-btn
+                  @click="isExistsSchedule ? checkUpdate() : checkAndClose()"
+                  variant="text"
+                  :size="32"
+                  class="pt-2 pl-1"
+                >
+                <Icons name="close" title="Закрыть" />
+              </v-btn>
+              </div>
+            </div>
+            <v-form class="d-flex w-100" :disabled="!updateAccess('unit') && isExistsSchedule" @submit.prevent="addSchedule">
+              <v-row class="w-100">
+                <v-col class="d-flex flex-column w-100 mt-2">
+                  <v-text-field
+                      v-model="nameRef"
+                      :rules="[rules.required]"
+                      :color="BASE_COLOR"
+                      :base-color="FIELD_COLOR"
+                      class="w-auto text-sm-body-1"
+                      rounded="md"
+                      variant="outlined"
+                      density="compact"
+                      placeholder="График работы"
+                      label="Название"
+                      clear-icon="close"
+                      hide-details
+                      clearable
+                      autofocus
+                  />
+                  <div class="d-flex ga-10 mb-4">
+                    <custom-text-field v-for="week in weeks" :label="week.week" aria-valuemax="24" v-model="week.hour" min-width="10px" max-width="10px" />
+                  </div>
+                  <div class="d-flex my-4 justify-end">
+                    <v-btn :color="BASE_COLOR" class="text-none" @click="calculate">Вычислить</v-btn>
+                  </div>
+                </v-col>
+              </v-row>
+            </v-form>
+
+            <v-card class="table" :style="`border: 2px solid ${BASE_COLOR}`">
+              <v-data-table-server
+                  style="height: 38vh"
+                  items-per-page-text="Элементов на странице:"
+                  loading-text="Загрузка"
+                  no-data-text="Нет данных"
+                  v-model:items-per-page="countMonths"
+                  :loading="loadingMonth"
+                  :headers="headersMonths"
+                  :items-length="paginationsMonth.total || 0"
+                  :items="months"
+                  :item-value="headersMonths.title"
+                  page-text='{0}-{1} от {2}'
+                  :items-per-page-options="[
+                      {value: 25, title: '25'},
+                      {value: 50, title: '50'},
+                      {value: 100, title: '100'},
+                  ]"
+                  fixed-footer
+                  fixed-header
+                  hover
+              >
+                <template v-slot:item="{ item, index }">
+                  <tr>
+                    <td>{{ index + 1 }}</td>
+                    <td>{{ item.month }}</td>
+                    <td style="width: 120px;">
+                      <custom-text-field min-width="20px" max-width="20px" v-model="item.hours"/>
+                    </td>
+                  </tr>
+                </template>
+              </v-data-table-server>
+            </v-card>
+          </v-card>
+        </v-dialog>
+      </v-card>
+
+      <v-card>
+        <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup.esc="closeFilterModal">
+          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="600"
+                  class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
+            <div class="d-flex justify-space-between align-center mb-2">
+              <span>Фильтр</span>
+            </div>
+            <v-form class="d-flex w-100">
+              <v-row class="w-100">
+                <v-col class="d-flex flex-column w-100">
+                  <div class="d-flex justify-space-between ga-6 mb-3">
+                    <v-text-field
+                        v-model="filterForm.name"
+                        :color="BASE_COLOR"
+                        rounded="md"
+                        variant="outlined"
+                        class="w-auto text-sm-body-1"
+                        density="compact"
+                        :base-color="FIELD_COLOR"
+                        placeholder="Наименование"
+                        label="Наименование"
+                        clear-icon="close"
+                        clearable
+                        hide-details
+                        autofocus
+                    />
+                  </div>
+                  <div class="d-flex justify-space-between ga-6 mb-3">
+                     <v-text-field
+                        v-model="filterForm.symbol_code"
+                        :color="BASE_COLOR"
+                        rounded="md"
+                        variant="outlined"
+                        class="w-auto text-sm-body-1"
+                        density="compact"
+                        :base-color="FIELD_COLOR"
+                        placeholder="Символьный код"
+                        label="Символьный код"
+                        clear-icon="close"
+                        clearable
+                        hide-details
+                    />
+                  </div>
+                  <div class="d-flex justify-space-between ga-6 mb-3">
+                     <v-text-field
+                        v-model="filterForm.digital_code"
+                        :color="BASE_COLOR"
+                        rounded="md"
+                        variant="outlined"
+                        class="w-auto text-sm-body-1"
+                        density="compact"
+                        :base-color="FIELD_COLOR"
+                        placeholder="Цифровой код"
+                        label="Цифровой код"
+                        clear-icon="close"
+                        clearable
+                        hide-details
+                    />
+                  </div>
+                  <div class="d-flex justify-end ga-2">
+                  <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
+                  <v-btn :color="BASE_COLOR" class="btn"  @click="getScheduleData">применить</v-btn>
+                </div>
+                  </v-col>
+              </v-row>
+            </v-form>
+          </v-card>
+        </v-dialog>
+      </v-card>
+
+
+      <div v-if="showModal">
+        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()"   @closeWithSaving="closingWithSaving()"/>
+      </div>
+
+
+    </v-col>
+  </div>
+
+
+</template>
+
+<style scoped>
+
+</style>
