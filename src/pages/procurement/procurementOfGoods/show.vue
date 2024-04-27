@@ -280,11 +280,9 @@ watch(form, () => {
 
 
 
-watch(() => form.counterparty, async (id) => {
+watch(() => form.counterparty, async (data) => {
   form.cpAgreement = null
   const id = typeof data === 'object' ? data.id : data
-
-
   try {
     const res = await cpAgreementApi.getCounterpartyById(id)
 
