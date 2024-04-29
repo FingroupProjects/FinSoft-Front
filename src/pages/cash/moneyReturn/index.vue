@@ -360,7 +360,7 @@ onMounted(async () => {
               </td>
               <td>{{ item.doc_number }}</td>
               <td>{{ showDate(item.date) }}</td>
-              <td>{{ item.cashRegister.name }}</td>
+              <td>{{ item.cashRegister? item.cashRegister.name : "" }}</td>
               <td>{{ item.organization.name }}</td>
               <td>{{ item.operationType }}</td>
               <td>{{ item.counterparty ? item.counterparty.name : "" }}</td>

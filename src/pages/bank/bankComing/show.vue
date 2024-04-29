@@ -60,7 +60,8 @@ const organizationBills = ref([]);
 
 watch(
   () => form.typeOperation,
-  (newValue) => {
+  (newValue, oldValue) => {
+    if(oldValue === null) return
     resetFields();
   }
 );

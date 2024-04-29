@@ -70,7 +70,8 @@ const organizationBills = ref([]);
 
 watch(
   () => form.typeOperation,
-  (newValue) => {
+  (newValue, oldValue) => {
+    if(oldValue === null) return;
     resetFields();
   }
 );
@@ -112,9 +113,8 @@ const getTypes = async () => {
 };
 const getSellingGoods = async () => {
   try {
-    const {
-      data: { result },
-    } = await clientPaymentApi.getById(route.params.id);
+    const { data: { result }, } = await clientPaymentApi.getById(route.params.id);
+    console.log(result);
     form.typeOperation = result.operationType;
     (form.sum = result.sum), (author.value = result.author.name);
     (form.base = result.basis),
@@ -632,7 +632,7 @@ function validateNumberInput(event) {
           <div
             style="
               width: 250px;
-              height: 420px;
+              height: 450px;
               border: 1px solid rgba(39, 77, 135, 0.45);
               border-radius: 4px;
               box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
