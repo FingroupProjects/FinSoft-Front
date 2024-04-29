@@ -66,7 +66,7 @@ const headers = ref([
   { title: "Дата", key: "date" },
   { title: "Касса", key: "cashRegister.name" },
   { title: "Организация", key: "organization.name" },
-  { title: "Операция", key: "storage.name" },
+  { title: "Операция", key: "operationType.name" },
   { title: "Плательщик", key: "cashRegister.responsiblePerson.name" },
   { title: "Сумма", key: "currency.name" },
   { title: "Валюта", key: "currency.name" },
@@ -360,10 +360,10 @@ onMounted(async () => {
               </td>
               <td>{{ item.doc_number }}</td>
               <td>{{ showDate(item.date) }}</td>
-              <td>{{ item.cashRegister.name }}</td>
+              <td>{{ item.cashRegister ? item.cashRegister.name : "" }}</td>
               <td>{{ item.organization.name }}</td>
               <td>{{ item.operationType }}</td>
-              <td>{{ item.counterparty.name }}</td>
+              <td>{{ item.counterparty ? item.counterparty.name : "" }}</td>
               <td>{{ item.sum }}</td>
               <td>{{ item.currency }}</td>
               <td>{{ item.author.name }}</td>
