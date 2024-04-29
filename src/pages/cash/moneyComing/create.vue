@@ -254,7 +254,7 @@ const seventhAccess = async () => {
     organization_id: form.organization,
     cash_register_id: form.cash,
     sum: form.sum,
-    employee: form.employee,
+    employee_id: form.employee,
     basis: form.base,
     comment: form.comment,
     type: "PKO",
