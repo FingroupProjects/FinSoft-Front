@@ -86,6 +86,8 @@ const getSellingGoods = async ({ page, itemsPerPage, sortBy, search }) => {
       search,
       filterData
     );
+    console.log(data);
+
     paginations.value = data.result.pagination;
     moneyComing.value = data.result.data;
     loading.value = false;
