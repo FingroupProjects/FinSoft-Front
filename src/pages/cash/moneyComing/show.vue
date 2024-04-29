@@ -60,7 +60,8 @@ const organizationBills = ref([]);
 
 watch(
   () => form.typeOperation,
-  (newValue) => {
+  (newValue, oldValue) => {
+    if(oldValue === null) return;
     resetFields();
   }
 );
@@ -113,13 +114,13 @@ const getSellingGoods = async () => {
       (form.date = showDate(result.created_at, "-", true)),
       (form.cash = result.cashRegister),
       (form.comment = result.comment),
-      (form.employee = result.employee),
+      (form.employee = result.employee_id),
       (form.incomeItem = result.incomeItem),
       (form.balanceItem = result.balanceItem),
       (form.counterparty = result.counterparty),
       (form.sender_cash = result.sender_cash),
       (form.organization = result.organization),
-      (form.organization_bill = result.organization_bill),
+      (form.organization_bill = result.organizationBill),
       setTimeout(() => {
         form.cpAgreement = result.counterpartyAgreement;
       });
