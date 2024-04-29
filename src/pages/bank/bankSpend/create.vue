@@ -4,7 +4,7 @@ import {
   FIELD_COLOR,
 } from "../../../composables/constant/colors.js";
 import { useRouter } from "vue-router";
-import validate from "../bankComing/validate.js"
+import validate from "../bankComing/validate.js";
 import bankAppi from "../../../api/documents/bank.js";
 import { ref, reactive, onMounted, watch } from "vue";
 import employeeApi from "../../../api/list/employee.js";
@@ -457,7 +457,8 @@ const getTypes = async () => {
     const {
       data: { result },
     } = await bankAppi.getTypes("RKO");
-    typeOperations.value = result;
+    console.log(result);
+    typeOperations.value = result.filter((item) => item.title_ru !== "Оплата зарплаты");
     form.typeOperation = typeOperations.value[0].title_ru;
   } catch (e) {
     console.error(e);

@@ -354,7 +354,7 @@ const getAccess = () => {
     case "Оплата аванс подотчетнику":
       seventhAccess();
       break;
-    case "Прочие расходы":
+    case "Прочие Расходы":
       eighthAccess();
       break;
     case "Прочие оплаты":
@@ -563,7 +563,7 @@ function validateNumberInput(event) {
           <div
             style="
               width: 250px;
-              height: 420px;
+              height: 450px;
               border: 1px solid rgba(39, 77, 135, 0.45);
               border-radius: 4px;
               box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
@@ -606,7 +606,7 @@ function validateNumberInput(event) {
                 v-model="form.employee"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Прочие расходы'">
+            <div v-else-if="form.typeOperation === 'Прочие Расходы'">
               <custom-autocomplete
                 label="Статья дохода"
                 :items="incomeItems"

@@ -100,7 +100,7 @@ const firstAccess = async () => {
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.paymentFromClient(body);
+    await clientPaymentApi.paymentFromClient(body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -126,7 +126,7 @@ const secondAccess = async () => {
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.writeOff(body);
+    await clientPaymentApi.writeOff(body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -151,7 +151,7 @@ const thirdAccess = async () => {
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.anotherCashRegister(body);
+    await clientPaymentApi.anotherCashRegister(body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -178,7 +178,7 @@ const fourthAccess = async () => {
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.investment(body);
+    await clientPaymentApi.investment(body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -206,7 +206,7 @@ const fifthAccess = async () => {
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.creditReceive(body);
+    await clientPaymentApi.creditReceive(body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -234,7 +234,7 @@ const sixthAccess = async () => {
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.providerRefund(body);
+    await clientPaymentApi.providerRefund(body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -260,7 +260,7 @@ const seventhAccess = async () => {
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.accountablePersonRefund(body);
+    await clientPaymentApi.accountablePersonRefund(body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -286,7 +286,7 @@ const eighthAccess = async () => {
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.otherExpenses(body);
+    await clientPaymentApi.otherExpenses(body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {
@@ -313,7 +313,7 @@ const ninthAccess = async () => {
     type: "PKO",
   };
   try {
-    const res = await clientPaymentApi.otherExpenses(body);
+    await clientPaymentApi.otherIncomes(body);
     showToast(addMessage, "green");
     router.push("/moneyComing");
   } catch (e) {

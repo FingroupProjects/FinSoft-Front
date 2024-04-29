@@ -115,15 +115,15 @@ const getSellingGoods = async () => {
       (form.cash = result.cashRegister),
       (form.comment = result.comment),
       (form.employee = result.employee_id),
-      (form.incomeItem = result.incomeItem),
-      (form.balanceItem = result.balanceItem),
+      (form.incomeItem = result.balanceArticle),
       (form.counterparty = result.counterparty),
-      (form.sender_cash = result.sender_cash),
+      (form.balanceItem = result.balanceArticle),
       (form.organization = result.organization),
+      (form.sender_cash = result.senderCashRegister),
       (form.organization_bill = result.organizationBill),
       setTimeout(() => {
         form.cpAgreement = result.counterpartyAgreement;
-      });
+      },);
   } catch (e) {
     console.error(e);
   }
@@ -528,8 +528,10 @@ const getCounterparties = async () => {
 const getCpAgreements = async (id) => {
   try {
     const { data } = await cpAgreementApi.getCounterpartyById(id);
-    cpAgreements.value = data.result.counterparty_id.counterpartyAgreement;
-  } catch (e) {}
+    cpAgreements.value = data.result.data;
+  } catch (e) {
+    console.error(e);
+  }
 };
 
 const getIncomeItems = async () => {
