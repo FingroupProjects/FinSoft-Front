@@ -364,7 +364,7 @@ onMounted(async () => {
               <td>{{ showDate(item.date) }}</td>
               <td>{{ item.cashRegister ? item.cashRegister.name : "" }}</td>
               <td>{{ item.organization.name }}</td>
-              <td>{{ item.operationType }}</td>
+              <td>{{ item.operationType.name }}</td>
               <td>{{ item.counterparty ? item.counterparty.name : "" }}</td>
               <td>{{ item.sum }}</td>
               <td>{{ item.currency }}</td>
