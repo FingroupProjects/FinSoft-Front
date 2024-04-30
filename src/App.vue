@@ -7,7 +7,7 @@ import AdminPanel from "./pages/admin-panel/index.vue";
 import Sidebar from "./components/sidebar/Sidebar.vue";
 import warningModal from "./components/paymentWarning/warningModal.vue";
 
-const rale = ref(false);
+const rale = ref(true);
 const procurementOfGoods = ref(false);
 const admin = ref(false);
 const route = useRoute();
