@@ -96,6 +96,7 @@ const firstAccess = async () => {
     counterparty_id: form.counterparty,
     counterparty_agreement_id: form.cpAgreement,
     basis: form.base,
+    operation_type_id: form.typeOperation,
     comment: form.comment,
     type: "PKO",
   };
@@ -122,6 +123,7 @@ const secondAccess = async () => {
     sum: form.sum,
     organization_bill_id: form.organization_bill,
     basis: form.base,
+    operation_type_id: form.typeOperation,
     comment: form.comment,
     type: "PKO",
   };
@@ -147,6 +149,7 @@ const thirdAccess = async () => {
     sum: form.sum,
     sender_cash_register_id: form.sender_cash,
     basis: form.base,
+    operation_type_id: form.typeOperation,
     comment: form.comment,
     type: "PKO",
   };
@@ -174,6 +177,7 @@ const fourthAccess = async () => {
     counterparty_id: form.counterparty,
     counterparty_agreement_id: form.cpAgreement,
     basis: form.base,
+    operation_type_id: form.typeOperation,
     comment: form.comment,
     type: "PKO",
   };
@@ -202,6 +206,7 @@ const fifthAccess = async () => {
     counterparty_id: form.counterparty,
     counterparty_agreement_id: form.cpAgreement,
     basis: form.base,
+    operation_type_id: form.typeOperation,
     comment: form.comment,
     type: "PKO",
   };
@@ -230,6 +235,7 @@ const sixthAccess = async () => {
     counterparty_id: form.counterparty,
     counterparty_agreement_id: form.cpAgreement,
     basis: form.base,
+    operation_type_id: form.typeOperation,
     comment: form.comment,
     type: "PKO",
   };
@@ -256,6 +262,7 @@ const seventhAccess = async () => {
     sum: form.sum,
     employee_id: form.employee,
     basis: form.base,
+    operation_type_id: form.typeOperation,
     comment: form.comment,
     type: "PKO",
   };
@@ -282,6 +289,7 @@ const eighthAccess = async () => {
     sum: form.sum,
     balance_article_id: form.incomeItem,
     basis: form.base,
+    operation_type_id: form.typeOperation,
     comment: form.comment,
     type: "PKO",
   };
@@ -309,6 +317,7 @@ const ninthAccess = async () => {
     sum: form.sum,
     balance_article_id: form.balanceItem,
     basis: form.base,
+    operation_type_id: form.typeOperation,
     comment: form.comment,
     type: "PKO",
   };
@@ -323,31 +332,31 @@ const ninthAccess = async () => {
 
 const getAccess = () => {
   switch (form.typeOperation) {
-    case "Оплата от клиента":
+    case 1:
       firstAccess();
       break;
-    case "Снятие с P/C":
+    case 2:
       secondAccess();
       break;
-    case "Получение с другой кассы":
+    case 3:
       thirdAccess();
       break;
-    case "Вложение":
+    case 4:
       fourthAccess();
       break;
-    case "Получение кредита":
+    case 5:
       fifthAccess();
       break;
-    case "Возврат от поставщика":
+    case 6:
       sixthAccess();
       break;
-    case "Возврат от подотчетника":
+    case 7:
       seventhAccess();
       break;
-    case "Прочие доходы":
+    case 8:
       eighthAccess();
       break;
-    case "Прочие приходы":
+    case 9:
       ninthAccess();
       break;
   }
@@ -402,7 +411,8 @@ const getTypes = async () => {
       data: { result },
     } = await clientPaymentApi.getTypes("PKO");
     typeOperations.value = result;
-    form.typeOperation = typeOperations.value[0].title_ru;
+    console.log(typeOperations.value);
+    form.typeOperation = typeOperations.value[0].id;
   } catch (e) {
     console.error(e);
   }
@@ -570,41 +580,41 @@ function validateNumberInput(event) {
                   :color="BASE_COLOR"
                   :key="typeOperation.id"
                   :label="typeOperation.title_ru"
-                  :value="typeOperation.title_ru"
+                  :value="typeOperation.id"
                 ></v-radio>
               </v-radio-group>
             </div>
           </div>
           <div class="d-flex flex-column ga-4">
-            <div v-if="form.typeOperation === 'Снятие с P/C'">
+            <div v-if="form.typeOperation === 2">
               <custom-autocomplete
                 label="Банковский счет"
                 :items="organizationBills"
                 v-model="form.organization_bill"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Получение с другой кассы'">
+            <div v-else-if="form.typeOperation === 3">
               <custom-autocomplete
                 label="Касса отправителя"
                 :items="cashRegisters"
                 v-model="form.sender_cash"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Возврат от подотчетника'">
+            <div v-else-if="form.typeOperation === 4">
               <custom-autocomplete
                 label="Сотрудник"
                 :items="employees"
                 v-model="form.employee"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Прочие доходы'">
+            <div v-else-if="form.typeOperation === 5">
               <custom-autocomplete
                 label="Статья дохода"
                 :items="incomeItems"
                 v-model="form.incomeItem"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Прочие приходы'">
+            <div v-else-if="form.typeOperation === 6">
               <custom-autocomplete
                 label="Статья баланса"
                 :items="incomeItems"
