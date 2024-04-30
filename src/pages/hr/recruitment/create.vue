@@ -14,6 +14,8 @@ import {addMessage} from "../../../composables/constant/buttons.js";
 import showDate from "../../../composables/date/showDate.js";
 import validate from "../../../composables/validate/validate.js";
 import showToast from "../../../composables/toast/index.js";
+import schedule from "../../../api/list/schedule.js";
+import department from "../../../api/list/department.js";
 
 const router = useRouter()
 
@@ -25,6 +27,7 @@ const form = reactive({
   department: null,
   employee: null,
   salary: null,
+  schedule: null,
   basis: null,
   comment: null,
   author: null,
@@ -34,6 +37,7 @@ const organizations = ref([])
 const employees = ref([])
 const positions = ref([])
 const departments = ref([])
+const schedules = ref([])
 
 
 const getOrganizations = async () => {
@@ -52,8 +56,13 @@ const getPositions = async () => {
 }
 
 const getDepartments = async () => {
-  const {data} = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  const {data} = await department.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   departments.value = data.result.data
+}
+
+const getSchedules = async () => {
+  const {data} = await schedule.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  schedules.value = data.result.data
 }
 
 const addRecruitment = async () => {
@@ -91,12 +100,13 @@ const addRecruitment = async () => {
     "date": changeTheDateForSending(form.date, '-'),
     "organization_id": form.organization,
     "basis": form.basis,
-    "department_id": 1,
-    "position_id": 1,
+    "department_id": form.department,
+    "position_id": form.position,
     "employee_id": form.employee,
     "salary": Number(form.salary),
+    "schedule_id": 1,
     "hiring_date": changeTheDateForSending(form.date, '-'),
-    "comment": form.comment
+    "comment": form.comment,
   }
 
   try {
@@ -120,6 +130,7 @@ onMounted(() => {
   getEmployees()
   getPositions()
   getDepartments()
+  getSchedules()
 })
 </script>
 
@@ -152,7 +163,7 @@ onMounted(() => {
           <custom-text-field label="Дата приёма" type="date" v-model="form.dateOfReceipt"/>
           <custom-autocomplete label="Должность" :items="positions" v-model="form.position"/>
           <custom-autocomplete label="Отдел" :items="departments" v-model="form.department"/>
-          <custom-autocomplete label="График работы" :items="[]"/>
+          <custom-autocomplete label="График работы" :items="schedules" v-model="form.schedule"/>
         </div>
         <v-textarea
             label="Основание"

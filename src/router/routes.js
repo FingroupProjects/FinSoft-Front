@@ -233,7 +233,7 @@ const routes = [
     component: () => import("../pages/hr/timeSheet/index.vue"),
   },
   {
-    path: "/hr/timeSheet/create",
+    path: "/hr/timeSheetCreate",
     name: "timeSheetCreate",
     component: () => import("../pages/hr/timeSheet/create.vue"),
   },

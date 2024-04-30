@@ -242,16 +242,15 @@ watch(search, debounce((newValue) => {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Начисление зарплаты</span>
+          <span>Табель</span>
         </div>
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="$router.push('/hr/timeSheet/create')" name="add"/>
+              <Icons title="Добавить" @click="$router.push('/hr/timeSheetCreate')" name="add"/>
               <Icons title="Скопировать" @click="" name="copy"/>
               <Icons title="Удалить" @click="compute" name="delete"/>
             </div>
-
             <div class="w-100">
               <v-text-field
                   v-model="search"

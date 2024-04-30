@@ -129,7 +129,7 @@ const validateItem = (item) => {
 };
 
 const addNewProcurement = async () => {
-  if (validate(form.date, form.organization, form.counterparty, form.cpAgreement, form.storage, form.currency) !== true) return
+  if (validate(form.date, form.organization, form.month, form.cpAgreement, form.storage, form.currency) !== true) return
 
   const missingData = goods.value.some(validateItem)
   if (missingData) return
@@ -137,7 +137,7 @@ const addNewProcurement = async () => {
   const body = {
     date: form.date,
     organization_id: form.organization,
-    counterparty_id: form.counterparty,
+    counterparty_id: form.month,
     counterparty_agreement_id: form.cpAgreement,
     storage_id: form.storage,
     saleInteger: Number(form.saleInteger),
@@ -162,12 +162,12 @@ const addNewProcurement = async () => {
 }
 
 const isChanged = () => {
-  const {saleInteger, salePercent, organization, counterparty, cpAgreement, storage, currency, date} = form;
+  const {saleInteger, salePercent, organization, month, cpAgreement, storage, currency, date} = form;
 
   const goodsValues = goods.value.flatMap(good => [good.good_id, good.amount, good.price]);
 
   const cleanedGoodsValues = goodsValues.filter(val => val !== undefined);
-  const valuesToCheck = [saleInteger, salePercent, organization, counterparty, cpAgreement, storage, currency, date, ...cleanedGoodsValues];
+  const valuesToCheck = [saleInteger, salePercent, organization, month, cpAgreement, storage, currency, date, ...cleanedGoodsValues];
 
   return valuesToCheck.every(val => val === null || val === '' || val === currentDate() || val === "1");
 }
@@ -198,7 +198,7 @@ const totalPriceWithSale = computed(() => {
 const isSaleIntegerDisabled = computed(() => !!form.salePercent);
 const isSalePercentDisabled = computed(() => !!form.saleInteger);
 
-watch(() => form.counterparty, async (id) => {
+watch(() => form.month, async (id) => {
   form.cpAgreement = null
   getCpAgreements(id)
   // try {
@@ -292,8 +292,8 @@ onMounted(() => {
           <custom-text-field disabled value="Номер" v-model="form.number"/>
           <custom-text-field label="Дата" type="date" v-model="form.date"/>
           <custom-autocomplete label="Организация" :items="organizations" v-model="form.organization"/>
-          <custom-autocomplete label="Поставщик" :items="counterparties" v-model="form.counterparty"/>
-          <custom-autocomplete :disabled="!form.counterparty" label="Договор" :items="cpAgreements" v-model="form.cpAgreement"/>
+          <custom-autocomplete label="Поставщик" :items="counterparties" v-model="form.month"/>
+          <custom-autocomplete :disabled="!form.month" label="Договор" :items="cpAgreements" v-model="form.cpAgreement"/>
           <custom-autocomplete label="Склад" :items="storages" v-model="form.storage"/>
           <custom-text-field label="Руч. скидка (сумма)" v-mask="'###'" v-model="form.saleInteger"
                              :disabled="isSaleIntegerDisabled"/>
