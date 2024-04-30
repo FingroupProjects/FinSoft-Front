@@ -78,6 +78,7 @@ const weeks = reactive([
     hour: 0
   }
 ]);
+
 const countMonths = ref(12)
 
 
@@ -135,7 +136,6 @@ const getScheduleData = async ({page, itemsPerPage, sortBy, search} = {}) => {
     const {data} = await schedule.get({page, itemsPerPage, sortBy}, search, filterData);
     paginations.value = data.result.pagination;
     schedules.value = data.result.data;
-    console.log(data)
     markedID.value = []
   } catch (e) {
 
@@ -207,8 +207,8 @@ const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
 const addSchedule = async () => {
   const body = {
     "name" : nameRef.value,
-    "data" : months.value.map(item => ({
-      "month_id": item.id,
+    "data" : months.value.map((item, index) => ({
+      "month_id": index + 1,
       "number_of_hours" : item.hours
     })),
     "weeks": weeks.map(item => ({
@@ -227,8 +227,8 @@ const addSchedule = async () => {
       markedID.value.push(res.data.result.id)
       isExistsSchedule.value = true
     }
-  } catch (error) {
-    console.error(error);
+  } catch (e) {
+    console.error(e);
   } finally {
    dialog.value = false
   }
@@ -237,20 +237,12 @@ const addSchedule = async () => {
 const update = async ({page, itemsPerPage, sortBy, search}) => {
   const body = {
     "name" : nameRef.value,
-    "data" : [
-      {
-        "month_id": 1,
-        "number_of_hours" : 4
-      },
-      {
-        "month_id": 2,
-        "number_of_hours" : 4
-      },
-      {
-        "month_id": 3,
-        "number_of_hours" : 4
-      }
-    ]
+    "data" : months.value.map((item) => ({
+      id: item.id,
+      month_id: item.month_id,
+      number_of_hours : item.hours
+    })),
+    "weeks": weeks
   }
   try {
     const {status} = await schedule.update(idSchedule.value, body)
@@ -301,12 +293,20 @@ const openDialog = (item) => {
   } else {
     months.value.push(...item.workerSchedule.map(el => (
       {
-        id: el.month.id,
+        id: el.id,
+        month_id: el.month.id,
         name: el.month.name,
         hours: el.number_of_hours
       }
     )));
-    weeks.splice(0, weeks.length, ...item.weekHours.map(el => ({hour: el.hours})));
+    weeks.splice(0, weeks.length, ...item.weekHours.map(el => (
+        {
+          id: el.id,
+          week: el.week,
+          week_num: el.week,
+          hour: el.hours
+        }
+    )));
 
     markedID.value.push(item.id)
     idSchedule.value = item.id
@@ -377,14 +377,16 @@ const calculate = async () => {
 
   try {
     const {data} = await schedule.calculateHours({weeks: body})
+    const tempMonths = months.value
     months.value = data.result.map((item, index) => ({
-      ...item,
-      id: index + 1
+      id: tempMonths[index]?.id,
+      month_id: tempMonths[index]?.month_id,
+      name: item.month,
+      hours: item.hours
     }))
-    console.log(months.value)
     isShowMonth.value = true
   } catch (e) {
-
+    console.log(e)
   }
 }
 
@@ -402,12 +404,8 @@ watch(dialog, newVal => {
     loadingMonth.value = false;
     isExistsSchedule.value = false;
     months.value = [];
-    const transformWeeks = weeks.map(week => ({
-      week_num: week.week_num,
-      week: week.week,
-      hour: 0
-    }));
-    console.log(transformWeeks)
+    const defaultValueWeeks = JSON.parse(localStorage.getItem('weeks'))
+    weeks.splice(0, weeks.length, ...defaultValueWeeks)
   } else {
     markedID.value = [markedID.value[markedID.value.length - 1]];
   }
@@ -417,6 +415,9 @@ watch(search, debounce(newValue => {
   debounceSearch.value = newValue
 }, 500))
 
+onMounted(() => {
+  localStorage.setItem('weeks', JSON.stringify(weeks))
+})
 </script>
 
 <template>
@@ -555,7 +556,7 @@ watch(search, debounce(newValue => {
                       autofocus
                   />
                   <div class="d-flex ga-8 mt-4">
-                    <custom-text-field v-for="week in weeks" :label="week.week" v-model="week.hour" min-width="10px" max-width="10px" />
+                    <custom-text-field v-for="week in weeks" v-model="week.hour" min-width="10px" max-width="10px" />
                   </div>
                   <div class="d-flex my-3 justify-end">
                     <v-btn :color="BASE_COLOR" class="text-none" @click="calculate">Вычислить</v-btn>
