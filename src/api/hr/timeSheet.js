@@ -3,16 +3,18 @@ import { api, buildParams } from '../api.js'
 export default {
   get({page = 1, itemsPerPage = 25, sortBy}, search = "", filterData = {}) {
     const params = buildParams(page, itemsPerPage, sortBy, search, filterData);
-    console.log({ params })
-    return api.get('/document/provider/purchaseList', { params });
+    return api.get('/reportCard', { params });
   },
   add(data) {
-    return api.post('/document/provider/purchase', data)
+    return api.post('/reportCard', data)
   },
   getById(id) {
-    return api.get(`/document/show/${id}`)
+    return api.get(`/reportCard/${id}`)
   },
   update(id, data) {
-    return api.patch(`/document/update/${id}`, data)
+    return api.patch(`/reportCard/${id}`, data)
   },
+  reportCard(data) {
+    return api.get('/reportCard/employees', { params: data })
+  }
 }

@@ -20,6 +20,7 @@ import {BASE_COLOR} from "../../../composables/constant/colors.js";
 import "../../../assets/css/procurement.css";
 import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
 import schedule from "../../../api/list/schedule.js";
+import timeSheet from "../../../api/hr/timeSheet.js";
 
 const router = useRouter()
 const emits = defineEmits(['changed'])
@@ -68,6 +69,16 @@ const getMonths = async () => {
   const {data} = await schedule.month({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   months.value = data.result.data
   console.log(data)
+}
+
+const reportCard = async () => {
+  const body = {
+    month_id: form.month,
+    organization_id: form.organization,
+  }
+
+  const res = await timeSheet.reportCard(body)
+  console.log(res)
 }
 
 const lineMarking = (item) => {
@@ -190,7 +201,7 @@ onMounted(() => {
           <custom-text-field label="Дата" type="date" v-model="form.date" max-width="180" min-width="90"/>
           <custom-autocomplete label="Организация" :items="organizations" v-model="form.organization" max-width="180px" min-width="90"/>
           <custom-autocomplete label="Месяц" :items="months" v-model="form.month" max-width="180px" min-width="90"/>
-          <v-btn :color="BASE_COLOR" class="text-none" @click="">Заполнить</v-btn>
+          <v-btn :color="BASE_COLOR" class="text-none" @click="reportCard">Заполнить</v-btn>
         </div>
       </v-col>
       <v-col>
