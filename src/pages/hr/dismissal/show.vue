@@ -36,7 +36,6 @@ const employees = ref([])
 const getDismissalDetails = async () => {
   try {
     const {data} = await dismissal.getById(route.params.id)
-    console.log(data)
     form.date = showDate(data.data.date, '-', true)
     form.dateOfDismissal = showDate(data.data.firing_date, '-', true)
     form.organization = data.data.organization

@@ -4,22 +4,22 @@ export default {
   get({page = 1, itemsPerPage = 10, sortBy}, search = '', filter = {}) {
     const params = buildParams(page, itemsPerPage, sortBy, search, filter);
 
-    return api.get('/worker-schedule', { params });
+    return api.get('/schedule', { params });
   },
   add(data) {
-    return  api.post('/worker-schedule', data, { headers: { permission: true } })
+    return api.post('/schedule', data)
   },
   show(id) {
-    return api.get(`/worker-schedule/${id}`)
+    return api.get(`/schedule/${id}`)
   },
   update(id, body) {
-    return api.patch(`/worker-schedule/${id}`, body)
+    return api.patch(`/schedule/${id}`, body)
   },
   remove(ids) {
-    return api.post(`/worker-schedule/massDelete`, ids)
+    return api.post(`/schedule/massDelete`, ids)
   },
   restore(ids) {
-    return api.post(`/worker-schedule/massRestore`, ids)
+    return api.post(`/schedule/massRestore`, ids)
   },
   month() {
     return api.get('/months')

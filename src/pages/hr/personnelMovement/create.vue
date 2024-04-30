@@ -15,6 +15,7 @@ import showToast from "../../../composables/toast/index.js";
 import {addMessage} from "../../../composables/constant/buttons.js";
 import validate from "../../../composables/validate/validate.js";
 import {useRouter} from "vue-router";
+import scheduleApi from "../../../api/list/schedule.js";
 
 const router = useRouter()
 
@@ -24,6 +25,7 @@ const form = reactive({
   organization: null,
   position: null,
   department: null,
+  schedule: null,
   employee: null,
   salary: null,
   basis: null,
@@ -35,6 +37,7 @@ const organizations = ref([])
 const employees = ref([])
 const positions = ref([])
 const departments = ref([])
+const schedules = ref([])
 
 
 const getOrganizations = async () => {
@@ -55,6 +58,11 @@ const getPositions = async () => {
 const getDepartments = async () => {
   const {data} = await departmentApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   departments.value = data.result.data
+}
+
+const getSchedules = async () => {
+  const {data} = await scheduleApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  schedules.value = data.result.data
 }
 
 const addPersonalMovement = async () => {
@@ -82,6 +90,9 @@ const addPersonalMovement = async () => {
       "Отдел": form.department,
     },
     {
+      "График работы": form.schedule,
+    },
+    {
       "Основание": form.basis,
     }
   ]
@@ -94,6 +105,8 @@ const addPersonalMovement = async () => {
     "basis": form.basis,
     "department_id": form.department,
     "position_id": form.position,
+    "schedule_id": form.schedule,
+    "comment": form.comment,
     "employee_id": form.employee,
     "salary": form.salary
   }
@@ -118,6 +131,7 @@ onMounted(() => {
   getEmployees()
   getPositions()
   getDepartments()
+  getSchedules()
 })
 </script>
 
@@ -150,7 +164,7 @@ onMounted(() => {
           <custom-text-field label="Дата перевода" type="date" v-model="form.dateOfMovement"/>
           <custom-autocomplete label="Новый должность" :items="positions" v-model="form.position"/>
           <custom-autocomplete label="Новый отдел" :items="departments" v-model="form.department"/>
-          <custom-autocomplete label="График работы" :items="[]"/>
+          <custom-autocomplete label="График работы" :items="schedules" v-model="form.schedule"/>
         </div>
         <v-textarea
             label="Основание"
