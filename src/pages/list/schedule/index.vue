@@ -210,6 +210,10 @@ const addSchedule = async () => {
     "data" : months.value.map(item => ({
       "month_id": item.id,
       "number_of_hours" : item.hours
+    })),
+    "weeks": weeks.map(item => ({
+      week: item.week_num,
+      hour: Number(item.hour)
     }))
   }
 
@@ -295,6 +299,15 @@ const openDialog = (item) => {
     idSchedule.value = 0
     isExistsSchedule.value = false
   } else {
+    months.value.push(...item.workerSchedule.map(el => (
+      {
+        id: el.month.id,
+        name: el.month.name,
+        hours: el.number_of_hours
+      }
+    )));
+    weeks.splice(0, weeks.length, ...item.weekHours.map(el => ({hour: el.hours})));
+
     markedID.value.push(item.id)
     idSchedule.value = item.id
     isExistsSchedule.value = true
@@ -368,6 +381,7 @@ const calculate = async () => {
       ...item,
       id: index + 1
     }))
+    console.log(months.value)
     isShowMonth.value = true
   } catch (e) {
 
@@ -385,9 +399,15 @@ watch(markedID, (newVal) => {
 watch(dialog, newVal => {
   if (!newVal) {
     nameRef.value = null;
-    loadingMonth.value = true;
+    loadingMonth.value = false;
     isExistsSchedule.value = false;
     months.value = [];
+    const transformWeeks = weeks.map(week => ({
+      week_num: week.week_num,
+      week: week.week,
+      hour: 0
+    }));
+    console.log(transformWeeks)
   } else {
     markedID.value = [markedID.value[markedID.value.length - 1]];
   }
@@ -518,9 +538,6 @@ watch(search, debounce(newValue => {
             <v-form class="d-flex w-100" :disabled="!updateAccess('unit') && isExistsSchedule" @submit.prevent="addSchedule">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100 mt-2">
-                  <div class="d-flex ga-10 mb-4">
-                    <custom-text-field v-for="week in weeks" :label="week.week" aria-valuemax="24" v-model="week.hour" min-width="10px" max-width="10px" />
-                  </div>
                   <v-text-field
                       v-model="nameRef"
                       :rules="[rules.required]"
@@ -537,7 +554,10 @@ watch(search, debounce(newValue => {
                       clearable
                       autofocus
                   />
-                  <div class="d-flex my-4 justify-end">
+                  <div class="d-flex ga-8 mt-4">
+                    <custom-text-field v-for="week in weeks" :label="week.week" v-model="week.hour" min-width="10px" max-width="10px" />
+                  </div>
+                  <div class="d-flex my-3 justify-end">
                     <v-btn :color="BASE_COLOR" class="text-none" @click="calculate">Вычислить</v-btn>
                   </div>
                 </v-col>
@@ -569,7 +589,7 @@ watch(search, debounce(newValue => {
                 <template v-slot:item="{ item, index }">
                   <tr>
                     <td>{{ index + 1 }}</td>
-                    <td>{{ item.month }}</td>
+                    <td>{{ item.name }}</td>
                     <td style="width: 120px;">
                       <custom-text-field min-width="20px" max-width="20px" v-model="item.hours"/>
                     </td>
