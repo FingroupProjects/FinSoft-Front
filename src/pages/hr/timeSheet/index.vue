@@ -22,6 +22,7 @@ import storageApi from "../../../api/list/storage.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import currencyApi from "../../../api/list/currency.js";
 import user from "../../../api/list/user.js";
+import timeSheet from "../../../api/hr/timeSheet.js";
 
 const router = useRouter()
 
@@ -41,9 +42,7 @@ const showConfirmDialog = ref(false);
 const showModal = ref(false);
 const counterFilter = ref(0);
 
-
 const organizations = ref([])
-const providers = ref([])
 const storages = ref([])
 const authors = ref([])
 const currencies = ref([])
@@ -65,11 +64,6 @@ const filterForm = ref({
 const headers = ref([
   {title: 'Номер', key: 'doc_number'},
   {title: 'Дата', key: 'date'},
-  {title: 'Поставщик', key: 'counterparty.name'},
-  {title: 'Организация', key: 'organization.name'},
-  {title: 'Склад', key: 'storage.name'},
-  {title: 'Автор', key: 'author.name'},
-  {title: 'Валюта', key: 'currency.name'},
 ])
 
 const getProcurementData = async ({page, itemsPerPage, sortBy, search} = {}) => {
@@ -79,11 +73,12 @@ const getProcurementData = async ({page, itemsPerPage, sortBy, search} = {}) => 
   filterModal.value = false
   loading.value = true
   try {
-    const { data } = await procurementApi.get({page, itemsPerPage, sortBy}, search, filterData)
-    paginations.value = data.result.pagination
+    const { data } = await timeSheet.get({page, itemsPerPage, sortBy}, search, filterData)
     procurements.value = data.result.data
+    paginations.value = data.result.pagination
     loading.value = false
   } catch (e) {
+    console.log(e)
   }
 }
 
@@ -107,7 +102,6 @@ const massDel = async () => {
       markedID.value = []
       dialog.value = false
     }
-
   } catch (e) {
 
   }
@@ -209,7 +203,7 @@ const getCurrencies = async () => {
 }
 
 const show = (item) => {
-  window.open(`/procurementOfGoods/${item.id}`, '_blank')
+  window.open(`/hr/timeSheet/${item.id}`, '_blank')
 }
 
 onMounted(() => {
@@ -335,11 +329,6 @@ watch(search, debounce((newValue) => {
               </td>
               <td>{{ item.doc_number }}</td>
               <td>{{ showDate(item.date) }}</td>
-              <td>{{ item.counterparty.name }}</td>
-              <td>{{ item.organization.name }}</td>
-              <td>{{ item.storage.name }}</td>
-              <td>{{ item.author.name }}</td>
-              <td>{{ item.currency.name }}</td>
             </tr>
           </template>
         </v-data-table-server>

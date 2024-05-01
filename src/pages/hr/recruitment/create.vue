@@ -16,6 +16,7 @@ import validate from "../../../composables/validate/validate.js";
 import showToast from "../../../composables/toast/index.js";
 import schedule from "../../../api/list/schedule.js";
 import department from "../../../api/list/department.js";
+import position from "../../../api/list/position.js";
 
 const router = useRouter()
 
@@ -51,7 +52,7 @@ const getEmployees = async () => {
 }
 
 const getPositions = async () => {
-  const {data} = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  const {data} = await position.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   positions.value = data.result.data
 }
 
