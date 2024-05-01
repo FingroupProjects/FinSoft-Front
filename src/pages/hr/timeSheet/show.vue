@@ -19,6 +19,7 @@ import "../../../assets/css/procurement.css";
 import {BASE_COLOR} from "../../../composables/constant/colors.js";
 import showDate from "../../../composables/date/showDate.js";
 import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
+import timeSheet from "../../../api/hr/timeSheet.js";
 
 
 const router = useRouter()
@@ -65,7 +66,9 @@ const headers = ref([
 
 const getProcurementDetails = async () => {
   try {
-    const { data } = await procurementApi.getById(route.params.id)
+    const { data } = await timeSheet.getById(route.params.id)
+    console.log(data)
+
     form.doc_number = data.result.doc_number
     form.date = showDate(data.result.date, '-', true)
     form.organization = {
@@ -338,7 +341,7 @@ onMounted( () => {
     
       <div class="d-flex justify-space-between text-uppercase pa-1">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Покупка (просмотр)</span>
+          <span>Табель (просмотр)</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
@@ -359,11 +362,6 @@ onMounted( () => {
           <custom-text-field readonly label="Номер"  :value="form.doc_number"/>
           <custom-text-field label="Дата" type="date" v-model="form.date"/>
           <custom-autocomplete label="Организация" :items="organizations"  v-model="form.organization"/>
-          <custom-autocomplete label="Поставщик" :items="counterparties" v-model="form.counterparty"/>
-          <custom-autocomplete label="Договор" :items="cpAgreements" v-model="form.cpAgreement"/>
-          <custom-autocomplete label="Склад" :items="storages" v-model="form.storage"/>
-          <custom-text-field label="Руч. скидка (сумма)" v-mask="'###'" v-model="form.saleInteger" :disabled="isSaleIntegerDisabled"/>
-          <custom-text-field label="Руч. скидка (процент)" v-mask="'###'" v-model="form.salePercent" :disabled="isSalePercentDisabled"/>
         </div>
       </v-col>
       <v-col>
