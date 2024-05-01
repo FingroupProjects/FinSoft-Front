@@ -233,6 +233,11 @@ const routes = [
     component: () => import("../pages/hr/timeSheet/index.vue"),
   },
   {
+    path: "/hr/timeSheet/:id",
+    name: "timeSheetShow",
+    component: () => import("../pages/hr/timeSheet/show.vue"),
+  },
+  {
     path: "/hr/timeSheetCreate",
     name: "timeSheetCreate",
     component: () => import("../pages/hr/timeSheet/create.vue"),

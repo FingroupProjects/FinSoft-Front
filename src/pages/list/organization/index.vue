@@ -52,7 +52,7 @@ const toggleModal = () => {
 
 
 const isEmployeeFieldDisabled = computed(() => {
-  return !createAccess('employees') && !updateAccess('employees');
+  return !createAccess('employee') && !updateAccess('employee');
 });
 
 const filterForm = ref({

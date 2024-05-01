@@ -1,26 +1,20 @@
 <script setup>
-import {computed, onMounted, reactive, ref, watch, defineEmits} from "vue";
+import {defineEmits, onMounted, reactive, ref, watch} from "vue";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../../composables/toast/index.js";
 import currentDate from "../../../composables/date/currentDate.js";
-import validate from "./validate.js";
 import {useRouter} from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
-import counterpartyApi from "../../../api/list/counterparty.js";
-import storageApi from "../../../api/list/storage.js";
-import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
-import currencyApi from "../../../api/list/currency.js";
-import procurementApi from "../../../api/documents/procurement.js";
-import goodApi from "../../../api/list/goods.js";
 import {addMessage} from "../../../composables/constant/buttons.js";
 import {BASE_COLOR} from "../../../composables/constant/colors.js";
 import "../../../assets/css/procurement.css";
-import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
+import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
 import schedule from "../../../api/list/schedule.js";
 import timeSheet from "../../../api/hr/timeSheet.js";
+import validate from "../../../composables/validate/validate.js";
 
 const router = useRouter()
 const emits = defineEmits(['changed'])
@@ -40,12 +34,7 @@ const form = reactive({
 
 const author = ref(null)
 const markedID = ref([])
-const goods = ref([{
-  id: 1,
-  good_id: null,
-  amount: "1",
-  price: null,
-}])
+
 
 const organizations = ref([])
 const months = ref([])
@@ -53,6 +42,7 @@ const cpAgreements = ref([])
 const storages = ref([])
 const currencies = ref([])
 const listGoods = ref([])
+const employees = ref([])
 
 const headers = ref([
   {title: 'Сотрудники', key: 'goods', sortable: false},
@@ -61,14 +51,13 @@ const headers = ref([
 ])
 
 const getOrganizations = async () => {
-  const {data} = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   organizations.value = data.result.data
 }
 
 const getMonths = async () => {
   const {data} = await schedule.month({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   months.value = data.result.data
-  console.log(data)
 }
 
 const reportCard = async () => {
@@ -77,8 +66,19 @@ const reportCard = async () => {
     organization_id: form.organization,
   }
 
-  const res = await timeSheet.reportCard(body)
-  console.log(res)
+  try {
+    const { data } = await timeSheet.reportCard(body)
+    employees.value = data.result.map(item => ({
+      id: item.id,
+      name: item.name,
+      number_of_hours: item.number_of_hours,
+      number_of_hours_in_fact: item.number_of_hours,
+      schedule_id: item.schedule_id,
+      salary: item.salary
+    }))
+  } catch (e) {
+    console.error(e)
+  }
 }
 
 const lineMarking = (item) => {
@@ -92,47 +92,28 @@ const lineMarking = (item) => {
   }
 }
 
-const validateItem = (item) => {
-  if (item.good_id === null) {
-    showToast("Поле Товар не может быть пустым", "warning");
-    return true;
-  }
-  if (item.amount === null) {
-    showToast("Поле Количество не может быть пустым", "warning");
-    return true;
-  }
-  if (item.price === null) {
-    showToast("Поле Цена не может быть пустым", "warning");
-    return true;
-  }
-  return false;
-};
 
 const addNewProcurement = async () => {
-  if (validate(form.date, form.organization, form.month, form.cpAgreement, form.storage, form.currency) !== true) return
-
-  const missingData = goods.value.some(validateItem)
-  if (missingData) return
 
   const body = {
-    date: form.date,
     organization_id: form.organization,
-    counterparty_id: form.month,
-    counterparty_agreement_id: form.cpAgreement,
-    storage_id: form.storage,
-    currency_id: typeof form.currency === 'object' ? form.currency.id : form.currency,
-    goods: goods.value.map((item) => ({
-      good_id: Number(item.good_id),
-      amount: Number(item.amount),
-      price: Number(item.price),
+    month_id: form.month,
+    date: form.date,
+    comment: form.comment,
+    data: employees.value.map((item) => ({
+      employee_id: item.id,
+      standart_hours: Number(item.number_of_hours),
+      fact_hours:  Number(item.number_of_hours_in_fact),
+      schedule_id: item.schedule_id,
+      salary: item.salary
     }))
   }
 
   try {
-    const res = await procurementApi.add(body)
+    const res = await timeSheet.add(body)
     if (res.status === 201) {
       showToast(addMessage)
-      router.push('/procurementOfGoods')
+      router.push('/hr/timeSheet')
     }
   } catch (e) {
     console.log(e)
@@ -142,9 +123,9 @@ const addNewProcurement = async () => {
 const isChanged = () => {
   const {saleInteger, salePercent, organization, month, cpAgreement, storage, currency, date} = form;
 
-  const goodsValues = goods.value.flatMap(good => [good.good_id, good.amount, good.price]);
+  const employeeValues = employees.value.flatMap(good => [good.name, good.number_of_hours, good.number_of_hours_in_fact]);
 
-  const cleanedGoodsValues = goodsValues.filter(val => val !== undefined);
+  const cleanedGoodsValues = employeeValues.filter(val => val !== undefined);
   const valuesToCheck = [saleInteger, salePercent, organization, month, cpAgreement, storage, currency, date, ...cleanedGoodsValues];
 
   return valuesToCheck.every(val => val === null || val === '' || val === currentDate() || val === "1");
@@ -156,7 +137,7 @@ watch(confirmDocument, () => {
   }
 })
 
-watch([form, goods.value], () => {
+watch([form, employees.value], () => {
   if (!isChanged()) {
     emits('changed', true);
   } else {
@@ -214,7 +195,7 @@ onMounted(() => {
                 loading-text="Загрузка"
                 no-data-text="Нет данных"
                 :headers="headers"
-                :items="goods"
+                :items="employees"
                 v-model="markedID"
                 item-value="id"
                 page-text='{0}-{1} от {2}'
@@ -238,13 +219,13 @@ onMounted(() => {
                     </CustomCheckbox>
                   </td>
                   <td style="width: 40%;">
-                    <custom-autocomplete v-model="item.good_id" :items="listGoods" min-width="150" max-width="100%"/>
+                    <custom-text-field readonly v-model="item.name" min-width="150" max-width="100%"/>
                   </td>
                   <td>
-                    <custom-text-field v-model="item.amount" v-mask="'########'" min-width="50"/>
+                    <custom-text-field readonly v-model="item.number_of_hours" v-mask="'########'" min-width="50"/>
                   </td>
                   <td>
-                    <custom-text-field v-model="item.price" v-mask="'##########'" min-width="80"/>
+                    <custom-text-field v-model="item.number_of_hours_in_fact" v-mask="'##########'" min-width="80"/>
                   </td>
                 </tr>
               </template>
