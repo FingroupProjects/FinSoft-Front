@@ -423,7 +423,7 @@ onMounted(() => {
             <Icons
               style="margin-top: 2px"
               @click="closeWindow"
-              title="Удалить"
+              title="Закрыть"
               name="close"
             />
           </div>
