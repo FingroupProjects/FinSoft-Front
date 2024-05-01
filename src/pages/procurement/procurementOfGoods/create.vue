@@ -47,6 +47,8 @@ const goods = ref([
   },
 ]);
 
+const userOrganization = ref("");
+
 const organizations = ref([]);
 const counterparties = ref([]);
 const cpAgreements = ref([]);
@@ -329,9 +331,11 @@ watch([form, goods.value], () => {
   }
 });
 
-onMounted(() => {
+onMounted(async () => {
   form.date = currentDate();
-  author.value = JSON.parse(localStorage.getItem("user")).name || null;
+  userOrganization.value = await JSON.parse(localStorage.getItem("user")).organization || null;
+  form.organization = userOrganization.value;
+  author.value = await JSON.parse(localStorage.getItem("user")).name || null;
 
   getOrganizations();
   getCounterparties();
@@ -351,8 +355,7 @@ onMounted(() => {
         <div class="d-flex w-100">
           <div class="d-flex ga-2 mt-1 me-3">
             <Icons title="Добавить" @click="addNewProcurement" name="save" />
-            <Icons title="Скопировать" name="copy" />
-            <Icons title="Удалить" name="delete" />
+            <Icons title="Закрыть" @click="router.push('/procurementOfGoods')" name="close" />
           </div>
         </div>
       </v-card>

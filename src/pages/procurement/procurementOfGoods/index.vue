@@ -91,7 +91,6 @@ const getProcurementData = async ({
       search,
       filterData
     );
-    console.log(data);
     paginations.value = data.result.pagination;
     procurements.value = data.result.data;
     loading.value = false;
