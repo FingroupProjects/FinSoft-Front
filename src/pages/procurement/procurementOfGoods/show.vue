@@ -88,7 +88,7 @@ const getProcurementDetails = async () => {
         id: data.result.counterpartyAgreement.id,
         name: data.result.counterpartyAgreement.name,
       };
-    }, 200);
+    }, 100);
     form.storage = {
       id: data.result.storage.id,
       name: data.result.storage.name,
@@ -131,13 +131,13 @@ const getCounterparties = async () => {
   counterparties.value = data.result.data;
 };
 
-const getCpAgreements = async () => {
-  const { data } = await cpAgreementApi.get({
-    page: 1,
-    itemsPerPage: 100000,
-    sortBy: "name",
-  });
+const getCpAgreements = async (id) => {
+  cpAgreements.value = [];
+  const { data } = await cpAgreementApi.getCounterpartyById(id);
   cpAgreements.value = data.result.data;
+  if (cpAgreements.value.length === 1) {
+    form.cpAgreement = cpAgreements.value[0];
+  }
 };
 
 const getStorages = async () => {
@@ -262,7 +262,7 @@ const updateProcurement = async () => {
       router.push("/procurementOfGoods");
     }
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -337,41 +337,56 @@ watch(form, () => {
   }
 });
 
+// watch(
+//   () => form.counterparty,
+//   async (data) => {
+//     form.cpAgreement = null;
+//     const id = typeof data === "object" ? data.id : data;
+//     try {
+//       const res = await cpAgreementApi.getCounterpartyById(id);
+//       console.log(res);
+//       form.currency = {
+//         id: res.data.result.currency_id.id,
+//         name: res.data.result.currency_id.name,
+//       };
+//       const array =
+//         Object.prototype.toString.call(res.data.result) === "[object Array]";
+//       const obj =
+//         Object.prototype.toString.call(res.data.result) === "[object Object]";
+
+//       cpAgreements.value = array
+//         ? res.data.result.data
+//         : obj
+//         ? res.data.result.data
+//         : [];
+//     } catch (e) {
+//       cpAgreements.value = [];
+//     }
+//   }
+// );
+
 watch(
   () => form.counterparty,
-  async (data) => {
+  async (id) => {
+    if (id === null) return;
     form.cpAgreement = null;
-    const id = typeof data === "object" ? data.id : data;
-    try {
-      const res = await cpAgreementApi.getCounterpartyById(id);
-
-      form.currency = {
-        id: res.data.result.currency_id,
-        name: res.data.result.currency_id,
-      };
-      const array =
-        Object.prototype.toString.call(res.data.result) === "[object Array]";
-      const obj =
-        Object.prototype.toString.call(res.data.result) === "[object Object]";
-
-      cpAgreements.value = array
-        ? res.data.result.data
-        : obj
-        ? res.data.result.data
-        : [];
-    } catch (e) {
-      cpAgreements.value = [];
-    }
+    form.currency = null;
+    getCpAgreements(typeof id === "object" ? id.id : id);
   }
 );
 
-// watch(() => form.cpAgreement, async () => {
-//   const {data} = await cpAgreementApi.getById(form.cpAgreement)
-//   form.currency = {
-//     id: data.result.currency_id.id,
-//     name: data.result.currency_id.name
-//   }
-// })
+watch(
+  () => form.cpAgreement,
+  (newValue) => {
+    if (newValue === null) return;
+    setTimeout(() => {
+      const cp = cpAgreements.value.find((el) =>
+        (el.id === typeof newValue) === "object" ? newValue.id : newValue
+      );
+      form.currency = cp.currency_id;
+    }, 500);
+  }
+);
 
 watch(confirmDocument, () => {
   if (confirmDocument.isUpdateOrCreateDocument) {
@@ -379,13 +394,16 @@ watch(confirmDocument, () => {
   }
 });
 
+const closeWindow = () => {
+  window.close();
+};
+
 onMounted(() => {
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
   getProcurementDetails();
   Promise.all([
     getOrganizations(),
     getCounterparties(),
-    getCpAgreements(),
     getStorages(),
     getCurrencies(),
     getGoods(),
@@ -401,9 +419,13 @@ onMounted(() => {
       <v-card variant="text" class="d-flex align-center ga-2">
         <div class="d-flex w-100">
           <div class="d-flex ga-2 mt-1 me-3">
-            <Icons title="Добавить" @click="updateProcurement" name="add" />
-            <Icons title="Скопировать" @click="" name="copy" />
-            <Icons title="Удалить" @click="" name="delete" />
+            <Icons title="Добавить" @click="updateProcurement" name="save" />
+            <Icons
+              style="margin-top: 2px"
+              @click="closeWindow"
+              title="Удалить"
+              name="close"
+            />
           </div>
         </div>
       </v-card>
@@ -524,14 +546,11 @@ onMounted(() => {
             </v-data-table>
           </div>
         </div>
-        <div class="d-flex justify-space-between w-100 mt-2 bottomField">
+        <div
+          class="d-flex flex-wrap ga-4 justify-space-between w-100 mt-2 bottomField"
+        >
           <div class="d-flex ga-10">
-            <custom-text-field
-              readonly
-              :value="author"
-              min-width="140"
-              max-width="110"
-            />
+            <custom-text-field readonly :value="author" min-width="110" />
             <custom-text-field
               label="Комментарий"
               v-model="form.comment"
@@ -542,12 +561,12 @@ onMounted(() => {
             <custom-text-field
               readonly
               :value="'Количество: ' + totalCount"
-              min-width="180"
+              min-width="130"
             />
             <custom-text-field
               readonly
               :value="'Сумма со скидкой: ' + totalPriceWithSale"
-              min-width="180"
+              min-width="160"
             />
             <custom-text-field
               readonly
@@ -556,11 +575,12 @@ onMounted(() => {
               max-width="110"
             />
             <custom-autocomplete
+              readonly
               v-model="form.currency"
               label="Валюта"
               :items="currencies"
-              min-width="110"
-              max-width="110"
+              min-width="190"
+              maxWidth="190px"
             />
           </div>
         </div>

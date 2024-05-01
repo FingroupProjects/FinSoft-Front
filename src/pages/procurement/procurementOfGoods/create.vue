@@ -260,7 +260,6 @@ const totalCount = computed(() =>
   goods.value.reduce((acc, item) => acc + Number(item.amount || 0), 0)
 );
 
-
 const totalPriceWithSale = computed(() => {
   let sum = 0;
   if (form.salePercent !== null) {
@@ -336,37 +335,40 @@ onMounted(() => {
 
   getOrganizations();
   getCounterparties();
-  // getCpAgreements()
   getStorages();
   getCurrencies();
   getGoods();
 });
+
 </script>
 <template>
   <div class="document">
-    <v-col>
-      <div class="d-flex justify-space-between text-uppercase">
-        <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Покупка (создание)</span>
-        </div>
-        <v-card variant="text" class="d-flex align-center ga-2">
-          <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="addNewProcurement" name="add" />
-              <Icons title="Скопировать" name="copy" />
-              <Icons title="Удалить" name="delete" />
-            </div>
-          </div>
-        </v-card>
+    <div class="d-flex justify-space-between text-uppercase pa-1">
+      <div class="d-flex align-center ga-2 pe-2 ms-4">
+        <span>Покупка (создание)</span>
       </div>
-    </v-col>
+      <v-card variant="text" class="d-flex align-center ga-2">
+        <div class="d-flex w-100">
+          <div class="d-flex ga-2 mt-1 me-3">
+            <Icons title="Добавить" @click="addNewProcurement" name="save" />
+            <Icons title="Скопировать" name="copy" />
+            <Icons title="Удалить" name="delete" />
+          </div>
+        </div>
+      </v-card>
+    </div>
     <v-divider />
     <v-divider />
     <div style="background: #fff">
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field disabled value="Номер" v-model="form.number" />
-          <custom-text-field class="date" label="Дата" type="date" v-model="form.date" />
+          <custom-text-field
+            class="date"
+            label="Дата"
+            type="date"
+            v-model="form.date"
+          />
           <custom-autocomplete
             label="Организация"
             :items="organizations"
@@ -476,7 +478,9 @@ onMounted(() => {
             </v-data-table>
           </div>
         </div>
-        <div class="d-flex flex-wrap ga-4 justify-space-between w-100 mt-2 bottomField">
+        <div
+          class="d-flex flex-wrap ga-4 justify-space-between w-100 mt-2 bottomField"
+        >
           <div class="d-flex ga-10">
             <custom-text-field readonly :value="author" min-width="110" />
             <custom-text-field

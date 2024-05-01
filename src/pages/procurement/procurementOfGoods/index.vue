@@ -66,6 +66,7 @@ const filterForm = ref({
 const headers = ref([
   { title: "Номер", key: "doc_number" },
   { title: "Дата", key: "date" },
+  { title: "Статус", key: "active" },
   { title: "Поставщик", key: "counterparty.name" },
   { title: "Организация", key: "organization.name" },
   { title: "Склад", key: "storage.name" },
@@ -90,6 +91,7 @@ const getProcurementData = async ({
       search,
       filterData
     );
+    console.log(data);
     paginations.value = data.result.pagination;
     procurements.value = data.result.data;
     loading.value = false;
@@ -260,6 +262,13 @@ watch(
     debounceSearch.value = newValue;
   }, 500)
 );
+const getColor = (isActive) => {
+  if (isActive) {
+    return "green";
+  } else {
+    return "red";
+  }
+};
 </script>
 
 <template>
@@ -368,6 +377,11 @@ watch(
             </td>
             <td>{{ item.doc_number }}</td>
             <td>{{ showDate(item.date) }}</td>
+            <td>
+              <v-chip :color="getColor(item.active)">{{
+                item.active ? "Проведен" : "Не проведен"
+              }}</v-chip>
+            </td>
             <td>{{ item.counterparty.name }}</td>
             <td>{{ item.organization.name }}</td>
             <td>{{ item.storage.name }}</td>
@@ -465,6 +479,7 @@ watch(
 .filterElement {
   position: relative;
 }
+
 .countFilter {
   position: absolute;
   top: -5px;
