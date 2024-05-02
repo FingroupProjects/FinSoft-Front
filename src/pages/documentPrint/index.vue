@@ -1,11 +1,13 @@
 <script setup>
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { onMounted, ref, reactive } from "vue";
 import showDate from "../../composables/date/showDate";
 import currentDate from "../../composables/date/currentDate";
 import procurementApi from "../../api/documents/procurement";
 import CustomTextField from "../../components/formElements/CustomTextField.vue";
 import { computed } from "vue";
+
+const router = useRouter();
 const route = useRoute();
 
 const goods = ref([]);
@@ -38,10 +40,12 @@ const getProcurementDetails = async () => {
     form.doc_number = data.result.doc_number;
     form.date = showDate(data.result.date, "-", true);
     (form.organization = data.result.organization.name),
-    (form.counterparty = data.result.counterparty.name),
-    (form.storage = data.result.storage.name),
-    (form.saleInteger = data.result.saleInteger !== 0 ? data.result.saleInteger : null);
-    form.salePercent = data.result.salePercent !== 0 ? data.result.salePercent : null;
+      (form.counterparty = data.result.counterparty.name),
+      (form.storage = data.result.storage.name),
+      (form.saleInteger =
+        data.result.saleInteger !== 0 ? data.result.saleInteger : null);
+    form.salePercent =
+      data.result.salePercent !== 0 ? data.result.salePercent : null;
     form.comment = data.result.comment;
     form.currency = data.result.currency;
     goods.value = data.result.goods.map((item) => ({
@@ -59,32 +63,46 @@ const getProcurementDetails = async () => {
 };
 
 const totalSum = computed(() => {
-  let sum = 0
-  goods.value.forEach(item => {
-    sum += item.price * item.amount
-  })
-  return sum
-})
+  let sum = 0;
+  goods.value.forEach((item) => {
+    sum += item.price * item.amount;
+  });
+  return sum;
+});
 
 const totalPrice = computed(() => {
-  let price = 0
-  goods.value.forEach(item => {
-    price += item.price
-  })
-  return price
-})
+  let price = 0;
+  goods.value.forEach((item) => {
+    price += item.price;
+  });
+  return price;
+});
 
 const totalCount = computed(() => {
-  let count = 0
-  goods.value.forEach(item => {
-    count += item.amount
-  })
-  return count
-})
-
-onMounted(() => {
-  getProcurementDetails();
+  let count = 0;
+  goods.value.forEach((item) => {
+    count += item.amount;
+  });
+  return count;
 });
+
+const windowPrint = () => {
+  window.print();
+}
+
+onMounted(async () => {
+  await getProcurementDetails();
+  window.addEventListener('afterprint', handleAfterPrint);
+  windowPrint();
+});
+
+const handleAfterPrint = () => {
+  window.removeEventListener('afterprint', handleAfterPrint);
+  setTimeout(() => {
+    router.go(-1);     
+  }, 500);
+}
+
 </script>
 
 <template>
@@ -147,15 +165,23 @@ onMounted(() => {
         </tbody>
       </table>
 
-      <div>
-        
+      <div class="d-flex justify-center ga-16">
+        <div class="d-flex ga-4">
+          <span>Сдал</span>
+          <div style="width: 150px; border-bottom: 1px solid #d9d9d9;" />
+        </div>
+        <div class="d-flex ga-4">
+          <span>Принял</span>
+          <div style="width: 150px; border-bottom: 1px solid #d9d9d9;" />
+        </div>
       </div>
     </div>
   </div>
 </template>
+
 <style scoped>
-table {
-  table-layout: auto;
+td {
+  padding: 10px;
 }
 
 .border-none {
