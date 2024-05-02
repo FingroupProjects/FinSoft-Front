@@ -353,6 +353,14 @@ const routes = [
     component: () => import("../pages/documentHistory/index.vue"),
   },
   {
+    path: "/documentPrint/:id",
+    name: "documentPrint",
+    component: () => import("../pages/documentPrint/index.vue"),
+    meta: {
+      hideSideBarAndHeader: true,
+    },
+  },
+  {
     path: "/login",
     name: "login",
     component: () => import("../pages/authentication/authentication.vue"),

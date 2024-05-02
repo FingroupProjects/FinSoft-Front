@@ -377,7 +377,7 @@ const getColor = (isActive) => {
             <td>{{ item.doc_number }}</td>
             <td>{{ showDate(item.date) }}</td>
             <td>
-              <v-chip :color="getColor(item.active)">{{
+              <v-chip class="w-100 d-flex justify-center" :color="getColor(item.active)">{{
                 item.active ? "Проведен" : "Не проведен"
               }}</v-chip>
             </td>

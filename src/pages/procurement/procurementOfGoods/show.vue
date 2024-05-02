@@ -109,7 +109,6 @@ const getProcurementDetails = async () => {
     prevGoods.value = [...goods.value];
     tempForm.value = Object.assign({}, form);
   } catch (e) {
-  } finally {
   }
 };
 
@@ -419,6 +418,7 @@ onMounted(() => {
       <v-card variant="text" class="d-flex align-center ga-2">
         <div class="d-flex w-100">
           <div class="d-flex ga-2 mt-1 me-3">
+            <Icons @click="$router.push({name: 'documentPrint', params:{id: route.params.id}})" name="print" />
             <Icons title="Добавить" @click="updateProcurement" name="save" />
             <Icons
               style="margin-top: 2px"
