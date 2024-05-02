@@ -9,12 +9,11 @@ import {
   ErrorSelectMessage,
   removeMessage,
   restoreMessage,
-  selectOneItemMessage,
 } from "../../../composables/constant/buttons.js";
 import Icons from "../../../composables/Icons/Icons.vue";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import validate from "./validate.js";
+import validate from "../../../composables/validate/validate.js";
 import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 import debounce from "lodash.debounce";
 import schedule from "../../../api/list/schedule.js";
@@ -40,7 +39,6 @@ const markedID = ref([])
 
 const nameRef = ref(null)
 const showModal = ref(false);
-const isShowMonth = ref(false);
 const weeks = reactive([
   {
     week_num: 0,
@@ -205,6 +203,15 @@ const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
 }
 
 const addSchedule = async () => {
+
+  const validateValue = [
+    {
+      "Наименование": nameRef.value
+    }
+  ]
+
+  if (validate(validateValue) !== true) return
+
   const body = {
     "name" : nameRef.value,
     "data" : months.value.map((item, index) => ({
@@ -316,18 +323,6 @@ const openDialog = (item) => {
   }
 }
 
-const addBasedOnSchedule = () => {
-  if (markedID.value.length !== 1 && !isExistsSchedule.value) return showToast(selectOneItemMessage, 'warning')
- 
-  dialog.value = true
-
-  schedules.value.forEach(item => {
-    if (markedID.value[0] === item.id) {
-      idSchedule.value = item.id
-      nameRef.value = item.name
-    }
-  })
-}
 
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
@@ -370,6 +365,16 @@ const compute = ({page, itemsPerPage, sortBy, search}) => {
 }
 
 const calculate = async () => {
+
+ const validateWeeks = weeks.map(item => {
+    if (item.hour === '') return 'заполнить'
+    if (Number(item.hour) > 24) return '+24'
+    return true
+  })
+
+  if (validateWeeks.includes('+24')) return showToast('Кол-во часов должно быть меньше 24', 'warning')
+  if (validateWeeks.includes('заполнить')) return showToast('Поля "Кол-во часов" должны быть заполнены', 'warning')
+
   const body = weeks.map(item => ({
     week: item.week_num,
     hour: Number(item.hour)
@@ -384,7 +389,7 @@ const calculate = async () => {
       name: item.month,
       hours: item.hours
     }))
-    isShowMonth.value = true
+    showToast('Кол-во часов успешно вычислено!')
   } catch (e) {
     console.log(e)
   }
@@ -431,7 +436,6 @@ onMounted(() => {
           <div class="d-flex w-100">
             <div class="d-flex ga-2 me-3">
               <Icons title="Добавить" v-if="createAccess('currency')" @click="openDialog(0)" name="add"/>
-              <Icons title="Копировать" v-if="createAccess('currency')" @click="addBasedOnSchedule" name="copy"/>
               <Icons title="Удалить" v-if="removeAccess('currency')" @click="compute" name="delete"/>
             </div>
 
@@ -549,7 +553,7 @@ onMounted(() => {
                       variant="outlined"
                       density="compact"
                       placeholder="График работы"
-                      label="Название"
+                      label="Наименование"
                       clear-icon="close"
                       hide-details
                       clearable
@@ -627,38 +631,6 @@ onMounted(() => {
                         clearable
                         hide-details
                         autofocus
-                    />
-                  </div>
-                  <div class="d-flex justify-space-between ga-6 mb-3">
-                     <v-text-field
-                        v-model="filterForm.symbol_code"
-                        :color="BASE_COLOR"
-                        rounded="md"
-                        variant="outlined"
-                        class="w-auto text-sm-body-1"
-                        density="compact"
-                        :base-color="FIELD_COLOR"
-                        placeholder="Символьный код"
-                        label="Символьный код"
-                        clear-icon="close"
-                        clearable
-                        hide-details
-                    />
-                  </div>
-                  <div class="d-flex justify-space-between ga-6 mb-3">
-                     <v-text-field
-                        v-model="filterForm.digital_code"
-                        :color="BASE_COLOR"
-                        rounded="md"
-                        variant="outlined"
-                        class="w-auto text-sm-body-1"
-                        density="compact"
-                        :base-color="FIELD_COLOR"
-                        placeholder="Цифровой код"
-                        label="Цифровой код"
-                        clear-icon="close"
-                        clearable
-                        hide-details
                     />
                   </div>
                   <div class="d-flex justify-end ga-2">
