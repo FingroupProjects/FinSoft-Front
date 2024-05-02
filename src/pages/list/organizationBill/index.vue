@@ -163,8 +163,7 @@ const checkUpdate = () => {
   } else {
     dialog.value = false;
   }
-
-};
+}
 
 
 const rules = {

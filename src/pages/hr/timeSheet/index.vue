@@ -14,7 +14,7 @@ import {
   warningMessage
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
-import procurementApi from '../../../api/documents/procurement.js';
+import timeSheetApi from '../../../api/hr/timeSheet.js';
 import showDate from "../../../composables/date/showDate.js";
 import organizationApi from "../../../api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
@@ -36,10 +36,8 @@ const markedID = ref([]);
 const markedItem = ref([])
 const search = ref('')
 const debounceSearch = ref('')
-const procurements = ref([])
+const timeSheets = ref([])
 const paginations = ref([])
-const showConfirmDialog = ref(false);
-const showModal = ref(false);
 const counterFilter = ref(0);
 
 const organizations = ref([])
@@ -66,7 +64,7 @@ const headers = ref([
   {title: 'Дата', key: 'date'},
 ])
 
-const getProcurementData = async ({page, itemsPerPage, sortBy, search} = {}) => {
+const getTimeSheetData = async ({page, itemsPerPage, sortBy, search} = {}) => {
   counterFilter.value = 0;
   countFilter()
   const filterData = filterForm.value
@@ -74,7 +72,7 @@ const getProcurementData = async ({page, itemsPerPage, sortBy, search} = {}) => 
   loading.value = true
   try {
     const { data } = await timeSheet.get({page, itemsPerPage, sortBy}, search, filterData)
-    procurements.value = data.result.data
+    timeSheets.value = data.result.data
     paginations.value = data.result.pagination
     loading.value = false
   } catch (e) {
@@ -95,15 +93,15 @@ const  countFilter = () => {
 
 const massDel = async () => {
   try {
-    const {status} = await procurementApi.massDeletion({ids: markedID.value})
+    const {status} = await timeSheetApi.massDeletion({ids: markedID.value})
     if (status === 200) {
       showToast(removeMessage, 'red')
-      await getProcurementData({})
+      await getTimeSheetData({})
       markedID.value = []
       dialog.value = false
     }
   } catch (e) {
-
+    console.log(e)
   }
 }
 
@@ -111,11 +109,11 @@ const massDel = async () => {
 const massRestore = async () => {
 
   try {
-    const {status} = await procurementApi.massRestore({ids: markedID.value})
+    const {status} = await timeSheetApi.massRestore({ids: markedID.value})
 
     if (status === 200) {
       showToast(restoreMessage)
-      await getProcurementData({})
+      await getTimeSheetData({})
       markedID.value = []
       dialog.value = false
     }
@@ -137,7 +135,7 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
 
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
-    const firstMarkedItem = procurements.value.find(el => el.id === markedID.value[0]);
+    const firstMarkedItem = timeSheets.value.find(el => el.id === markedID.value[0]);
     if (firstMarkedItem && firstMarkedItem.deleted_at) {
       if(item.deleted_at === null) {
         showToast(ErrorSelectMessage, 'warning')
@@ -164,7 +162,7 @@ const lineMarking = (item) => {
 const closeFilterModal = async () => {
   filterModal.value = false
   cleanFilterForm()
-  await getProcurementData()
+  await getTimeSheetData()
 }
 
 const cleanFilterForm = () => {
@@ -222,7 +220,7 @@ watch(dialog, newVal => {
 })
 
 watch(markedID, (newVal) => {
-  markedItem.value = procurements.value.find((el) => el.id === newVal[0]);
+  markedItem.value = timeSheets.value.find((el) => el.id === newVal[0]);
 })
 
 watch(search, debounce((newValue) => {
@@ -285,11 +283,11 @@ watch(search, debounce((newValue) => {
             :loading="loading"
             :headers="headers"
             :items-length="paginations.total || 0"
-            :items="procurements"
+            :items="timeSheets"
             :item-value="headers.title"
             :search="debounceSearch"
             v-model="markedID"
-            @update:options="getProcurementData"
+            @update:options="getTimeSheetData"
             page-text =  '{0}-{1} от {2}'
             :items-per-page-options="[
                 {value: 25, title: '25'},
@@ -360,7 +358,7 @@ watch(search, debounce((newValue) => {
                   </div>
                   <div class="d-flex justify-end ga-2">
                     <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-                    <v-btn :color="BASE_COLOR" class="btn"  @click="getProcurementData">применить</v-btn>
+                    <v-btn :color="BASE_COLOR" class="btn"  @click="getTimeSheetData">применить</v-btn>
                   </div>
                 </v-col>
               </v-row>

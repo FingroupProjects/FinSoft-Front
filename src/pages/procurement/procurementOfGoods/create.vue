@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, reactive, ref, watch, defineEmits } from "vue";
+import {computed, onMounted, reactive, ref, watch, defineEmits, onUnmounted} from "vue";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
@@ -46,8 +46,6 @@ const goods = ref([
     price: null,
   },
 ]);
-
-const userOrganization = ref("");
 
 const organizations = ref([]);
 const counterparties = ref([]);
@@ -99,14 +97,6 @@ const getStorages = async () => {
   storages.value = data.result.data;
 };
 
-const getCurrencies = async () => {
-  const { data } = await currencyApi.get({
-    page: 1,
-    itemsPerPage: 100000,
-    sortBy: "name",
-  });
-  currencies.value = data.result.data;
-};
 
 const getGoods = async () => {
   const { data } = await goodApi.get({
@@ -218,8 +208,7 @@ const isChanged = () => {
   const {
     saleInteger,
     salePercent,
-    organization,
-    month,
+    counterparty,
     cpAgreement,
     storage,
     currency,
@@ -236,14 +225,14 @@ const isChanged = () => {
   const valuesToCheck = [
     saleInteger,
     salePercent,
-    organization,
-    month,
+    counterparty,
     cpAgreement,
     storage,
     currency,
     date,
     ...cleanedGoodsValues,
   ];
+
 
   return valuesToCheck.every(
     (val) => val === null || val === "" || val === currentDate() || val === "1"
@@ -283,7 +272,7 @@ watch(
   () => form.counterparty,
   async (id) => {
     form.cpAgreement = null;
-    getCpAgreements(id);
+    await getCpAgreements(id);
   }
 );
 
@@ -331,16 +320,18 @@ watch([form, goods.value], () => {
   }
 });
 
-onMounted(async () => {
+onUnmounted(() => {
+  emits('changed', false);
+})
+
+onMounted( () => {
   form.date = currentDate();
-  userOrganization.value = await JSON.parse(localStorage.getItem("user")).organization || null;
-  form.organization = userOrganization.value;
-  author.value = await JSON.parse(localStorage.getItem("user")).name || null;
+  form.organization =  JSON.parse(localStorage.getItem("user")).organization || null;
+  author.value =  JSON.parse(localStorage.getItem("user")).name || null;
 
   getOrganizations();
   getCounterparties();
   getStorages();
-  getCurrencies();
   getGoods();
 });
 
