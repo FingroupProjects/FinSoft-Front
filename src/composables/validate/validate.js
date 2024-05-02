@@ -5,7 +5,7 @@ export default function validate(fieldsToCheck) {
     for (const key in item) {
       if (item.hasOwnProperty(key)) {
         const value = item[key];
-        if (!value) {
+        if (!value || value === '' || value === null) {
           showToast(`Поле ${key} не может быть пустым`, 'warning');
           return false;
         }

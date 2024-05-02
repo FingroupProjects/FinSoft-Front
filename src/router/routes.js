@@ -225,7 +225,12 @@ const routes = [
   {
     path: "/hr/payroll",
     name: "payroll",
-    component: () => import("../pages/hr/payingSalaries/index.vue"),
+    component: () => import("../pages/hr/payroll/index.vue"),
+  },
+  {
+    path: "/hr/payrollCreate",
+    name: "payrollCreate",
+    component: () => import("../pages/hr/payroll/create.vue"),
   },
   {
     path: "/hr/timeSheet",
