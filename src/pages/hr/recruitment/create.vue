@@ -3,7 +3,7 @@ import CustomTextField from "../../../components/formElements/CustomTextField.vu
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import Icons from "../../../composables/Icons/Icons.vue";
 import {BASE_COLOR, FIELD_COLOR} from "../../../composables/constant/colors.js";
-import {onMounted, reactive, ref} from "vue";
+import {defineEmits, onMounted, onUnmounted, reactive, ref, watch} from "vue";
 import organizationApi from "../../../api/list/organizations.js";
 import employee from "../../../api/list/employee.js";
 import currentDate from "../../../composables/date/currentDate.js";
@@ -11,14 +11,16 @@ import recruitment from "../../../api/hr/recruitment.js";
 import changeTheDateForSending from "../../../composables/date/changeTheDateForSending.js";
 import {useRouter} from "vue-router";
 import {addMessage} from "../../../composables/constant/buttons.js";
-import showDate from "../../../composables/date/showDate.js";
 import validate from "../../../composables/validate/validate.js";
 import showToast from "../../../composables/toast/index.js";
 import schedule from "../../../api/list/schedule.js";
 import department from "../../../api/list/department.js";
 import position from "../../../api/list/position.js";
+import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
 
 const router = useRouter()
+const emits = defineEmits(["changed"]);
+const confirmDocument = useConfirmDocumentStore();
 
 const form = reactive({
   date: null,
@@ -99,13 +101,13 @@ const addRecruitment = async () => {
 
   const body = {
     "date": changeTheDateForSending(form.date, '-'),
-    "organization_id": form.organization,
+    "organization_id": typeof form.organization === 'object' ? form.organization.id : form.organization,
     "basis": form.basis,
     "department_id": form.department,
     "position_id": form.position,
     "employee_id": form.employee,
     "salary": Number(form.salary),
-    "schedule_id": 1,
+    "schedule_id": form.schedule,
     "hiring_date": changeTheDateForSending(form.date, '-'),
     "comment": form.comment,
   }
@@ -124,9 +126,38 @@ const addRecruitment = async () => {
   console.log(body)
 }
 
+const isChanged = () => {
+  const { employee, salary, dateOfReceipt, date, position, department, schedule, basis, comment} = form;
+
+  const valuesToCheck = [employee, salary, dateOfReceipt, date, position, department, schedule, basis, comment];
+  console.log(valuesToCheck)
+  return valuesToCheck.every(val => val === null || val === '' || val === currentDate() || val === "1");
+}
+
+watch(form, () => {
+  console.log(!isChanged())
+  if (!isChanged()) {
+    emits('changed', true);
+  } else {
+    emits('changed', false);
+  }
+});
+
+watch(confirmDocument, () => {
+  if (confirmDocument.isUpdateOrCreateDocument) {
+    addRecruitment()
+  }
+})
+
+onUnmounted(() => {
+  emits('changed', false);
+})
+
 onMounted(() => {
   form.date = form.dateOfReceipt = currentDate()
+  form.organization = JSON.parse(localStorage.getItem('user')).organization || null
   form.author = JSON.parse(localStorage.getItem('user')).name || null
+
   getOrganizations()
   getEmployees()
   getPositions()
@@ -145,7 +176,8 @@ onMounted(() => {
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1">
-              <Icons title="Добавить" @click="addRecruitment" name="add"/>
+              <Icons title="Добавить" @click="addRecruitment" name="save" />
+              <Icons title="Закрыть" @click="router.push('/hr/recruitment')" name="close" />
             </div>
           </div>
         </v-card>
@@ -157,11 +189,11 @@ onMounted(() => {
       <v-col style="height: 72vh" class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field disabled value="Номер"/>
-          <custom-text-field label="Дата" type="date" v-model="form.date"/>
+          <custom-text-field label="Дата" type="date" class="date" v-model="form.date"/>
           <custom-autocomplete label="Организация" :items="organizations" v-model="form.organization"/>
           <custom-autocomplete label="Сотрудник" :items="employees" v-model="form.employee"/>
           <custom-text-field label="Оклад" v-model="form.salary"/>
-          <custom-text-field label="Дата приёма" type="date" v-model="form.dateOfReceipt"/>
+          <custom-text-field label="Дата приёма" type="date" class="date" v-model="form.dateOfReceipt"/>
           <custom-autocomplete label="Должность" :items="positions" v-model="form.position"/>
           <custom-autocomplete label="Отдел" :items="departments" v-model="form.department"/>
           <custom-autocomplete label="График работы" :items="schedules" v-model="form.schedule"/>

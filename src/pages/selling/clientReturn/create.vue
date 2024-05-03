@@ -7,21 +7,22 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../../composables/toast/index.js";
 import currentDate from "../../../composables/date/currentDate.js";
 import validate from "./validate.js";
-import { useRouter } from "vue-router";
+import {useRouter} from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import storageApi from "../../../api/list/storage.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
-import currencyApi from "../../../api/list/currency.js";
 import clientReturnApi from "../../../api/documents/clientReturn.js";
 import goodApi from "../../../api/list/goods.js";
-import { addMessage } from "../../../composables/constant/buttons.js";
+import {addMessage} from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
 import {BASE_COLOR} from "../../../composables/constant/colors.js";
+import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
 
 
 const router = useRouter()
 const emits = defineEmits(['changed'])
+const confirmDocument = useConfirmDocumentStore()
 
 const form = reactive({
   date: null,
@@ -85,11 +86,6 @@ const getCpAgreements = async (id) => {
 const getStorages = async () => {
   const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   storages.value = data.result.data
-}
-
-const getCurrencies = async () => {
-  const { data } = await currencyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  currencies.value = data.result.data
 }
 
 const getGoods = async () => {
@@ -159,7 +155,6 @@ const addNewClientReturn = async () => {
     }))
  }
 
-
  try {
    const res = await clientReturnApi.add(body)
    if (res.status === 201) {
@@ -171,6 +166,16 @@ const addNewClientReturn = async () => {
  }
 }
 
+const isChanged = () => {
+  const {date, counterparty, cpAgreement, comment, storage, saleInteger, salePercent, currency} = form;
+
+  const goodsValues = goods.value.flatMap(good => [good.good_id, good.amount, good.price, good.price, good.auto_sale_percent, good.auto_sale_sum]);
+  const cleanedGoodsValues = goodsValues.filter(val => val !== undefined)
+
+  const valuesToCheck = [date, counterparty, cpAgreement, comment, storage, saleInteger, salePercent, currency, ...cleanedGoodsValues];
+
+  return valuesToCheck.every(val => val === null || val === '' || val === currentDate() || val === "1");
+}
 
 const totalPrice = computed(() => {
   let sum = 0
@@ -228,6 +233,21 @@ watch(
       }
     }
 );
+
+watch(confirmDocument, () => {
+  if (confirmDocument.isUpdateOrCreateDocument) {
+    addNewClientReturn()
+  }
+})
+
+watch([form, goods.value], () => {
+  console.log(!isChanged())
+  if (!isChanged()) {
+    emits('changed', true);
+  } else {
+    emits('changed', false);
+  }
+});
 
 onUnmounted(() => {
   emits('changed', false);

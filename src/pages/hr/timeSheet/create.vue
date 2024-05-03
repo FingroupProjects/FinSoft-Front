@@ -63,7 +63,7 @@ const getMonths = async () => {
 const reportCard = async () => {
   const body = {
     month_id: form.month,
-    organization_id: form.organization,
+    organization_id: typeof form.organization === 'object' ? form.organization.id : form.organization,
   }
 
   try {
@@ -121,14 +121,10 @@ const addNewProcurement = async () => {
 }
 
 const isChanged = () => {
-  const {saleInteger, salePercent, organization, month, cpAgreement, storage, currency, date} = form;
-
-  const employeeValues = employees.value.flatMap(good => [good.name, good.number_of_hours, good.number_of_hours_in_fact]);
-
-  const cleanedGoodsValues = employeeValues.filter(val => val !== undefined);
-  const valuesToCheck = [saleInteger, salePercent, organization, month, cpAgreement, storage, currency, date, ...cleanedGoodsValues];
-
-  return valuesToCheck.every(val => val === null || val === '' || val === currentDate() || val === "1");
+  const {organization, month, date, comment} = form;
+  const valuesToCheck = [organization, month, date, comment];
+  console.log(valuesToCheck)
+  return valuesToCheck.every(val => val === null || val === '' || val === currentDate() || JSON.stringify(val) === JSON.stringify(JSON.parse(localStorage.getItem('user')).organization));
 }
 
 watch(confirmDocument, () => {
@@ -138,6 +134,7 @@ watch(confirmDocument, () => {
 })
 
 watch([form, employees.value], () => {
+  console.log(!isChanged())
   if (!isChanged()) {
     emits('changed', true);
   } else {
@@ -147,6 +144,7 @@ watch([form, employees.value], () => {
 
 onMounted(() => {
   form.date = currentDate()
+  form.organization = JSON.parse(localStorage.getItem('user')).organization || null
   author.value = JSON.parse(localStorage.getItem('user')).name || null
 
   getOrganizations()

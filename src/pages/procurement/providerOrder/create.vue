@@ -245,7 +245,8 @@ onMounted(() => {
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1">
-              <Icons title="Добавить" @click="addNewProviderOrder" name="add"/>
+              <Icons title="Добавить" @click="addNewProviderOrder" name="save" />
+              <Icons title="Закрыть" @click="router.push('/providerOrder')" name="close" />
             </div>
           </div>
         </v-card>
@@ -257,7 +258,7 @@ onMounted(() => {
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field disabled value="Номер"/>
-          <custom-text-field label="Дата" type="date" v-model="form.date"/>
+          <custom-text-field label="Дата" type="date" class="date" v-model="form.date"/>
           <custom-autocomplete label="Организация" :items="organizations" v-model="form.organization"/>
           <custom-autocomplete label="Клиент" :items="counterparties" v-model="form.counterparty"/>
           <custom-autocomplete :disabled="!form.counterparty" label="Договор" :items="cpAgreements" v-model="form.cpAgreement"/>

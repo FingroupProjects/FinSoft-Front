@@ -27,13 +27,9 @@ const confirmDocument = useConfirmDocumentStore()
 const form = reactive({
   date: null,
   organization: null,
-  organizations: [],
   counterparty: null,
-  counterparties: [],
   cpAgreement: null,
-  cpAgreements: [],
   storage: null,
-  storages: [],
   saleInteger: null,
   salePercent: null,
   comment: null,
@@ -276,12 +272,10 @@ onMounted(() => {
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="addNewProvider" name="add"/>
-              <Icons title="Скопировать" @click="" name="copy"/>
-              <Icons title="Удалить" @click="" name="delete"/>
+              <Icons title="Добавить" @click="addNewProvider" name="save" />
+              <Icons title="Закрыть" @click="router.push('/providerReturn')" name="close" />
             </div>
           </div>
-
         </v-card>
       </div>
     </v-col>
@@ -291,7 +285,7 @@ onMounted(() => {
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field disabled value="Номер" v-model="form.number"/>
-          <custom-text-field label="Дата" type="date" v-model="form.date"/>
+          <custom-text-field label="Дата" type="date" class="date" v-model="form.date"/>
           <custom-autocomplete label="Организация" :items="organizations"  v-model="form.organization"/>
           <custom-autocomplete label="Поставщик" :items="counterparties" v-model="form.counterparty"/>
           <custom-autocomplete label="Договор" :disabled="!form.counterparty" :items="cpAgreements" v-model="form.cpAgreement"/>

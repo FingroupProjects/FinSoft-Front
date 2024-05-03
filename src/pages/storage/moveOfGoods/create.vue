@@ -23,9 +23,7 @@ const router = useRouter()
 const form = reactive({
   date: null,
   organization: null,
-  organizations: [],
   storage: null,
-  storages: [],
   sender_storage: null,
   recipient_storage: null,
   comment: null,
@@ -38,7 +36,7 @@ const markedID = ref([])
 const goods = ref([{
   id: 1,
   good_id: null,
-  amount: 1,
+  amount: "1",
   price: null,
 }])
 
@@ -109,7 +107,7 @@ const addNewMove = async () => {
 
   const body = {
     date: form.date,
-    organization_id: form.organization,
+    organization_id: typeof form.organization === 'object' ? form.organization.id : form.organization,
     sender_storage_id: form.sender_storage,
     recipient_storage_id: form.recipient_storage,
     comment : form.comment, 
@@ -129,73 +127,17 @@ const addNewMove = async () => {
    console.error(e)
  }
 }
-const totalPrice = computed(() => {
-  let sum = 0
-  goods.value.forEach(item => {
-    sum += item.price * item.amount
-  })
-  return sum
-})
-
-const totalPriceWithSale = computed(() => {
-  let sum = 0
-  if (form.salePercent !== null) {
-      sum = totalPrice.value - (totalPrice.value * form.salePercent / 100)
-  } else {
-    goods.value.forEach(item => {
-      sum += (item.price * item.amount)
-    })
-    sum -= form.saleInteger
-  }
-
-  return sum
-})
 
 
 onMounted(() => {
   form.date = currentDate()
+  form.organization = JSON.parse(localStorage.getItem('user')).organization || null
   author.value = JSON.parse(localStorage.getItem('user')).name || null
+
   getOrganizations()
   getStorages()
   getGoods()
 })
-
-watch(() => form.counterparty, async (id) => {
-  form.cpAgreement = null
-
-  try {
-    const res = await cpAgreementApi.getById(id)
-
-    form.currency = {
-      id: res.data.result.currency_id.id,
-      name: res.data.result.currency_id.name
-    }
-
-    const array = Object.prototype.toString.call(res.data.result) === '[object Array]'
-    const obj = Object.prototype.toString.call(res.data.result) === '[object Object]'
-
-    cpAgreements.value = array ? res.data.result : obj ? [res.data.result] : []
-
-  } catch (e) {
-    cpAgreements.value = []
-  }
-})
-
-const isSaleIntegerDisabled = computed(() => !!form.salePercent);
-const isSalePercentDisabled = computed(() => !!form.saleInteger);
-
-watch(() => form.saleInteger, (newValue) => {
-  if (!newValue) {
-    form.salePercent = ''
-  }
-})
-
-watch(() => form.salePercent, (newValue) => {
-  if (!newValue) {
-    form.saleInteger = ''
-  }
-})
-
 </script>
 <template>
   <div class="document">
@@ -222,7 +164,7 @@ watch(() => form.salePercent, (newValue) => {
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field disabled value="Номер" v-model="form.number"/>
-          <custom-text-field label="Дата" type="date" v-model="form.date"/>
+          <custom-text-field label="Дата" type="date" class="date" v-model="form.date"/>
           <custom-autocomplete label="Организация" :items="organizations"  v-model="form.organization"/>
           <custom-autocomplete label="Склад-отп" :items="storages" v-model="form.sender_storage"/>
           <custom-autocomplete label="Склад-пол" :items="storages" v-model="form.recipient_storage"/>
