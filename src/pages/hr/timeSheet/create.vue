@@ -93,10 +93,10 @@ const lineMarking = (item) => {
 }
 
 
-const addNewProcurement = async () => {
+const addNewTimeSheet = async () => {
 
   const body = {
-    organization_id: form.organization,
+    organization_id: typeof form.organization === 'object' ? form.organization.id : form.organization,
     month_id: form.month,
     date: form.date,
     comment: form.comment,
@@ -123,13 +123,12 @@ const addNewProcurement = async () => {
 const isChanged = () => {
   const {organization, month, date, comment} = form;
   const valuesToCheck = [organization, month, date, comment];
-  console.log(valuesToCheck)
   return valuesToCheck.every(val => val === null || val === '' || val === currentDate() || JSON.stringify(val) === JSON.stringify(JSON.parse(localStorage.getItem('user')).organization));
 }
 
 watch(confirmDocument, () => {
   if (confirmDocument.isUpdateOrCreateDocument) {
-    addNewProcurement()
+    addNewTimeSheet()
   }
 })
 
@@ -162,7 +161,7 @@ onMounted(() => {
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="addNewProcurement" name="add"/>
+              <Icons title="Добавить" @click="addNewTimeSheet" name="add"/>
               <Icons title="Скопировать" @click="" name="copy"/>
               <Icons title="Удалить" @click="" name="delete"/>
             </div>

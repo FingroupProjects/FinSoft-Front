@@ -17,12 +17,8 @@ import debounce from "lodash.debounce";
 import procurementApi from '../../../api/documents/procurement.js';
 import showDate from "../../../composables/date/showDate.js";
 import organizationApi from "../../../api/list/organizations.js";
-import counterpartyApi from "../../../api/list/counterparty.js";
-import storageApi from "../../../api/list/storage.js";
-import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
-import currencyApi from "../../../api/list/currency.js";
-import user from "../../../api/list/user.js";
 import timeSheet from "../../../api/hr/timeSheet.js";
+import schedule from "../../../api/list/schedule.js";
 
 const router = useRouter()
 
@@ -46,20 +42,18 @@ const organizations = ref([])
 const storages = ref([])
 const authors = ref([])
 const currencies = ref([])
-const counterparties = ref([])
-const counterpartyAgreements = ref([])
+const months = ref([])
 
 const filterForm = ref({
   date: null,
   provider_id: null,
-  counterparty_id: null,
+  month_id: null,
   counterparty_agreement_id: null,
   organization_id: null,
   storage_id: null,
   author_id: null,
   currency_id: null
 })
-
 
 const headers = ref([
   {title: 'Номер', key: 'doc_number'},
@@ -171,48 +165,24 @@ const cleanFilterForm = () => {
   filterForm.value = {}
 }
 
-const getAuthors = async () => {
-  const { data } = await user.getAuthors();
-  authors.value = data.result.data
-}
 
 const getOrganizations = async () => {
   const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   organizations.value = data.result.data
 }
 
-const getStorages = async () => {
-  const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  storages.value = data.result.data
-}
-const getCounterparties = async () => {
-  const { data } = await counterpartyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  counterparties.value = data.result.data
-}
-
-const getCpAgreements = async () => {
-  const { data } = await cpAgreementApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  counterpartyAgreements.value = data.result.data
-}
-
-
-const getCurrencies = async () => {
-  const { data } = await currencyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-
-  currencies.value = data.result.data
+const getMonths = async () => {
+  const { data } = await schedule.month({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  months.value = data.result.data
 }
 
 const show = (item) => {
-  window.open(`/hr/timeSheet/${item.id}`, '_blank')
+  window.open(`/hr/payroll/${item.id}`, '_blank')
 }
 
 onMounted(() => {
   getOrganizations()
-  getCounterparties()
-  getCpAgreements()
-  getStorages()
-  getCurrencies()
-  getAuthors()
+  getMonths()
 })
 
 watch(dialog, newVal => {
@@ -340,7 +310,7 @@ watch(search, debounce((newValue) => {
             <div class="d-flex justify-space-between align-center mb-2">
               <span>Фильтр</span>
             </div>
-            <v-form class="d-flex w-100" @submit.prevent="">
+            <v-form class="d-flex w-100">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100 ga-4">
                   <div class="d-flex ga-2 w-100">
@@ -348,15 +318,7 @@ watch(search, debounce((newValue) => {
                   </div>
                   <div class="d-flex ga-2">
                     <custom-autocomplete label="Организация" :items="organizations"  v-model="filterForm.organization_id"/>
-                    <custom-autocomplete label="Поставщик" :items="counterparties" v-model="filterForm.counterparty_id"/>
-                  </div>
-                  <div class="d-flex ga-2">
-                    <custom-autocomplete label="Склад" :items="storages" v-model="filterForm.storage_id"/>
-                    <custom-autocomplete label="Валюта" :items="currencies" v-model="filterForm.currency_id"/>
-                  </div>
-                  <div class="d-flex ga-2">
-                    <custom-autocomplete label="Автор" :items="authors" v-model="filterForm.author_id"/>
-                    <custom-autocomplete label="Договор" :items="counterpartyAgreements" v-model="filterForm.counterparty_agreement_id"/>
+                    <custom-autocomplete label="Месяц" :items="months" v-model="filterForm.month_id"/>
                   </div>
                   <div class="d-flex justify-end ga-2">
                     <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
