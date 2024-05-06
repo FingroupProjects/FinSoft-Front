@@ -63,7 +63,7 @@ const getMonths = async () => {
 const reportCard = async () => {
   const body = {
     month_id: form.month,
-    organization_id: form.organization,
+    organization_id: typeof form.organization === 'object' ? form.organization.id : form.organization,
   }
 
   try {
@@ -93,10 +93,10 @@ const lineMarking = (item) => {
 }
 
 
-const addNewProcurement = async () => {
+const addNewTimeSheet = async () => {
 
   const body = {
-    organization_id: form.organization,
+    organization_id: typeof form.organization === 'object' ? form.organization.id : form.organization,
     month_id: form.month,
     date: form.date,
     comment: form.comment,
@@ -121,23 +121,19 @@ const addNewProcurement = async () => {
 }
 
 const isChanged = () => {
-  const {saleInteger, salePercent, organization, month, cpAgreement, storage, currency, date} = form;
-
-  const employeeValues = employees.value.flatMap(good => [good.name, good.number_of_hours, good.number_of_hours_in_fact]);
-
-  const cleanedGoodsValues = employeeValues.filter(val => val !== undefined);
-  const valuesToCheck = [saleInteger, salePercent, organization, month, cpAgreement, storage, currency, date, ...cleanedGoodsValues];
-
-  return valuesToCheck.every(val => val === null || val === '' || val === currentDate() || val === "1");
+  const {organization, month, date, comment} = form;
+  const valuesToCheck = [organization, month, date, comment];
+  return valuesToCheck.every(val => val === null || val === '' || val === currentDate() || JSON.stringify(val) === JSON.stringify(JSON.parse(localStorage.getItem('user')).organization));
 }
 
 watch(confirmDocument, () => {
   if (confirmDocument.isUpdateOrCreateDocument) {
-    addNewProcurement()
+    addNewTimeSheet()
   }
 })
 
 watch([form, employees.value], () => {
+  console.log(!isChanged())
   if (!isChanged()) {
     emits('changed', true);
   } else {
@@ -147,6 +143,7 @@ watch([form, employees.value], () => {
 
 onMounted(() => {
   form.date = currentDate()
+  form.organization = JSON.parse(localStorage.getItem('user')).organization || null
   author.value = JSON.parse(localStorage.getItem('user')).name || null
 
   getOrganizations()
@@ -164,7 +161,7 @@ onMounted(() => {
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="addNewProcurement" name="add"/>
+              <Icons title="Добавить" @click="addNewTimeSheet" name="add"/>
               <Icons title="Скопировать" @click="" name="copy"/>
               <Icons title="Удалить" @click="" name="delete"/>
             </div>

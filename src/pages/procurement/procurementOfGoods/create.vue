@@ -1,5 +1,5 @@
 <script setup>
-import {computed, onMounted, reactive, ref, watch, defineEmits, onUnmounted} from "vue";
+import {computed, defineEmits, getCurrentInstance, onMounted, onUnmounted, reactive, ref, watch} from "vue";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
@@ -7,22 +7,22 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../../composables/toast/index.js";
 import currentDate from "../../../composables/date/currentDate.js";
 import validate from "./validate.js";
-import { useRouter } from "vue-router";
+import {useRouter} from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import storageApi from "../../../api/list/storage.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
-import currencyApi from "../../../api/list/currency.js";
 import procurementApi from "../../../api/documents/procurement.js";
 import goodApi from "../../../api/list/goods.js";
-import { addMessage } from "../../../composables/constant/buttons.js";
-import { BASE_COLOR } from "../../../composables/constant/colors.js";
+import {addMessage} from "../../../composables/constant/buttons.js";
+import {BASE_COLOR} from "../../../composables/constant/colors.js";
 import "../../../assets/css/procurement.css";
-import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
+import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
 
 const router = useRouter();
 const emits = defineEmits(["changed"]);
 const confirmDocument = useConfirmDocumentStore();
+
 
 const form = reactive({
   date: null,
@@ -463,6 +463,7 @@ onMounted( () => {
                   <td>
                     <custom-text-field
                       readonly
+                      v-model="item.summa"
                       :value="item.amount * item.price"
                       min-width="100"
                     />

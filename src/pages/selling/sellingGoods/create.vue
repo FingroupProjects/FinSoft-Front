@@ -7,20 +7,21 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../../composables/toast/index.js";
 import currentDate from "../../../composables/date/currentDate.js";
 import validate from "./validate.js";
-import { useRouter } from "vue-router";
+import {useRouter} from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import storageApi from "../../../api/list/storage.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
-import currencyApi from "../../../api/list/currency.js";
 import saleApi from "../../../api/documents/sale.js";
 import goodApi from "../../../api/list/goods.js";
-import { addMessage } from "../../../composables/constant/buttons.js";
+import {addMessage} from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
-import { BASE_COLOR } from "../../../composables/constant/colors.js";
+import {BASE_COLOR} from "../../../composables/constant/colors.js";
+import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
 
 const router = useRouter();
 const emits = defineEmits(['changed'])
+const confirmDocument = useConfirmDocumentStore();
 
 const form = reactive({
   date: null,
@@ -41,7 +42,7 @@ const goods = ref([
   {
     id: 1,
     good_id: null,
-    amount: 1,
+    amount: "1",
     price: null,
   },
 ]);
@@ -77,7 +78,6 @@ const getCounterparties = async () => {
       sortBy: "name",
     });
     counterparties.value = data.result.data;
-    console.log(counterparties.value)
   } catch (e) {
     console.error(e);
   }
@@ -197,6 +197,43 @@ const addNewSale = async () => {
   }
 };
 
+const isChanged = () => {
+  const {
+    saleInteger,
+    salePercent,
+    counterparty,
+    cpAgreement,
+    storage,
+    currency,
+    date,
+    comment
+  } = form;
+
+  const goodsValues = goods.value.flatMap((good) => [
+    good.good_id,
+    good.amount,
+    good.price,
+  ]);
+
+  const cleanedGoodsValues = goodsValues.filter((val) => val !== undefined);
+  const valuesToCheck = [
+    saleInteger,
+    salePercent,
+    counterparty,
+    cpAgreement,
+    storage,
+    currency,
+    date,
+    comment,
+    ...cleanedGoodsValues,
+  ];
+  console.log(valuesToCheck)
+
+  return valuesToCheck.every(
+      (val) => val === null || val === "" || val === currentDate() || val === "1"
+  );
+};
+
 const totalPrice = computed(() => {
   let sum = 0;
   goods.value.forEach((item) => {
@@ -261,6 +298,21 @@ watch(
     }
 );
 
+watch(confirmDocument, () => {
+  if (confirmDocument.isUpdateOrCreateDocument) {
+    addNewSale();
+  }
+});
+
+watch([form, goods.value], () => {
+  console.log(!isChanged())
+  if (!isChanged()) {
+    emits("changed", true);
+  } else {
+    emits("changed", false);
+  }
+});
+
 onUnmounted(() => {
   emits('changed', false);
 })
@@ -288,9 +340,8 @@ onMounted(() => {
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="addNewSale" name="add"/>
-              <Icons title="Скопировать" name="copy"/>
-              <Icons title="Удалить" name="delete"/>
+              <Icons title="Добавить" @click="addNewSale" name="save" />
+              <Icons title="Закрыть" @click="router.push('/sellingGoodsCreate')" name="close" />
             </div>
           </div>
         </v-card>
@@ -302,7 +353,7 @@ onMounted(() => {
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field disabled value="Номер" v-model="form.number" />
-          <custom-text-field label="Дата" type="date" v-model="form.date" />
+          <custom-text-field label="Дата" type="date" class="date" v-model="form.date" />
           <custom-autocomplete
             label="Организация"
             :items="organizations"
