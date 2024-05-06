@@ -13,6 +13,7 @@ import {editMessage} from "../../../composables/constant/buttons.js";
 import validate from "../../../composables/validate/validate.js";
 import showToast from "../../../composables/toast/index.js";
 import showDate from "../../../composables/date/showDate.js";
+import schedule from "../../../api/list/schedule.js";
 
 const router = useRouter()
 const route = useRoute()
@@ -26,6 +27,7 @@ const form = reactive({
   employee: null,
   salary: null,
   basis: null,
+  schedule: null,
   comment: null,
   author: null,
 })
@@ -34,12 +36,11 @@ const organizations = ref([])
 const employees = ref([])
 const positions = ref([])
 const departments = ref([])
-
+const schedules = ref([])
 
 const getDismissalDetails = async () => {
   try {
     const {data} = await recruitment.getById(route.params.id)
-    console.log(data)
     form.date = showDate(data.data.date, '-', true)
     form.dateOfReceipt = showDate(data.data.hiring_date, '-', true)
     form.organization = data.data.organization
@@ -74,6 +75,11 @@ const getDepartments = async () => {
   departments.value = data.result.data
 }
 
+const getSchedules = async () => {
+  const {data} = await schedule.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  schedules.value = data.result.data
+}
+
 const updateRecruitment = async () => {
 
   const validateValue = [
@@ -99,6 +105,9 @@ const updateRecruitment = async () => {
       "Отдел": form.department
     },
     {
+      "График работы": form.schedule
+    },
+    {
       "Основание": form.basis
     },
   ]
@@ -113,6 +122,7 @@ const updateRecruitment = async () => {
     "position_id": 1,
     "employee_id": typeof(form.employee) === 'object' ? form.employee.id : form.employee,
     "salary": Number(form.salary),
+    "schedule_id": Number(form.schedule),
     "hiring_date": changeTheDateForSending(form.date, '-'),
     "comment": form.comment
   }
@@ -138,6 +148,7 @@ onMounted(() => {
   getEmployees()
   getPositions()
   getDepartments()
+  getSchedules()
 })
 </script>
 
@@ -170,7 +181,7 @@ onMounted(() => {
           <custom-text-field label="Дата приёма" type="date" v-model="form.dateOfReceipt"/>
           <custom-autocomplete label="Должность" :items="positions" v-model="form.position"/>
           <custom-autocomplete label="Отдел" :items="departments" v-model="form.department"/>
-          <custom-autocomplete label="График работы" :items="[]"/>
+          <custom-autocomplete label="График работы" :items="schedules" v-model="form.schedule"/>
         </div>
         <v-textarea
             label="Основание"
