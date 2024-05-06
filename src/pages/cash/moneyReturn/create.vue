@@ -333,32 +333,35 @@ const ninthAccess = async () => {
 
 const getAccess = () => {
   switch (form.typeOperation) {
-    case "Возврат клиенту":
+    case 10:
       firstAccess();
       break;
-    case "Пополнение с Р/С":
+    case 11:
       secondAccess();
       break;
-    case "Отправка на другую кассу":
+    case 12:
       thirdAccess();
       break;
-    case "Возврат вложения":
+    case 13:
       fourthAccess();
       break;
-    case "Оплата кредита":
+    case 14:
       fifthAccess();
       break;
-    case "Возврат поставщику":
+    case 15:
       sixthAccess();
       break;
-    case "Оплата аванс подотчетнику":
+    case 16:
       seventhAccess();
       break;
-    case "Прочие Расходы":
+    case 17:
       eighthAccess();
       break;
-    case "Прочие оплаты":
+    case 18:
       ninthAccess();
+      break;
+    case 19:
+      tenthAccess();
       break;
   }
 };
@@ -459,7 +462,8 @@ const getTypes = async () => {
       data: { result },
     } = await clientPaymentApi.getTypes("RKO");
     typeOperations.value = result;
-    form.typeOperation = typeOperations.value[0].title_ru;
+    console.log(typeOperations.value);
+    form.typeOperation = typeOperations.value[0].id;  
   } catch (e) {
     console.error(e);
   }
@@ -579,41 +583,41 @@ function validateNumberInput(event) {
                   :color="BASE_COLOR"
                   :key="typeOperation.id"
                   :label="typeOperation.title_ru"
-                  :value="typeOperation.title_ru"
+                  :value="typeOperation.id" 
                 ></v-radio>
               </v-radio-group>
             </div>
           </div>
           <div class="d-flex flex-column ga-4">
-            <div v-if="form.typeOperation === 'Пополнение с Р/С'">
+            <div v-if="form.typeOperation === 11">
               <custom-autocomplete
                 label="Банковский счет"
                 :items="organizationBills"
                 v-model="form.organization_bill"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Отправка на другую кассу'">
+            <div v-else-if="form.typeOperation === 12">
               <custom-autocomplete
                 label="Касса отправителя"
                 :items="cashRegisters"
                 v-model="form.sender_cash"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Оплата аванс подотчетнику'">
+            <div v-else-if="form.typeOperation === 13">
               <custom-autocomplete
                 label="Сотрудник"
                 :items="employees"
                 v-model="form.employee"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Прочие Расходы'">
+            <div v-else-if="form.typeOperation === 14">
               <custom-autocomplete
                 label="Статья дохода"
                 :items="incomeItems"
                 v-model="form.incomeItem"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Прочие оплаты'">
+            <div v-else-if="form.typeOperation === 15">
               <custom-autocomplete
                 label="Статья баланса"
                 :items="incomeItems"
