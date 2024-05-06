@@ -436,8 +436,8 @@ onMounted(() => {
     <div style="background: #fff">
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
-          <custom-text-field readonly label="Номер" :value="form.doc_number" />
-          <custom-text-field label="Дата" type="date" v-model="form.date" />
+          <custom-text-field readonly :value="form.doc_number" />
+          <custom-text-field label="Дата" class="date" type="date" v-model="form.date" />
           <custom-autocomplete
             label="Организация"
             :items="organizations"
@@ -516,8 +516,9 @@ onMounted(() => {
                     <custom-autocomplete
                       v-model="item.good_id"
                       :items="listGoods"
+                      :id="item.good_id"
                       min-width="150"
-                      max-width="100%"
+                      max-width="100%"                      
                     />
                   </td>
                   <td>
@@ -566,12 +567,12 @@ onMounted(() => {
             <custom-text-field
               readonly
               :value="'Сумма со скидкой: ' + totalPriceWithSale"
-              min-width="160"
+              min-width="190"
             />
             <custom-text-field
               readonly
               :value="'Сумма без скидки: ' + totalPrice"
-              min-width="180"
+              min-width="190"
               max-width="110"
             />
             <custom-autocomplete
