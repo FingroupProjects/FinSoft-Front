@@ -118,7 +118,6 @@ const getGoods = async (good_storage_id, good_organization_id) => {
     good_organization_id
   );
   listGoods.value = data.result.data;
-  console.log(data);
 };
 
 const decreaseCountOfGoods = () => {
@@ -472,6 +471,7 @@ onMounted(() => {
                       :items="listGoods"
                       min-width="150"
                       max-width="100%"
+                      :isAmount="true"
                     />
                   </td>
                   <td>
