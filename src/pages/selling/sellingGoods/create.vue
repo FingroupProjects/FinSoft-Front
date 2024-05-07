@@ -102,12 +102,18 @@ const getStorages = async () => {
 };
 
 
-const getGoods = async () => {
-  const { data } = await goodApi.get({
-    page: 1,
-    itemsPerPage: 100000,
-    sortBy: "name",
-  });
+const getGoods = async (good_storage_id, good_organization_id) => {
+  const search = "";
+  const { data } = await goodApi.get(
+    {
+      page: 1,
+      itemsPerPage: 100000,
+      sortBy: "name",
+    },
+    search,
+    good_storage_id,
+    good_organization_id
+  );
   listGoods.value = data.result.data;
 };
 
@@ -313,6 +319,17 @@ watch([form, goods.value], () => {
   }
 });
 
+watch(
+  () => [form.storage, form.organization],
+  (newValue) => {
+    if (newValue[0] !== null && newValue[1] !== null) {
+      const storage_id = typeof newValue[0] === "object" ? newValue[0].id : newValue[0];
+      const organization_id = typeof newValue[1] === "object" ? newValue[1].id : newValue[1];
+      getGoods(storage_id, organization_id);
+    }
+  }
+);
+
 onUnmounted(() => {
   emits('changed', false);
 })
@@ -325,7 +342,6 @@ onMounted(() => {
   getOrganizations();
   getCounterparties();
   getStorages();
-  getGoods();
 });
 
 </script>
@@ -435,6 +451,7 @@ onMounted(() => {
                       :items="listGoods"
                       min-width="150"
                       max-width="100%"
+                      :isAmount="true"
                     />
                   </td>
                   <td>
