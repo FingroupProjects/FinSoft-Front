@@ -6,7 +6,7 @@ import CustomAutocomplete from "../../../components/formElements/CustomAutocompl
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../../composables/toast/index.js";
 import currentDate from "../../../composables/date/currentDate.js";
-import {useRouter} from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
 import {addMessage} from "../../../composables/constant/buttons.js";
 import {BASE_COLOR} from "../../../composables/constant/colors.js";
@@ -18,6 +18,7 @@ import validate from "../../../composables/validate/validate.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
 
 const router = useRouter()
+const route = useRoute()
 const emits = defineEmits(['changed'])
 const confirmDocument = useConfirmDocumentStore()
 
@@ -52,6 +53,17 @@ const headers = ref([
   {title: 'Удержание от зарплаты', key: 'currency.name', sortable: false},
   {title: 'Зарплата к оплате', key: 'currency.name', sortable: false},
 ])
+
+const getPayrollDetails = async () => {
+  try {
+    const { data } = await payroll.getById(route.params.id)
+    employees.value = data.result.employees
+    form.organization = data.result.organization
+  } catch (e) {
+    console.error(e)
+  }
+
+}
 
 const getOrganizations = async () => {
   const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
@@ -168,6 +180,7 @@ onMounted(() => {
   author.value = JSON.parse(localStorage.getItem('user')).name || null
   form.organization = JSON.parse(localStorage.getItem('user')).organization || null
 
+  getPayrollDetails()
   getOrganizations()
   getMonths()
 })
@@ -236,7 +249,7 @@ onMounted(() => {
                     </CustomCheckbox>
                   </td>
                   <td style="width: 40%;">
-                    <custom-text-field readonly v-model="item.employee.name" min-width="100" max-width="100%"/>
+                    <custom-text-field readonly v-model="item.salary" min-width="100" max-width="100%"/>
                   </td>
                   <td>
                     <custom-text-field readonly v-model="item.salary" v-mask="'########'" min-width="80"/>
