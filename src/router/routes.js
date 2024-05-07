@@ -228,6 +228,11 @@ const routes = [
     component: () => import("../pages/hr/payroll/index.vue"),
   },
   {
+    path: "/hr/payroll/:id",
+    name: "payrollShow",
+    component: () => import("../pages/hr/payroll/show.vue"),
+  },
+  {
     path: "/hr/payrollCreate",
     name: "payrollCreate",
     component: () => import("../pages/hr/payroll/create.vue"),

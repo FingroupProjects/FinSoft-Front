@@ -1,4 +1,5 @@
 <script setup>
+
 import {
   computed,
   defineEmits,
@@ -26,7 +27,9 @@ import goodApi from "../../../api/list/goods.js";
 import { addMessage } from "../../../composables/constant/buttons.js";
 import { BASE_COLOR } from "../../../composables/constant/colors.js";
 import "../../../assets/css/procurement.css";
-import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
+import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
+import currentDateWithTime from "../../../composables/date/currentDateWithTime.js";
+import formatDateTime from "../../../composables/date/formatDateTime.js";
 
 const router = useRouter();
 const emits = defineEmits(["changed"]);
@@ -180,7 +183,7 @@ const addNewProcurement = async () => {
   if (missingData) return;
 
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
@@ -348,11 +351,10 @@ onUnmounted(() => {
   emits("changed", false);
 });
 
-onMounted(() => {
-  form.date = currentDate();
-  form.organization =
-    JSON.parse(localStorage.getItem("user")).organization || null;
-  author.value = JSON.parse(localStorage.getItem("user")).name || null;
+onMounted( () => {
+  form.date = currentDateWithTime();
+  form.organization =  JSON.parse(localStorage.getItem("user")).organization || null;
+  author.value =  JSON.parse(localStorage.getItem("user")).name || null;
 
   getOrganizations();
   getCounterparties();
@@ -387,7 +389,7 @@ onMounted(() => {
           <custom-text-field
             class="date"
             label="Дата"
-            type="date"
+            type="datetime-local"
             v-model="form.date"
           />
           <custom-autocomplete
