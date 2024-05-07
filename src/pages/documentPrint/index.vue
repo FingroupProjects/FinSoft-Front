@@ -88,91 +88,92 @@ const totalCount = computed(() => {
 
 const windowPrint = () => {
   window.print();
-}
+};
 
 onMounted(async () => {
   await getProcurementDetails();
-  window.addEventListener('afterprint', handleAfterPrint);
+  window.addEventListener("afterprint", handleAfterPrint);
   windowPrint();
 });
 
 const handleAfterPrint = () => {
-  window.removeEventListener('afterprint', handleAfterPrint);
+  window.removeEventListener("afterprint", handleAfterPrint);
   setTimeout(() => {
-    router.go(-1);     
+    router.go(-1);
   }, 500);
-}
-
+};
 </script>
 
 <template>
-  <div style="width: 80%; padding: 20px 15px">
-    <div class="d-flex justify-space-between mb-4">
-      <div class="d-flex ga-8">
-        <CustomTextField
-          style="min-width: 120px"
-          v-model="form.organization"
-          variant="underlined"
-          label="Ораганизация"
-        />
-        <CustomTextField
-          style="min-width: 120px"
-          v-model="form.counterparty"
-          variant="underlined"
-          label="Поставщик"
-        />
-        <CustomTextField
-          style="min-width: 120px"
-          v-model="form.storage"
-          variant="underlined"
-          label="Склад"
-        />
-      </div>
-      <CustomTextField
-        style="min-width: 90px; max-width: 90px"
-        variant="underlined"
-        v-model="form.date"
-        label="Дата"
-      />
-    </div>
-    <div class="d-flex flex-column justify-center ga-10">
-      <div class="text-center">
-        <h2>Накладная № {{ form.doc_number }}</h2>
-      </div>
-      <table class="border-none table-auto w-full">
-        <thead>
-          <tr>
-            <th v-for="header in headers" :key="header.id">
-              {{ header.title }}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(good, index) in goods" :key="good.id">
-            <td>{{ index + 1 }}</td>
-            <td>{{ good.good.name }}</td>
-            <td>{{ good.amount }}</td>
-            <td>{{ good.price }}</td>
-            <td>{{ good.amount * good.price }}</td>
-          </tr>
-          <tr>
-            <td></td>
-            <td class="text-right">Итого</td>
-            <td>{{ totalCount }}</td>
-            <td>{{ totalPrice }}</td>
-            <td>{{ totalSum }}</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="d-flex justify-center ga-16">
-        <div class="d-flex ga-4">
-          <span>Сдал</span>
-          <div style="width: 150px; border-bottom: 1px solid #d9d9d9;" />
+  <div class="w-100 d-flex justify-center align-start h-100 ">
+    <div style="width: 80%; padding: 20px 15px">
+      <div class="d-flex justify-space-between mb-4">
+        <div class="d-flex ga-8">
+          <CustomTextField
+            style="min-width: 120px"
+            v-model="form.organization"
+            variant="underlined"
+            label="Ораганизация"
+          />
+          <CustomTextField
+            style="min-width: 120px"
+            v-model="form.counterparty"
+            variant="underlined"
+            label="Поставщик"
+          />
+          <CustomTextField
+            style="min-width: 120px"
+            v-model="form.storage"
+            variant="underlined"
+            label="Склад"
+          />
         </div>
-        <div class="d-flex ga-4">
-          <span>Принял</span>
-          <div style="width: 150px; border-bottom: 1px solid #d9d9d9;" />
+        <CustomTextField
+          style="min-width: 90px; max-width: 90px"
+          variant="underlined"
+          v-model="form.date"
+          label="Дата"
+        />
+      </div>
+      <div class="d-flex flex-column justify-center ga-10">
+        <div class="text-center">
+          <h2>Накладная № {{ form.doc_number }}</h2>
+        </div>
+        <table class="border-none table-auto w-full">
+          <thead>
+            <tr>
+              <th v-for="header in headers" :key="header.id">
+                {{ header.title }}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(good, index) in goods" :key="good.id">
+              <td>{{ index + 1 }}</td>
+              <td>{{ good.good.name }}</td>
+              <td>{{ good.amount }}</td>
+              <td>{{ good.price }}</td>
+              <td>{{ good.amount * good.price }}</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td class="text-right">Итого</td>
+              <td>{{ totalCount }}</td>
+              <td>{{ totalPrice }}</td>
+              <td>{{ totalSum }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="d-flex justify-center ga-16">
+          <div class="d-flex ga-4">
+            <span>Сдал</span>
+            <div style="width: 150px; border-bottom: 1px solid #d9d9d9" />
+          </div>
+          <div class="d-flex ga-4">
+            <span>Принял</span>
+            <div style="width: 150px; border-bottom: 1px solid #d9d9d9" />
+          </div>
         </div>
       </div>
     </div>

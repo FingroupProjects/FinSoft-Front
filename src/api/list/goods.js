@@ -7,8 +7,10 @@ export default {
   update(id, data) {
     return api.post(`/good/${id}`, data);
   },
-  get({ page = 1, itemsPerPage = 10, sortBy }, search = "") {
-    const params = buildParams(page, itemsPerPage, sortBy, search);
+  get( { page = 1, itemsPerPage = 10, sortBy }, search = "", good_storage_id, good_organization_id,) {
+    const params = buildParams( page, itemsPerPage, sortBy, search, );
+    params.good_storage_id = good_storage_id
+    params.good_organization_id = good_organization_id
     return api.get("/good", { params });
   },
   getById(id) {
@@ -22,7 +24,7 @@ export default {
   },
 
   // good-image
-  getImages(id, { page = 1, itemsPerPage = 10 }){
+  getImages(id, { page = 1, itemsPerPage = 10 }) {
     const params = buildParams(page, itemsPerPage);
     return api.get(`/image/${id}`, { params });
   },
