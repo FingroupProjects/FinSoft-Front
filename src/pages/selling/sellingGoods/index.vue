@@ -22,6 +22,8 @@ import storageApi from "../../../api/list/storage.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import currencyApi from "../../../api/list/currency.js";
 import user from "../../../api/list/user.js";
+import deleteRestoreApi from "../../../api/documents/deleteRestore.js";
+
 const router = useRouter()
 
 const loading = ref(true)
@@ -102,11 +104,9 @@ function countFilter() {
 }
 
 
-
-
 const massDel = async () => {
   try {
-    const {status} = await saleApi.massDeletion({ids: markedID.value})
+    const {status} = await deleteRestoreApi.delete({ids: markedID.value})
     if (status === 200) {
       showToast(removeMessage, 'red')
       await getSellingGoods({})
@@ -117,10 +117,9 @@ const massDel = async () => {
   }
 }
 
-
 const massRestore = async () => {
   try {
-    const {status} = await saleApi.massRestore({ids: markedID.value})
+    const {status} = await deleteRestoreApi.restore({ids: markedID.value})
     if (status === 200) {
       showToast(restoreMessage)
       await getSellingGoods({})
