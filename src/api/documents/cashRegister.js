@@ -50,6 +50,9 @@ export default {
   otherIncomes(data) {
     return api.post("cash-store/other-incomes", data);
   },
+  salaryPayment(data) {
+    return api.post("cash-store/salary-payment", data);
+  },
 
   // update
   updatePaymentFromClient(id, data) {

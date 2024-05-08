@@ -354,7 +354,7 @@ const tenthAccess = async () => {
     type: "RKO",
   };
   try {
-    await clientPaymentApi.otherExpenses(body);
+    await clientPaymentApi.salaryPayment(body);
     showToast(addMessage, "green");
     router.push("/moneyReturn");
   } catch (e) {
