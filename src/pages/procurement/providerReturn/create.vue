@@ -21,8 +21,9 @@ import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
 import currentDateWithTime from "../../../composables/date/currentDateWithTime.js";
 import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
+import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
 
-
+const useOrganization = ref(useHasOneOrganization())
 const router = useRouter()
 const emits = defineEmits(['changed'])
 const confirmDocument = useConfirmDocumentStore()
@@ -131,10 +132,14 @@ const validateItem = (item) => {
 };
 
 const addNewProvider = async () => {
-  if (validate(form.date, form.organization, form.counterparty, form.cpAgreement, form.storage, form.currency) !== true) return
+  if (validate(form.date, form.counterparty, form.cpAgreement, form.storage, form.currency) !== true) return
 
   const missingData = goods.value.some(validateItem)
   if (missingData) return
+
+  if (useOrganization.value.getIsHasOneOrganization) {
+    form.organization = useOrganization.value.getOrganization
+  }
 
   const body = {
     date: formatDateTime(form.date),
@@ -150,8 +155,10 @@ const addNewProvider = async () => {
       good_id: Number(item.good_id),
       amount: Number(item.amount),
       price: Number(item.price),
-    }))
- }
+    })),
+  }
+
+  console.log(body)
 
 
  try {
@@ -294,7 +301,7 @@ onMounted(() => {
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field disabled value="Номер" v-model="form.number"/>
           <custom-text-field label="Дата" type="datetime-local" class="date" v-model="form.date"/>
-          <custom-autocomplete label="Организация" :items="organizations"  v-model="form.organization"/>
+          <custom-autocomplete v-if="!useOrganization.getIsHasOneOrganization" label="Организация" :items="organizations"  v-model="form.organization"/>
           <custom-autocomplete label="Поставщик" :items="counterparties" v-model="form.counterparty"/>
           <custom-autocomplete label="Договор" :disabled="!form.counterparty" :items="cpAgreements" v-model="form.cpAgreement"/>
           <custom-autocomplete label="Склад" :items="storages" v-model="form.storage"/>

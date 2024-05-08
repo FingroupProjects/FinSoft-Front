@@ -182,7 +182,7 @@ const validateItem = (item) => {
 }
 
 const updateProvider = async () => {
-  if (validate(form.date, form.organization, form.counterparty, form.cpAgreement, form.storage, form.currency) !== true) return
+  if (validate(form.date, form.counterparty, form.cpAgreement, form.storage, form.currency) !== true) return
 
   const missingData = goods.value.some(validateItem)
   if (missingData) return
