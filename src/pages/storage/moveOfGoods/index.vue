@@ -32,7 +32,7 @@ const search = ref('')
 const debounceSearch = ref('')
 const nameRef = ref(null)
 const descriptionRef = ref(null)
-const procurements = ref([])
+const moves = ref([])
 const paginations = ref([])
 const showConfirmDialog = ref(false);
 const showModal = ref(false);
@@ -40,9 +40,8 @@ const count = ref(0);
 
 const organizations = ref([])
 const storages = ref([])
-
-
-
+const sender_storages = ref([])
+const recipient_storages = ref([])
 
 const filterForm = ref({
   date: null,
@@ -78,7 +77,7 @@ const getMoveData = async ({page, itemsPerPage, sortBy, search}) => {
     const { data } = await moveApi.get({page, itemsPerPage, sortBy}, search, filterData)
     console.log(data);
     paginations.value = data.result.pagination
-    procurements.value = data.result.data
+    moves.value = data.result.data
     loading.value = false
   } catch (e) {
   }
@@ -93,9 +92,20 @@ const getStorages = async () => {
   storages.value = data.result.data
 }
 
+const getSenderStorage = async () => {
+  const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  sender_storages.value = data.result.data
+}
+const getRecipientStorage = async () => {
+  const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  recipient_storages.value = data.result.data
+}
+
 onMounted(() => {
   getOrganizations()
   getStorages()
+  getSenderStorage()
+  getRecipientStorage()
 })
 
 
@@ -155,7 +165,7 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
 
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
-    const firstMarkedItem = procurements.value.find(el => el.id === markedID.value[0]);
+    const firstMarkedItem = moves.value.find(el => el.id === markedID.value[0]);
     if (firstMarkedItem && firstMarkedItem.deleted_at) {
       if(item.deleted_at === null) {
         showToast(ErrorSelectMessage, 'warning')
@@ -199,7 +209,7 @@ watch(dialog, newVal => {
 })
 
 watch(markedID, (newVal) => {
-  markedItem.value = procurements.value.find((el) => el.id === newVal[0]);
+  markedItem.value = moves.value.find((el) => el.id === newVal[0]);
 })
 
 watch(search, debounce((newValue) => {
@@ -263,7 +273,7 @@ watch(search, debounce((newValue) => {
             :loading="loading"
             :headers="headers"
             :items-length="paginations.total || 0"
-            :items="procurements"
+            :items="moves"
             :item-value="headers.title"
             :search="debounceSearch"
             v-model="markedID"
@@ -330,7 +340,8 @@ watch(search, debounce((newValue) => {
                   <custom-text-field label="Дата" type="date" min-width="508"  v-model="filterForm.date"/>
                   </div>
                   <div class="d-flex ga-2">
-                    <custom-autocomplete label="Склад-отправитель" :items="organizations"  v-model="filterForm.organization_id"/>
+                    <custom-autocomplete label="Огранизация" :items="organizations"  v-model="filterForm.organization_id"/>
+                    <custom-autocomplete label="Склад-отправитель" :items="storages" v-model="filterForm.storage_id"/>
                   <custom-autocomplete label="Склад-получатель" :items="storages" v-model="filterForm.storage_id"/>               
                  </div>
                  

@@ -31,7 +31,7 @@ const form = reactive({
   sender_storage: null,
   sender_storages: [],
   recipient_storage: null,
-  recipient_storage: [],
+  recipient_storages: [],
   comment: null,
 })
 
@@ -99,18 +99,13 @@ const getRecipientStorage = async () => {
   const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   storages.value = data.result.data
 }
-
-
-
 const getGoods = async () => {
   const { data } = await goodApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   listGoods.value = data.result.data
 }
-
 const decreaseCountOfGoods = () => {
   goods.value = goods.value.filter((item) => !markedID.value.includes(item.id))
 }
-
 const lineMarking = (item) => {
   const index = markedID.value.indexOf(item.id);
   if (index !== -1) {
@@ -121,7 +116,6 @@ const lineMarking = (item) => {
     }
   }
 }
-
 const increaseCountOfGoods = () => {
   const missingData = goods.value.some(validateItem)
   if (missingData) return
@@ -146,7 +140,7 @@ const updateMove = async () => {
 
   const missingData = goods.value.some(validateItem)
   if (missingData) return
-
+ 
   const body = {
     date: form.date,
     organization_id: typeof form.organization === 'object' ? form.organization.id : form.organization,
@@ -197,51 +191,13 @@ const totalPriceWithSale = computed(() => {
 onMounted( () => {
   author.value = JSON.parse(localStorage.getItem('user')).name || null
 
-  Promise.all([
+   Promise.all([
       getOrganizations(),
       getStorages(),
       getGoods(),
       getMoveDetails()
   ])
 
-})
-
-
-watch(() => form.counterparty, async (data) => {
-  form.cpAgreement = null
-
-  const id = typeof data === 'object' ? data.id : data
-
-  try {
-    const res = await cpAgreementApi.getById(id)
-    form.currency = {
-      id: res.data.result.currency_id.id,
-      name: res.data.result.currency_id.name
-    }
-
-    const array = Object.prototype.toString.call(res.data.result) === '[object Array]'
-    const obj = Object.prototype.toString.call(res.data.result) === '[object Object]'
-
-    cpAgreements.value = array ? res.data.result : obj ? [res.data.result] : []
-
-  } catch (e) {
-    cpAgreements.value = []
-  }
-})
-
-const isSaleIntegerDisabled = computed(() => !!form.salePercent);
-const isSalePercentDisabled = computed(() => !!form.saleInteger);
-
-watch(() => form.saleInteger, (newValue) => {
-  if (!newValue) {
-    form.salePercent = ''
-  }
-})
-
-watch(() => form.salePercent, (newValue) => {
-  if (!newValue) {
-    form.saleInteger = ''
-  }
 })
 
 </script>

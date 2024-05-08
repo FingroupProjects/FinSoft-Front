@@ -25,7 +25,9 @@ const form = reactive({
   organization: null,
   storage: null,
   sender_storage: null,
+  sender_storages: [],
   recipient_storage: null,
+  recipient_storages: [],
   comment: null,
   currency: null,
 })
@@ -42,7 +44,8 @@ const goods = ref([{
 
 const organizations = ref([])
 const storages = ref([])
-const currencies = ref([])
+const sender_storages = ref([])
+const recipient_storages = ref([])
 const listGoods = ref([])
 
 const headers = ref([
@@ -58,6 +61,14 @@ const getOrganizations = async () => {
 const getStorages = async () => {
   const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   storages.value = data.result.data
+}
+const getSenderStorage = async () => {
+  const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  sender_storages.value = data.result.data
+}
+const getRecipientStorage = async () => {
+  const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  recipient_storages.value = data.result.data
 }
 
 const getGoods = async () => {
