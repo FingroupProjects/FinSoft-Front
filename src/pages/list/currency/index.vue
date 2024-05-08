@@ -299,7 +299,7 @@ const addCurrency = async ({page, itemsPerPage, sortBy}) => {
       isExistsCurrency.value = true
     }
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 }
 
@@ -320,7 +320,7 @@ const update = async ({page, itemsPerPage, sortBy, search}) => {
       dialog.value = false
     }
   } catch (e) {
-    console.log(e)
+    console.error(e)
   }
 }
 
@@ -336,7 +336,7 @@ const removeCurrency = async ({page, itemsPerPage, sortBy}) => {
       markedID.value = []
     }
   } catch (e) {
-    console.log(e)
+    console.error(e)
   }
 }
 
@@ -349,7 +349,7 @@ const restoreCurrency = async ({page, itemsPerPage, sortBy}) => {
       markedID.value = []
     }
   } catch (e) {
-    console.log(e)
+    console.error(e)
   }
 }
 
@@ -407,7 +407,7 @@ const updateRate = async ({page, itemsPerPage, sortBy}) => {
       rateDialog.value = false
     }
   } catch (e) {
-    console.log(e)
+    console.error(e)
   }
 }
 
@@ -436,7 +436,7 @@ const removeCurrencyRate = async ({page, itemsPerPage, sortBy}) => {
       rateDialog.value = false
     }
   } catch (e) {
-    console.log(e)
+    console.error(e)
   }
 }
 
@@ -450,7 +450,7 @@ const restoreCurrencyRate = async ({page, itemsPerPage, sortBy}) => {
       rateDialog.value = false
     }
   } catch (e) {
-    console.log(e)
+    console.error(e)
   }
 }
 
@@ -708,7 +708,7 @@ watch(search, debounce((newValue) => {
               </v-btn>
               </div>
             </div>
-            <v-form class="d-flex w-100" :disabled="!updateAccess('unit') && isExistsCurrency" @submit.prevent="addCurrency">
+            <v-form class="d-flex w-100" :disabled="!updateAccess('currency') && isExistsCurrency" @submit.prevent="addCurrency">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100">
                   <v-text-field

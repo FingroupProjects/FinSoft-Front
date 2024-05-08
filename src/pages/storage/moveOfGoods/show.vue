@@ -15,6 +15,7 @@ import moveApi from "../../../api/documents/move.js";
 import goodApi from "../../../api/list/goods.js";
 import { editMessage } from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
+import showDate from "../../../composables/date/showDate.js";
 import {BASE_COLOR} from "../../../composables/constant/colors.js";
 
 const router = useRouter()
@@ -49,41 +50,34 @@ const listGoods = ref([])
 
 const headers = ref([
   {title: 'Товары', key: 'goods', sortable: false},
-  {title: 'Количество', key: 'currency.name', sortable: false},
-  {title: 'Цена', key: 'currency.name', sortable: false},
-  {title: 'Сумма', key: 'currency.name', sortable: false},
+  {title: 'Количество', key: 'currency.name', sortable: false}
 ])
 
 
 const getMoveDetails = async () => {
   const { data } = await moveApi.getById(route.params.id)
-  console.log(data)
-  if(data?.result) {
-
-    form.doc_number = data.result.doc_number   
-    form.date = data.result.date
-    form.organization = {
-      id: data.result.organization.id,
-      name: data.result.organization.name
-    }
-    form.storage = {
-      id: data.result.storage.id,
-      name: data.result.storage.name
-    }
-    form.sender_storage = {
-      id: data.result.sender_storage.id,
-      name: data.result.sender_storage.name
-    }
-    form.recipient_storage = {
-      id: data.result.recipient_storage.id,
-      name: data.result.recipient_storage.name
-    }
-    form.comment = data.result.comment
-    goods.value = data.result.goods.map(item => ({
-      good_id: item.good.id,
-      amount: item.amount,
-    }))
+  console.log(data);
+  form.doc_number = data.data.doc_number
+  form.date = showDate(data.data.date, '-', true);
+  form.organization = {
+    id: data.data.organization_id.id,
+    name: data.data.organization_id.name
   }
+  form.sender_storage = {
+    id: data.data.sender_storage_id.id,
+    name: data.data.sender_storage_id.name
+  }
+  form.recipient_storage = {
+    id: data.data.recipient_storage_id.id,
+    name: data.data.recipient_storage_id.name
+  }
+  form.comment = data.data.comment
+
+  goods.value = data.data.goods.map(item => ({
+    id: item.id,
+    good_id: item.good.id,
+    amount: item.amount,
+  }))
 }
 
 const getOrganizations = async () => {
@@ -142,7 +136,7 @@ const validateItem = (item) => {
 }
 
 const updateMove = async () => {
-  if (validate(form.date, form.organization, form.storage) !== true) return
+  if (validate(form.date, form.organization, form.sender_storage, form.recipient_storage ) !== true) return
 
   const missingData = goods.value.some(validateItem)
   if (missingData) return
@@ -150,10 +144,10 @@ const updateMove = async () => {
   const body = {
     date: form.date,
     organization_id: typeof form.organization === 'object' ? form.organization.id : form.organization,
-    storage_id: typeof form.storage ===  'object' ? form.storage.id : form.storage,
-    sender_storage_id: typeof form.sender_storage ===  'object' ? form.sender_storage.id: form.sender_storage,
-    recipient_storage_id: typeof form.recipient_storage ===  'object' ? form.recipient_storage.id : form.recipient_storage,
+    sender_storage_id: typeof form.sender_storage === 'object' ? form.sender_storage.id : form.sender_storage,
+    recipient_storage_id: typeof form.recipient_storage === 'object' ? form.recipient_storage.id : form.recipient_storage,
     goods: goods.value.map((item) => ({
+      id: Number(item.id),
       good_id: Number(item.good_id),
       amount: Number(item.amount),
     }))
@@ -166,11 +160,35 @@ const updateMove = async () => {
      router.push('/moveOfGoods')
    }
  } catch (e) {
-   console.log(e)
+   console.error(e)
  }
 }
+
+
+const totalPrice = computed(() => {
+  let sum = 0
+  goods.value.forEach(item => {
+    sum += item.price * item.amount
+  })
+  return sum
+})
+
+const totalPriceWithSale = computed(() => {
+  let sum = 0
+  if (form.salePercent !== null) {
+      sum = totalPrice.value - (totalPrice.value * form.salePercent / 100)
+  } else {
+    goods.value.forEach(item => {
+      sum += (item.price * item.amount)
+    })
+    sum -= form.saleInteger
+  }
+
+  return sum
+})
+
+
 onMounted( () => {
-  form.date = currentDate()
   author.value = JSON.parse(localStorage.getItem('user')).name || null
 
    Promise.all([
@@ -249,11 +267,11 @@ onMounted( () => {
                       <span>{{ index + 1}}</span>
                     </CustomCheckbox>
                   </td>
-                  <td>
-                    <custom-autocomplete v-model="item.good_id" :items="listGoods" min-width="150" />
+                  <td style="width: 40%">
+                    <custom-autocomplete v-model="item.good_id" :items="listGoods"  max-width="200"/>
                   </td>
                   <td>
-                    <custom-text-field v-model="item.amount" v-mask="'########'" min-width="50" max-width="90" />
+                    <custom-text-field v-model="item.amount" v-mask="'########'" min-width="50" max-width="120" />
                   </td>
                 </tr>
               </template>

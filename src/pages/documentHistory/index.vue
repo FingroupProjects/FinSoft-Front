@@ -17,7 +17,6 @@ const getDocumentHistory = async () => {
       ...item,
       date: showDate(item.date),
     }));
-    console.log(data);
   } catch (e) {
     console.error(e);
   }

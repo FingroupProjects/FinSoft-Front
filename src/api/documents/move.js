@@ -12,6 +12,6 @@ export default {
     return api.get(`/document/movement/${id}`)
   },
   update(id, data) {
-    return api.patch(`/document/update/${id}`, data)
+    return api.patch(`/document/movement/${id}`, data)
   },
 }

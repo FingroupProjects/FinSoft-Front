@@ -1,27 +1,25 @@
 <script setup>
-import {ref, watch, onMounted} from "vue";
+import {onMounted, ref, watch} from "vue";
 import {useRouter} from "vue-router";
 import showToast from '../../../composables/toast/index.js'
 import Icons from "../../../composables/Icons/Icons.vue";
-import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
-import organizationApi from "../../../api/list/organizations.js";
-import counterpartyApi from "../../../api/list/counterparty.js";
-import storageApi from "../../../api/list/storage.js";
-import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
-import currencyApi from "../../../api/list/currency.js";
-import user from "../../../api/list/user.js";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
-import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
+import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
+import {BASE_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 import {
-  removeMessage,
-  warningMessage,
   ErrorSelectMessage,
-  restoreMessage
+  removeMessage,
+  restoreMessage,
+  warningMessage
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
-import providerApi from '../../../api/documents/provider.js';
+import procurementApi from '../../../api/documents/procurement.js';
 import showDate from "../../../composables/date/showDate.js";
+import organizationApi from "../../../api/list/organizations.js";
+import timeSheet from "../../../api/hr/timeSheet.js";
+import schedule from "../../../api/list/schedule.js";
+
 const router = useRouter()
 
 const loading = ref(true)
@@ -34,26 +32,22 @@ const markedID = ref([]);
 const markedItem = ref([])
 const search = ref('')
 const debounceSearch = ref('')
-const nameRef = ref(null)
-const descriptionRef = ref(null)
 const procurements = ref([])
 const paginations = ref([])
 const showConfirmDialog = ref(false);
 const showModal = ref(false);
-const count = ref(0);
+const counterFilter = ref(0);
+
 const organizations = ref([])
-const providers = ref([])
 const storages = ref([])
 const authors = ref([])
 const currencies = ref([])
-const counterparties = ref([])
-const counterpartyAgreements = ref([])
-
+const months = ref([])
 
 const filterForm = ref({
   date: null,
   provider_id: null,
-  counterparty_id: null,
+  month_id: null,
   counterparty_agreement_id: null,
   organization_id: null,
   storage_id: null,
@@ -61,72 +55,61 @@ const filterForm = ref({
   currency_id: null
 })
 
-
 const headers = ref([
-  {title: 'Номер', key: 'name'},
-  {title: 'Дата', key: 'currency.name'},
-  {title: 'Поставщик', key: 'currency.name'},
-  {title: 'Организация', key: 'currency.name'},
-  {title: 'Склад', key: 'currency.name'},
-  {title: 'Автор', key: 'currency.name'},
-  {title: 'Валюта', key: 'currency.name'},
+  {title: 'Номер', key: 'doc_number'},
+  {title: 'Дата', key: 'date'},
 ])
 
-const rules = {
-  required: v => !!v,
-}
-
-
-const getProviderData = async ({page, itemsPerPage, sortBy, search}) => {
-  count.value = 0;
+const getProcurementData = async ({page, itemsPerPage, sortBy, search} = {}) => {
+  counterFilter.value = 0;
   countFilter()
   const filterData = filterForm.value
   filterModal.value = false
   loading.value = true
   try {
-    const { data } = await providerApi.get({page, itemsPerPage, sortBy}, search, filterData)
-    paginations.value = data.result.pagination
+    const { data } = await timeSheet.get({page, itemsPerPage, sortBy}, search, filterData)
     procurements.value = data.result.data
+    paginations.value = data.result.pagination
     loading.value = false
   } catch (e) {
+    console.log(e)
   }
 }
 
-function countFilter() {
-
+const  countFilter = () => {
   for (const key in filterForm.value) {
     if (filterForm.value[key] !== null) {
-      count.value++;
+      counterFilter.value++;
     }
   }
-
-  return count;
 }
+
+
+
 
 const massDel = async () => {
   try {
-    const {status} = await providerApi.massDeletion({ids: markedID.value})
-
+    const {status} = await procurementApi.massDeletion({ids: markedID.value})
     if (status === 200) {
-
       showToast(removeMessage, 'red')
-      await getProviderData({})
+      await getProcurementData({})
       markedID.value = []
       dialog.value = false
     }
-
   } catch (e) {
 
   }
 }
+
+
 const massRestore = async () => {
 
   try {
-    const {status} = await providerApi.massRestore({ids: markedID.value})
+    const {status} = await procurementApi.massRestore({ids: markedID.value})
 
     if (status === 200) {
       showToast(restoreMessage)
-      await getProviderData({})
+      await getProcurementData({})
       markedID.value = []
       dialog.value = false
     }
@@ -172,22 +155,39 @@ const lineMarking = (item) => {
   markedItem.value = item;
 }
 
-const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
-  filterModal.value = {}
+const closeFilterModal = async () => {
+  filterModal.value = false
   cleanFilterForm()
-  await getProviderData({page, itemsPerPage, sortBy, search})
+  await getProcurementData()
 }
 
 const cleanFilterForm = () => {
   filterForm.value = {}
 }
+
+
+const getOrganizations = async () => {
+  const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  organizations.value = data.result.data
+}
+
+const getMonths = async () => {
+  const { data } = await schedule.month({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  months.value = data.result.data
+}
+
+const show = (item) => {
+  window.open(`/hr/payroll/${item.id}`, '_blank')
+}
+
+onMounted(() => {
+  getOrganizations()
+  getMonths()
+})
+
 watch(dialog, newVal => {
-  if (!newVal) {
-    nameRef.value = null
-    descriptionRef.value = null
-    loadingRate.value = true
-  } else {
-    markedID.value = [markedID.value[markedID.value.length - 1]];
+  if (newVal) {
+    markedID.value = [markedID.value[markedID.value.length - 1]]
   }
 })
 
@@ -199,68 +199,22 @@ watch(search, debounce((newValue) => {
   debounceSearch.value = newValue
 }, 500))
 
-
-const getAuthors = async () => {
-  const { data } = await user.getAuthors();
-  
-  authors.value = data.result
-  
-}
-
-const getOrganizations = async () => {
-  const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  organizations.value = data.result.data
-}
-
-const getCounterparties = async () => {
-  const { data } = await counterpartyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  counterparties.value = data.result.data
-}
-
-const getCpAgreements = async () => {
-  const { data } = await cpAgreementApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  counterpartyAgreements.value = data.result.data
-}
-
-const getStorages = async () => {
-  const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  storages.value = data.result.data
-}
-
-const getCurrencies = async () => {
-  const { data } = await currencyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  
-  currencies.value = data.result.data
- 
-}
-
-onMounted(() => {
-  getOrganizations()
-  getCounterparties()
-  getCpAgreements()
-  getStorages()
-  getCurrencies()
-  getAuthors()
- 
-})
-
 </script>
 
 <template>
   <div>
     <v-col>
-      <div class="d-flex justify-space-between text-uppercase" >
+      <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Возврат поставщику</span>
+          <span>Начисление запрлаты</span>
         </div>
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="$router.push('/providerOfGoods/create')" name="add"/>
+              <Icons title="Добавить" @click="$router.push('/hr/payrollCreate')" name="add"/>
               <Icons title="Скопировать" @click="" name="copy"/>
               <Icons title="Удалить" @click="compute" name="delete"/>
             </div>
-
             <div class="w-100">
               <v-text-field
                   v-model="search"
@@ -287,7 +241,7 @@ onMounted(() => {
                 @click="filterModal = true"
                 class="mt-1"
             />
-            <span v-if="count !== 0" class="countFilter">{{ count }}</span>
+            <span v-if="counterFilter !== 0" class="countFilter">{{ counterFilter }}</span>
           </div>
         </v-card>
       </div>
@@ -305,7 +259,7 @@ onMounted(() => {
             :item-value="headers.title"
             :search="debounceSearch"
             v-model="markedID"
-            @update:options="getProviderData"
+            @update:options="getProcurementData"
             page-text =  '{0}-{1} от {2}'
             :items-per-page-options="[
                 {value: 25, title: '25'},
@@ -320,7 +274,7 @@ onMounted(() => {
             <tr
                 @mouseenter="hoveredRowIndex = index"
                 @mouseleave="hoveredRowIndex = null"
-                @dblclick="$router.push(`/providerOfGoods/${item.id}`)"
+                @dblclick="show(item)"
                 :class="{'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
               <td>
@@ -345,16 +299,10 @@ onMounted(() => {
               </td>
               <td>{{ item.doc_number }}</td>
               <td>{{ showDate(item.date) }}</td>
-              <td>{{ item.counterparty.name }}</td>
-              <td>{{ item.organization.name }}</td>
-              <td>{{ item.storage.name }}</td>
-              <td>{{ item.author.name }}</td>
-              <td>{{ item.currency.name }}</td>
             </tr>
           </template>
         </v-data-table-server>
       </v-card>
-
       <v-card>
         <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup.esc="closeFilterModal">
           <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="450"
@@ -362,38 +310,28 @@ onMounted(() => {
             <div class="d-flex justify-space-between align-center mb-2">
               <span>Фильтр</span>
             </div>
-            <v-form class="d-flex w-100" @submit.prevent="">
+            <v-form class="d-flex w-100">
               <v-row class="w-100">
-                <v-col class="d-flex flex-column w-100">
+                <v-col class="d-flex flex-column w-100 ga-4">
                   <div class="d-flex ga-2 w-100">
-                  <custom-text-field label="Дата" type="date" min-width="508"  v-model="filterForm.date"/>
+                    <custom-text-field label="Дата" type="date" min-width="508"  v-model="filterForm.date"/>
                   </div>
                   <div class="d-flex ga-2">
                     <custom-autocomplete label="Организация" :items="organizations"  v-model="filterForm.organization_id"/>
-                  <custom-autocomplete label="Поставщик" :items="counterparties" v-model="filterForm.counterparty_id"/>               
-                 </div>
-                  <div class="d-flex ga-2">
-                  <custom-autocomplete label="Склад" :items="storages" v-model="filterForm.storage_id"/>
-                  <custom-autocomplete label="Валюта" :items="currencies" v-model="filterForm.currency_id"/>
-                </div>
-                <div class="d-flex ga-2">
-                  <custom-autocomplete label="Автор" :items="authors" v-model="filterForm.author_id"/>
-                   <custom-autocomplete label="Договор" :items="counterpartyAgreements" v-model="filterForm.counterparty_agreement_id"/>
+                    <custom-autocomplete label="Месяц" :items="months" v-model="filterForm.month_id"/>
                   </div>
                   <div class="d-flex justify-end ga-2">
                     <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-                    <v-btn :color="BASE_COLOR" class="btn"  @click="getProviderData">применить</v-btn>
+                    <v-btn :color="BASE_COLOR" class="btn"  @click="getProcurementData">применить</v-btn>
                   </div>
                 </v-col>
               </v-row>
-            </v-form> 
+            </v-form>
           </v-card>
         </v-dialog>
       </v-card>
     </v-col>
   </div>
-
-
 </template>
 
 <style scoped>

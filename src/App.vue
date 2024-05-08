@@ -7,7 +7,7 @@ import AdminPanel from "./pages/admin-panel/index.vue";
 import Sidebar from "./components/sidebar/Sidebar.vue";
 import warningModal from "./components/paymentWarning/warningModal.vue";
 
-const rale = ref(false);
+const rale = ref(true);
 const procurementOfGoods = ref(false);
 const admin = ref(false);
 const route = useRoute();
@@ -15,6 +15,7 @@ const isLayout = ref(true);
 const lists = ref([]);
 const admins = ref([]);
 const isChangedDocument = ref(false)
+const isUpdateOrCreateDocument = ref(false)
 
 const toggleSidebar = () => {
   rale.value = !rale.value;
@@ -41,6 +42,7 @@ window.addEventListener("load", () => {
 })
 
 const changed = data => {
+  // console.log(data)
   return isChangedDocument.value = data
 }
 
@@ -103,7 +105,7 @@ const changed = data => {
   -webkit-box-align: center;
   align-items: center;
   position: relative;
-  background-image: url("assets/svg/auth/login-bg.jpg");
+  /* background-image: url("assets/svg/auth/login-bg.jpg"); */
   background-repeat: initial;
   background-attachment: initial;
   background-origin: initial;
@@ -116,7 +118,7 @@ const changed = data => {
 .panel {
   position: relative;
   top: 0;
-  left: -20%;
+  left: -100%;
   width: 0px;
   height: 100vh;
   background-color: white;

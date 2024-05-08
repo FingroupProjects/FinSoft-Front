@@ -82,3 +82,11 @@ label {
   border: 1px solid red;
   padding: 0 5px;
 }
+
+.v-container {
+  padding: 0px
+}
+
+.date .v-field__input {
+  display: block !important
+}

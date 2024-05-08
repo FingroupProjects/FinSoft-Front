@@ -40,16 +40,17 @@ const list = ref({
       child: [
         { id: 1, title: "Единица измерения", link: "/list/unit" },
         { id: 2, title: "Банковские счета", link: "/list/organizationBill" },
-        { id: 3, title: "Номенклатура", link: "/list/nomenclature" },
-        { id: 4, title: "Пользователи", link: "/list/user" },
-        { id: 5, title: "Контрагенты", link: "/list/counterparty" },
-        { id: 6, title: "Организации", link: "/list/organization" },
-        { id: 7, title: "Сотрудники", link: "/list/employee" },
-        { id: 8, title: "Должность", link: "/list/position" },
-        { id: 9, title: "Виды цен", link: "/list/priceType" },
-        { id: 10, title: "Валюты", link: "/list/currency" },
-        { id: 11, title: "Склады", link: "/list/storage" },
-        { id: 12, title: "Кассы", link: "/list/cashRegister" },
+        { id: 3, title: "График работы", link: "/list/schedule" },
+        { id: 4, title: "Номенклатура", link: "/list/nomenclature" },
+        { id: 5, title: "Пользователи", link: "/list/user" },
+        { id: 7, title: "Контрагенты", link: "/list/counterparty" },
+        { id: 8, title: "Организации", link: "/list/organization" },
+        { id: 9, title: "Сотрудники", link: "/list/employee" },
+        { id: 10, title: "Должность", link: "/list/position" },
+        { id: 11, title: "Виды цен", link: "/list/priceType" },
+        { id: 12, title: "Валюты", link: "/list/currency" },
+        { id: 13, title: "Склады", link: "/list/storage" },
+        { id: 14, title: "Кассы", link: "/list/cashRegister" },
       ],
     },
   ],
@@ -74,8 +75,8 @@ const procurementOfGoods = ref({
       title: "Покупка",
       child: [
         { id: 1, title: "Покупка товаров", link: "/procurementOfGoods" },
-        { id: 2, title: "Возврат постащику", link: "/providerOfGoods" },
-        { id: 3, title: "Заказ поставщику", link: "" },
+        { id: 2, title: "Возврат постащику", link: "/providerReturn" },
+        { id: 3, title: "Заказ поставщику", link: "/providerOrder" },
       ],
     },
   ],
@@ -150,8 +151,9 @@ const cash = ref({
       title: "Деньги",
       child: [
         { id: 1, title: "Приход деньги", link: "/moneyComing" },
-        { id: 2, title: "Расход деньги", link: "/" },
-        { id: 2, title: "Приход и расход рас. счета", link: "/" },
+        { id: 2, title: "Расход деньги", link: "/moneyReturn" },
+        { id: 3, title: "Приход рас. счета", link: "/bankComing" },
+        { id: 4, title: "Расход рас. счета", link: "/bankSpend" },
       ],
     },
   ],
@@ -163,7 +165,7 @@ const salary = ref({
       id: 1,
       title: "Отчеты",
       link: "/",
-      child: [{ id: 1, title: "Ведомость зарплаты", link: "" }],
+      child: [{ id: 1, title: "Ведомость зарплаты", link: "/hr/salaryInformation" }],
     },
   ],
   lists: [
@@ -171,17 +173,18 @@ const salary = ref({
       id: 1,
       title: "Кадр",
       child: [
-        { id: 1, title: "Прием на работу", link: "/" },
-        { id: 2, title: "Кадровое перемещение", link: "/" },
-        { id: 2, title: "Увольнение", link: "/" },
+        { id: 1, title: "Прием на работу", link: "/hr/recruitment" },
+        { id: 2, title: "Кадровое перемещение", link: "/hr/personnelMovement" },
+        { id: 2, title: "Увольнение", link: "/hr/dismissal" },
       ],
     },
     {
       id: 2,
       title: "Зарплата",
       child: [
-        { id: 1, title: "Начисление зарплаты", link: "/" },
-        { id: 2, title: "Оплата зарплаты", link: "/" },
+        { id: 1, title: "Начисление зарплаты", link: "/hr/payroll" },
+        { id: 2, title: "Оплата зарплаты", link: "/hr/payingSalaries" },
+        { id: 3, title: "Табель", link: "/hr/timeSheet" },
       ],
     },
   ],
@@ -300,7 +303,7 @@ const push = (item) => {
 }
 
 .title {
-  color: #848484;
+  color: #E8D9D9;
   font-family: "Inter", sans-serif;
   font-weight: 300;
 }

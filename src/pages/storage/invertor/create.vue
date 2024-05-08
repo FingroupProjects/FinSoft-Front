@@ -22,10 +22,8 @@ const router = useRouter();
 const form = reactive({
   date: null,
   organization: null,
-  organizations: [],
   storage: null,
   user: null,
-  storages: [],
   comment: null,
   currency: null,
   accounting_quantity: null,
@@ -40,7 +38,7 @@ const goods = ref([
   {
     id: 1,
     good_id: null,
-    amount: 1,
+    amount: "1",
     price: null,
   },
 ]);
@@ -82,7 +80,6 @@ const getUsers = async () => {
     sortBy: "name",
   });
   users.value = data.result.data;
-  console.log(data);
 };
 
 const getGoods = async () => {
@@ -141,7 +138,7 @@ const addNewInvertor = async () => {
 
   const body = {
     date: form.date,
-    organization_id: form.organization,
+    organization_id: typeof form.organization === "object" ? form.organization.id : form.organization,
     storage_id: form.storage,
     responsible_person_id: form.user,
     comment: form.comment,
@@ -153,8 +150,6 @@ const addNewInvertor = async () => {
     })),
   };
 
-  console.log(body);
-
   try {
     const res = await invertorApi.add(body);
     if (res.status === 201) {
@@ -165,93 +160,25 @@ const addNewInvertor = async () => {
     console.log(e);
   }
 };
-const totalPrice = computed(() => {
-  let sum = 0;
-  goods.value.forEach((item) => {
-    sum += item.price * item.amount;
-  });
-  return sum;
-});
 
-const totalPriceWithSale = computed(() => {
-  let sum = 0;
-  if (form.salePercent !== null) {
-    sum = totalPrice.value - (totalPrice.value * form.salePercent) / 100;
-  } else {
-    goods.value.forEach((item) => {
-      sum += item.price * item.amount;
-    });
-    sum -= form.saleInteger;
-  }
-
-  return sum;
-});
 
 onMounted(() => {
   form.date = currentDate();
+  form.organization = JSON.parse(localStorage.getItem("user")).organization || null;
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
+
   getOrganizations();
   getStorages();
   getGoods();
   getUsers();
 });
-
-watch(
-  () => form.counterparty,
-  async (id) => {
-    form.cpAgreement = null;
-
-    try {
-      const res = await cpAgreementApi.getById(id);
-
-      form.currency = {
-        id: res.data.result.currency_id.id,
-        name: res.data.result.currency_id.name,
-      };
-
-      const array =
-        Object.prototype.toString.call(res.data.result) === "[object Array]";
-      const obj =
-        Object.prototype.toString.call(res.data.result) === "[object Object]";
-
-      cpAgreements.value = array
-        ? res.data.result
-        : obj
-        ? [res.data.result]
-        : [];
-    } catch (e) {
-      cpAgreements.value = [];
-    }
-  }
-);
-
-const isSaleIntegerDisabled = computed(() => !!form.salePercent);
-const isSalePercentDisabled = computed(() => !!form.saleInteger);
-
-watch(
-  () => form.saleInteger,
-  (newValue) => {
-    if (!newValue) {
-      form.salePercent = "";
-    }
-  }
-);
-
-watch(
-  () => form.salePercent,
-  (newValue) => {
-    if (!newValue) {
-      form.saleInteger = "";
-    }
-  }
-);
 </script>
 <template>
   <div class="document">
     <v-col>
       <div class="d-flex justify-space-between text-uppercase">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Перемещение товаров</span>
+          <span>Инвентаризация товаров (создание)</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
@@ -270,7 +197,7 @@ watch(
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field disabled value="Номер" v-model="form.number" />
-          <custom-text-field label="Дата" type="date" v-model="form.date" />
+          <custom-text-field label="Дата" type="date" class="date" v-model="form.date" />
           <custom-autocomplete
             label="Организация"
             :items="organizations"

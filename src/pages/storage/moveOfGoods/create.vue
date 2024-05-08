@@ -23,8 +23,7 @@ const router = useRouter()
 const form = reactive({
   date: null,
   organization: null,
-  organizations: [],
-  storage: null, 
+  storage: null,
   sender_storage: null,
   sender_storages: [],
   recipient_storage: null,
@@ -39,7 +38,8 @@ const markedID = ref([])
 const goods = ref([{
   id: 1,
   good_id: null,
-  amount: 1,
+  amount: "1",
+  price: null,
 }])
 
 const organizations = ref([])
@@ -111,14 +111,14 @@ const validateItem = (item) => {
 };
 
 const addNewMove = async () => {
-  if (validate(form.date, form.organization) !== true) return
+  if (validate(form.date, form.organization, form.sender_storage, form.recipient_storage) !== true) return
 
   const missingData = goods.value.some(validateItem)
   if (missingData) return
 
   const body = {
     date: form.date,
-    organization_id: form.organization,
+    organization_id: typeof form.organization === 'object' ? form.organization.id : form.organization,
     sender_storage_id: form.sender_storage,
     recipient_storage_id: form.recipient_storage,
     comment : form.comment, 
@@ -127,7 +127,7 @@ const addNewMove = async () => {
       amount: Number(item.amount),
     }))
  }
-  console.log(body)
+
  try {
    const res = await moveApi.add(body)
    if (res.status === 201) {
@@ -135,17 +135,19 @@ const addNewMove = async () => {
      router.push('/moveOfGoods')
    }
  } catch (e) {
-   console.log(e)
+   console.error(e)
  }
 }
+
+
 onMounted(() => {
   form.date = currentDate()
+  form.organization = JSON.parse(localStorage.getItem('user')).organization || null
   author.value = JSON.parse(localStorage.getItem('user')).name || null
+
   getOrganizations()
   getStorages()
   getGoods()
-  getSenderStorage()
-  getRecipientStorage()
 })
 </script>
 <template>
@@ -173,10 +175,10 @@ onMounted(() => {
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field disabled value="Номер" v-model="form.number"/>
-          <custom-text-field label="Дата" type="date" v-model="form.date"/>
+          <custom-text-field label="Дата" type="date" class="date" v-model="form.date"/>
           <custom-autocomplete label="Организация" :items="organizations"  v-model="form.organization"/>
-          <custom-autocomplete label="Склад-отп" :items="sender_storages"   v-model="form.sender_storage"/>
-          <custom-autocomplete label="Склад-пол" :items="recipient_storages" v-model="form.recipient_storage"/>
+          <custom-autocomplete label="Склад-отп" :items="storages" v-model="form.sender_storage"/>
+          <custom-autocomplete label="Склад-пол" :items="storages" v-model="form.recipient_storage"/>
         </div>
       </v-col>
       <v-col>
@@ -215,11 +217,11 @@ onMounted(() => {
                       <span>{{ index + 1}}</span>
                     </CustomCheckbox>
                   </td>
-                  <td>
-                    <custom-autocomplete v-model="item.good_id" :items="listGoods" min-width="150" />
+                  <td style="width: 40%">
+                    <custom-autocomplete v-model="item.good_id" :items="listGoods"  max-width="200"/>
                   </td>
                   <td>
-                    <custom-text-field v-model="item.amount" v-mask="'########'" min-width="50" max-width="90" />
+                    <custom-text-field v-model="item.amount" v-mask="'########'" min-width="50" max-width="120" />
                   </td>
                  
                 </tr>

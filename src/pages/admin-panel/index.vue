@@ -2,6 +2,7 @@
 import { ref, defineProps, onMounted, watch, onBeforeUnmount } from "vue";
 import { useRouter } from "vue-router";
 import Icons from "../../composables/Icons/Icons.vue";
+import { useConfirmDocumentStore } from "../../store/confirmDocument.js";
 
 const props = defineProps(["admin", "admins", "lists", "isChangedDocument"]);
 const emit = defineEmits(["toggle", "changedDocument"]);
@@ -11,6 +12,7 @@ const filteredLists = ref([]);
 const filteredAdmins = ref([]);
 const showConfirmModal = ref(false)
 const panelItem = ref({});
+const confirmDocument = useConfirmDocumentStore()
 
 watch(props.admins, (newVal) => {
   if (newVal) {
@@ -22,7 +24,6 @@ watch(props.admins, (newVal) => {
 
 watch(props.lists, (newVal) => {
   if (newVal) {
-    console.log("lists");
     filteredLists.value = props.lists.map((list) => {
       return {
         ...list,
@@ -43,11 +44,16 @@ function push(item) {
   router.push(item.link);
 }
 
-const toggleChangedDocument = () => {
+const toggleChangedDocument = (action) => {
 
   showConfirmModal.value = false;
-  emit("changedDocument");
-  router.push(panelItem.value.link);
+  if (action === 'cancel') {
+    emit("changedDocument");
+    router.push(panelItem.value.link);
+  } else {
+   confirmDocument.updateOrCreateDocument()
+  }
+
 }
 
 onMounted(() => {
@@ -111,7 +117,7 @@ onMounted(() => {
           >
             <span>Подтверждение</span>
             <v-btn
-                @click="toggleChangedDocument"
+                @click="showConfirmModal = false"
                 variant="text"
                 :size="32"
                 class="pt-2 pl-1"
@@ -124,14 +130,14 @@ onMounted(() => {
           >
           <v-card-actions class="d-flex justify-end align-end">
             <v-btn
-                @click="toggleChangedDocument"
+                @click="toggleChangedDocument('cancel')"
                 class="text-none w-[200px] h-[20px]"
                 color="red"
                 variant="flat"
             >Нет</v-btn
             >
             <v-btn
-                @click=""
+                @click="toggleChangedDocument('updateOrCreate')"
                 class="text-none w-[200px] h-[20px]"
                 color="green"
                 variant="flat"
@@ -167,6 +173,7 @@ onMounted(() => {
 .sidebar {
   max-height: 100vh;
   overflow: auto;
+  box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.25);
 }
 
 ::-webkit-scrollbar-thumb {
@@ -182,7 +189,7 @@ onMounted(() => {
   color: #848484;
   font-size: 14px;
   font-family: "Inter", sans-serif;
-  font-weight: 300;
+  font-weight: 400;
   max-height: 92vh;
   overflow: auto;
 }
@@ -203,7 +210,7 @@ li {
 li:hover {
   background: rgb(210, 211, 215);
   color: #08072e;
-  font-weight: normal;
+  /* font-weight: normal; */
   cursor: pointer;
 }
 </style>

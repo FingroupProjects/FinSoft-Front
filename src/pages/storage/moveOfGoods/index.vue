@@ -4,8 +4,8 @@ import {useRouter} from "vue-router";
 import showToast from '../../../composables/toast/index.js'
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
+import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 import {
   removeMessage,
@@ -54,10 +54,10 @@ const filterForm = ref({
 
 
 const headers = ref([
-  {title: 'Номер', key: 'name'},
-  {title: 'Дата', key: 'currency.name'},
-  {title: 'Склад-отправитель', key: 'sender_storage.name'},
-  {title: 'Склад-получатель', key: 'recipient_storage.name'},
+  {title: 'Номер', key: 'doc_number'},
+  {title: 'Дата', key: 'date'},
+  {title: 'Склад-отправитель', key: 'storage.name'},
+  {title: 'Склад-получатель', key: 'storage.name'},
   {title: 'Организация', key: 'organization.name'},
   {title: 'Автор', key: 'author.name'},
 ])
@@ -321,7 +321,6 @@ watch(search, debounce((newValue) => {
               <td>{{ item.recipient_storage_id.name }}</td>
               <td>{{ item.organization_id.name }}</td>
               <td>{{ item.author_id.name }}</td>
-
             </tr>
           </template>
         </v-data-table-server>

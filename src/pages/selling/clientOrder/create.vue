@@ -1,5 +1,5 @@
 <script setup>
-import {computed, onMounted, reactive, ref, watch} from "vue";
+import {computed, defineEmits, onMounted, onUnmounted, reactive, ref, watch} from "vue";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
@@ -7,32 +7,32 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../../composables/toast/index.js";
 import currentDate from "../../../composables/date/currentDate.js";
 import validate from "./validate.js";
-import { useRouter } from "vue-router";
+import {useRouter} from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
-import currencyApi from "../../../api/list/currency.js";
 import clientOrderApi from "../../../api/documents/clientOrder.js";
 import goodApi from "../../../api/list/goods.js";
-import { addMessage } from "../../../composables/constant/buttons.js";
+import {addMessage} from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
 import {BASE_COLOR} from "../../../composables/constant/colors.js";
+import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
 
 
 const router = useRouter()
+const emits = defineEmits(['changed'])
+const confirmDocument = useConfirmDocumentStore()
 
 const form = reactive({
   date: null,
   shipping_date: null,
   organization: null,
-  organizations: [],
   counterparty: null,
-  counterparties: [],
   cpAgreement: null,
-  cpAgreements: [],
   comment: null,
   summa: null,
   currency: null,
+  status: null,
 })
 
 const loading = ref(false)
@@ -41,7 +41,7 @@ const markedID = ref([])
 const goods = ref([{
   id: 1,
   good_id: null,
-  amount: 1,
+  amount: "1",
   auto_sale_percent: null,
   auto_sale_sum: null,
   price: null,
@@ -52,6 +52,7 @@ const counterparties = ref([])
 const cpAgreements = ref([])
 const currencies = ref([])
 const listGoods = ref([])
+const statuses = ref([])
 
 const headers = ref([
   {title: 'Товары', key: 'goods', sortable: false},
@@ -62,6 +63,10 @@ const headers = ref([
   {title: 'Сумма', key: 'currency.name', sortable: false},
 ])
 
+const getStatuses = async () => {
+  const { data } = await clientOrderApi.getStatuses();
+  statuses.value = data.result
+}
 const getOrganizations = async () => {
   const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   organizations.value = data.result.data
@@ -72,14 +77,13 @@ const getCounterparties = async () => {
   counterparties.value = data.result.data
 }
 
-const getCpAgreements = async () => {
-  const { data } = await cpAgreementApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  cpAgreements.value = data.result.data
-}
-
-const getCurrencies = async () => {
-  const { data } = await currencyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  currencies.value = data.result.data
+const getCpAgreements = async (id) => {
+  cpAgreements.value = [];
+  const { data } = await cpAgreementApi.getCounterpartyById(id);
+  cpAgreements.value = data.result.data;
+  if (cpAgreements.value.length === 1) {
+    form.cpAgreement = cpAgreements.value[0];
+  }
 }
 
 const getGoods = async () => {
@@ -126,7 +130,6 @@ const validateItem = (item) => {
 };
 
 const addNewClientOrder = async () => {
-  console.log(form.currency)
   if (validate(form.date, form.organization, form.counterparty, form.cpAgreement, form.currency) !== true) return
 
   const missingData = goods.value.some(validateItem)
@@ -135,9 +138,10 @@ const addNewClientOrder = async () => {
   const body = {
     date: form.date,
     shipping_date: form.shipping_date,
-    organization_id: form.organization,
-    counterparty_id: form.counterparty,
-    counterparty_agreement_id: form.cpAgreement,
+    organization_id: typeof form.organization === "object" ? form.organization.id : form.organization,
+    counterparty_id: typeof form.counterparty === "object" ? form.counterparty.id : form.counterparty,
+    counterparty_agreement_id: typeof form.cpAgreement === "object" ? form.cpAgreement.id : form.cpAgreement,
+    status: form.status,
     comment: form.comment,
     currency_id: typeof form.currency === 'object' ? form.currency.id : form.currency,
     summa: totalPrice.value,
@@ -151,7 +155,6 @@ const addNewClientOrder = async () => {
     }))
  }
 
-  console.log(body)
 
  try {
    const res = await clientOrderApi.add(body)
@@ -160,10 +163,21 @@ const addNewClientOrder = async () => {
      router.push('/clientOrder')
    }
  } catch (e) {
-   console.log(e)
+   console.error(e)
  }
 }
 
+const isChanged = () => {
+  const {date, shipping_date, counterparty, cpAgreement, comment, status, currency} = form;
+
+  const goodsValues = goods.value.flatMap(good => [good.good_id, good.amount, good.price, good.price, good.auto_sale_percent, good.auto_sale_sum]);
+  const cleanedGoodsValues = goodsValues.filter(val => val !== undefined)
+
+  const valuesToCheck = [date, shipping_date, counterparty, cpAgreement, comment, status, currency, ...cleanedGoodsValues];
+  console.log(valuesToCheck)
+
+  return valuesToCheck.every(val => val === null || val === '' || val === currentDate() || val === "1");
+}
 
 const totalPrice = computed(() => {
   let sum = 0
@@ -173,40 +187,56 @@ const totalPrice = computed(() => {
   return sum
 })
 
+watch(confirmDocument, () => {
+  if (confirmDocument.isUpdateOrCreateDocument) {
+    addNewClientOrder()
+  }
+})
+
+watch([form, goods.value], () => {
+  console.log(!isChanged())
+  if (!isChanged()) {
+    emits('changed', true);
+  } else {
+    emits('changed', false);
+  }
+});
+
+watch(
+    () => form.counterparty,
+    async (id) => {
+      form.cpAgreement = null;
+      await getCpAgreements(id);
+    }
+)
+
+watch(
+    () => form.cpAgreement,
+    (newValue) => {
+      if (newValue !== null) {
+        const cpAgreement = cpAgreements.value.find((el) =>
+            (el.id === typeof newValue) === "object" ? newValue.id : newValue
+        );
+        form.currency = cpAgreement.currency_id;
+      }
+    }
+);
+
+onUnmounted(() => {
+  emits('changed', false);
+})
 
 onMounted(() => {
   form.date = currentDate()
   form.shipping_date = currentDate()
+  form.organization = JSON.parse(localStorage.getItem('user')).organization || null
   author.value = JSON.parse(localStorage.getItem('user')).name || null
-  getOrganizations()
+
   getCounterparties()
-  getCpAgreements()
-  getCurrencies()
+  getOrganizations()
+  getStatuses()
   getGoods()
 })
-
-watch(() => form.counterparty, async (id) => {
-  form.cpAgreement = null
-
-  try {
-    const res = await cpAgreementApi.getById(id)
-
-    form.currency = {
-      id: res.data.result.currency_id.id,
-      name: res.data.result.currency_id.name
-    }
-
-    const array = Object.prototype.toString.call(res.data.result) === '[object Array]'
-    const obj = Object.prototype.toString.call(res.data.result) === '[object Object]'
-
-    cpAgreements.value = array ? res.data.result : obj ? [res.data.result] : []
-
-  } catch (e) {
-    cpAgreements.value = []
-  }
-})
-
-
 </script>
 <template>
   <div class="document">
@@ -233,11 +263,12 @@ watch(() => form.counterparty, async (id) => {
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field disabled value="Номер"/>
-          <custom-text-field label="Дата" type="date" v-model="form.date"/>
+          <custom-text-field label="Дата" type="date" class="date" v-model="form.date"/>
           <custom-autocomplete label="Организация" :items="organizations"  v-model="form.organization"/>
           <custom-autocomplete label="Клиент" :items="counterparties" v-model="form.counterparty"/>
-          <custom-autocomplete label="Договор" :items="cpAgreements" v-model="form.cpAgreement"/>
+          <custom-autocomplete :disabled="!form.counterparty" label="Договор" :items="cpAgreements" v-model="form.cpAgreement"/>
           <custom-text-field label="Дата отгрузки" type="date" v-model="form.shipping_date"/>
+          <custom-autocomplete label="Статус заказа" :items="statuses" v-model="form.status"/>
         </div>
       </v-col>
       <v-col>
@@ -306,7 +337,7 @@ watch(() => form.counterparty, async (id) => {
           </div>
           <div class="d-flex ga-6">
             <custom-text-field readonly  :value="'Общая сумма: ' + totalPrice" min-width="180" max-width="110"/>
-            <custom-autocomplete v-model="form.currency" label="Валюта" :items="currencies" min-width="110" max-width="110" />
+            <custom-autocomplete readonly v-model="form.currency" label="Валюта" :items="currencies" min-width="110" max-width="110" />
           </div>
         </div>
       </v-col>

@@ -25,8 +25,6 @@ import user from "../../../api/list/user.js";
 const router = useRouter()
 
 const loading = ref(true)
-const loadingRate = ref(true)
-const dialog = ref(false)
 const filterModal = ref(false)
 const hoveredRowIndex = ref(null)
 
@@ -38,8 +36,6 @@ const nameRef = ref(null)
 const descriptionRef = ref(null)
 const sales = ref([])
 const paginations = ref([])
-const showConfirmDialog = ref(false);
-const showModal = ref(false);
 const count = ref(0);
 
 
@@ -109,18 +105,13 @@ function countFilter() {
 
 
 const massDel = async () => {
-
   try {
     const {status} = await saleApi.massDeletion({ids: markedID.value})
-
     if (status === 200) {
-
       showToast(removeMessage, 'red')
       await getSellingGoods({})
       markedID.value = []
-      dialog.value = false
     }
-
   } catch (e) {
 
   }
@@ -128,15 +119,12 @@ const massDel = async () => {
 
 
 const massRestore = async () => {
-
   try {
     const {status} = await saleApi.massRestore({ids: markedID.value})
-
     if (status === 200) {
       showToast(restoreMessage)
       await getSellingGoods({})
       markedID.value = []
-      dialog.value = false
     }
   } catch (e) {
 
@@ -181,33 +169,18 @@ const lineMarking = (item) => {
 }
 
 const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
-  filterModal.value = {}
+  filterModal.value = true
   cleanFilterForm()
   await getSellingGoods({page, itemsPerPage, sortBy, search})
-
 }
 
 const cleanFilterForm = () => {
   filterForm.value = {}
 }
 
-
-watch(dialog, newVal => {
-  if (!newVal) {
-    nameRef.value = null
-    descriptionRef.value = null
-    loadingRate.value = true
-  } else {
-    markedID.value = [markedID.value[markedID.value.length - 1]];
-  }
-})
-
-
 const getAuthors = async () => {
-  const { data } = await user.getAuthors();
-  
-  authors.value = data.result
-  
+  const { data } = await user.getAuthors()
+  authors.value = data.result.data
 }
 
 const getOrganizations = async () => {
@@ -232,9 +205,7 @@ const getStorages = async () => {
 
 const getCurrencies = async () => {
   const { data } = await currencyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  
   currencies.value = data.result.data
- 
 }
 
 onMounted(() => {
@@ -248,12 +219,16 @@ onMounted(() => {
 })
 
 watch(markedID, (newVal) => {
-  markedItem.value = procurements.value.find((el) => el.id === newVal[0]);
+  markedItem.value = sales.value.find((el) => el.id === newVal[0]);
 })
 
 watch(search, debounce((newValue) => {
   debounceSearch.value = newValue
 }, 500))
+
+const show = (item) => {
+  window.open(`/SellingGoodsEdit/${item.id}`, '_blank')
+}
 
 </script>
 
@@ -331,7 +306,7 @@ watch(search, debounce((newValue) => {
             <tr
                 @mouseenter="hoveredRowIndex = index"
                 @mouseleave="hoveredRowIndex = null"
-                @dblclick="$router.push(`/SellingGoodsEdit/${item.id}`)"
+                @dblclick="show(item)"
                 :class="{'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
               <td>
@@ -347,8 +322,8 @@ watch(search, debounce((newValue) => {
                 <template v-else>
                   <div class="d-flex align-center">
                     <Icons
-                        style="margin-right: 10px; margin-top: 4px"
-                        :name="item.deleted_at === null ? 'valid' : 'inValid'"
+                      style="margin-right: 10px; margin-top: 4px"
+                      :name="item.deleted_at === null ? 'valid' : 'inValid'"
                     />
                     <span>{{ index + 1 }}</span>
                   </div>
@@ -375,8 +350,8 @@ watch(search, debounce((newValue) => {
             </div>
             <v-form class="d-flex w-100" @submit.prevent="">
               <v-row class="w-100">
-                <v-col class="d-flex flex-column w-100">
-                  <div class="d-flex ga-2 w-100">
+                <v-col class="d-flex flex-column w-100 ga-4">
+                  <div class="d-flex ga-2 w-100 ">
                   <custom-text-field label="Дата" type="date" min-width="508"  v-model="filterForm.date"/>
                   </div>
                   <div class="d-flex ga-2">

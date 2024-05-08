@@ -27,7 +27,6 @@ const createGroup = async () => {
       return
     }
     const response = await employeeGroup.add({name: name.value, type: 2});
-    console.log(response)
     if (response.status === 201) {
       showToast(addMessage);
     }
