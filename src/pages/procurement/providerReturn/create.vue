@@ -18,6 +18,9 @@ import {addMessage} from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
 import {BASE_COLOR} from "../../../composables/constant/colors.js";
 import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
+import currentDateWithTime from "../../../composables/date/currentDateWithTime.js";
+import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
+import formatDateTime from "../../../composables/date/formatDateTime.js";
 
 
 const router = useRouter()
@@ -134,11 +137,11 @@ const addNewProvider = async () => {
   if (missingData) return
 
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id: typeof form.organization === 'object' ? form.organization.id : form.organization,
     counterparty_id: typeof form.counterparty === 'object' ? form.counterparty.id : form.counterparty,
     counterparty_agreement_id: typeof form.cpAgreement === 'object' ? form.cpAgreement.id : form.cpAgreement,
-    storage_id: form.storage ,
+    storage_id: form.storage,
     saleInteger: Number(form.saleInteger),
     salePercent: Number(form.salePercent),
     currency_id: typeof form.currency === 'object' ? form.currency.id : form.currency,
@@ -171,7 +174,7 @@ const isChanged = () => {
   const cleanedGoodsValues = goodsValues.filter(val => val !== undefined);
   const valuesToCheck = [saleInteger, salePercent, counterparty, cpAgreement, currency, date, ...cleanedGoodsValues];
 
-  return valuesToCheck.every(val => val === null || val === '' || val === currentDate() || val === "1");
+  return valuesToCheck.every(val => val === null || val === '' || val === currentDateWithTime() || val === "1");
 }
 
 
@@ -186,6 +189,7 @@ const totalPrice = computed(() => {
 const totalPriceWithSale = computed(() => {
   let sum = 0
   if (form.salePercent !== null) {
+    console.log(1)
       sum = totalPrice.value - (totalPrice.value * form.salePercent / 100)
   } else {
     goods.value.forEach(item => {
@@ -221,14 +225,19 @@ watch(
 );
 
 watch(() => form.saleInteger, (newValue) => {
-  if (!newValue) {
-    form.salePercent = ''
+  if (form.saleInteger > totalPrice.value) {
+    form.saleInteger = totalPrice.value
   }
+
+  if (!newValue) {
+    form.saleInteger = ''
+  }
+
 })
 
 watch(() => form.salePercent, (newValue) => {
   if (!newValue) {
-    form.saleInteger = ''
+    form.salePercent = ''
   }
 })
 
@@ -239,7 +248,6 @@ watch(confirmDocument, () => {
 })
 
 watch([form, goods.value], () => {
-  console.log(!isChanged())
   if (!isChanged()) {
     emits('changed', true);
   } else {
@@ -252,7 +260,7 @@ onUnmounted(() => {
 })
 
 onMounted(() => {
-  form.date = currentDate()
+  form.date = currentDateWithTime()
   form.organization =  JSON.parse(localStorage.getItem("user")).organization || null;
   author.value = JSON.parse(localStorage.getItem('user')).name || null
 
@@ -285,12 +293,12 @@ onMounted(() => {
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field disabled value="Номер" v-model="form.number"/>
-          <custom-text-field label="Дата" type="date" class="date" v-model="form.date"/>
+          <custom-text-field label="Дата" type="datetime-local" class="date" v-model="form.date"/>
           <custom-autocomplete label="Организация" :items="organizations"  v-model="form.organization"/>
           <custom-autocomplete label="Поставщик" :items="counterparties" v-model="form.counterparty"/>
           <custom-autocomplete label="Договор" :disabled="!form.counterparty" :items="cpAgreements" v-model="form.cpAgreement"/>
           <custom-autocomplete label="Склад" :items="storages" v-model="form.storage"/>
-          <custom-text-field label="Руч. скидка (сумма)" v-mask="'###'" v-model="form.saleInteger" :disabled="isSaleIntegerDisabled"/>
+          <custom-text-field label="Руч. скидка (сумма)" v-model="form.saleInteger" :disabled="isSaleIntegerDisabled"/>
           <custom-text-field label="Руч. скидка (процент)" v-mask="'###'" v-model="form.salePercent" :disabled="isSalePercentDisabled"/>
         </div>
       </v-col>
@@ -302,7 +310,7 @@ onMounted(() => {
           </div>
           <div class="d-flex flex-column w-100 goods">
             <v-data-table
-                style="height: 78vh"
+                style="height: 50vh"
                 items-per-page-text="Элементов на странице:"
                 loading-text="Загрузка"
                 no-data-text="Нет данных"

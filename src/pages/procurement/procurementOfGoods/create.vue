@@ -1,5 +1,15 @@
 <script setup>
-import {computed, defineEmits, getCurrentInstance, onMounted, onUnmounted, reactive, ref, watch} from "vue";
+
+import {
+  computed,
+  defineEmits,
+  getCurrentInstance,
+  onMounted,
+  onUnmounted,
+  reactive,
+  ref,
+  watch,
+} from "vue";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
@@ -7,22 +17,23 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../../composables/toast/index.js";
 import currentDate from "../../../composables/date/currentDate.js";
 import validate from "./validate.js";
-import {useRouter} from "vue-router";
+import { useRouter } from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import storageApi from "../../../api/list/storage.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import procurementApi from "../../../api/documents/procurement.js";
 import goodApi from "../../../api/list/goods.js";
-import {addMessage} from "../../../composables/constant/buttons.js";
-import {BASE_COLOR} from "../../../composables/constant/colors.js";
+import { addMessage } from "../../../composables/constant/buttons.js";
+import { BASE_COLOR } from "../../../composables/constant/colors.js";
 import "../../../assets/css/procurement.css";
 import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
+import currentDateWithTime from "../../../composables/date/currentDateWithTime.js";
+import formatDateTime from "../../../composables/date/formatDateTime.js";
 
 const router = useRouter();
 const emits = defineEmits(["changed"]);
 const confirmDocument = useConfirmDocumentStore();
-
 
 const form = reactive({
   date: null,
@@ -97,13 +108,18 @@ const getStorages = async () => {
   storages.value = data.result.data;
 };
 
-
-const getGoods = async () => {
-  const { data } = await goodApi.get({
-    page: 1,
-    itemsPerPage: 100000,
-    sortBy: "name",
-  });
+const getGoods = async (good_storage_id, good_organization_id) => {
+  const search = "";
+  const { data } = await goodApi.get(
+    {
+      page: 1,
+      itemsPerPage: 100000,
+      sortBy: "name",
+    },
+    search,
+    good_storage_id,
+    good_organization_id
+  );
   listGoods.value = data.result.data;
 };
 
@@ -167,7 +183,7 @@ const addNewProcurement = async () => {
   if (missingData) return;
 
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
@@ -232,7 +248,6 @@ const isChanged = () => {
     date,
     ...cleanedGoodsValues,
   ];
-
 
   return valuesToCheck.every(
     (val) => val === null || val === "" || val === currentDate() || val === "1"
@@ -312,6 +327,18 @@ watch(confirmDocument, () => {
   }
 });
 
+watch(
+  () => [form.storage, form.organization],
+  (newValue) => {
+    if (newValue[0] !== null && newValue[1] !== null) {
+      const storage_id = typeof newValue[0] === "object" ? newValue[0].id : newValue[0];
+      const organization_id = typeof newValue[1] === "object" ? newValue[1].id : newValue[1];
+      getGoods(storage_id, organization_id);
+    }
+  }
+);
+
+
 watch([form, goods.value], () => {
   if (!isChanged()) {
     emits("changed", true);
@@ -321,20 +348,18 @@ watch([form, goods.value], () => {
 });
 
 onUnmounted(() => {
-  emits('changed', false);
-})
+  emits("changed", false);
+});
 
 onMounted( () => {
-  form.date = currentDate();
+  form.date = currentDateWithTime();
   form.organization =  JSON.parse(localStorage.getItem("user")).organization || null;
   author.value =  JSON.parse(localStorage.getItem("user")).name || null;
 
   getOrganizations();
   getCounterparties();
   getStorages();
-  getGoods();
 });
-
 </script>
 <template>
   <div class="document">
@@ -346,7 +371,11 @@ onMounted( () => {
         <div class="d-flex w-100">
           <div class="d-flex ga-2 mt-1 me-3">
             <Icons title="Добавить" @click="addNewProcurement" name="save" />
-            <Icons title="Закрыть" @click="router.push('/procurementOfGoods')" name="close" />
+            <Icons
+              title="Закрыть"
+              @click="router.push('/procurementOfGoods')"
+              name="close"
+            />
           </div>
         </div>
       </v-card>
@@ -360,7 +389,7 @@ onMounted( () => {
           <custom-text-field
             class="date"
             label="Дата"
-            type="date"
+            type="datetime-local"
             v-model="form.date"
           />
           <custom-autocomplete
@@ -444,6 +473,7 @@ onMounted( () => {
                       :items="listGoods"
                       min-width="150"
                       max-width="100%"
+                      :isAmount="true"
                     />
                   </td>
                   <td>

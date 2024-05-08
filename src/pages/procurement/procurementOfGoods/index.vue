@@ -25,6 +25,7 @@ import storageApi from "../../../api/list/storage.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import currencyApi from "../../../api/list/currency.js";
 import user from "../../../api/list/user.js";
+import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 
 const router = useRouter();
 
@@ -375,7 +376,7 @@ const getColor = (isActive) => {
               </template>
             </td>
             <td>{{ item.doc_number }}</td>
-            <td>{{ showDate(item.date) }}</td>
+            <td>{{ getDateTimeInShow(item.date) }}</td>
             <td>
               <v-chip class="w-100 d-flex justify-center" :color="getColor(item.active)">{{
                 item.active ? "Проведен" : "Не проведен"

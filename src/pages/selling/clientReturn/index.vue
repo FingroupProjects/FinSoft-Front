@@ -22,6 +22,7 @@ import counterpartyApi from "../../../api/list/counterparty.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import storageApi from "../../../api/list/storage.js";
 import currencyApi from "../../../api/list/currency.js";
+import deleteRestoreApi from "../../../api/documents/deleteRestore.js";
 
 const router = useRouter()
 
@@ -92,24 +93,20 @@ function countFilter() {
 
 const massDel = async () => {
   try {
-    const {status} = await clientReturnApi.massDeletion({ids: markedID.value})
+    const {status} = await deleteRestoreApi.delete({ids: markedID.value})
     if (status === 200) {
       showToast(removeMessage, 'red')
       await getClientReturnData({})
       markedID.value = []
     }
-
   } catch (e) {
 
   }
 }
 
-
 const massRestore = async () => {
-
   try {
-    const {status} = await clientReturnApi.massRestore({ids: markedID.value})
-
+    const {status} = await deleteRestoreApi.restore({ids: markedID.value})
     if (status === 200) {
       showToast(restoreMessage)
       await getClientReturnData({})

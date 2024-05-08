@@ -17,6 +17,8 @@ import {addMessage} from "../../../composables/constant/buttons.js";
 import {BASE_COLOR} from "../../../composables/constant/colors.js";
 import "../../../assets/css/procurement.css";
 import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
+import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
+import currentDateWithTime from "../../../composables/date/currentDateWithTime.js";
 
 const router = useRouter()
 const emits = defineEmits(['changed'])
@@ -125,7 +127,7 @@ const addNewProviderOrder = async () => {
   if (missingData) return
 
   const body = {
-    date: form.date,
+    date: getDateTimeInShow(form.date, '-', true),
     organization_id: typeof form.organization === 'object' ? form.organization.id : form.organization,
     counterparty_id: typeof form.counterparty === 'object' ? form.counterparty.id : form.counterparty,
     counterparty_agreement_id: typeof form.cpAgreement === 'object' ? form.cpAgreement.id : form.cpAgreement,
@@ -225,7 +227,7 @@ onUnmounted(() => {
 })
 
 onMounted(() => {
-  form.date = currentDate()
+  form.date = currentDateWithTime()
   author.value = JSON.parse(localStorage.getItem('user')).name || null
   form.organization =  JSON.parse(localStorage.getItem("user")).organization || null;
 
@@ -258,7 +260,7 @@ onMounted(() => {
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field disabled value="Номер"/>
-          <custom-text-field label="Дата" type="date" class="date" v-model="form.date"/>
+          <custom-text-field label="Дата" type="datetime-local" class="date" v-model="form.date"/>
           <custom-autocomplete label="Организация" :items="organizations" v-model="form.organization"/>
           <custom-autocomplete label="Клиент" :items="counterparties" v-model="form.counterparty"/>
           <custom-autocomplete :disabled="!form.counterparty" label="Договор" :items="cpAgreements" v-model="form.cpAgreement"/>

@@ -22,6 +22,7 @@ import storageApi from "../../../api/list/storage.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import currencyApi from "../../../api/list/currency.js";
 import user from "../../../api/list/user.js";
+import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 const router = useRouter()
 
 const loading = ref(true)
@@ -344,7 +345,7 @@ watch(search, debounce((newValue) => {
                 </template>
               </td>
               <td>{{ item.doc_number }}</td>
-              <td>{{ showDate(item.date) }}</td>
+              <td>{{ getDateTimeInShow(item.date) }}</td>
               <td>{{ item.counterparty.name }}</td>
               <td>{{ item.organization.name }}</td>
               <td>{{ item.author.name }}</td>

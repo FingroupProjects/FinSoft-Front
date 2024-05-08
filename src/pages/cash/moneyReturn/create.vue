@@ -3,8 +3,9 @@ import {
   BASE_COLOR,
   FIELD_COLOR,
 } from "../../../composables/constant/colors.js";
-import validate from "../moneyComing/validate.js";
 import { useRouter } from "vue-router";
+import validate from "../moneyComing/validate.js";
+import monthApi from "../../../api/list/schedule.js"; 
 import { ref, reactive, onMounted, watch } from "vue";
 import employeeApi from "../../../api/list/employee.js";
 import Icons from "../../../composables/Icons/Icons.vue";
@@ -35,6 +36,7 @@ const form = reactive({
   cash: null,
   comment: null,
   employee: null,
+  months_id: null,
   incomeItem: null,
   balanceItem: null,
   cpAgreement: null,
@@ -45,6 +47,7 @@ const form = reactive({
   typeOperation: null
 });
 
+const months = ref([]);
 const employees = ref([]);
 const incomeItems = ref([]);
 const cpAgreements = ref([]);
@@ -97,7 +100,7 @@ const firstAccess = async () => {
     counterparty_agreement_id: form.cpAgreement,
     basis: form.base,
     comment: form.comment,
-    type_operation: form.typeOperation,
+    operation_type_id: form.typeOperation,
     type: "RKO",
   };
   try {
@@ -124,7 +127,7 @@ const secondAccess = async () => {
     organization_bill_id: form.organization_bill,
     basis: form.base,
     comment: form.comment,
-    type_operation: form.typeOperation,
+    operation_type_id: form.typeOperation,
     type: "RKO",
   };
   try {
@@ -150,7 +153,7 @@ const thirdAccess = async () => {
     sender_cash_register_id: form.sender_cash,
     basis: form.base,
     comment: form.comment,
-    type_operation: form.typeOperation,
+    operation_type_id: form.typeOperation,
     type: "RKO",
   };
   try {
@@ -178,7 +181,7 @@ const fourthAccess = async () => {
     counterparty_agreement_id: form.cpAgreement,
     basis: form.base,
     comment: form.comment,
-    type_operation: form.typeOperation,
+    operation_type_id: form.typeOperation,
     type: "RKO",
   };
   try {
@@ -207,7 +210,7 @@ const fifthAccess = async () => {
     counterparty_agreement_id: form.cpAgreement,
     basis: form.base,
     comment: form.comment,
-    type_operation: form.typeOperation,
+    operation_type_id: form.typeOperation,
     type: "RKO",
   };
   try {
@@ -236,7 +239,7 @@ const sixthAccess = async () => {
     counterparty_agreement_id: form.cpAgreement,
     basis: form.base,
     comment: form.comment,
-    type_operation: form.typeOperation,
+    operation_type_id: form.typeOperation,
     type: "RKO",
   };
   try {
@@ -263,11 +266,10 @@ const seventhAccess = async () => {
     employee_id: form.employee,
     basis: form.base,
     comment: form.comment,
-    type_operation: form.typeOperation,
+    operation_type_id: form.typeOperation,
     type: "RKO",
   };
   try {
-    console.log(body);
     await clientPaymentApi.accountablePersonRefund(body);
     showToast(addMessage, "green");
     router.push("/moneyReturn");
@@ -291,7 +293,7 @@ const eighthAccess = async () => {
     balance_article_id: form.incomeItem,
     basis: form.base,
     comment: form.comment,
-    type_operation: form.typeOperation,
+    operation_type_id: form.typeOperation,
     type: "RKO",
   };
   try {
@@ -319,7 +321,36 @@ const ninthAccess = async () => {
     balance_article_id: form.balanceItem,
     basis: form.base,
     comment: form.comment,
-    type_operation: form.typeOperation,
+    operation_type_id: form.typeOperation,
+    type: "RKO",
+  };
+  try {
+    await clientPaymentApi.otherExpenses(body);
+    showToast(addMessage, "green");
+    router.push("/moneyReturn");
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const tenthAccess = async () => {
+  if (
+    !validate(form.sum, form.base, form.date, form.organization, form.cash) ||
+    isValid(form.employee, "Сотрудник", form.months_id, "Месяц") !== true
+  ) {
+    return;
+  }
+
+  const body = {
+    date: form.date,
+    organization_id: form.organization,
+    cash_register_id: form.cash,
+    sum: form.sum,
+    employee_id: form.employee,
+    month_id: form.months_id,
+    basis: form.base,
+    comment: form.comment,
+    operation_type_id: form.typeOperation,
     type: "RKO",
   };
   try {
@@ -462,7 +493,6 @@ const getTypes = async () => {
       data: { result },
     } = await clientPaymentApi.getTypes("RKO");
     typeOperations.value = result;
-    console.log(typeOperations.value);
     form.typeOperation = typeOperations.value[0].id;  
   } catch (e) {
     console.error(e);
@@ -482,11 +512,20 @@ const getEmployees = async () => {
   }
 };
 
+const getMonths = async () => {
+  try {
+    const { data } = await monthApi.month();
+    months.value = data.result.data;
+  } catch (e) {
+    console.error(e);
+  }
+}
 onMounted(async () => {
   form.date = currentDate();
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
   await Promise.all([
     getTypes(),
+    getMonths(),
     getEmployees(),
     getIncomeItems(),
     getCashregisters(),
@@ -598,30 +637,42 @@ function validateNumberInput(event) {
             </div>
             <div v-else-if="form.typeOperation === 12">
               <custom-autocomplete
-                label="Касса отправителя"
+                label="Касса получателя"
                 :items="cashRegisters"
                 v-model="form.sender_cash"
               />
             </div>
-            <div v-else-if="form.typeOperation === 13">
+            <div v-else-if="form.typeOperation === 16">
               <custom-autocomplete
                 label="Сотрудник"
                 :items="employees"
                 v-model="form.employee"
               />
             </div>
-            <div v-else-if="form.typeOperation === 14">
+            <div v-else-if="form.typeOperation === 17">
               <custom-autocomplete
                 label="Статья дохода"
                 :items="incomeItems"
                 v-model="form.incomeItem"
               />
             </div>
-            <div v-else-if="form.typeOperation === 15">
+            <div v-else-if="form.typeOperation === 18">
               <custom-autocomplete
                 label="Статья баланса"
                 :items="incomeItems"
                 v-model="form.balanceItem"
+              />
+            </div>
+            <div v-else-if="form.typeOperation === 19" class="d-flex flex-column ga-4">
+              <custom-autocomplete
+                label="Сотрудник"
+                :items="employees"
+                v-model="form.employee"
+              />
+              <custom-autocomplete
+                label="Месяц"
+                :items="months"
+                v-model="form.months_id"
               />
             </div>
             <div v-else class="d-flex flex-column ga-4">
