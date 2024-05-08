@@ -18,6 +18,8 @@ import { editMessage } from "../../../composables/constant/buttons.js";
 import {BASE_COLOR} from "../../../composables/constant/colors.js";
 import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
 import "../../../assets/css/procurement.css";
+import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
+import formatDateTime from "../../../composables/date/formatDateTime.js";
 
 
 const router = useRouter()
@@ -64,7 +66,7 @@ const getProviderOrderDetails = async () => {
   try {
     const { data } = await providerOrderApi.getById(route.params.id)
     form.doc_number = data.result.doc_number
-    form.date = showDate(data.result.date, '-', true)
+    form.date = getDateTimeInShow(data.result.date, '-', true)
     form.organization = {
       id: data.result.organization.id,
       name: data.result.organization.name
@@ -173,7 +175,7 @@ const updateProviderOrder = async () => {
 
  try {
    const body = {
-     date: form.date,
+     date: formatDateTime(form.date),
      organization_id: typeof form.organization === 'object' ? form.organization.id : form.organization,
      counterparty_id: typeof form.counterparty === 'object' ? form.counterparty.id : form.counterparty,
      counterparty_agreement_id: typeof form.cpAgreement === 'object' ? form.cpAgreement.id : form.cpAgreement,
@@ -232,6 +234,13 @@ const checkDataChanges = () => {
   const formDataChanged = JSON.stringify(tempForm.value) !== JSON.stringify(prevForm.value);
   const isArraysEqual = arraysEqual(goods.value, prevGoods.value)
   return formDataChanged || isArraysEqual
+};
+
+const getHistory = () => {
+  router.push({
+    name: "documentHistory",
+    params: route.params.id,
+  });
 };
 
 watch([goods.value], (newValue) => {
@@ -311,6 +320,7 @@ onMounted( () => {
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
+              <span style="color: #08072E" class="mt-1 ms-2 cursor-pointer" @click="getHistory()">История</span>
               <Icons title="Добавить" @click="updateProviderOrder" name="add"/>
               <Icons title="Удалить" @click="" name="delete"/>
             </div>
@@ -324,7 +334,7 @@ onMounted( () => {
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field readonly label="Номер" v-model="form.doc_number"/>
-          <custom-text-field label="Дата" type="date" v-model="form.date"/>
+          <custom-text-field label="Дата" type="datetime-local" class="date" v-model="form.date"/>
           <custom-autocomplete label="Организация" :items="organizations"  v-model="form.organization"/>
           <custom-autocomplete label="Клиент" :items="counterparties" v-model="form.counterparty"/>
           <custom-autocomplete label="Договор" :items="cpAgreements" v-model="form.cpAgreement"/>
