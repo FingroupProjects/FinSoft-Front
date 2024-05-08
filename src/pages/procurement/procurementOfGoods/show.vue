@@ -27,6 +27,8 @@ import "../../../assets/css/procurement.css";
 import { BASE_COLOR } from "../../../composables/constant/colors.js";
 import showDate from "../../../composables/date/showDate.js";
 import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
+import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
+import formatDateTime from "../../../composables/date/formatDateTime.js";
 
 const router = useRouter();
 const route = useRoute();
@@ -74,7 +76,8 @@ const getProcurementDetails = async () => {
   try {
     const { data } = await procurementApi.getById(route.params.id);
     form.doc_number = data.result.doc_number;
-    form.date = showDate(data.result.date, "-", true);
+    form.date = getDateTimeInShow(data.result.date, "-", true);
+    console.log(form.date)
     form.organization = {
       id: data.result.organization.id,
       name: data.result.organization.name,
@@ -227,7 +230,7 @@ const updateProcurement = async () => {
 
   try {
     const body = {
-      date: form.date,
+      date: formatDateTime(form.date),
       organization_id:
         typeof form.organization === "object"
           ? form.organization.id
@@ -263,6 +266,13 @@ const updateProcurement = async () => {
   } catch (e) {
     console.error(e);
   }
+};
+
+const getHistory = () => {
+  router.push({
+    name: "documentHistory",
+    params: route.params.id,
+  });
 };
 
 const totalPrice = computed(() => {
@@ -418,6 +428,7 @@ onMounted(() => {
       <v-card variant="text" class="d-flex align-center ga-2">
         <div class="d-flex w-100">
           <div class="d-flex ga-2 mt-1 me-3">
+            <span style="color: #08072E" class="mt-1 ms-2 cursor-pointer" @click="getHistory()">История</span>
             <Icons @click="$router.push({name: 'documentPrint', params:{id: route.params.id}})" name="print" />
             <Icons title="Добавить" @click="updateProcurement" name="save" />
             <Icons
@@ -437,7 +448,12 @@ onMounted(() => {
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field readonly :value="form.doc_number" />
-          <custom-text-field label="Дата" class="date" type="date" v-model="form.date" />
+          <custom-text-field
+            label="Дата"
+            class="date"
+            type="datetime-local"
+            v-model="form.date"
+          />
           <custom-autocomplete
             label="Организация"
             :items="organizations"

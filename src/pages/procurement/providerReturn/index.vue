@@ -22,6 +22,7 @@ import {
 import debounce from "lodash.debounce";
 import providerApi from '../../../api/documents/providerReturn.js';
 import showDate from "../../../composables/date/showDate.js";
+import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 const router = useRouter()
 
 const loading = ref(true)
@@ -345,7 +346,7 @@ onMounted(() => {
                 </template>
               </td>
               <td>{{ item.doc_number }}</td>
-              <td>{{ showDate(item.date) }}</td>
+              <td>{{ getDateTimeInShow(item.date) }}</td>
               <td>{{ item.counterparty.name }}</td>
               <td>{{ item.organization.name }}</td>
               <td>{{ item.storage.name }}</td>
