@@ -5,6 +5,8 @@ import Header from "./components/header/Header.vue";
 import showToast from "./composables/toast/index.js";
 import AdminPanel from "./pages/admin-panel/index.vue";
 import Sidebar from "./components/sidebar/Sidebar.vue";
+import { initializeApp } from "firebase/app";
+import { getMessaging, getToken, onMessage } from "firebase/messaging";
 import warningModal from "./components/paymentWarning/warningModal.vue";
 
 const rale = ref(true);
@@ -45,6 +47,39 @@ const changed = data => {
   // console.log(data)
   return isChangedDocument.value = data
 }
+
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB0s5dLzQZhwq6PlCO7aJHEx__UqW-9nzg",
+  authDomain: "finsoft-ba979.firebaseapp.com",
+  projectId: "finsoft-ba979",
+  storageBucket: "finsoft-ba979.appspot.com",
+  messagingSenderId: "754506329372",
+  appId: "1:754506329372:web:cecf11931afc35ff959ed9",
+  measurementId: "G-WWY76F9JBN"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+
+const messaging = getMessaging();
+
+onMessage(messaging, (payload) => {
+  console.log('Message received. ', payload);
+});
+
+getToken(messaging, { vapidKey: 'BPaOc1rsWFtJVBTnrlmiLBiBHlVjvoYOERryG2lj7UB75xynmfP5oZhL4sWhJhb1Vgm2dh-iRvqhD2f3UYukuFU' }).then((currentToken) => {
+  if (currentToken) {
+    console.log(currentToken)
+  } else {
+    // Show permission request UI
+    console.log('No registration token available. Request permission to generate one.');
+    // ...
+  }
+}).catch((err) => {
+  console.log('An error occurred while retrieving token. ', err);
+  // ...
+});
 
 </script>
 
