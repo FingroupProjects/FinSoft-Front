@@ -20,8 +20,10 @@ import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
 import "../../../assets/css/procurement.css";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
+import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
 
 
+const useOrganization = ref(useHasOneOrganization())
 const router = useRouter()
 const route = useRoute()
 
@@ -168,10 +170,14 @@ const validateItem = (item) => {
 }
 
 const updateProviderOrder = async () => {
-  if (validate(form.date, form.organization, form.counterparty, form.cpAgreement, form.currency) !== true) return
+  if (validate(form.date, form.counterparty, form.cpAgreement, form.currency) !== true) return
 
   const missingData = goods.value.some(validateItem)
   if (missingData) return
+
+  if (useOrganization.value.getIsHasOneOrganization) {
+    form.organization = useOrganization.value.getOrganization
+  }
 
  try {
    const body = {
@@ -335,7 +341,7 @@ onMounted( () => {
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field readonly label="Номер" v-model="form.doc_number"/>
           <custom-text-field label="Дата" type="datetime-local" class="date" v-model="form.date"/>
-          <custom-autocomplete label="Организация" :items="organizations"  v-model="form.organization"/>
+          <custom-autocomplete v-if="!useOrganization.getIsHasOneOrganization" label="Организация" :items="organizations"  v-model="form.organization"/>
           <custom-autocomplete label="Клиент" :items="counterparties" v-model="form.counterparty"/>
           <custom-autocomplete label="Договор" :items="cpAgreements" v-model="form.cpAgreement"/>
         </div>

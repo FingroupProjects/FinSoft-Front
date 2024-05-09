@@ -17,8 +17,12 @@ import saleApi from "../../../api/documents/sale.js";
 import goodApi from "../../../api/list/goods.js";
 import { editMessage } from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
-import showDate from "../../../composables/date/showDate.js";
 import { BASE_COLOR } from "../../../composables/constant/colors.js";
+import formatDateTime from "../../../composables/date/formatDateTime.js";
+import showDate from "../../../composables/date/showDate.js";
+import  {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
+
+const useOrganization = ref(useHasOneOrganization())
 
 const document = ref(null);
 const router = useRouter();
@@ -205,7 +209,6 @@ const updateProcurement = async () => {
   if (
     validate(
       form.date,
-      form.organization,
       form.counterparty,
       form.cpAgreement,
       form.storage,
@@ -217,8 +220,12 @@ const updateProcurement = async () => {
   const missingData = goods.value.some(validateItem);
   if (missingData) return;
 
+  if (useOrganization.value.getIsHasOneOrganization) {
+    form.organization = useOrganization.value.getOrganization
+  }
+
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
@@ -387,8 +394,9 @@ watch(
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field :value="form.doc_number" />
-          <custom-text-field label="Дата" type="date" v-model="form.date" />
+          <custom-text-field label="Дата" type="datetime-local" class="date" v-model="form.date" />
           <custom-autocomplete
+          v-if="!useOrganization.getIsHasOneOrganization"
             label="Организация"
             :items="organizations"
             v-model="form.organization"

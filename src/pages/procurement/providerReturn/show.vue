@@ -19,7 +19,11 @@ import "../../../assets/css/procurement.css";
 import showDate from "../../../composables/date/showDate.js";
 import {BASE_COLOR} from "../../../composables/constant/colors.js";
 import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
+import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
+import formatDateTime from "../../../composables/date/formatDateTime.js";
+import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 
+const useOrganization = ref(useHasOneOrganization())
 const router = useRouter()
 const route = useRoute()
 
@@ -162,6 +166,8 @@ const increaseCountOfGoods = () => {
   const missingData = goods.value.some(validateItem)
   if (missingData) return
 
+  
+
   goods.value.push({id: goods.value.length + 1, good_id: null, amount: 1, price: null })
 }
 
@@ -187,8 +193,13 @@ const updateProvider = async () => {
   const missingData = goods.value.some(validateItem)
   if (missingData) return
 
+  if (useOrganization.value.getIsHasOneOrganization) {
+    form.organization = useOrganization.value.getOrganization
+  }
+
+
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id: typeof form.organization === 'object' ? form.organization.id : form.organization,
     counterparty_id: typeof form.counterparty === 'object' ? form.counterparty.id : form.counterparty,
     counterparty_agreement_id: typeof form.cpAgreement === 'object' ? form.cpAgreement.id : form.cpAgreement,
@@ -351,8 +362,8 @@ onMounted( () => {
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field  :value="form.doc_number"/>
-          <custom-text-field label="Дата" type="date" v-model="form.date"/>
-          <custom-autocomplete label="Организация" :items="organizations"  v-model="form.organization"/>
+          <custom-text-field label="Дата" type="datetime-local" class="date" v-model="form.date"/>
+          <custom-autocomplete v-if="!useOrganization.getIsHasOneOrganization" label="Организация" :items="organizations"  v-model="form.organization"/>
           <custom-autocomplete label="Поставщик" :items="counterparties" v-model="form.counterparty"/>
           <custom-autocomplete label="Договор" :items="cpAgreements" v-model="form.cpAgreement"/>
           <custom-autocomplete label="Склад" :items="storages" v-model="form.storage"/>
