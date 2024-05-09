@@ -17,21 +17,21 @@ firebase.initializeApp({
     measurementId: "G-WWY76F9JBN"
 });
 
-self.addEventListener("push", (event) => {
-    const notif = event.data.json().notification;
+// self.addEventListener("push", (event) => {
+//     const notif = event.data.json().notification;
+//
+//     event.waitUntil(self.registration.showNotification(notif.title, {
+//         body: notif.body,
+//         icon: 'Icon.png', /* or "icon.png" */
+//         data: {
+//             url: notif.click_action
+//         }
+//     }))
+// })
 
-    event.waitUntil(self.registration.showNotification(notif.title, {
-        body: notif.body,
-        icon: 'Icon.png', /* or "icon.png" */
-        data: {
-            url: notif.click_action
-        }
-    }))
-})
-
-self.addEventListener("notificationclick",(event) => {
-    event.waitUntil(clients.openWindow(event.notification.data.url))
-})
+// self.addEventListener("notificationclick",(event) => {
+//     event.waitUntil(clients.openWindow(event.notification.data.url))
+// })
 
 // Retrieve an instance of Firebase Messaging so that it can handle background
 // messages.
