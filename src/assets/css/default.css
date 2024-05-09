@@ -1,3 +1,7 @@
+
+* {
+    font-family: "Inter", sans-serif;
+}
 .custom_input {
   font-size: 14px;
   width: 100%;
@@ -89,4 +93,21 @@ label {
 
 .date .v-field__input {
   display: block !important
+}
+
+.v-data-table-header__content {
+  font-weight: normal; !important;
+  font-size: 12px;
+  color: #524ED8;
+}
+
+.v-selection-control--density-default {
+  --v-selection-control-size: 40px;
+  color: #524ed8;
+}
+
+.custom_search .v-field.v-field--prepended {
+  --v-field-padding-start: 6px;
+  height: 40px;
+  font-size: 12px !important;
 }
