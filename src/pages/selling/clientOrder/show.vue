@@ -16,6 +16,10 @@ import goodApi from "../../../api/list/goods.js";
 import { editMessage } from "../../../composables/constant/buttons.js";
 import {BASE_COLOR} from "../../../composables/constant/colors.js";
 import "../../../assets/css/procurement.css";
+import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
+import showDate from "../../../composables/date/showDate.js";
+
+const useOrganization = ref(useHasOneOrganization())
 
 const router = useRouter()
 const route = useRoute()
@@ -165,13 +169,18 @@ const validateItem = (item) => {
 }
 
 const updateProcurement = async () => {
-  if (validate(form.date, form.organization, form.counterparty, form.cpAgreement, form.currency) !== true) return
+  if (validate(form.date, form.counterparty, form.cpAgreement, form.currency) !== true) return
 
   const missingData = goods.value.some(validateItem)
   if (missingData) return
 
+  if (useOrganization.value.getIsHasOneOrganization) {
+    form.organization = useOrganization.value.getOrganization
+  }
+
+
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     shipping_date: form.shipping_date,
     organization_id: typeof form.organization === 'object' ? form.organization.id : form.organization,
     counterparty_id: typeof form.counterparty === 'object' ? form.counterparty.id : form.counterparty,
@@ -275,8 +284,8 @@ watch(() => form.counterparty, async (data) => {
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field  :value="form.doc_number"/>
-          <custom-text-field label="Дата" type="date" v-model="form.date"/>
-          <custom-autocomplete label="Организация" :items="organizations"  v-model="form.organization"/>
+          <custom-text-field label="Дата" type="datetime-local" class="date" v-model="form.date"/>
+          <custom-autocomplete v-if="!useOrganization.getIsHasOneOrganization" label="Организация" :items="organizations"  v-model="form.organization"/>
           <custom-autocomplete label="Поставщик" :items="counterparties" v-model="form.counterparty"/>
           <custom-text-field label="Дата" type="date" v-model="form.shipping_date"/>
           <custom-autocomplete label="Договор" :items="cpAgreements" v-model="form.cpAgreement"/>

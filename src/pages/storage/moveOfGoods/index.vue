@@ -17,7 +17,7 @@ import debounce from "lodash.debounce";
 import organizationApi from "../../../api/list/organizations.js";
 import storageApi from "../../../api/list/storage.js";
 import moveApi from '../../../api/documents/move.js'; 
-import showDate from "../../../composables/date/showDate.js";
+import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 const router = useRouter()
 
 const loading = ref(true)
@@ -316,7 +316,7 @@ watch(search, debounce((newValue) => {
                 </template>
               </td>
               <td>{{ item.doc_number }}</td>
-              <td>{{ showDate(item.date) }}</td>
+              <td>{{ getDateTimeInShow(item.date) }}</td>
               <td>{{ item.sender_storage_id.name }}</td>
               <td>{{ item.recipient_storage_id.name }}</td>
               <td>{{ item.organization_id.name }}</td>

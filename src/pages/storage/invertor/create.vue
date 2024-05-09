@@ -16,7 +16,12 @@ import goodApi from "../../../api/list/goods.js";
 import { addMessage } from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
 import { BASE_COLOR } from "../../../composables/constant/colors.js";
+import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
+import currentDateWithTime from "../../../composables/date/currentDateWithTime.js";
+import formatDateTime from "../../../composables/date/formatDateTime.js";
 
+
+const useOrganization = ref(useHasOneOrganization())
 const router = useRouter();
 
 const form = reactive({
@@ -136,8 +141,12 @@ const addNewInvertor = async () => {
   const missingData = goods.value.some(validateItem);
   if (missingData) return;
 
+  if (useOrganization.value.getIsHasOneOrganization) {
+    form.organization = useOrganization.value.getOrganization
+  }
+
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id: typeof form.organization === "object" ? form.organization.id : form.organization,
     storage_id: form.storage,
     responsible_person_id: form.user,
@@ -163,7 +172,7 @@ const addNewInvertor = async () => {
 
 
 onMounted(() => {
-  form.date = currentDate();
+  form.date = currentDateWithTime();
   form.organization = JSON.parse(localStorage.getItem("user")).organization || null;
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
 
@@ -197,8 +206,9 @@ onMounted(() => {
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field disabled value="Номер" v-model="form.number" />
-          <custom-text-field label="Дата" type="date" class="date" v-model="form.date" />
+          <custom-text-field label="Дата" type="datetime-local" class="date" v-model="form.date" />
           <custom-autocomplete
+            v-if="!useOrganization.getIsHasOneOrganization"
             label="Организация"
             :items="organizations"
             v-model="form.organization"

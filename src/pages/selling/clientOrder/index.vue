@@ -23,6 +23,8 @@ import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import storageApi from "../../../api/list/storage.js";
 import currencyApi from "../../../api/list/currency.js";
 import deleteRestoreApi from "../../../api/documents/deleteRestore.js";
+import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
+
 
 const router = useRouter()
 
@@ -323,7 +325,7 @@ onMounted(() => {
                 </template>
               </td>
               <td>{{ item.doc_number }}</td>
-              <td>{{ showDate(item.date) }}</td>
+              <td>{{ getDateTimeInShow(item.date) }}</td>
               <td>{{ item.counterparty.name }}</td>
               <td>{{ item.organization.name }}</td>
               <td>{{ showDate(item.shippingDate) }}</td>

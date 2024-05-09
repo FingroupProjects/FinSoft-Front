@@ -18,7 +18,12 @@ import {addMessage} from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
 import {BASE_COLOR} from "../../../composables/constant/colors.js";
 import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
+import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
+import formatDateTime from "../../../composables/date/formatDateTime.js";
+import currentDateWithTime from "../../../composables/date/currentDateWithTime.js";
 
+
+const useOrganization = ref(useHasOneOrganization())
 const router = useRouter();
 const emits = defineEmits(['changed'])
 const confirmDocument = useConfirmDocumentStore();
@@ -164,7 +169,6 @@ const addNewSale = async () => {
   if (
     validate(
       form.date,
-      form.organization,
       form.counterparty,
       form.cpAgreement,
       form.storage,
@@ -176,8 +180,13 @@ const addNewSale = async () => {
   const missingData = goods.value.some(validateItem);
   if (missingData) return;
 
+  if (useOrganization.value.getIsHasOneOrganization) {
+    form.organization = useOrganization.value.getOrganization
+  }
+
+
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id: typeof form.organization === "object" ? form.organization.id : form.organization,
     counterparty_id: typeof form.counterparty === "object" ? form.counterparty.id : form.counterparty,
     counterparty_agreement_id: typeof form.cpAgreement === "object" ? form.cpAgreement.id : form.cpAgreement,
@@ -236,7 +245,7 @@ const isChanged = () => {
   console.log(valuesToCheck)
 
   return valuesToCheck.every(
-      (val) => val === null || val === "" || val === currentDate() || val === "1"
+      (val) => val === null || val === "" || val === currentDateWithTime() || val === "1"
   );
 };
 
@@ -335,7 +344,7 @@ onUnmounted(() => {
 })
 
 onMounted(() => {
-  form.date = currentDate();
+  form.date = currentDateWithTime();
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
   form.organization =  JSON.parse(localStorage.getItem("user")).organization || null;
 
@@ -369,8 +378,9 @@ onMounted(() => {
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field disabled value="Номер" v-model="form.number" />
-          <custom-text-field label="Дата" type="date" class="date" v-model="form.date" />
+          <custom-text-field label="Дата" type="datetime-local"  class="date" v-model="form.date" />
           <custom-autocomplete
+              v-if="!useOrganization.getIsHasOneOrganization"
             label="Организация"
             :items="organizations"
             v-model="form.organization"
