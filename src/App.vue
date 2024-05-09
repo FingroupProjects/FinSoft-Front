@@ -5,8 +5,8 @@ import Header from "./components/header/Header.vue";
 import showToast from "./composables/toast/index.js";
 import AdminPanel from "./pages/admin-panel/index.vue";
 import Sidebar from "./components/sidebar/Sidebar.vue";
-import { initializeApp } from "firebase/app";
-import { getMessaging, getToken, onMessage } from "firebase/messaging";
+// import { initializeApp } from "firebase/app";
+// import { getMessaging, getToken, onMessage } from "firebase/messaging";
 import warningModal from "./components/paymentWarning/warningModal.vue";
 
 const rale = ref(true);
