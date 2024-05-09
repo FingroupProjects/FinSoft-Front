@@ -4,12 +4,12 @@ import {BASE_COLOR, FIELD_COLOR} from "../../composables/constant/colors.js"
 defineProps({
   minWidth: {
     type: String,
-    default: '250',
+    default: '160',
     required: false
   },
   maxWidth: {
     type: String,
-    default: '250',
+    default: '160',
     required: false
   }
 })

@@ -1,15 +1,6 @@
 <script setup>
 
-import {
-  computed,
-  defineEmits,
-  getCurrentInstance,
-  onMounted,
-  onUnmounted,
-  reactive,
-  ref,
-  watch,
-} from "vue";
+import {computed, defineEmits, onMounted, onUnmounted, reactive, ref, watch,} from "vue";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
@@ -17,15 +8,14 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../../composables/toast/index.js";
 import currentDate from "../../../composables/date/currentDate.js";
 import validate from "./validate.js";
-import { useRouter } from "vue-router";
+import {useRouter} from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import storageApi from "../../../api/list/storage.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import procurementApi from "../../../api/documents/procurement.js";
 import goodApi from "../../../api/list/goods.js";
-import { addMessage } from "../../../composables/constant/buttons.js";
-import { BASE_COLOR } from "../../../composables/constant/colors.js";
+import {addMessage} from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
 import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
 import currentDateWithTime from "../../../composables/date/currentDateWithTime.js";
@@ -67,7 +57,7 @@ const listGoods = ref([]);
 
 const headers = ref([
   { title: "Товары", key: "goods", sortable: false },
-  { title: "Количество", key: "currency.name", sortable: false },
+  { title: "Кол-во", key: "currency.name", sortable: false },
   { title: "Цена", key: "currency.name", sortable: false },
   { title: "Сумма", key: "currency.name", sortable: false },
 ]);
@@ -360,19 +350,26 @@ onMounted( () => {
   getCounterparties();
   getStorages();
 });
+
+const hoveredGoodRow = (id) => {
+  hoveredRowId.value = id
+}
+
+const FIELD_GOODS = ref("#274D87");
+const hoveredRowId = ref(null);
+
 </script>
 <template>
   <div class="document">
     <div class="d-flex justify-space-between text-uppercase pa-1">
-      <div class="d-flex align-center ga-2 pe-2 ms-4">
+      <div class="d-flex align-center ga-2 pe-2 ms-4" >
         <span>Покупка (создание)</span>
       </div>
       <v-card variant="text" class="d-flex align-center ga-2">
         <div class="d-flex w-100">
           <div class="d-flex ga-2 mt-1 me-3">
-            <Icons title="Добавить" @click="addNewProcurement" name="save" />
+            <Icons @click="addNewProcurement" name="save" />
             <Icons
-              title="Закрыть"
               @click="router.push('/procurementOfGoods')"
               name="close"
             />
@@ -385,7 +382,11 @@ onMounted( () => {
     <div style="background: #fff">
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
-          <custom-text-field disabled value="Номер" v-model="form.number" />
+          <custom-text-field
+            disabled
+            value="Номер"
+            v-model="form.number"
+          />
           <custom-text-field
             class="date"
             label="Дата"
@@ -428,15 +429,7 @@ onMounted( () => {
         </div>
       </v-col>
       <v-col>
-        <div :style="`border: 1px solid ${BASE_COLOR}`" class="rounded">
-          <div class="d-flex pa-1 ga-1">
-            <Icons
-              name="add"
-              title="Добавить поле"
-              @click="increaseCountOfGoods"
-            />
-            <Icons name="delete" @click="decreaseCountOfGoods" />
-          </div>
+        <div  class="rounded">
           <div class="d-flex flex-column w-100">
             <v-data-table
               style="height: 50vh"
@@ -456,8 +449,8 @@ onMounted( () => {
               show-select
               fixed-header
             >
-              <template v-slot:item="{ item, index }">
-                <tr :key="index">
+              <template #item="{ item, index }">
+                <tr :key="index" @mouseenter="hoveredGoodRow(item.id)" @mouseleave="hoveredRowId = null">
                   <td>
                     <CustomCheckbox
                       v-model="markedID"
@@ -471,6 +464,7 @@ onMounted( () => {
                     <custom-autocomplete
                       v-model="item.good_id"
                       :items="listGoods"
+                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                       min-width="150"
                       max-width="100%"
                       :isAmount="true"
@@ -479,6 +473,7 @@ onMounted( () => {
                   <td>
                     <custom-text-field
                       v-model="item.amount"
+                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                       v-mask="'########'"
                       min-width="50"
                     />
@@ -486,6 +481,7 @@ onMounted( () => {
                   <td>
                     <custom-text-field
                       v-model="item.price"
+                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                       v-mask="'##########'"
                       min-width="80"
                     />
@@ -494,18 +490,22 @@ onMounted( () => {
                     <custom-text-field
                       readonly
                       v-model="item.summa"
+                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                       :value="item.amount * item.price"
                       min-width="100"
                     />
                   </td>
                 </tr>
               </template>
+              <template #footer>
+                <td :colspan="headers.length">
+                    <Icons @click="increaseCountOfGoods" name="add"/>
+                </td>
+              </template>
             </v-data-table>
           </div>
         </div>
-        <div
-          class="d-flex flex-wrap ga-4 justify-space-between w-100 mt-2 bottomField"
-        >
+        <div class="d-flex flex-wrap ga-4 justify-space-between w-100 mt-2 bottomField">
           <div class="d-flex ga-10">
             <custom-text-field readonly :value="author" min-width="110" />
             <custom-text-field
@@ -548,4 +548,5 @@ onMounted( () => {
 
 <style scoped>
 @import "../../../assets/css/procurement.css";
+
 </style>
