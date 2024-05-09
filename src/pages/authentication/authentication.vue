@@ -16,6 +16,7 @@ const authentication = async () => {
   const body = {
     login: loginRef.value,
     password: passwordRef.value,
+    device: "Mobile"
   }
 
   try {
