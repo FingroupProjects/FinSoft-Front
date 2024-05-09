@@ -48,6 +48,6 @@ messaging.onBackgroundMessage((payload) => {
         body: payload.notification.body,
         icon: '/Icon.png'
     };
-    console
+
     self.registration.showNotification(notificationTitle, notificationOptions);
 });
