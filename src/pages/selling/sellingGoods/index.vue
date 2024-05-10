@@ -1,21 +1,24 @@
 <script setup>
-import {onMounted, ref, watch} from "vue";
-import {useRouter} from "vue-router";
-import showToast from '../../../composables/toast/index.js'
+import { onMounted, ref, watch } from "vue";
+import { useRouter } from "vue-router";
+import showToast from "../../../composables/toast/index.js";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
+import {
+  BASE_COLOR,
+  FIELD_OF_SEARCH,
+} from "../../../composables/constant/colors.js";
 import {
   removeMessage,
   warningMessage,
   ErrorSelectMessage,
-  restoreMessage
+  restoreMessage,
+  approveDocument,
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
-import saleApi from '../../../api/documents/sale.js';
-import showDate from "../../../composables/date/showDate.js";
+import saleApi from "../../../api/documents/sale.js";
 import organizationApi from "../../../api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import storageApi from "../../../api/list/storage.js";
@@ -25,30 +28,29 @@ import user from "../../../api/list/user.js";
 import deleteRestoreApi from "../../../api/documents/deleteRestore.js";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 
-const router = useRouter()
+const router = useRouter();
 
-const loading = ref(true)
-const filterModal = ref(false)
-const hoveredRowIndex = ref(null)
+const loading = ref(true);
+const filterModal = ref(false);
+const hoveredRowIndex = ref(null);
 
 const markedID = ref([]);
-const markedItem = ref([])
-const search = ref('')
-const debounceSearch = ref('')
-const nameRef = ref(null)
-const descriptionRef = ref(null)
-const sales = ref([])
-const paginations = ref([])
+const markedItem = ref([]);
+const search = ref("");
+const debounceSearch = ref("");
+const nameRef = ref(null);
+const descriptionRef = ref(null);
+const sales = ref([]);
+const paginations = ref([]);
 const count = ref(0);
 
-
-const organizations = ref([])
-const providers = ref([])
-const storages = ref([])
-const authors = ref([])
-const currencies = ref([])
-const counterparties = ref([])
-const counterpartyAgreements = ref([])
+const organizations = ref([]);
+const providers = ref([]);
+const storages = ref([]);
+const authors = ref([]);
+const currencies = ref([]);
+const counterparties = ref([]);
+const counterpartyAgreements = ref([]);
 
 const filterForm = ref({
   date: null,
@@ -58,43 +60,45 @@ const filterForm = ref({
   organization_id: null,
   storage_id: null,
   author_id: null,
-  currency_id: null
-})
-
+  currency_id: null,
+});
 
 const headers = ref([
-  {title: 'Номер', key: 'name'},
-  {title: 'Дата', key: 'date'},
-  {title: 'Клиент', key: 'counterparty.name'},
-  {title: 'Организация', key: 'organization.name'},
-  {title: 'Склад', key: 'storage.name'},
-  {title: 'Автор', key: 'author.name'},
-  {title: 'Валюта', key: 'currency.name'},
-])
+  { title: "Номер", key: "name" },
+  { title: "Дата", key: "date" },
+  { title: "Статус", key: "active" },
+  { title: "Клиент", key: "counterparty.name" },
+  { title: "Организация", key: "organization.name" },
+  { title: "Склад", key: "storage.name" },
+  { title: "Автор", key: "author.name" },
+  { title: "Валюта", key: "currency.name" },
+]);
 
 const rules = {
-  required: v => !!v,
-}
+  required: (v) => !!v,
+};
 
-
-const getSellingGoods = async ({page, itemsPerPage, sortBy, search}) => {
+const getSellingGoods = async ({ page, itemsPerPage, sortBy, search }) => {
   count.value = 0;
-  countFilter()
-  const filterData = filterForm.value
-  filterModal.value = false
-  loading.value = true
+  countFilter();
+  const filterData = filterForm.value;
+  filterModal.value = false;
+  loading.value = true;
   try {
-    const { data } = await saleApi.get({page, itemsPerPage, sortBy}, search, filterData)
-    paginations.value = data.result.pagination
-    sales.value = data.result.data
-    loading.value = false
+    const { data } = await saleApi.get(
+      { page, itemsPerPage, sortBy },
+      search,
+      filterData
+    );
+    paginations.value = data.result.pagination;
+    sales.value = data.result.data;
+    loading.value = false;
   } catch (e) {
     console.error(e);
   }
-}
+};
 
 function countFilter() {
-
   for (const key in filterForm.value) {
     if (filterForm.value[key] !== null) {
       count.value++;
@@ -104,56 +108,52 @@ function countFilter() {
   return count;
 }
 
-
 const massDel = async () => {
   try {
-    const {status} = await deleteRestoreApi.delete({ids: markedID.value})
+    const { status } = await deleteRestoreApi.delete({ ids: markedID.value });
     if (status === 200) {
-      showToast(removeMessage, 'red')
-      await getSellingGoods({})
-      markedID.value = []
+      showToast(removeMessage, "red");
+      await getSellingGoods({});
+      markedID.value = [];
     }
-  } catch (e) {
-
-  }
-}
+  } catch (e) {}
+};
 
 const massRestore = async () => {
   try {
-    const {status} = await deleteRestoreApi.restore({ids: markedID.value})
+    const { status } = await deleteRestoreApi.restore({ ids: markedID.value });
     if (status === 200) {
-      showToast(restoreMessage)
-      await getSellingGoods({})
-      markedID.value = []
+      showToast(restoreMessage);
+      await getSellingGoods({});
+      markedID.value = [];
     }
-  } catch (e) {
-
-  }
-}
+  } catch (e) {}
+};
 
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
-  if(markedID.value.length === 0) return showToast(warningMessage, 'warning')
+  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
 
-  if(markedItem.value.deleted_at) {
-    return massRestore({ page, itemsPerPage, sortBy })
+  if (markedItem.value.deleted_at) {
+    return massRestore({ page, itemsPerPage, sortBy });
+  } else {
+    return massDel({ page, itemsPerPage, sortBy, search });
   }
-  else{
-    return massDel({ page, itemsPerPage, sortBy, search })
-  }
-}
+};
 
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
-    const firstMarkedItem = sales.value.find(el => el.id === markedID.value[0]);
+    const firstMarkedItem = sales.value.find(
+      (el) => el.id === markedID.value[0]
+    );
     if (firstMarkedItem && firstMarkedItem.deleted_at) {
-      if(item.deleted_at === null) {
-        showToast(ErrorSelectMessage, 'warning')
+      if (item.deleted_at === null) {
+        showToast(ErrorSelectMessage, "warning");
         return;
       }
     }
     if (firstMarkedItem && firstMarkedItem.deleted_at === null) {
-      if(item.deleted_at !== null) {
-        showToast(ErrorSelectMessage, 'warning')
+      if (item.deleted_at !== null) {
+        showToast(ErrorSelectMessage, "warning");
         return;
       }
     }
@@ -166,112 +166,174 @@ const lineMarking = (item) => {
     markedID.value.push(item.id);
   }
   markedItem.value = item;
-}
+};
 
-const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
-  filterModal.value = true
-  cleanFilterForm()
-  await getSellingGoods({page, itemsPerPage, sortBy, search})
-}
+const closeFilterModal = async ({ page, itemsPerPage, sortBy, search }) => {
+  filterModal.value = true;
+  cleanFilterForm();
+  await getSellingGoods({ page, itemsPerPage, sortBy, search });
+};
 
 const cleanFilterForm = () => {
-  filterForm.value = {}
-}
+  filterForm.value = {};
+};
+
+const computeStatus = () => {
+  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
+
+  if (markedItem.value.active) {
+    return unApprove();
+  } else {
+    return approve();
+  }
+};
+
+const approve = async () => {
+  const { status } = await saleApi.approve({ ids: markedID.value});
+  if (status === 200) {
+    showToast(approveDocument);
+    await getSellingGoods({});
+    markedID.value = [];
+  }
+};
+
+const unApprove = async () => {
+  const { status } = await saleApi.unApprove({ ids: markedID.value });
+  console.log('1',1)
+  if (status === 200) {
+    showToast(approveDocument);
+    await getSellingGoods({});
+    markedID.value = [];
+  }
+};
 
 const getAuthors = async () => {
-  const { data } = await user.getAuthors()
-  authors.value = data.result.data
-}
+  const { data } = await user.getAuthors();
+  authors.value = data.result.data;
+};
 
 const getOrganizations = async () => {
-  const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  organizations.value = data.result.data
-}
+  const { data } = await organizationApi.get({
+    page: 1,
+    itemsPerPage: 100000,
+    sortBy: "name",
+  });
+  organizations.value = data.result.data;
+};
 
 const getCounterparties = async () => {
-  const { data } = await counterpartyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  counterparties.value = data.result.data
-}
+  const { data } = await counterpartyApi.get({
+    page: 1,
+    itemsPerPage: 100000,
+    sortBy: "name",
+  });
+  counterparties.value = data.result.data;
+};
 
 const getCpAgreements = async () => {
-  const { data } = await cpAgreementApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  counterpartyAgreements.value = data.result.data
-}
+  const { data } = await cpAgreementApi.get({
+    page: 1,
+    itemsPerPage: 100000,
+    sortBy: "name",
+  });
+  counterpartyAgreements.value = data.result.data;
+};
 
 const getStorages = async () => {
-  const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  storages.value = data.result.data
-}
+  const { data } = await storageApi.get({
+    page: 1,
+    itemsPerPage: 100000,
+    sortBy: "name",
+  });
+  storages.value = data.result.data;
+};
 
 const getCurrencies = async () => {
-  const { data } = await currencyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  currencies.value = data.result.data
-}
+  const { data } = await currencyApi.get({
+    page: 1,
+    itemsPerPage: 100000,
+    sortBy: "name",
+  });
+  currencies.value = data.result.data;
+};
 
 onMounted(() => {
-  getOrganizations()
-  getCounterparties()
-  getCpAgreements()
-  getStorages()
-  getCurrencies()
-  getAuthors()
- 
-})
+  getOrganizations();
+  getCounterparties();
+  getCpAgreements();
+  getStorages();
+  getCurrencies();
+  getAuthors();
+});
 
 watch(markedID, (newVal) => {
   markedItem.value = sales.value.find((el) => el.id === newVal[0]);
-})
+});
 
-watch(search, debounce((newValue) => {
-  debounceSearch.value = newValue
-}, 500))
+watch(
+  search,
+  debounce((newValue) => {
+    debounceSearch.value = newValue;
+  }, 500)
+);
 
 const show = (item) => {
-  window.open(`/SellingGoodsEdit/${item.id}`, '_blank')
-}
+  window.open(`/SellingGoodsEdit/${item.id}`, "_blank");
+};
 
+const getColor = (isActive) => {
+  if (isActive) {
+    return "green";
+  } else {
+    return "red";
+  }
+};
 </script>
 
 <template>
   <div>
     <v-col>
-      <div class="d-flex justify-space-between text-uppercase ">
+      <div class="d-flex justify-space-between text-uppercase">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
           <span>Продажа</span>
         </div>
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="$router.push('/sellingGoodsCreate')" name="add"/>
-              <Icons title="Скопировать" name="copy"/>
-              <Icons title="Удалить" @click="compute" name="delete"/>
+              <Icons
+                title="Добавить"
+                @click="$router.push('/sellingGoodsCreate')"
+                name="add"
+              />
+              <Icons title="Скопировать" @click="computeStatus()" name="copy" />
+              <Icons title="Удалить" @click="compute" name="delete" />
             </div>
 
             <div class="w-100">
               <v-text-field
-                  v-model="search"
-                  prepend-inner-icon="search"
-                  density="compact"
-                  label="Поиск..."
-                  variant="outlined"
-                  :color="BASE_COLOR"
-                  rounded="lg"
-                  :base-color="FIELD_OF_SEARCH"
-                  clear-icon="close"
-                  hide-details
-                  single-line
-                  :append-inner-icon="search ? 'close' : ''"
-                  @click:append-inner="search = ''"
-                  flat
+                v-model="search"
+                prepend-inner-icon="search"
+                density="compact"
+                label="Поиск..."
+                variant="outlined"
+                :color="BASE_COLOR"
+                rounded="lg"
+                :base-color="FIELD_OF_SEARCH"
+                clear-icon="close"
+                hide-details
+                single-line
+                :append-inner-icon="search ? 'close' : ''"
+                @click:append-inner="search = ''"
+                flat
               ></v-text-field>
             </div>
           </div>
           <div class="filterElement">
             <Icons
-                name="filter"
-                title="фильтр"
-                @click="filterModal = true"
-                class="mt-1"
+              name="filter"
+              title="фильтр"
+              @click="filterModal = true"
+              class="mt-1"
             />
             <span v-if="count !== 0" class="countFilter">{{ count }}</span>
           </div>
@@ -279,42 +341,44 @@ const show = (item) => {
       </div>
       <v-card class="mt-2 table">
         <v-data-table-server
-            style="height: 78vh"
-            items-per-page-text="Элементов на странице:"
-            loading-text="Загрузка"
-            no-data-text="Нет данных"
-            v-model:items-per-page="paginations.per_page"
-            :loading="loading"
-            :headers="headers"
-            :items-length="paginations.total || 0"
-            :items="sales"
-            :item-value="headers.title"
-            :search="debounceSearch"
-            v-model="markedID"
-            @update:options="getSellingGoods"
-            page-text =  '{0}-{1} от {2}'
-            :items-per-page-options="[
-                {value: 25, title: '25'},
-                {value: 50, title: '50'},
-                {value: 100, title: '100'},
-            ]"
-            show-select
-            fixed-header
-            hover
+          style="height: 78vh"
+          items-per-page-text="Элементов на странице:"
+          loading-text="Загрузка"
+          no-data-text="Нет данных"
+          v-model:items-per-page="paginations.per_page"
+          :loading="loading"
+          :headers="headers"
+          :items-length="paginations.total || 0"
+          :items="sales"
+          :item-value="headers.title"
+          :search="debounceSearch"
+          v-model="markedID"
+          @update:options="getSellingGoods"
+          page-text="{0}-{1} от {2}"
+          :items-per-page-options="[
+            { value: 25, title: '25' },
+            { value: 50, title: '50' },
+            { value: 100, title: '100' },
+          ]"
+          show-select
+          fixed-header
+          hover
         >
           <template v-slot:item="{ item, index }">
             <tr
-                @mouseenter="hoveredRowIndex = index"
-                @mouseleave="hoveredRowIndex = null"
-                @dblclick="show(item)"
-                :class="{'bg-grey-lighten-2': markedID.includes(item.id) }"
+              @mouseenter="hoveredRowIndex = index"
+              @mouseleave="hoveredRowIndex = null"
+              @dblclick="show(item)"
+              :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
               <td>
-                <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
+                <template
+                  v-if="hoveredRowIndex === index || markedID.includes(item.id)"
+                >
                   <CustomCheckbox
-                      v-model="markedID"
-                      :checked="markedID.includes(item.id)"
-                      @change="lineMarking(item)"
+                    v-model="markedID"
+                    :checked="markedID.includes(item.id)"
+                    @change="lineMarking(item)"
                   >
                     <span>{{ index + 1 }}</span>
                   </CustomCheckbox>
@@ -331,6 +395,13 @@ const show = (item) => {
               </td>
               <td>{{ item.doc_number }}</td>
               <td>{{ getDateTimeInShow(item.date) }}</td>
+              <td>
+                <v-chip
+                  class="w-100 d-flex justify-center"
+                  :color="getColor(item.active)"
+                  >{{ item.active ? "Проведен" : "Не проведен" }}</v-chip
+                >
+              </td>
               <td>{{ item.counterparty.name }}</td>
               <td>{{ item.organization.name }}</td>
               <td>{{ item.storage.name }}</td>
@@ -342,33 +413,78 @@ const show = (item) => {
       </v-card>
 
       <v-card>
-        <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup.esc="closeFilterModal">
-          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="450"
-                  class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
+        <v-dialog
+          persistent
+          class="mt-2 pa-2"
+          v-model="filterModal"
+          @keyup.esc="closeFilterModal"
+        >
+          <v-card
+            :style="`border: 2px solid ${BASE_COLOR}`"
+            min-width="450"
+            class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
+            rounded="xl"
+          >
             <div class="d-flex justify-space-between align-center mb-2">
               <span>Фильтр</span>
             </div>
             <v-form class="d-flex w-100" @submit.prevent="">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100 ga-4">
-                  <div class="d-flex ga-2 w-100 ">
-                  <custom-text-field label="Дата" type="date" min-width="508"  v-model="filterForm.date"/>
+                  <div class="d-flex ga-2 w-100">
+                    <custom-text-field
+                      label="Дата"
+                      type="date"
+                      min-width="508"
+                      v-model="filterForm.date"
+                    />
                   </div>
                   <div class="d-flex ga-2">
-                    <custom-autocomplete label="Организация" :items="organizations"  v-model="filterForm.organization_id"/>
-                  <custom-autocomplete label="Клиент" :items="counterparties" v-model="filterForm.counterparty_id"/>               
-                 </div>
+                    <custom-autocomplete
+                      label="Организация"
+                      :items="organizations"
+                      v-model="filterForm.organization_id"
+                    />
+                    <custom-autocomplete
+                      label="Клиент"
+                      :items="counterparties"
+                      v-model="filterForm.counterparty_id"
+                    />
+                  </div>
                   <div class="d-flex ga-2">
-                  <custom-autocomplete label="Склад" :items="storages" v-model="filterForm.storage_id"/>
-                  <custom-autocomplete label="Валюта" :items="currencies" v-model="filterForm.currency_id"/>
-                </div>
-                <div class="d-flex ga-2">
-                  <custom-autocomplete label="Автор" :items="authors" v-model="filterForm.author_id"/>
-                   <custom-autocomplete label="Договор" :items="counterpartyAgreements" v-model="filterForm.counterparty_agreement_id"/>
+                    <custom-autocomplete
+                      label="Склад"
+                      :items="storages"
+                      v-model="filterForm.storage_id"
+                    />
+                    <custom-autocomplete
+                      label="Валюта"
+                      :items="currencies"
+                      v-model="filterForm.currency_id"
+                    />
+                  </div>
+                  <div class="d-flex ga-2">
+                    <custom-autocomplete
+                      label="Автор"
+                      :items="authors"
+                      v-model="filterForm.author_id"
+                    />
+                    <custom-autocomplete
+                      label="Договор"
+                      :items="counterpartyAgreements"
+                      v-model="filterForm.counterparty_agreement_id"
+                    />
                   </div>
                   <div class="d-flex justify-end ga-2">
-                    <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-                    <v-btn :color="BASE_COLOR" class="btn"  @click="getSellingGoods">применить</v-btn>
+                    <v-btn color="red" class="btn" @click="closeFilterModal"
+                      >сбросить</v-btn
+                    >
+                    <v-btn
+                      :color="BASE_COLOR"
+                      class="btn"
+                      @click="getSellingGoods"
+                      >применить</v-btn
+                    >
                   </div>
                 </v-col>
               </v-row>
@@ -378,8 +494,6 @@ const show = (item) => {
       </v-card>
     </v-col>
   </div>
-
-
 </template>
 
 <style scoped>
