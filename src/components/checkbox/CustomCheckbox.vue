@@ -71,7 +71,8 @@ const props = defineProps(['checked'])
     box-shadow: 0 0 0 var(--focus);
   }
   .checkbox-wrapper-13 input[type=checkbox]:not(.switch) {
-    width: 21px;
+    width: 19px;
+    height: 18px;
   }
   .checkbox-wrapper-13 input[type=checkbox]:not(.switch):after {
     opacity: var(--o, 0);
@@ -96,7 +97,7 @@ const props = defineProps(['checked'])
     border-top: 0;
     border-left: 0;
     left: 7px;
-    top: 4px;
+    top: 3px;
     transform: rotate(var(--r, 20deg));
   }
   .checkbox-wrapper-13 input[type=checkbox]:not(.switch):checked {

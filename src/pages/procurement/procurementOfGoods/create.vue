@@ -1,7 +1,6 @@
 <script setup>
 
 import {computed, defineEmits, onMounted, onUnmounted, reactive, ref, watch,} from "vue";
-import Icons from "../../../composables/Icons/Icons.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
@@ -20,6 +19,7 @@ import "../../../assets/css/procurement.css";
 import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
 import currentDateWithTime from "../../../composables/date/currentDateWithTime.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
+import Button from "../../../components/button/button.vue";
 
 const router = useRouter();
 const emits = defineEmits(["changed"]);
@@ -368,8 +368,8 @@ const hoveredRowId = ref(null);
       <v-card variant="text" class="d-flex align-center ga-2">
         <div class="d-flex w-100">
           <div class="d-flex ga-2 mt-1 me-3">
-            <Icons @click="addNewProcurement" name="save" />
-            <Icons
+            <Button @click="addNewProcurement" name="save" />
+            <Button
               @click="router.push('/procurementOfGoods')"
               name="close"
             />
@@ -377,7 +377,6 @@ const hoveredRowId = ref(null);
         </div>
       </v-card>
     </div>
-    <v-divider />
     <v-divider />
     <div style="background: #fff">
       <v-col class="d-flex flex-column ga-2 pb-0">
@@ -497,11 +496,7 @@ const hoveredRowId = ref(null);
                   </td>
                 </tr>
               </template>
-              <template #footer>
-                <td :colspan="headers.length">
-                    <Icons @click="increaseCountOfGoods" name="add"/>
-                </td>
-              </template>
+
             </v-data-table>
           </div>
         </div>
