@@ -48,7 +48,6 @@ const changed = data => {
   return isChangedDocument.value = data
 }
 
-//
 // const firebaseConfig = {
 //   apiKey: "AIzaSyB0s5dLzQZhwq6PlCO7aJHEx__UqW-9nzg",
 //   authDomain: "finsoft-ba979.firebaseapp.com",
@@ -58,27 +57,23 @@ const changed = data => {
 //   appId: "1:754506329372:web:cecf11931afc35ff959ed9",
 //   measurementId: "G-WWY76F9JBN"
 // };
-//
-// // Initialize Firebase
+
 // const app = initializeApp(firebaseConfig);
-//
+
 // const messaging = getMessaging();
-//
+
 // onMessage(messaging, (payload) => {
 //   console.log('Message received. ', payload);
 // });
-//
+
 // getToken(messaging, { vapidKey: 'BPaOc1rsWFtJVBTnrlmiLBiBHlVjvoYOERryG2lj7UB75xynmfP5oZhL4sWhJhb1Vgm2dh-iRvqhD2f3UYukuFU' }).then((currentToken) => {
 //   if (currentToken) {
 //     console.log(currentToken)
 //   } else {
-//     // Show permission request UI
 //     console.log('No registration token available. Request permission to generate one.');
-//     // ...
 //   }
 // }).catch((err) => {
 //   console.log('An error occurred while retrieving token. ', err);
-//   // ...
 // });
 
 </script>
