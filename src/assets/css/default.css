@@ -122,3 +122,8 @@ body{
 .fz-12 {
   font-size: 12px !important;
 }
+
+.v-table > .v-table__wrapper > table > tbody > tr > td, .v-table > .v-table__wrapper > table > tbody > tr > th, td, .v-table > .v-table__wrapper > table > thead > tr > th, .v-table > .v-table__wrapper > table > tfoot > tr > td, .v-table > .v-table__wrapper > table > tfoot > tr > th {
+  padding: 15px;
+  font-size: 16px;
+}
