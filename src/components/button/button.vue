@@ -71,12 +71,12 @@ const headerButtons = ref([
   {
     title: "История",
     key: "history",
-    icon: "<svg style='margin-top: 5px' height=\"13\" version=\"1.1\" viewBox=\"0 0 20 21\" width=\"13\" xmlns=\"http://www.w3.org/2000/svg\"\n" +
+    icon: "<svg  height=\"13\" version=\"1.1\" viewBox=\"0 0 20 21\" width=\"13\" xmlns=\"http://www.w3.org/2000/svg\"\n" +
         "       xmlns:sketch=\"http://www.bohemiancoding.com/sketch/ns\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"><title/>\n" +
         "    <desc/>\n" +
         "    <defs/>\n" +
         "    <g fill=\"none\" fill-rule=\"evenodd\" id=\"Page-1\" stroke=\"none\" stroke-width=\"1\">\n" +
-        "      <g fill=\"#000000\" id=\"Core\" opacity=\"0.9\" transform=\"translate(-464.000000, -254.000000)\">\n" +
+        "      <g fill=\"#fff\" id=\"Core\" opacity=\"0.9\" transform=\"translate(-464.000000, -254.000000)\">\n" +
         "        <g id=\"history\" transform=\"translate(464.000000, 254.500000)\">\n" +
         "          <path\n" +
         "              d=\"M10.5,0 C7,0 3.9,1.9 2.3,4.8 L0,2.5 L0,9 L6.5,9 L3.7,6.2 C5,3.7 7.5,2 10.5,2 C14.6,2 18,5.4 18,9.5 C18,13.6 14.6,17 10.5,17 C7.2,17 4.5,14.9 3.4,12 L1.3,12 C2.4,16 6.1,19 10.5,19 C15.8,19 20,14.7 20,9.5 C20,4.3 15.7,0 10.5,0 L10.5,0 Z M9,5 L9,10.1 L13.7,12.9 L14.5,11.6 L10.5,9.2 L10.5,5 L9,5 L9,5 Z\"\n" +
@@ -119,7 +119,7 @@ const handleClick = () => {
 
 <template>
   <v-btn v-for="item in filteredButtons" :key="item.id" @click="handleClick" style="padding: 15px 20px !important; height: auto;" class="d-flex align-center text-none" :color="item.bgColor" rounded="lg">
-    <span class="me-1" v-html="item.icon"></span>
+    <span class="d-flex justify-center me-1" v-html="item.icon"></span>
     <span :style="[' font-size: 14px; white-space: wrap; letter-spacing: 0', {color: item.textColor}]">{{ item.title }}</span>
   </v-btn>
 </template>
