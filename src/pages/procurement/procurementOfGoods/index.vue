@@ -103,7 +103,7 @@ const getProcurementData = async ({
 const headerButtons = ref([
   {
     name: "create",
-    function: () => router.push({ name: "sellingGoodsCreate" }),
+    function: () => router.push({ name: "procurementOfGoodsCreate" }),
   },
   {
     name: "createBasedOn",
