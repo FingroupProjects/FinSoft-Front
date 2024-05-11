@@ -92,20 +92,20 @@ const headerButtons = ref([
   {
     name: "approve",
     function: () => {
-      approve()
+      approve();
     },
   },
   {
     name: "cancel",
     function: () => {
-      unApprove()
+      unApprove();
     },
   },
   {
     name: "delete",
     function: () => {
-      massDel({})
-    }
+      massDel({});
+    },
   },
 ]);
 
@@ -124,7 +124,6 @@ const getSellingGoods = async ({ page, itemsPerPage, sortBy, search }) => {
     paginations.value = data.result.pagination;
     sales.value = data.result.data;
     loading.value = false;
-    console.log(data);
   } catch (e) {
     console.error(e);
   }
@@ -189,32 +188,26 @@ const cleanFilterForm = () => {
   filterForm.value = {};
 };
 
-const computeStatus = () => {
-  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
-
-  if (markedItem.value.active) {
-    return unApprove();
-  } else {
-    return approve();
-  }
-};
-
 const approve = async () => {
-  const { status } = await saleApi.approve({ ids: markedID.value });
-  if (status === 200) {
+  try {
+    const res = await saleApi.approve({ ids: markedID.value });
+    console.log('res',res)
     showToast(approveDocument);
     await getSellingGoods({});
     markedID.value = [];
+  } catch (e) {
+    console.error(e);
   }
 };
 
 const unApprove = async () => {
-  const { status } = await saleApi.unApprove({ ids: markedID.value });
-  console.log("1", 1);
-  if (status === 200) {
+  try {
+    await saleApi.unApprove({ ids: markedID.value });
     showToast(approveDocument);
     await getSellingGoods({});
     markedID.value = [];
+  } catch (e) {
+    console.error(e);
   }
 };
 
@@ -293,9 +286,9 @@ const show = (item) => {
 };
 
 const getColor = (active, deleted_at) => {
-  if (active && !deleted_at) {
+  if (active) {
     return "green";
-  } else if(active && deleted_at){
+  } else if (deleted_at) {
     return "red";
   } else {
     return "orange";
@@ -337,10 +330,10 @@ const getColor = (active, deleted_at) => {
             :append-inner-icon="search ? 'close' : ''"
             @click:append-inner="search = ''"
             flat
-          ></v-text-field>
+          />
         </div>
 
-        <div class="mt-1">
+        <div class="mt-1 filterElement">
           <Icons
             name="filter"
             title="Фильтр"
@@ -384,18 +377,21 @@ const getColor = (active, deleted_at) => {
             :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
           >
             <td>
-                <CustomCheckbox
-                  v-model="markedID"
-                  :checked="markedID.includes(item.id)"
-                  @change="lineMarking(item)"
-                >
-                </CustomCheckbox>
-             
+              <CustomCheckbox
+                v-model="markedID"
+                :checked="markedID.includes(item.id)"
+                @change="lineMarking(item)"
+              >
+              </CustomCheckbox>
             </td>
             <td>{{ item.doc_number }}</td>
             <td>{{ getDateTimeInShow(item.date) }}</td>
             <td>
-              <v-chip style="height: 50px !important;" class="w-100 d-flex justify-center" :color="getColor(item.active, item.deleted_at)">
+              <v-chip
+                style="height: 50px !important"
+                class="w-100 d-flex justify-center"
+                :color="getColor(item.active, item.deleted_at)"
+              >
                 <span class="padding: 5px;">{{ item.active ? "Проведен" : item.deleted_at !== null ? "Удален" : "Не проведен" }}</span>
               </v-chip>
             </td>
@@ -493,6 +489,10 @@ const getColor = (active, deleted_at) => {
 </template>
 
 <style scoped>
+.filterElement {
+  position: relative;
+}
+
 .countFilter {
   position: absolute;
   top: -5px;

@@ -71,8 +71,8 @@ const props = defineProps(['checked'])
     box-shadow: 0 0 0 var(--focus);
   }
   .checkbox-wrapper-13 input[type=checkbox]:not(.switch) {
-    width: 19px;
-    height: 18px;
+    width: 20px;
+    height: 19px;
   }
   .checkbox-wrapper-13 input[type=checkbox]:not(.switch):after {
     opacity: var(--o, 0);
