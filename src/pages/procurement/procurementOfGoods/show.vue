@@ -549,8 +549,10 @@ onMounted(() => {
                   </td>
                 </tr>
                 <tr v-if="index === goods.length - 1">
-                  <td class="w-100" colspan="5">
-                    <ButtonGoods @click="increaseCountOfGoods"/>
+                  <td></td>
+                  <td style="width: 250%" class="d-flex ga-2" colspan="10">
+                    <ButtonGoods name="add" @click="increaseCountOfGoods"/>
+                    <ButtonGoods name="delete" @click="decreaseCountOfGoods"/>
                   </td>
                 </tr>
               </template>
