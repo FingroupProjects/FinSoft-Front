@@ -104,7 +104,7 @@ const headerButtons = ref([
   {
     name: "delete",
     function: () => {
-      compute({})
+      massDel({})
     }
   },
 ]);
@@ -142,34 +142,13 @@ function countFilter() {
 
 const massDel = async () => {
   try {
-    const { status } = await deleteRestoreApi.delete({ ids: markedID.value });
+    const { status } = await saleApi.delete({ ids: markedID.value });
     if (status === 200) {
       showToast(removeMessage, "red");
       await getSellingGoods({});
       markedID.value = [];
     }
   } catch (e) {}
-};
-
-const massRestore = async () => {
-  try {
-    const { status } = await deleteRestoreApi.restore({ ids: markedID.value });
-    if (status === 200) {
-      showToast(restoreMessage);
-      await getSellingGoods({});
-      markedID.value = [];
-    }
-  } catch (e) {}
-};
-
-const compute = ({ page, itemsPerPage, sortBy, search }) => {
-  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
-
-  if (markedItem.value.deleted_at) {
-    return massRestore({ page, itemsPerPage, sortBy });
-  } else {
-    return massDel({ page, itemsPerPage, sortBy, search });
-  }
 };
 
 const lineMarking = (item) => {
