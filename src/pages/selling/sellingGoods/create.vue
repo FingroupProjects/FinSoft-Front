@@ -193,6 +193,7 @@ const addNewSale = async () => {
     storage_id: form.storage,
     saleInteger: Number(form.saleInteger),
     salePercent: Number(form.salePercent),
+    sale_sum: Number(totalPrice.value),
     currency_id: typeof form.currency === "object" ? form.currency.id : form.currency,
     goods: goods.value.map((item) => ({
       good_id: Number(item.good_id),

@@ -197,6 +197,7 @@ const approve = async () => {
     markedID.value = [];
   } catch (e) {
     console.error(e);
+    showToast('Ошибка', 'red');
   }
 };
 
