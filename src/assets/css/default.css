@@ -96,8 +96,8 @@ label {
 }
 
 .v-data-table-header__content {
-  font-weight: normal; !important;
-  font-size: 12px;
+  font-weight: 600 !important;
+  font-size: 16px;
   color: #524ED8;
 }
 
@@ -108,7 +108,29 @@ label {
 
 .custom_search .v-field.v-field--prepended {
   --v-field-padding-start: 6px;
-  height: 40px;
+  height: 49.6px !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 14px !important;
+}
+
+.v-table > .v-table__wrapper > table > tbody > tr > td, .v-table > .v-table__wrapper > table > tbody > tr > th, td, .v-table > .v-table__wrapper > table > thead > tr > th, .v-table > .v-table__wrapper > table > tfoot > tr > td, .v-table > .v-table__wrapper > table > tfoot > tr > th {
+  padding: 15px;
+  font-size: 16px;
+}
+
+.v-list-item-title {
+  font-size: 12px !important;
+}
+
+.v-list-item--density-default.v-list-item--one-line {
+  min-height: 28px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+.fz-12 {
   font-size: 12px !important;
 }
 

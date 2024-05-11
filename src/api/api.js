@@ -1,6 +1,5 @@
 import axios from 'axios'
 import {getToken} from "../composables/auth/index.js";
-import showToast from "../composables/toast/index.js";
 
 const headers = {
   'Accept': 'application/json',

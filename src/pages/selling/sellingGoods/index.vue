@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, ref, watch } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import showToast from "../../../composables/toast/index.js";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
@@ -9,6 +9,7 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import {
   BASE_COLOR,
   FIELD_OF_SEARCH,
+  TITLE_COLOR,
 } from "../../../composables/constant/colors.js";
 import {
   removeMessage,
@@ -27,7 +28,9 @@ import currencyApi from "../../../api/list/currency.js";
 import user from "../../../api/list/user.js";
 import deleteRestoreApi from "../../../api/documents/deleteRestore.js";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
+import Button from "../../../components/button/button.vue";
 
+const route = useRoute();
 const router = useRouter();
 
 const loading = ref(true);
@@ -74,9 +77,37 @@ const headers = ref([
   { title: "Валюта", key: "currency.name" },
 ]);
 
-const rules = {
-  required: (v) => !!v,
-};
+const headerButtons = ref([
+  {
+    name: "create",
+    function: () => router.push({ name: "sellingGoodsCreate" }),
+  },
+  {
+    name: "createBasedOn",
+    function: () => {},
+  },
+  {
+    name: "copy",
+  },
+  {
+    name: "approve",
+    function: () => {
+      approve()
+    },
+  },
+  {
+    name: "cancel",
+    function: () => {
+      unApprove()
+    },
+  },
+  {
+    name: "delete",
+    function: () => {
+      massDel({})
+    }
+  },
+]);
 
 const getSellingGoods = async ({ page, itemsPerPage, sortBy, search }) => {
   count.value = 0;
@@ -93,6 +124,7 @@ const getSellingGoods = async ({ page, itemsPerPage, sortBy, search }) => {
     paginations.value = data.result.pagination;
     sales.value = data.result.data;
     loading.value = false;
+    console.log(data);
   } catch (e) {
     console.error(e);
   }
@@ -110,34 +142,13 @@ function countFilter() {
 
 const massDel = async () => {
   try {
-    const { status } = await deleteRestoreApi.delete({ ids: markedID.value });
+    const { status } = await saleApi.delete({ ids: markedID.value });
     if (status === 200) {
       showToast(removeMessage, "red");
       await getSellingGoods({});
       markedID.value = [];
     }
   } catch (e) {}
-};
-
-const massRestore = async () => {
-  try {
-    const { status } = await deleteRestoreApi.restore({ ids: markedID.value });
-    if (status === 200) {
-      showToast(restoreMessage);
-      await getSellingGoods({});
-      markedID.value = [];
-    }
-  } catch (e) {}
-};
-
-const compute = ({ page, itemsPerPage, sortBy, search }) => {
-  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
-
-  if (markedItem.value.deleted_at) {
-    return massRestore({ page, itemsPerPage, sortBy });
-  } else {
-    return massDel({ page, itemsPerPage, sortBy, search });
-  }
 };
 
 const lineMarking = (item) => {
@@ -189,7 +200,7 @@ const computeStatus = () => {
 };
 
 const approve = async () => {
-  const { status } = await saleApi.approve({ ids: markedID.value});
+  const { status } = await saleApi.approve({ ids: markedID.value });
   if (status === 200) {
     showToast(approveDocument);
     await getSellingGoods({});
@@ -199,7 +210,7 @@ const approve = async () => {
 
 const unApprove = async () => {
   const { status } = await saleApi.unApprove({ ids: markedID.value });
-  console.log('1',1)
+  console.log("1", 1);
   if (status === 200) {
     showToast(approveDocument);
     await getSellingGoods({});
@@ -281,225 +292,207 @@ const show = (item) => {
   window.open(`/SellingGoodsEdit/${item.id}`, "_blank");
 };
 
-const getColor = (isActive) => {
-  if (isActive) {
+const getColor = (active, deleted_at) => {
+  if (active && !deleted_at) {
     return "green";
-  } else {
+  } else if(active && deleted_at){
     return "red";
+  } else {
+    return "orange";
   }
 };
 </script>
 
 <template>
-  <div>
-    <v-col>
-      <div class="d-flex justify-space-between text-uppercase">
-        <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Продажа</span>
-        </div>
-        <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
-          <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <Icons
-                title="Добавить"
-                @click="$router.push('/sellingGoodsCreate')"
-                name="add"
-              />
-              <Icons title="Скопировать" @click="computeStatus()" name="copy" />
-              <Icons title="Удалить" @click="compute" name="delete" />
-            </div>
-
-            <div class="w-100">
-              <v-text-field
-                v-model="search"
-                prepend-inner-icon="search"
-                density="compact"
-                label="Поиск..."
-                variant="outlined"
-                :color="BASE_COLOR"
-                rounded="lg"
-                :base-color="FIELD_OF_SEARCH"
-                clear-icon="close"
-                hide-details
-                single-line
-                :append-inner-icon="search ? 'close' : ''"
-                @click:append-inner="search = ''"
-                flat
-              ></v-text-field>
-            </div>
-          </div>
-          <div class="filterElement">
-            <Icons
-              name="filter"
-              title="фильтр"
-              @click="filterModal = true"
-              class="mt-1"
-            />
-            <span v-if="count !== 0" class="countFilter">{{ count }}</span>
-          </div>
-        </v-card>
+  <div class="pa-4">
+    <div class="d-flex justify-space-between">
+      <div class="d-flex align-center ga-2 pe-2 ms-4">
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Продажа</span>
       </div>
-      <v-card class="mt-2 table">
-        <v-data-table-server
-          style="height: 78vh"
-          items-per-page-text="Элементов на странице:"
-          loading-text="Загрузка"
-          no-data-text="Нет данных"
-          v-model:items-per-page="paginations.per_page"
-          :loading="loading"
-          :headers="headers"
-          :items-length="paginations.total || 0"
-          :items="sales"
-          :item-value="headers.title"
-          :search="debounceSearch"
-          v-model="markedID"
-          @update:options="getSellingGoods"
-          page-text="{0}-{1} от {2}"
-          :items-per-page-options="[
-            { value: 25, title: '25' },
-            { value: 50, title: '50' },
-            { value: 100, title: '100' },
-          ]"
-          show-select
-          fixed-header
-          hover
-        >
-          <template v-slot:item="{ item, index }">
-            <tr
-              @mouseenter="hoveredRowIndex = index"
-              @mouseleave="hoveredRowIndex = null"
-              @dblclick="show(item)"
-              :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
-            >
-              <td>
-                <template
-                  v-if="hoveredRowIndex === index || markedID.includes(item.id)"
-                >
-                  <CustomCheckbox
-                    v-model="markedID"
-                    :checked="markedID.includes(item.id)"
-                    @change="lineMarking(item)"
-                  >
-                    <span>{{ index + 1 }}</span>
-                  </CustomCheckbox>
-                </template>
-                <template v-else>
-                  <div class="d-flex align-center">
-                    <Icons
-                      style="margin-right: 10px; margin-top: 4px"
-                      :name="item.deleted_at === null ? 'valid' : 'inValid'"
-                    />
-                    <span>{{ index + 1 }}</span>
-                  </div>
-                </template>
-              </td>
-              <td>{{ item.doc_number }}</td>
-              <td>{{ getDateTimeInShow(item.date) }}</td>
-              <td>
-                <v-chip
-                  class="w-100 d-flex justify-center"
-                  :color="getColor(item.active)"
-                  >{{ item.active ? "Проведен" : "Не проведен" }}</v-chip
-                >
-              </td>
-              <td>{{ item.counterparty.name }}</td>
-              <td>{{ item.organization.name }}</td>
-              <td>{{ item.storage.name }}</td>
-              <td>{{ item.author.name }}</td>
-              <td>{{ item.currency.name }}</td>
-            </tr>
-          </template>
-        </v-data-table-server>
-      </v-card>
+      <v-card variant="text" min-width="350" class="d-flex justify-end ga-2">
+        <div class="d-flex w-100 justify-end mb-3">
+          <div class="d-flex ga-2">
+            <Button
+              v-for="(button, idx) in headerButtons"
+              :name="button.name"
+              :key="idx"
+              @click="button.function"
+            />
+          </div>
+        </div>
+        <div class="custom_search">
+          <v-text-field
+            style="width: 190px"
+            v-model="search"
+            prepend-inner-icon="search"
+            density="compact"
+            label="Поиск..."
+            variant="outlined"
+            :color="BASE_COLOR"
+            rounded="lg"
+            :base-color="FIELD_OF_SEARCH"
+            clear-icon="close"
+            hide-details
+            single-line
+            :append-inner-icon="search ? 'close' : ''"
+            @click:append-inner="search = ''"
+            flat
+          ></v-text-field>
+        </div>
 
-      <v-card>
-        <v-dialog
-          persistent
-          class="mt-2 pa-2"
-          v-model="filterModal"
-          @keyup.esc="closeFilterModal"
-        >
-          <v-card
-            :style="`border: 2px solid ${BASE_COLOR}`"
-            min-width="450"
-            class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
-            rounded="xl"
-          >
-            <div class="d-flex justify-space-between align-center mb-2">
-              <span>Фильтр</span>
-            </div>
-            <v-form class="d-flex w-100" @submit.prevent="">
-              <v-row class="w-100">
-                <v-col class="d-flex flex-column w-100 ga-4">
-                  <div class="d-flex ga-2 w-100">
-                    <custom-text-field
-                      label="Дата"
-                      type="date"
-                      min-width="508"
-                      v-model="filterForm.date"
-                    />
-                  </div>
-                  <div class="d-flex ga-2">
-                    <custom-autocomplete
-                      label="Организация"
-                      :items="organizations"
-                      v-model="filterForm.organization_id"
-                    />
-                    <custom-autocomplete
-                      label="Клиент"
-                      :items="counterparties"
-                      v-model="filterForm.counterparty_id"
-                    />
-                  </div>
-                  <div class="d-flex ga-2">
-                    <custom-autocomplete
-                      label="Склад"
-                      :items="storages"
-                      v-model="filterForm.storage_id"
-                    />
-                    <custom-autocomplete
-                      label="Валюта"
-                      :items="currencies"
-                      v-model="filterForm.currency_id"
-                    />
-                  </div>
-                  <div class="d-flex ga-2">
-                    <custom-autocomplete
-                      label="Автор"
-                      :items="authors"
-                      v-model="filterForm.author_id"
-                    />
-                    <custom-autocomplete
-                      label="Договор"
-                      :items="counterpartyAgreements"
-                      v-model="filterForm.counterparty_agreement_id"
-                    />
-                  </div>
-                  <div class="d-flex justify-end ga-2">
-                    <v-btn color="red" class="btn" @click="closeFilterModal"
-                      >сбросить</v-btn
-                    >
-                    <v-btn
-                      :color="BASE_COLOR"
-                      class="btn"
-                      @click="getSellingGoods"
-                      >применить</v-btn
-                    >
-                  </div>
-                </v-col>
-              </v-row>
-            </v-form>
-          </v-card>
-        </v-dialog>
+        <div class="mt-1">
+          <Icons
+            name="filter"
+            title="Фильтр"
+            @click="filterModal = true"
+            class="mt-1"
+          />
+          <span v-if="count !== 0" class="countFilter">{{ count }}</span>
+        </div>
       </v-card>
-    </v-col>
+    </div>
+    <v-card class="table">
+      <v-data-table-server
+        style="height: 78vh"
+        items-per-page-text="Элементов на странице:"
+        loading-text="Загрузка"
+        no-data-text="Нет данных"
+        v-model:items-per-page="paginations.per_page"
+        :loading="loading"
+        :headers="headers"
+        :items-length="paginations.total || 0"
+        :items="sales"
+        :item-value="headers.title"
+        :search="debounceSearch"
+        v-model="markedID"
+        @update:options="getSellingGoods"
+        page-text="{0}-{1} от {2}"
+        :items-per-page-options="[
+          { value: 25, title: '25' },
+          { value: 50, title: '50' },
+          { value: 100, title: '100' },
+        ]"
+        show-select
+        fixed-header
+        hover
+      >
+        <template v-slot:item="{ item, index }">
+          <tr
+            @mouseenter="hoveredRowIndex = index"
+            @mouseleave="hoveredRowIndex = null"
+            @dblclick="show(item)"
+            :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
+          >
+            <td>
+                <CustomCheckbox
+                  v-model="markedID"
+                  :checked="markedID.includes(item.id)"
+                  @change="lineMarking(item)"
+                >
+                </CustomCheckbox>
+             
+            </td>
+            <td>{{ item.doc_number }}</td>
+            <td>{{ getDateTimeInShow(item.date) }}</td>
+            <td>
+              <v-chip style="height: 50px !important;" class="w-100 d-flex justify-center" :color="getColor(item.active, item.deleted_at)">
+                <span class="padding: 5px;">{{ item.active ? "Проведен" : item.deleted_at !== null ? "Удален" : "Не проведен" }}</span>
+              </v-chip>
+            </td>
+            <td>{{ item.counterparty.name }}</td>
+            <td>{{ item.organization.name }}</td>
+            <td>{{ item.storage.name }}</td>
+            <td>{{ item.author.name }}</td>
+            <td>{{ item.currency.name }}</td>
+          </tr>
+        </template>
+      </v-data-table-server>
+    </v-card>
+
+    <v-card>
+      <v-dialog
+        persistent
+        class="mt-2 pa-2"
+        v-model="filterModal"
+        @keyup.esc="closeFilterModal"
+      >
+        <v-card
+          :style="`border: 2px solid ${BASE_COLOR}`"
+          min-width="450"
+          class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
+          rounded="xl"
+        >
+          <div class="d-flex justify-space-between align-center mb-2">
+            <span>Фильтр</span>
+          </div>
+          <v-form class="d-flex w-100" @submit.prevent="">
+            <v-row class="w-100">
+              <v-col class="d-flex flex-column w-100 ga-4">
+                <div class="d-flex ga-2 w-100">
+                  <custom-text-field
+                    label="Дата"
+                    type="date"
+                    min-width="508"
+                    v-model="filterForm.date"
+                  />
+                </div>
+                <div class="d-flex ga-2">
+                  <custom-autocomplete
+                    label="Организация"
+                    :items="organizations"
+                    v-model="filterForm.organization_id"
+                  />
+                  <custom-autocomplete
+                    label="Клиент"
+                    :items="counterparties"
+                    v-model="filterForm.counterparty_id"
+                  />
+                </div>
+                <div class="d-flex ga-2">
+                  <custom-autocomplete
+                    label="Склад"
+                    :items="storages"
+                    v-model="filterForm.storage_id"
+                  />
+                  <custom-autocomplete
+                    label="Валюта"
+                    :items="currencies"
+                    v-model="filterForm.currency_id"
+                  />
+                </div>
+                <div class="d-flex ga-2">
+                  <custom-autocomplete
+                    label="Автор"
+                    :items="authors"
+                    v-model="filterForm.author_id"
+                  />
+                  <custom-autocomplete
+                    label="Договор"
+                    :items="counterpartyAgreements"
+                    v-model="filterForm.counterparty_agreement_id"
+                  />
+                </div>
+                <div class="d-flex justify-end ga-2">
+                  <v-btn color="red" class="btn" @click="closeFilterModal"
+                    >сбросить</v-btn
+                  >
+                  <v-btn
+                    :color="BASE_COLOR"
+                    class="btn"
+                    @click="getSellingGoods"
+                    >применить</v-btn
+                  >
+                </div>
+              </v-col>
+            </v-row>
+          </v-form>
+        </v-card>
+      </v-dialog>
+    </v-card>
   </div>
 </template>
 
 <style scoped>
-.filterElement {
-  position: relative;
-}
 .countFilter {
   position: absolute;
   top: -5px;

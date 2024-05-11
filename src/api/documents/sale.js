@@ -20,4 +20,7 @@ export default {
   unApprove(data) {
     return api.post(`/document/client/unApprove/`, data)
   },
+  delete(data) {
+    return api.post('/document/client/delete', data)
+  }
 };
