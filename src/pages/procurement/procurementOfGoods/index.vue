@@ -8,13 +8,14 @@ import CustomAutocomplete from "../../../components/formElements/CustomAutocompl
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import {
   BASE_COLOR,
-  FIELD_OF_SEARCH, TITLE_COLOR,
+  FIELD_OF_SEARCH,
+  TITLE_COLOR,
 } from "../../../composables/constant/colors.js";
 import {
   approveDocument,
   ErrorSelectMessage,
   removeMessage,
-  restoreMessage, unApproveDocument,
+  restoreMessage,
   warningMessage,
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
@@ -54,8 +55,6 @@ const authors = ref([]);
 const currencies = ref([]);
 const counterparties = ref([]);
 const counterpartyAgreements = ref([]);
-
-
 
 const filterForm = ref({
   date: null,
@@ -101,29 +100,37 @@ const getProcurementData = async ({
     loading.value = false;
   } catch (e) {}
 };
-
 const headerButtons = ref([
   {
-    name: 'create',
-    function: () => router.push({ name: 'procurementOfGoodsCreate' })
+    name: "create",
+    function: () => router.push({ name: "sellingGoodsCreate" }),
   },
   {
-    name: 'createBasedOn',
-    function: () => {}
+    name: "createBasedOn",
+    function: () => {},
   },
   {
-    name: 'approve',
+    name: "copy",
+  },
+  {
+    name: "approve",
     function: () => {
-      return computeStatus()
-    }
+      approve();
+    },
   },
   {
-    name: 'cancel',
+    name: "cancel",
+    function: () => {
+      unApprove();
+    },
   },
   {
-    name: 'delete'
-  }
-])
+    name: "delete",
+    function: () => {
+      massDel({});
+    },
+  },
+]);
 
 const countFilter = () => {
   for (const key in filterForm.value) {
@@ -145,31 +152,6 @@ const massDel = async () => {
       dialog.value = false;
     }
   } catch (e) {}
-};
-
-const massRestore = async () => {
-  try {
-    const { status } = await procurementApi.massRestore({
-      ids: markedID.value,
-    });
-
-    if (status === 200) {
-      showToast(restoreMessage);
-      await getProcurementData({});
-      markedID.value = [];
-      dialog.value = false;
-    }
-  } catch (e) {}
-};
-
-const compute = ({ page, itemsPerPage, sortBy, search }) => {
-  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
-
-  if (markedItem.value.deleted_at) {
-    return massRestore({ page, itemsPerPage, sortBy });
-  } else {
-    return massDel({ page, itemsPerPage, sortBy, search });
-  }
 };
 
 const lineMarking = (item) => {
@@ -200,31 +182,26 @@ const lineMarking = (item) => {
   markedItem.value = item;
 };
 
-const computeStatus = () => {
-  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
-
-  if (markedItem.value.active) {
-    return unApprove();
-  } else {
-    return approve();
-  }
-};
-
 const approve = async () => {
-  const { status } = await saleApi.approve({ ids: markedID.value});
-  if (status === 200) {
+  try {
+    const res = await procurementApi.approve({ ids: markedID.value });
+    console.log('res',res)
     showToast(approveDocument);
-    await getProcurementData();
+    await getProcurementData({});
     markedID.value = [];
+  } catch (e) {
+    console.error(e);
   }
 };
 
 const unApprove = async () => {
-  const { status } = await saleApi.unApprove({ ids: markedID.value });
-  if (status === 200) {
-    showToast(unApproveDocument);
-    await getProcurementData();
+  try {
+    await procurementApi.unApprove({ ids: markedID.value });
+    showToast(approveDocument);
+    await getProcurementData({});
     markedID.value = [];
+  } catch (e) {
+    console.error(e);
   }
 };
 
@@ -317,51 +294,69 @@ watch(
     debounceSearch.value = newValue;
   }, 500)
 );
+
+const getColor = (active, deleted_at) => {
+  if (active && !deleted_at) {
+    return "green";
+  } else if (active && deleted_at) {
+    return "red";
+  } else {
+    return "orange";
+  }
+};
 </script>
 
 <template>
-  <div class="pa-2">
-    <div class="d-flex justify-space-between text-uppercase">
+  <div class="pa-4">
+    <div class="d-flex justify-space-between">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
-        <span :style="`color: ${TITLE_COLOR}`">Покупка</span>
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Покупка</span>
       </div>
-      <v-card variant="text" min-width="350" class="d-flex justify-end align-center ga-2">
-        <div class="d-flex w-100 justify-space-between">
-          <div style="min-width: 685px" class="d-flex ga-2 mt-1 me-3 w-100">
-            <Button v-for="(button, idx) in headerButtons" :name="button.name" :key="idx" @click="button.function"/>
-          </div>
-          <div class="w-100 custom_search">
-            <v-text-field
-              style="width: 190px;"
-              v-model="search"
-              prepend-inner-icon="search"
-              density="compact"
-              label="Поиск..."
-              variant="outlined"
-              :color="BASE_COLOR"
-              rounded="lg"
-              :base-color="FIELD_OF_SEARCH"
-              clear-icon="close"
-              hide-details
-              single-line
-              :append-inner-icon="search ? 'close' : ''"
-              @click:append-inner="search = ''"
-              flat
-            ></v-text-field>
-          </div>
-          <div class="filterElement">
-            <Icons
-                name="filter"
-                title="фильтр"
-                @click="filterModal = true"
-                class="mt-2"
+      <v-card variant="text" min-width="350" class="d-flex justify-end ga-2">
+        <div class="d-flex w-100 justify-end mb-3">
+          <div class="d-flex ga-2">
+            <Button
+              v-for="(button, idx) in headerButtons"
+              :name="button.name"
+              :key="idx"
+              @click="button.function"
             />
-            <span v-if="counterFilter !== 0" class="countFilter">{{ counterFilter }}</span>
           </div>
+        </div>
+        <div class="custom_search">
+          <v-text-field
+            style="width: 190px"
+            v-model="search"
+            prepend-inner-icon="search"
+            density="compact"
+            label="Поиск..."
+            variant="outlined"
+            :color="BASE_COLOR"
+            rounded="lg"
+            :base-color="FIELD_OF_SEARCH"
+            clear-icon="close"
+            hide-details
+            single-line
+            :append-inner-icon="search ? 'close' : ''"
+            @click:append-inner="search = ''"
+            flat
+          />
+        </div>
+
+        <div class="mt-1 filterElement">
+          <Icons
+            name="filter"
+            title="Фильтр"
+            @click="filterModal = true"
+            class="mt-1"
+          />
+          <span v-if="counterFilter !== 0" class="countFilter">{{
+            count
+          }}</span>
         </div>
       </v-card>
     </div>
-    <v-card class="mt-2 table">
+    <v-card class="table">
       <v-data-table-server
         style="height: 78vh"
         items-per-page-text="Элементов на странице:"
@@ -405,9 +400,19 @@ watch(
             <td>{{ item.doc_number }}</td>
             <td>{{ getDateTimeInShow(item.date) }}</td>
             <td>
-              <v-chip class="w-100 d-flex justify-center" style="font-size: 12px;" :color="item.active ? 'green' : 'red'">{{
-                item.active ? "Проведен" : "Не проведен"
-              }}</v-chip>
+              <v-chip
+                style="height: 50px !important"
+                class="w-100 d-flex justify-center"
+                :color="getColor(item.active, item.deleted_at)"
+              >
+                <span class="padding: 5px;">{{
+                  item.active
+                    ? "Проведен"
+                    : item.deleted_at !== null
+                    ? "Удален"
+                    : "Не проведен"
+                }}</span>
+              </v-chip>
             </td>
             <td>{{ item.counterparty.name }}</td>
             <td>{{ item.organization.name }}</td>
