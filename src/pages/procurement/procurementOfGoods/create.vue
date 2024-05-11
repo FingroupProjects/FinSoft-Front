@@ -417,7 +417,7 @@ onMounted( () => {
             :disabled="isSaleIntegerDisabled"
           />
           <custom-text-field
-            label="Руч. скидка (процент)"
+            label="Руч. скидка (%)"
             v-mask="'###'"
             v-model="form.salePercent"
             :disabled="isSalePercentDisabled"

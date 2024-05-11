@@ -24,11 +24,13 @@ import procurementApi from "../../../api/documents/procurement.js";
 import goodApi from "../../../api/list/goods.js";
 import { editMessage } from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
-import { BASE_COLOR } from "../../../composables/constant/colors.js";
+import {BASE_COLOR, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import showDate from "../../../composables/date/showDate.js";
 import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
+import Button from "../../../components/button/button.vue";
+import ButtonGoods from "../../../components/button/buttonGoods.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -423,20 +425,15 @@ onMounted(() => {
   <div class="document">
     <div class="d-flex justify-space-between text-uppercase pa-1">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
-        <span>Покупка (просмотр)</span>
+        <span :style="`color: ${TITLE_COLOR}`">Покупка (просмотр)</span>
       </div>
       <v-card variant="text" class="d-flex align-center ga-2">
         <div class="d-flex w-100">
           <div class="d-flex ga-2 mt-1 me-3">
-            <span style="color: #08072E" class="mt-1 ms-2 cursor-pointer" @click="getHistory()">История</span>
-            <Icons @click="$router.push({name: 'documentPrint', params:{id: route.params.id}})" name="print" />
-            <Icons title="Добавить" @click="updateProcurement" name="save" />
-            <Icons
-              style="margin-top: 2px"
-              @click="closeWindow"
-              title="Закрыть"
-              name="close"
-            />
+            <Button name="history" @click="getHistory()" />
+            <Button name="print" @click="$router.push({name: 'documentPrint', params:{id: route.params.id}})" />
+            <Button name="save" @click="updateProcurement" />
+            <Button name="close" @click="closeWindow" />
           </div>
         </div>
       </v-card>
@@ -481,7 +478,7 @@ onMounted(() => {
             :disabled="isSaleIntegerDisabled"
           />
           <custom-text-field
-            label="Руч. скидка (процент)"
+            label="Руч. скидка (%)"
             v-mask="'###'"
             v-model="form.salePercent"
             :disabled="isSalePercentDisabled"
@@ -489,15 +486,7 @@ onMounted(() => {
         </div>
       </v-col>
       <v-col>
-        <div :style="`border: 1px solid ${BASE_COLOR}`" class="rounded">
-          <div class="d-flex pa-1 ga-1">
-            <Icons
-              name="add"
-              title="Добавить поле"
-              @click="increaseCountOfGoods"
-            />
-            <Icons name="delete" @click="decreaseCountOfGoods" />
-          </div>
+        <div  class="rounded">
           <div class="d-flex flex-column w-100">
             <v-data-table
               style="height: 50vh"
@@ -534,7 +523,7 @@ onMounted(() => {
                       :items="listGoods"
                       :id="item.good_id"
                       min-width="150"
-                      max-width="100%"                      
+                      max-width="100%"
                     />
                   </td>
                   <td>
@@ -557,6 +546,11 @@ onMounted(() => {
                       :value="item.amount * item.price"
                       min-width="100"
                     />
+                  </td>
+                </tr>
+                <tr v-if="index === goods.length - 1">
+                  <td class="w-100" colspan="5">
+                    <ButtonGoods @click="increaseCountOfGoods"/>
                   </td>
                 </tr>
               </template>
