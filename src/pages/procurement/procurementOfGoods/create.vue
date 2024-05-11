@@ -118,7 +118,9 @@ const getGoods = async (good_storage_id, good_organization_id) => {
 };
 
 const decreaseCountOfGoods = () => {
-  goods.value = goods.value.filter((item) => !markedID.value.includes(item.id));
+  if (goods.value.length > 1) {
+    goods.value = goods.value.filter((item) => !markedID.value.includes(item.id));
+  }
 };
 
 const lineMarking = (item) => {
@@ -196,6 +198,7 @@ const addNewProcurement = async () => {
     salePercent: Number(form.salePercent),
     currency_id:
       typeof form.currency === "object" ? form.currency.id : form.currency,
+    sale_sum: totalPrice.value,
     goods: goods.value.map((item) => ({
       good_id: Number(item.good_id),
       amount: Number(item.amount),
@@ -493,8 +496,10 @@ onMounted( () => {
                   </td>
                 </tr>
                 <tr v-if="index === goods.length - 1">
-                  <td class="w-100" colspan="5">
-                    <ButtonGoods @click="increaseCountOfGoods"/>
+                  <td></td>
+                  <td style="width: 250%" class="d-flex ga-2" colspan="10">
+                    <ButtonGoods name="add" @click="increaseCountOfGoods"/>
+                    <ButtonGoods name="delete" @click="decreaseCountOfGoods"/>
                   </td>
                 </tr>
               </template>
