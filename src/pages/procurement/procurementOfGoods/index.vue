@@ -11,9 +11,10 @@ import {
   FIELD_OF_SEARCH, TITLE_COLOR,
 } from "../../../composables/constant/colors.js";
 import {
+  approveDocument,
   ErrorSelectMessage,
   removeMessage,
-  restoreMessage,
+  restoreMessage, unApproveDocument,
   warningMessage,
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
@@ -27,6 +28,7 @@ import currencyApi from "../../../api/list/currency.js";
 import user from "../../../api/list/user.js";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import Button from "../../../components/button/button.vue";
+import saleApi from "../../../api/documents/sale.js";
 
 const router = useRouter();
 
@@ -111,7 +113,9 @@ const headerButtons = ref([
   },
   {
     name: 'approve',
-    function: () => {}
+    function: () => {
+      return computeStatus()
+    }
   },
   {
     name: 'cancel',
@@ -194,6 +198,34 @@ const lineMarking = (item) => {
     markedID.value.push(item.id);
   }
   markedItem.value = item;
+};
+
+const computeStatus = () => {
+  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
+
+  if (markedItem.value.active) {
+    return unApprove();
+  } else {
+    return approve();
+  }
+};
+
+const approve = async () => {
+  const { status } = await saleApi.approve({ ids: markedID.value});
+  if (status === 200) {
+    showToast(approveDocument);
+    await getProcurementData();
+    markedID.value = [];
+  }
+};
+
+const unApprove = async () => {
+  const { status } = await saleApi.unApprove({ ids: markedID.value });
+  if (status === 200) {
+    showToast(unApproveDocument);
+    await getProcurementData();
+    markedID.value = [];
+  }
 };
 
 const closeFilterModal = async () => {
@@ -368,7 +400,6 @@ watch(
                 :checked="markedID.includes(item.id)"
                 @change="lineMarking(item)"
               >
-                <span style="margin-top: 0.7px;">{{ index + 1 }}</span>
               </CustomCheckbox>
             </td>
             <td>{{ item.doc_number }}</td>

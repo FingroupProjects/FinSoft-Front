@@ -1,11 +1,11 @@
 <script setup>
 import {computed, defineEmits, onMounted, onUnmounted, reactive, ref, watch} from "vue";
 import Icons from "../../../composables/Icons/Icons.vue";
+import Button from "../../../components/button/button.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../../composables/toast/index.js";
-import currentDate from "../../../composables/date/currentDate.js";
 import validate from "./validate.js";
 import {useRouter} from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
@@ -19,7 +19,6 @@ import "../../../assets/css/procurement.css";
 import {BASE_COLOR} from "../../../composables/constant/colors.js";
 import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
 import currentDateWithTime from "../../../composables/date/currentDateWithTime.js";
-import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
 import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
 
@@ -357,6 +356,11 @@ onMounted(() => {
                   <td>
                     <custom-text-field readonly :value="item.amount * item.price"  min-width="100" max-width="110"/>
                   </td>
+                </tr>
+                <tr v-if="index === goods.length - 1">
+                 <td>
+                   <Button name="add" @click="increaseCountOfGoods"/>
+                 </td>
                 </tr>
               </template>
             </v-data-table>
