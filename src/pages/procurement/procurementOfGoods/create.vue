@@ -20,6 +20,8 @@ import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
 import currentDateWithTime from "../../../composables/date/currentDateWithTime.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
 import Button from "../../../components/button/button.vue";
+import {BASE_COLOR, TITLE_COLOR} from "../../../composables/constant/colors.js";
+import ButtonGoods from "../../../components/button/buttonGoods.vue";
 
 const router = useRouter();
 const emits = defineEmits(["changed"]);
@@ -54,6 +56,8 @@ const cpAgreements = ref([]);
 const storages = ref([]);
 const currencies = ref([]);
 const listGoods = ref([]);
+const FIELD_GOODS = ref("#274D87");
+const hoveredRowId = ref(null);
 
 const headers = ref([
   { title: "Товары", key: "goods", sortable: false },
@@ -351,19 +355,12 @@ onMounted( () => {
   getStorages();
 });
 
-const hoveredGoodRow = (id) => {
-  hoveredRowId.value = id
-}
-
-const FIELD_GOODS = ref("#274D87");
-const hoveredRowId = ref(null);
-
 </script>
 <template>
   <div class="document">
     <div class="d-flex justify-space-between text-uppercase pa-1">
       <div class="d-flex align-center ga-2 pe-2 ms-4" >
-        <span>Покупка (создание)</span>
+        <span :style="`color: ${TITLE_COLOR}`">Покупка (создание)</span>
       </div>
       <v-card variant="text" class="d-flex align-center ga-2">
         <div class="d-flex w-100">
@@ -431,72 +428,76 @@ const hoveredRowId = ref(null);
         <div  class="rounded">
           <div class="d-flex flex-column w-100">
             <v-data-table
-              style="height: 50vh"
-              items-per-page-text="Элементов на странице:"
-              loading-text="Загрузка"
-              no-data-text="Нет данных"
-              :headers="headers"
-              :items="goods"
-              v-model="markedID"
-              item-value="id"
-              page-text="{0}-{1} от {2}"
-              :items-per-page-options="[
+                style="height: 50vh"
+                items-per-page-text="Элементов на странице:"
+                loading-text="Загрузка"
+                no-data-text="Нет данных"
+                :headers="headers"
+                :items="goods"
+                v-model="markedID"
+                item-value="id"
+                page-text="{0}-{1} от {2}"
+                :items-per-page-options="[
                 { value: 25, title: '25' },
                 { value: 50, title: '50' },
                 { value: 100, title: '100' },
               ]"
-              show-select
-              fixed-header
+                show-select
+                fixed-header
             >
-              <template #item="{ item, index }">
-                <tr :key="index" @mouseenter="hoveredGoodRow(item.id)" @mouseleave="hoveredRowId = null">
+              <template v-slot:item="{ item, index }">
+                <tr :key="index" @mouseenter="hoveredRowId = item.id" @mouseleave="hoveredRowId = null">
                   <td>
                     <CustomCheckbox
-                      v-model="markedID"
-                      @change="lineMarking(item)"
-                      :checked="markedID.includes(item.id)"
+                        v-model="markedID"
+                        @change="lineMarking(item)"
+                        :checked="markedID.includes(item.id)"
                     >
-                      <span>{{ index + 1 }}</span>
+                      <span class="fz-12">{{ index + 1 }}</span>
                     </CustomCheckbox>
                   </td>
                   <td style="width: 40%">
                     <custom-autocomplete
-                      v-model="item.good_id"
-                      :items="listGoods"
-                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                      min-width="150"
-                      max-width="100%"
-                      :isAmount="true"
+                        v-model="item.good_id"
+                        :items="listGoods"
+                        :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                        min-width="150"
+                        max-width="100%"
+                        :isAmount="true"
                     />
                   </td>
                   <td>
                     <custom-text-field
-                      v-model="item.amount"
-                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                      v-mask="'########'"
-                      min-width="50"
+                        v-model="item.amount"
+                        :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                        v-mask="'########'"
+                        min-width="50"
                     />
                   </td>
                   <td>
                     <custom-text-field
-                      v-model="item.price"
-                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                      v-mask="'##########'"
-                      min-width="80"
+                        v-model="item.price"
+                        :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                        v-mask="'##########'"
+                        min-width="80"
                     />
                   </td>
                   <td>
                     <custom-text-field
-                      readonly
-                      v-model="item.summa"
-                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                      :value="item.amount * item.price"
-                      min-width="100"
+                        readonly
+                        v-model="item.summa"
+                        :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                        :value="item.amount * item.price"
+                        min-width="100"
                     />
                   </td>
                 </tr>
+                <tr v-if="index === goods.length - 1">
+                  <td class="w-100" colspan="5">
+                    <ButtonGoods @click="increaseCountOfGoods"/>
+                  </td>
+                </tr>
               </template>
-
             </v-data-table>
           </div>
         </div>
