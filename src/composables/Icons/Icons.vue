@@ -296,8 +296,8 @@ defineProps({
     </svg>
     <svg
       v-if="name === 'filter'"
-      width="22"
-      height="22"
+      width="32"
+      height="32"
       viewBox="0 0 14 13"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
