@@ -14,7 +14,7 @@ import storageApi from "../../../api/list/storage.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import procurementApi from "../../../api/documents/procurement.js";
 import goodApi from "../../../api/list/goods.js";
-import {addMessage} from "../../../composables/constant/buttons.js";
+import {addMessage, cannotDeleteAllProducts, cannotDeleteLastProduct} from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
 import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
 import currentDateWithTime from "../../../composables/date/currentDateWithTime.js";
@@ -118,9 +118,15 @@ const getGoods = async (good_storage_id, good_organization_id) => {
 };
 
 const decreaseCountOfGoods = () => {
-  if (goods.value.length > 1) {
-    goods.value = goods.value.filter((item) => !markedID.value.includes(item.id));
+  if (markedID.value.length !== goods.value.length) {
+    return showToast(cannotDeleteAllProducts, "warning");
   }
+  if (goods.value.length > 1) {
+    return showToast(cannotDeleteLastProduct, "warning");
+  }
+  goods.value = goods.value.filter((item) => !markedID.value.includes(item.id));
+
+
 };
 
 const lineMarking = (item) => {
@@ -413,18 +419,6 @@ onMounted( () => {
             :items="storages"
             v-model="form.storage"
           />
-          <custom-text-field
-            label="Руч. скидка (сумма)"
-            v-mask="'###'"
-            v-model="form.saleInteger"
-            :disabled="isSaleIntegerDisabled"
-          />
-          <custom-text-field
-            label="Руч. скидка (%)"
-            v-mask="'###'"
-            v-model="form.salePercent"
-            :disabled="isSalePercentDisabled"
-          />
         </div>
       </v-col>
       <v-col>
@@ -518,17 +512,14 @@ onMounted( () => {
           <div class="d-flex ga-6">
             <custom-text-field
               readonly
-              :value="'Количество: ' + totalCount"
+              label="Количество"
+              v-model="totalCount"
               min-width="130"
             />
             <custom-text-field
               readonly
-              :value="'Сумма со скидкой: ' + totalPriceWithSale"
-              min-width="160"
-            />
-            <custom-text-field
-              readonly
-              :value="'Сумма без скидки: ' + totalPrice"
+              label="Общая сумма:"
+              v-model="totalPrice"
               min-width="180"
               max-width="110"
             />
