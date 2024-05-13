@@ -1,20 +1,11 @@
 <script setup>
-import {
-  computed,
-  defineEmits,
-  defineProps,
-  onMounted,
-  reactive,
-  ref,
-  watch,
-} from "vue";
-import Icons from "../../../composables/Icons/Icons.vue";
+import {computed, defineEmits, defineProps, onMounted, reactive, ref, watch,} from "vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../../composables/toast/index.js";
 import validate from "./validate.js";
-import { useRoute, useRouter } from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import storageApi from "../../../api/list/storage.js";
@@ -22,11 +13,10 @@ import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import currencyApi from "../../../api/list/currency.js";
 import procurementApi from "../../../api/documents/procurement.js";
 import goodApi from "../../../api/list/goods.js";
-import { editMessage } from "../../../composables/constant/buttons.js";
+import {editMessage} from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
-import {BASE_COLOR, TITLE_COLOR} from "../../../composables/constant/colors.js";
-import showDate from "../../../composables/date/showDate.js";
-import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
+import {TITLE_COLOR} from "../../../composables/constant/colors.js";
+import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
 import Button from "../../../components/button/button.vue";
@@ -35,7 +25,7 @@ import ButtonGoods from "../../../components/button/buttonGoods.vue";
 const router = useRouter();
 const route = useRoute();
 const count = ref(0);
-const emits = defineEmits(["changed"]);
+const emits = defineEmits(["changed", "click"]);
 const props = defineProps(["isUpdateOrCreateDocument"]);
 const confirmDocument = useConfirmDocumentStore();
 
@@ -348,41 +338,13 @@ watch(form, () => {
   }
 });
 
-// watch(
-//   () => form.counterparty,
-//   async (data) => {
-//     form.cpAgreement = null;
-//     const id = typeof data === "object" ? data.id : data;
-//     try {
-//       const res = await cpAgreementApi.getCounterpartyById(id);
-//       console.log(res);
-//       form.currency = {
-//         id: res.data.result.currency_id.id,
-//         name: res.data.result.currency_id.name,
-//       };
-//       const array =
-//         Object.prototype.toString.call(res.data.result) === "[object Array]";
-//       const obj =
-//         Object.prototype.toString.call(res.data.result) === "[object Object]";
-
-//       cpAgreements.value = array
-//         ? res.data.result.data
-//         : obj
-//         ? res.data.result.data
-//         : [];
-//     } catch (e) {
-//       cpAgreements.value = [];
-//     }
-//   }
-// );
-
 watch(
   () => form.counterparty,
   async (id) => {
     if (id === null) return;
     form.cpAgreement = null;
     form.currency = null;
-    getCpAgreements(typeof id === "object" ? id.id : id);
+    await getCpAgreements(typeof id === "object" ? id.id : id);
   }
 );
 
@@ -548,7 +510,7 @@ onMounted(() => {
                     />
                   </td>
                 </tr>
-                <tr v-if="index === goods.length - 1">
+                <tr v-if="index === goods.length - 1 || goods.length === 0">
                   <td></td>
                   <td style="width: 150%" class="d-flex ga-2" colspan="0">
                     <ButtonGoods name="add" @click="increaseCountOfGoods"/>

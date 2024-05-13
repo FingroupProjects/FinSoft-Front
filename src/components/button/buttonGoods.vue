@@ -1,6 +1,7 @@
 <script setup>
-import {computed, defineProps, ref} from "vue";
+import {computed, defineProps, defineEmits, ref} from "vue";
 const props = defineProps(["name"]);
+const emits = defineEmits(["click"]);
 
 const headerButtons = ref([
   {
@@ -25,12 +26,12 @@ const headerButtons = ref([
 
 const filteredButtons = computed(() => {
   return headerButtons.value.filter(button => button.key === props.name);
-});
+})
 
 </script>
 
 <template>
-  <v-btn v-for="item in filteredButtons" :key="item.key" rounded @click="$emit('click')" class="d-flex w-25 text-none" style="letter-spacing: 0" :color="item.bgColor">
+  <v-btn v-for="item in filteredButtons" :key="item.key" rounded @click="emits('click')" class="d-flex w-25 text-none" style="letter-spacing: 0" :color="item.bgColor">
     <span v-html="item.icon"></span>
     <span :style="`color: ${item.textColor}`">
       {{ item.title }}
