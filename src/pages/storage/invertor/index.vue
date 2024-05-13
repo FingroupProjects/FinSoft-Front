@@ -9,6 +9,7 @@ import CustomAutocomplete from "../../../components/formElements/CustomAutocompl
 import {
   BASE_COLOR,
   FIELD_OF_SEARCH,
+  TITLE_COLOR
 } from "../../../composables/constant/colors.js";
 import {
   removeMessage,
@@ -21,6 +22,8 @@ import organizationApi from "../../../api/list/organizations.js";
 import storageApi from "../../../api/list/storage.js";
 import invertorApi from "../../../api/documents/invertor.js";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
+import Button from "../../../components/button/button.vue";
+
 
 const router = useRouter();
 
@@ -102,6 +105,28 @@ const getStorages = async () => {
   });
   storages.value = data.result.data;
 };
+const headerButtons = ref([
+  {
+    name: "create",
+    function: () => router.push({ name: "invertoryCreate" }),
+  },
+  {
+    name: "createBasedOn",
+    function: () => {},
+  },
+  {
+    name: "copy",
+  },
+ 
+   
+  {
+    name: "delete",
+    function: () => {
+      massDel({});
+    },
+  },
+]);
+
 
 onMounted(() => {
   getOrganizations();
@@ -213,55 +238,56 @@ watch(
 </script>
 
 <template>
-  <div>
-    <v-col>
-      <div class="d-flex justify-space-between text-uppercase">
+  <div class="pa-4">
+      <div class="d-flex justify-space-between">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Инвентаризация товаров</span>
+          <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Инвентаризация товаров</span>
         </div>
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
-          <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <Icons
-                title="Добавить"
-                @click="$router.push('/invertoryCreate')"
-                name="add"
-              />
-              <Icons title="Скопировать" name="copy" />
-              <Icons title="Удалить" @click="compute" name="delete" />
-            </div>
-
-            <div class="w-100">
-              <v-text-field
-                v-model="search"
-                prepend-inner-icon="search"
-                density="compact"
-                label="Поиск..."
-                variant="outlined"
-                :color="BASE_COLOR"
-                rounded="lg"
-                :base-color="FIELD_OF_SEARCH"
-                clear-icon="close"
-                hide-details
-                single-line
-                :append-inner-icon="search ? 'close' : ''"
-                @click:append-inner="search = ''"
-                flat
-              ></v-text-field>
-            </div>
-          </div>
-          <div class="filterElement">
-            <Icons
-              name="filter"
-              title="фильтр"
-              @click="filterModal = false"
-              class="mt-1"
+          <div class="d-flex w-100 justify-end mb-3">
+          <div class="d-flex ga-2">
+            <Button
+              v-for="(button, idx) in headerButtons"
+              :name="button.name"
+              :key="idx"
+              @click="button.function"
             />
-            <span v-if="count !== 0" class="countFilter">{{ count }}</span>
           </div>
+        </div>
+
+        <div class="custom_search">
+          <v-text-field
+            style="width: 190px"
+            v-model="search"
+            prepend-inner-icon="search"
+            density="compact"
+            label="Поиск..."
+            variant="outlined"
+            :color="BASE_COLOR"
+            rounded="lg"
+            :base-color="FIELD_OF_SEARCH"
+            clear-icon="close"
+            hide-details
+            single-line
+            :append-inner-icon="search ? 'close' : ''"
+            @click:append-inner="search = ''"
+            flat
+          />
+        </div>
+        <div class="mt-1 filterElement">
+          <Icons
+            name="filter"
+            title="Фильтр"
+            @click="filterModal = true"
+            class="mt-1"
+          />
+          <span v-if="counterFilter !== 0" class="countFilter">{{
+            count
+          }}</span>
+        </div>
         </v-card>
       </div>
-      <v-card class="mt-2 table">
+      <v-card class="table">
         <v-data-table-server
           style="height: 78vh"
           items-per-page-text="Элементов на странице:"
@@ -370,7 +396,6 @@ watch(
           </v-card>
         </v-dialog>
       </v-card>
-    </v-col>
   </div>
 </template>
 
