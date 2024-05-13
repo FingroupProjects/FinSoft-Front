@@ -9,7 +9,7 @@ import organizationApi from "../../../api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import user from "../../../api/list/user.js";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import {BASE_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
+import {BASE_COLOR, FIELD_OF_SEARCH, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import {
   ErrorSelectMessage,
   removeMessage,
@@ -24,6 +24,7 @@ import storageApi from "../../../api/list/storage.js";
 import currencyApi from "../../../api/list/currency.js";
 import deleteRestoreApi from "../../../api/documents/deleteRestore.js";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
+import Button from "../../../components/button/button.vue";
 
 
 const router = useRouter()
@@ -89,6 +90,26 @@ const getClientOrderData = async ({page, itemsPerPage, sortBy, search}) => {
   } catch (e) {
   }
 }
+
+const headerButtons = ref([
+  {
+    name: "create",
+    function: () => router.push({ name: "procurementOfGoodsCreate" }),
+  },
+  {
+    name: "createBasedOn",
+    function: () => {},
+  },
+  {
+    name: "copy",
+  },
+  {
+    name: "delete",
+    function: () => {
+      massDel({});
+    },
+  },
+]); 
 
 function countFilter() {
   for (const key in filterForm.value) {
@@ -228,51 +249,56 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>
-    <v-col>
-      <div class="d-flex justify-space-between text-uppercase ">
+  <div class="pa-4">
+      <div class="d-flex justify-space-between">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Заказ от клиента</span>
+          <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Заказ от клиента</span>
         </div>
-        <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
-          <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="$router.push('/clientOrder/create')" name="add"/>
-              <Icons title="Скопировать" @click="" name="copy"/>
-              <Icons title="Удалить" @click="compute" name="delete"/>
-            </div>
-
-            <div class="w-100">
-              <v-text-field
-                  v-model="search"
-                  prepend-inner-icon="search"
-                  density="compact"
-                  label="Поиск..."
-                  variant="outlined"
-                  :color="BASE_COLOR"
-                  rounded="lg"
-                  :base-color="FIELD_OF_SEARCH"
-                  clear-icon="close"
-                  hide-details
-                  single-line
-                  :append-inner-icon="search ? 'close' : ''"
-                  @click:append-inner="search = ''"
-                  flat
-              ></v-text-field>
-            </div>
-          </div>
-          <div class="filterElement">
-            <Icons
-                name="filter"
-                title="фильтр"
-                @click="filterModal = true"
-                class="mt-1"
+        <v-card variant="text" min-width="350" class="d-flex justify-end ga-2">
+          <div class="d-flex w-100 justify-end mb-3">
+          <div class="d-flex ga-2">
+            <Button
+              v-for="(button, idx) in headerButtons"
+              :name="button.name"
+              :key="idx"
+              @click="button.function"
             />
-            <span v-if="count !== 0" class="countFilter">{{ count }}</span>
           </div>
+        </div>
+        <div class="custom_search">
+          <v-text-field
+            style="width: 190px"
+            v-model="search"
+            prepend-inner-icon="search"
+            density="compact"
+            label="Поиск..."
+            variant="outlined"
+            :color="BASE_COLOR"
+            rounded="lg"
+            :base-color="FIELD_OF_SEARCH"
+            clear-icon="close"
+            hide-details
+            single-line
+            :append-inner-icon="search ? 'close' : ''"
+            @click:append-inner="search = ''"
+            flat
+          />
+        </div>
+          
+        <div class="mt-1 filterElement">
+          <Icons
+            name="filter"
+            title="Фильтр"
+            @click="filterModal = true"
+            class="mt-1"
+          />
+          <span v-if="counterFilter !== 0" class="countFilter">{{
+            count
+          }}</span>
+        </div>
         </v-card>
       </div>
-      <v-card class="mt-2 table">
+      <v-card class="table">
         <v-data-table-server
             style="height: 78vh"
             items-per-page-text="Элементов на странице:"
@@ -303,26 +329,15 @@ onMounted(() => {
                 @mouseleave="hoveredRowIndex = null"
                 @dblclick="show(item)"
                 :class="{'bg-grey-lighten-2': markedID.includes(item.id) }"
+                style="font-size: 12px"
             >
               <td>
-                <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
                   <CustomCheckbox
                       v-model="markedID"
                       :checked="markedID.includes(item.id)"
                       @change="lineMarking(item)"
                   >
-                    <span>{{ index + 1 }}</span>
                   </CustomCheckbox>
-                </template>
-                <template v-else>
-                  <div class="d-flex align-center">
-                    <Icons
-                        style="margin-right: 10px; margin-top: 4px"
-                        :name="item.deleted_at === null ? 'valid' : 'inValid'"
-                    />
-                    <span>{{ index + 1 }}</span>
-                  </div>
-                </template>
               </td>
               <td>{{ item.doc_number }}</td>
               <td>{{ getDateTimeInShow(item.date) }}</td>
@@ -371,7 +386,6 @@ onMounted(() => {
           </v-card>
         </v-dialog>
       </v-card>
-    </v-col>
   </div>
 
 
