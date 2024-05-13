@@ -1,27 +1,32 @@
 <script setup>
-
 import {computed, defineEmits, onMounted, onUnmounted, reactive, ref, watch,} from "vue";
+import {
+  addMessage,
+  cannotDeleteAllProducts,
+  cannotDeleteLastProduct,
+  selectOneItemMessage
+} from "../../../composables/constant/buttons.js";
+import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
+import {TITLE_COLOR} from "../../../composables/constant/colors.js";
+import {useRouter} from "vue-router";
+import formatNumber from "../../../composables/format/formatNumber.js";
+import showToast from "../../../composables/toast/index.js";
+import validate from "./validate.js";
+import currentDateWithTime from "../../../composables/date/currentDateWithTime.js";
+import formatDateTime from "../../../composables/date/formatDateTime.js";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import showToast from "../../../composables/toast/index.js";
-import currentDate from "../../../composables/date/currentDate.js";
-import validate from "./validate.js";
-import {useRouter} from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import storageApi from "../../../api/list/storage.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import procurementApi from "../../../api/documents/procurement.js";
 import goodApi from "../../../api/list/goods.js";
-import {addMessage, cannotDeleteAllProducts, cannotDeleteLastProduct} from "../../../composables/constant/buttons.js";
-import "../../../assets/css/procurement.css";
-import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
-import currentDateWithTime from "../../../composables/date/currentDateWithTime.js";
-import formatDateTime from "../../../composables/date/formatDateTime.js";
 import Button from "../../../components/button/button.vue";
-import {BASE_COLOR, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";
+import "../../../assets/css/procurement.css";
+import parseFloatNumber from "../../../composables/format/parseFloatNumber.js";
 
 const router = useRouter();
 const emits = defineEmits(["changed"]);
@@ -118,15 +123,14 @@ const getGoods = async (good_storage_id, good_organization_id) => {
 };
 
 const decreaseCountOfGoods = () => {
-  if (markedID.value.length !== goods.value.length) {
-    return showToast(cannotDeleteAllProducts, "warning");
+  if (markedID.value.length === 0) {
+    return showToast(selectOneItemMessage, "warning");
   }
-  if (goods.value.length > 1) {
-    return showToast(cannotDeleteLastProduct, "warning");
+  if (markedID.value.length === goods.value.length) {
+    goods.value = [];
+    return goods.value.push([{ id: 1, good_id: null, amount: "1", price: null}])
   }
   goods.value = goods.value.filter((item) => !markedID.value.includes(item.id));
-
-
 };
 
 const lineMarking = (item) => {
@@ -204,13 +208,15 @@ const addNewProcurement = async () => {
     salePercent: Number(form.salePercent),
     currency_id:
       typeof form.currency === "object" ? form.currency.id : form.currency,
-    sale_sum: totalPrice.value,
+    sale_sum: parseFloatNumber(totalPrice.value),
     goods: goods.value.map((item) => ({
       good_id: Number(item.good_id),
       amount: Number(item.amount),
       price: Number(item.price),
     })),
-  };
+  }
+
+  console.log(body)
 
   try {
     const res = await procurementApi.add(body);
@@ -253,38 +259,37 @@ const isChanged = () => {
   ];
 
   return valuesToCheck.every(
-    (val) => val === null || val === "" || val === currentDate() || val === "1"
+    (val) => val === null || val === "" || val === currentDateWithTime() || val === "1"
   );
-};
+}
+
+const updatePrice = (item, event) => {
+  const inputValue = event.target.value;
+
+  if (!inputValue.trim()) {
+    item.price = null;
+    return;
+  }
+
+  const numericValue = parseFloat(inputValue.replace(/[^0-9.]/g, ''));
+  if (!isNaN(numericValue)) {
+    item.price = numericValue;
+  } else {
+    console.error('Invalid input value:', inputValue);
+  }
+}
 
 const totalPrice = computed(() => {
   let sum = 0;
   goods.value.forEach((item) => {
     sum += item.price * item.amount;
   });
-  return sum;
+  return formatNumber(sum);
 });
 
 const totalCount = computed(() =>
   goods.value.reduce((acc, item) => acc + Number(item.amount || 0), 0)
 );
-
-const totalPriceWithSale = computed(() => {
-  let sum = 0;
-  if (form.salePercent !== null) {
-    sum = totalPrice.value - (totalPrice.value * form.salePercent) / 100;
-  } else {
-    goods.value.forEach((item) => {
-      sum += item.price * item.amount;
-    });
-    sum -= form.saleInteger;
-  }
-
-  return sum;
-});
-
-const isSaleIntegerDisabled = computed(() => !!form.salePercent);
-const isSalePercentDisabled = computed(() => !!form.saleInteger);
 
 watch(
   () => form.counterparty,
@@ -302,24 +307,6 @@ watch(
         (el.id === typeof newValue) === "object" ? newValue.id : newValue
       );
       form.currency = cpAgreement.currency_id;
-    }
-  }
-);
-
-watch(
-  () => form.saleInteger,
-  (newValue) => {
-    if (!newValue) {
-      form.salePercent = "";
-    }
-  }
-);
-
-watch(
-  () => form.salePercent,
-  (newValue) => {
-    if (!newValue) {
-      form.saleInteger = "";
     }
   }
 );
@@ -473,9 +460,8 @@ onMounted( () => {
                   </td>
                   <td>
                     <custom-text-field
-                        v-model="item.price"
+                        @input="updatePrice(item, $event)"
                         :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                        v-mask="'##########'"
                         min-width="80"
                     />
                   </td>
@@ -484,7 +470,7 @@ onMounted( () => {
                         readonly
                         v-model="item.summa"
                         :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                        :value="item.amount * item.price"
+                        :value="formatNumber(item.amount * item.price)"
                         min-width="100"
                     />
                   </td>
@@ -493,7 +479,7 @@ onMounted( () => {
                   <td></td>
                   <td style="width: 150%" class="d-flex ga-2" colspan="10">
                     <ButtonGoods name="add" @click="increaseCountOfGoods"/>
-                    <ButtonGoods name="delete" @click="decreaseCountOfGoods"/>
+                    <ButtonGoods v-if="goods.length !== 1" name="delete" @click="decreaseCountOfGoods"/>
                   </td>
                 </tr>
               </template>
