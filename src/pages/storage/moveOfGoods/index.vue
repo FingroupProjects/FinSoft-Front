@@ -6,7 +6,7 @@ import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
-import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
+import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import {
   removeMessage,
   warningMessage,
@@ -18,6 +18,8 @@ import organizationApi from "../../../api/list/organizations.js";
 import storageApi from "../../../api/list/storage.js";
 import moveApi from '../../../api/documents/move.js'; 
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
+import Button from "../../../components/button/button.vue";
+
 const router = useRouter()
 
 const loading = ref(true)
@@ -82,6 +84,33 @@ const getMoveData = async ({page, itemsPerPage, sortBy, search}) => {
   } catch (e) {
   }
 }
+
+const headerButtons = ref([
+  {
+    name: "create",
+    function: () => router.push({ name: "moveOfGoodsCreate" }),
+  },
+  {
+    name: "createBasedOn",
+    function: () => {},
+  },
+  {
+    name: "copy",
+  },
+ 
+   
+  {
+    name: "delete",
+    function: () => {
+      massDel({});
+    },
+  },
+]);
+
+const show = (item) => {
+  window.open(`/moveOfGoods/${item.id}`, "_blank");
+};
+
 const getOrganizations = async () => {
   const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   organizations.value = data.result.data
@@ -219,51 +248,56 @@ watch(search, debounce((newValue) => {
 </script>
 
 <template>
-  <div>
-    <v-col>
-      <div class="d-flex justify-space-between text-uppercase" >
+  <div class="pa-4"> 
+      <div class="d-flex justify-space-between">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Перемещение товаров</span>
+          <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Перемещение товаров</span>
         </div>
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
-          <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="$router.push('/moveOfGoods/create')" name="add"/>
-              <Icons title="Скопировать" @click="" name="copy"/>
-              <Icons title="Удалить" @click="compute" name="delete"/>
-            </div>
-
-            <div class="w-100">
-              <v-text-field
-                  v-model="search"
-                  prepend-inner-icon="search"
-                  density="compact"
-                  label="Поиск..."
-                  variant="outlined"
-                  :color="BASE_COLOR"
-                  rounded="lg"
-                  :base-color="FIELD_OF_SEARCH"
-                  clear-icon="close"
-                  hide-details
-                  single-line
-                  :append-inner-icon="search ? 'close' : ''"
-                  @click:append-inner="search = ''"
-                  flat
-              ></v-text-field>
-            </div>
-          </div>
-          <div class="filterElement">
-            <Icons
-                name="filter"
-                title="фильтр"
-                @click="filterModal = true"
-                class="mt-1"
+          <div class="d-flex w-100 justify-end mb-3">
+            <div class="d-flex ga-2">
+            <Button
+              v-for="(button, idx) in headerButtons"
+              :name="button.name"
+              :key="idx"
+              @click="button.function"
             />
-            <span v-if="count !== 0" class="countFilter">{{ count }}</span>
           </div>
+        </div>
+
+        <div class="custom_search">
+          <v-text-field
+            style="width: 190px"
+            v-model="search"
+            prepend-inner-icon="search"
+            density="compact"
+            label="Поиск..."
+            variant="outlined"
+            :color="BASE_COLOR"
+            rounded="lg"
+            :base-color="FIELD_OF_SEARCH"
+            clear-icon="close"
+            hide-details
+            single-line
+            :append-inner-icon="search ? 'close' : ''"
+            @click:append-inner="search = ''"
+            flat
+          />
+        </div>
+          <div class=" filterElement">
+          <Icons
+            name="filter"
+            title="Фильтр"
+            @click="filterModal = true"
+            class="mt-1"
+          />
+          <span v-if="counterFilter !== 0" class="countFilter">{{
+            count
+          }}</span>
+        </div>
         </v-card>
       </div>
-      <v-card class="mt-2 table">
+      <v-card class="table">
         <v-data-table-server
             style="height: 78vh"
             items-per-page-text="Элементов на странице:"
@@ -292,29 +326,19 @@ watch(search, debounce((newValue) => {
             <tr
                 @mouseenter="hoveredRowIndex = index"
                 @mouseleave="hoveredRowIndex = null"
-                @dblclick="$router.push(`/moveOfGoods/${item.id}`)"
+                @dblclick="show(item)"
                 :class="{'bg-grey-lighten-2': markedID.includes(item.id) }"
+                style="font-size: 12px"
             >
               <td>
-                <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
                   <CustomCheckbox
                       v-model="markedID"
                       :checked="markedID.includes(item.id)"
                       @change="lineMarking(item)"
                   >
-                    <span>{{ index + 1 }}</span>
                   </CustomCheckbox>
-                </template>
-                <template v-else>
-                  <div class="d-flex align-center">
-                    <Icons
-                        style="margin-right: 10px; margin-top: 4px"
-                        :name="item.deleted_at === null ? 'valid' : 'inValid'"
-                    />
-                    <span>{{ index + 1 }}</span>
-                  </div>
-                </template>
               </td>
+                 
               <td>{{ item.doc_number }}</td>
               <td>{{ getDateTimeInShow(item.date) }}</td>
               <td>{{ item.sender_storage_id.name }}</td>
@@ -351,7 +375,6 @@ watch(search, debounce((newValue) => {
           </v-card>
         </v-dialog>
       </v-card>
-    </v-col>
   </div>
 
 
