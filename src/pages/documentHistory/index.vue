@@ -1,21 +1,56 @@
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import documentHistoryApi from "../../api/documents/documentHistory";
 import showDate from "../../composables/date/showDate";
-
+import getDateTimeInShow from "../../composables/date/getDateTimeInShow.js";
 const route = useRoute();
 
 const id = ref(null);
 
-const historyDoc = ref([]);
-const balances = ref([]);
-
 const selectedBlock = ref("История");
 
-const seletectBlock = (name) => {
-  selectedBlock.value = name;
+const loading = ref(true);
+
+const historyDoc = ref([]);
+const data = ref([]);
+const pagination = ref([]);
+
+const balanceHeaders = ref([
+  { title: "Номер", key: "doc_number" },
+  { title: "Дата", key: "date" },
+  { title: "Кредитная статья", key: "creditArticle.name" },
+  { title: "Организация", key: "organization.name" },
+  { title: "Дебетовая статья", key: "debitArticle.name" },
+  { title: "Сумма", key: "sum" },
+]);
+
+const accountingOfGoodsHeaders = ref([
+  { title: "Номер", key: "doc_number" },
+  { title: "Дата", key: "date" },
+  { title: "Тип движения", key: "movement_type" },
+  { title: "Организация", key: "organization.name" },
+  { title: "Сумма продажи", key: "sale_sum" },
+  { title: "Сумма", key: "sum" },
+]);
+
+const counterpartySettlementsHeaders = ref([
+  { title: "Номер", key: "doc_number" },
+  { title: "Дата", key: "date" },
+  { title: "Тип движения", key: "movement_type" },
+  { title: "Поставщик", key: "counterparty.name" },
+  { title: "Договор", key: "counterpartyAgreement.name" },
+  { title: "Организация", key: "organization.name" },
+  { title: "Сумма продажи", key: "sale_sum" },
+  { title: "Сумма", key: "sum" },
+]);
+
+const seletectBlock = async(name) => {
+  data.value = await []
+  pagination.value = await []
+  selectedBlock.value = await name;
 };
+
 const getDocumentHistory = async () => {
   try {
     const { data } = await documentHistoryApi.get(id.value);
@@ -23,31 +58,67 @@ const getDocumentHistory = async () => {
       ...item,
       date: showDate(item.date),
     }));
-    console.log(data);
   } catch (e) {
     console.error(e);
   }
 };
 
 const getBalance = async () => {
+  loading.value = true
   try {
-    const { data } = await documentHistoryApi.balance(id.value);
-    console.log(data);
-    balances.value = data.result
+    const {
+      data: { result },
+    } = await documentHistoryApi.balance(id.value);
+    data.value = result.data;
+    pagination.value = result.pagination;
+    loading.value = false
   } catch (e) {
     console.error(e);
   }
 };
 
+const getAccountingOfGoods = async () => {
+  loading.value = true
+  try {
+    const {
+      data: { result },
+    } = await documentHistoryApi.goodAccountings(id.value);
+    data.value = result.data;
+    pagination.value = result.pagination;
+    loading.value = false
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const getCounterpartySettlements = async () => {
+  loading.value = true
+  try {
+    const {
+      data: { result },
+    } = await documentHistoryApi.counterpartySettlements(id.value);
+    data.value = result.data;
+    pagination.value = result.pagination;
+    loading.value = false
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+watch(selectedBlock, (newVal) => {
+  if (newVal === "История") getDocumentHistory();
+  // if (newVal === "Баланс") getBalance();
+  // if (newVal === "Учет товаров") getAccountingOfGoods();
+  // if (newVal === "Взаимодействие с поставщиками") getCounterpartySettlements();
+});
+
 onMounted(async () => {
   id.value = route.params.id;
-  await getDocumentHistory();
-  await getBalance();
 });
 </script>
 
 <template>
-  <div class="ml-4 mt-4">
+  <div class="ma-4 mb-0">
     <div class="switcher">
       <button
         @click="seletectBlock('История')"
@@ -80,8 +151,9 @@ onMounted(async () => {
         Взаимодействие с поставщиками
       </button>
     </div>
+
     <div v-if="selectedBlock === 'История'">
-      <h2>История документа : Документ</h2>
+      <h2 class="my-4">История документа : Документ</h2>
       <v-col class="d-flex flex-column ga-4">
         <v-card class="pa-4 rounded-xl" v-for="item in historyDoc" :key="item">
           <div class="w-100" style="border-bottom: 2px solid #08072e">
@@ -111,19 +183,135 @@ onMounted(async () => {
         </v-card>
       </v-col>
     </div>
+
     <div v-if="selectedBlock === 'Баланс'">
-      <h2>Баланс</h2>
+      <h2 class="my-4">Баланс</h2>
+      <v-card class="table">
+        <v-data-table-server
+          style="height: 78vh"
+          :loading="loading"
+          loading-text="Загрузка"
+          items-per-page-text="Элементов на странице:"
+          no-data-text="Нет данных"
+          v-model:items-per-page="pagination.per_page"
+          :headers="balanceHeaders"
+          :items-length="pagination.total || 0"
+          :items="data"
+          :item-value="balanceHeaders.title"
+          page-text="{0}-{1} от {2}"
+          @update:options="getBalance"
+          :items-per-page-options="[
+            { value: 25, title: '25' },
+            { value: 50, title: '50' },
+            { value: 100, title: '100' },
+          ]"
+          fixed-header
+          hover
+        >
+          <template v-slot:item="{ item, index }">
+            <tr
+              @mouseenter="hoveredRowIndex = index"
+              @mouseleave="hoveredRowIndex = null"
+            >
+              <td>{{ item.id }}</td>
+              <td>{{ getDateTimeInShow(item.date) }}</td>
+              <td>{{ item.creditArticle ? item.creditArticle.name : '' }}</td>
+              <td>{{ item.organization ? item.organization.name : '' }}</td>
+              <td>{{ item.debitArticle ? item.debitArticle.name : '' }}</td>
+              <td>{{ item.sum }}</td>
+            </tr>
+          </template>
+        </v-data-table-server>
+      </v-card>
     </div>
+
     <div v-if="selectedBlock === 'Учет товаров'">
-      <h2>Учет товаров</h2>
+      <h2 class="my-4">Учет товаров</h2>
+      <v-card class="table">
+        <v-data-table-server
+          style="height: 78vh"
+          :loading="loading"
+          loading-text="Загрузка"
+          items-per-page-text="Элементов на странице:"
+          no-data-text="Нет данных"
+          v-model:items-per-page="pagination.per_page"
+          :headers="accountingOfGoodsHeaders"
+          :items-length="pagination.total || 0"
+          :items="data"
+          :item-value="accountingOfGoodsHeaders.title"
+          page-text="{0}-{1} от {2}"
+          @update:options="getAccountingOfGoods"
+          :items-per-page-options="[
+            { value: 25, title: '25' },
+            { value: 50, title: '50' },
+            { value: 100, title: '100' },
+          ]"
+          fixed-header
+          hover
+        >
+          <template v-slot:item="{ item, index }">
+            <tr
+              @mouseenter="hoveredRowIndex = index"
+              @mouseleave="hoveredRowIndex = null"
+            >
+              <td>{{ item.id }}</td>
+              <td>{{ getDateTimeInShow(item.date) }}</td>
+              <td>{{ item.movement_type }}</td>
+              <td>{{ item.organization ? item.organization.name : '' }}</td>
+              <td>{{ item.sale_sum !== null ? item.sale_sum : "" }}</td>
+              <td>{{ item.sum }}</td>
+            </tr>
+          </template>
+        </v-data-table-server>
+      </v-card>
     </div>
+
     <div v-if="selectedBlock === 'Взаимодействие с поставщиками'">
-      <h2>Взаимодействие с поставщиками</h2>
+      <h2 class="my-4">Взаимодействие с поставщиками</h2>
+      <v-card class="table">
+        <v-data-table-server
+          style="height: 78vh"
+          :loading="loading"
+          loading-text="Загрузка"
+          items-per-page-text="Элементов на странице:"
+          no-data-text="Нет данных"
+          v-model:items-per-page="pagination.per_page"
+          :headers="counterpartySettlementsHeaders"
+          :items-length="pagination.total || 0"
+          :items="data"
+          :item-value="counterpartySettlementsHeaders.title"
+          page-text="{0}-{1} от {2}"
+          @update:options="getCounterpartySettlements"
+          :items-per-page-options="[
+            { value: 25, title: '25' },
+            { value: 50, title: '50' },
+            { value: 100, title: '100' },
+          ]"
+          fixed-header
+          hover
+        >
+          <template v-slot:item="{ item, index }">
+            <tr
+              @mouseenter="hoveredRowIndex = index"
+              @mouseleave="hoveredRowIndex = null"
+            >
+              <td>{{ item.id }}</td>
+              <td>{{ getDateTimeInShow(item.date) }}</td>
+              <td>{{ item.movement_type }}</td>
+              <td>{{ item.counterparty ? item.counterparty.name : '' }}</td>
+              <td>{{ item.counterpartyAgreement ? item.counterpartyAgreement.name : '' }}</td>
+              <td>{{ item.organization ? item.organization.name : '' }}</td>
+              <td>{{ item.sale_sum !== null ? item.sale_sum : "" }}</td>
+              <td>{{ item.sum }}</td>
+            </tr>
+          </template>
+        </v-data-table-server>
+      </v-card>
     </div>
   </div>
 </template>
 
-<style>
+<style scoped>
 .switcher {
   background-color: #d9dce2;
   padding: 14px 16px;
@@ -135,7 +323,7 @@ onMounted(async () => {
 
 .button {
   padding: 8px 10px;
-  transition: all 500ms ease-in-out;
+  transition: all 400ms ease-in-out;
 }
 .active {
   background-color: #4f4cd1;
