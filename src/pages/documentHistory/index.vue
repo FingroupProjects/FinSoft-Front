@@ -8,7 +8,7 @@ const route = useRoute();
 
 const id = ref(null);
 
-const selectedBlock = ref("История");
+const selectedBlock = ref(null);
 
 const loading = ref(true);
 
@@ -46,8 +46,8 @@ const counterpartySettlementsHeaders = ref([
 ]);
 
 const seletectBlock = async(name) => {
-  data.value = await []
-  pagination.value = await []
+  data.value = []
+  pagination.value = []
   selectedBlock.value = await name;
 };
 
@@ -58,6 +58,7 @@ const getDocumentHistory = async () => {
       ...item,
       date: showDate(item.date),
     }));
+    console.log(data);
   } catch (e) {
     console.error(e);
   }
@@ -105,7 +106,7 @@ const getCounterpartySettlements = async () => {
   }
 };
 
-watch(selectedBlock, (newVal) => {
+watch(selectedBlock, (newVal, oldVal) => {
   if (newVal === "История") getDocumentHistory();
   // if (newVal === "Баланс") getBalance();
   // if (newVal === "Учет товаров") getAccountingOfGoods();
@@ -114,11 +115,12 @@ watch(selectedBlock, (newVal) => {
 
 onMounted(async () => {
   id.value = route.params.id;
+  selectedBlock.value = 'История'
 });
 </script>
 
 <template>
-  <div class="ma-4 mb-0">
+  <div class="pa-4 mb-0">
     <div class="switcher">
       <button
         @click="seletectBlock('История')"
@@ -188,7 +190,7 @@ onMounted(async () => {
       <h2 class="my-4">Баланс</h2>
       <v-card class="table">
         <v-data-table-server
-          style="height: 78vh"
+          style="height: 70vh"
           :loading="loading"
           loading-text="Загрузка"
           items-per-page-text="Элементов на странице:"
@@ -229,7 +231,7 @@ onMounted(async () => {
       <h2 class="my-4">Учет товаров</h2>
       <v-card class="table">
         <v-data-table-server
-          style="height: 78vh"
+          style="height: 70vh"
           :loading="loading"
           loading-text="Загрузка"
           items-per-page-text="Элементов на странице:"
@@ -270,7 +272,7 @@ onMounted(async () => {
       <h2 class="my-4">Взаимодействие с поставщиками</h2>
       <v-card class="table">
         <v-data-table-server
-          style="height: 78vh"
+          style="height: 70vh"
           :loading="loading"
           loading-text="Загрузка"
           items-per-page-text="Элементов на странице:"
@@ -314,7 +316,7 @@ onMounted(async () => {
 <style scoped>
 .switcher {
   background-color: #d9dce2;
-  padding: 14px 16px;
+  padding: 10px 16px;
   display: flex;
   gap: 10px;
   width: 640px;
