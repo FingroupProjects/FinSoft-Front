@@ -414,7 +414,6 @@ onMounted(() => {
         </div>
       </v-card>
     </div>
-
     <v-divider />
     <v-divider />
     <div style="background: #fff">
@@ -540,7 +539,12 @@ onMounted(() => {
         </div>
         <div class="d-flex flex-wrap ga-4 justify-space-between w-100 mt-2 bottomField">
           <div class="d-flex ga-10">
-            <custom-text-field readonly :value="author" min-width="110" />
+            <custom-text-field
+                readonly
+                v-model="author"
+                label="Автор"
+                min-width="110"
+            />
             <custom-text-field
                 label="Комментарий"
                 v-model="form.comment"

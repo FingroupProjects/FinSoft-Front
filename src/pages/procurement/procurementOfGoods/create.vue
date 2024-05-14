@@ -1,11 +1,6 @@
 <script setup>
 import {computed, defineEmits, onMounted, onUnmounted, reactive, ref, watch,} from "vue";
-import {
-  addMessage,
-  cannotDeleteAllProducts,
-  cannotDeleteLastProduct,
-  selectOneItemMessage
-} from "../../../composables/constant/buttons.js";
+import {addMessage, selectOneItemMessage} from "../../../composables/constant/buttons.js";
 import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
 import {TITLE_COLOR} from "../../../composables/constant/colors.js";
 import {useRouter} from "vue-router";
@@ -26,9 +21,10 @@ import goodApi from "../../../api/list/goods.js";
 import Button from "../../../components/button/button.vue";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";
 import "../../../assets/css/procurement.css";
-import parseFloatNumber from "../../../composables/format/parseFloatNumber.js";
 import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
+import {useHasOneOrganization} from "../../../store/hasOneOrganization.js";
 
+const useOrganization = ref(useHasOneOrganization())
 const router = useRouter();
 const emits = defineEmits(["changed"]);
 const confirmDocument = useConfirmDocumentStore();
@@ -209,15 +205,12 @@ const addNewProcurement = async () => {
     salePercent: Number(form.salePercent),
     currency_id:
       typeof form.currency === "object" ? form.currency.id : form.currency,
-    sale_sum: parseFloatNumber(totalPrice.value),
     goods: goods.value.map((item) => ({
       good_id: Number(item.good_id),
       amount: Number(item.amount),
       price: Number(item.price),
     })),
   }
-
-  console.log(body)
 
   try {
     const res = await procurementApi.add(body);
@@ -371,6 +364,7 @@ onMounted( () => {
             v-model="form.date"
           />
           <custom-autocomplete
+            v-if="!useOrganization.getIsHasOneOrganization"
             label="Организация"
             :items="organizations"
             v-model="form.organization"
@@ -474,7 +468,12 @@ onMounted( () => {
         </div>
         <div class="d-flex flex-wrap ga-4 justify-space-between w-100 mt-2 bottomField">
           <div class="d-flex ga-10">
-            <custom-text-field readonly :value="author" min-width="110" />
+            <custom-text-field
+                readonly
+                v-model="author"
+                label="Автор"
+                min-width="110"
+            />
             <custom-text-field
               label="Комментарий"
               v-model="form.comment"
