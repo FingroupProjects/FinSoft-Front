@@ -96,7 +96,7 @@ const getProviderData = async ({page, itemsPerPage, sortBy, search}) => {
 const headerButtons = ref([
   {
     name: "create",
-    function: () => router.push({ name: "procurementOfGoodsCreate" }),
+    function: () => router.push({ name: "providerReturnCreate" }),
   },
   {
     name: "createBasedOn",
