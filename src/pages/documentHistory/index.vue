@@ -30,7 +30,6 @@ const accountingOfGoodsHeaders = ref([
   { title: "Дата", key: "date" },
   { title: "Тип движения", key: "movement_type" },
   { title: "Организация", key: "organization.name" },
-  { title: "Сумма продажи", key: "sale_sum" },
   { title: "Сумма", key: "sum" },
 ]);
 
@@ -41,13 +40,13 @@ const counterpartySettlementsHeaders = ref([
   { title: "Поставщик", key: "counterparty.name" },
   { title: "Договор", key: "counterpartyAgreement.name" },
   { title: "Организация", key: "organization.name" },
-  { title: "Сумма продажи", key: "sale_sum" },
+  { title: "Сумма * курс валюты", key: "sale_sum" },
   { title: "Сумма", key: "sum" },
 ]);
 
-const seletectBlock = async(name) => {
-  data.value = []
-  pagination.value = []
+const seletectBlock = async (name) => {
+  data.value = [];
+  pagination.value = [];
   selectedBlock.value = await name;
 };
 
@@ -58,49 +57,70 @@ const getDocumentHistory = async () => {
       ...item,
       date: showDate(item.date),
     }));
-    console.log(data);
   } catch (e) {
     console.error(e);
   }
 };
 
-const getBalance = async () => {
-  loading.value = true
+const getBalance = async ({ page, itemsPerPage, sortBy, search } = {}) => {
+  loading.value = true;
   try {
     const {
       data: { result },
-    } = await documentHistoryApi.balance(id.value);
+    } = await documentHistoryApi.balance(
+      id.value,
+      { page, itemsPerPage, sortBy },
+      search
+    );
     data.value = result.data;
     pagination.value = result.pagination;
-    loading.value = false
+    loading.value = false;
   } catch (e) {
     console.error(e);
   }
 };
 
-const getAccountingOfGoods = async () => {
-  loading.value = true
+const getAccountingOfGoods = async ({
+  page,
+  itemsPerPage,
+  sortBy,
+  search,
+} = {}) => {
+  loading.value = true;
   try {
     const {
       data: { result },
-    } = await documentHistoryApi.goodAccountings(id.value);
+    } = await documentHistoryApi.goodAccountings(
+      id.value,
+      { page, itemsPerPage, sortBy },
+      search
+    );
     data.value = result.data;
     pagination.value = result.pagination;
-    loading.value = false
+    loading.value = false;
   } catch (e) {
     console.error(e);
   }
 };
 
-const getCounterpartySettlements = async () => {
-  loading.value = true
+const getCounterpartySettlements = async ({
+  page,
+  itemsPerPage,
+  sortBy,
+  search,
+} = {}) => {
+  loading.value = true;
   try {
     const {
       data: { result },
-    } = await documentHistoryApi.counterpartySettlements(id.value);
+    } = await documentHistoryApi.counterpartySettlements(
+      id.value,
+      { page, itemsPerPage, sortBy },
+      search
+    );
     data.value = result.data;
     pagination.value = result.pagination;
-    loading.value = false
+    loading.value = false;
   } catch (e) {
     console.error(e);
   }
@@ -108,14 +128,11 @@ const getCounterpartySettlements = async () => {
 
 watch(selectedBlock, (newVal, oldVal) => {
   if (newVal === "История") getDocumentHistory();
-  // if (newVal === "Баланс") getBalance();
-  // if (newVal === "Учет товаров") getAccountingOfGoods();
-  // if (newVal === "Взаимодействие с поставщиками") getCounterpartySettlements();
 });
 
 onMounted(async () => {
   id.value = route.params.id;
-  selectedBlock.value = 'История'
+  selectedBlock.value = "История";
 });
 </script>
 
@@ -156,8 +173,8 @@ onMounted(async () => {
 
     <div v-if="selectedBlock === 'История'">
       <h2 class="my-4">История документа : Документ</h2>
-      <v-col class="d-flex flex-column ga-4">
-        <v-card class="pa-4 rounded-xl" v-for="item in historyDoc" :key="item">
+      <div class="d-flex flex-column ga-4">
+        <v-card class="pa-5 rounded-xl" v-for="item in historyDoc" :key="item">
           <div class="w-100" style="border-bottom: 2px solid #08072e">
             <h3>{{ item.status }}</h3>
           </div>
@@ -183,7 +200,7 @@ onMounted(async () => {
             </span>
           </div>
         </v-card>
-      </v-col>
+      </div>
     </div>
 
     <div v-if="selectedBlock === 'Баланс'">
@@ -217,9 +234,9 @@ onMounted(async () => {
             >
               <td>{{ item.id }}</td>
               <td>{{ getDateTimeInShow(item.date) }}</td>
-              <td>{{ item.creditArticle ? item.creditArticle.name : '' }}</td>
-              <td>{{ item.organization ? item.organization.name : '' }}</td>
-              <td>{{ item.debitArticle ? item.debitArticle.name : '' }}</td>
+              <td>{{ item.creditArticle?.name }}</td>
+              <td>{{ item.organization?.name }}</td>
+              <td>{{ item.debitArticle?.name }}</td>
               <td>{{ item.sum }}</td>
             </tr>
           </template>
@@ -259,8 +276,7 @@ onMounted(async () => {
               <td>{{ item.id }}</td>
               <td>{{ getDateTimeInShow(item.date) }}</td>
               <td>{{ item.movement_type }}</td>
-              <td>{{ item.organization ? item.organization.name : '' }}</td>
-              <td>{{ item.sale_sum !== null ? item.sale_sum : "" }}</td>
+              <td>{{ item.organization?.name }}</td>
               <td>{{ item.sum }}</td>
             </tr>
           </template>
@@ -300,9 +316,9 @@ onMounted(async () => {
               <td>{{ item.id }}</td>
               <td>{{ getDateTimeInShow(item.date) }}</td>
               <td>{{ item.movement_type }}</td>
-              <td>{{ item.counterparty ? item.counterparty.name : '' }}</td>
-              <td>{{ item.counterpartyAgreement ? item.counterpartyAgreement.name : '' }}</td>
-              <td>{{ item.organization ? item.organization.name : '' }}</td>
+              <td>{{ item.counterparty?.name }}</td>
+              <td>{{ item.counterpartyAgreement?.name }}</td>
+              <td>{{ item.organization ? item.organization.name : "" }}</td>
               <td>{{ item.sale_sum !== null ? item.sale_sum : "" }}</td>
               <td>{{ item.sum }}</td>
             </tr>
