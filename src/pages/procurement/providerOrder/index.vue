@@ -93,7 +93,7 @@ const getProviderOrderData = async ({page, itemsPerPage, sortBy, search}) => {
 const headerButtons = ref([
   {
     name: "create",
-    function: () => router.push({ name: "procurementOfGoodsCreate" }),
+    function: () => router.push({ name: "providerOrderCreate" }),
   },
   {
     name: "createBasedOn",

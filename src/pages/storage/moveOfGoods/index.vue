@@ -268,6 +268,7 @@ watch(search, debounce((newValue) => {
         <div class="custom_search">
           <v-text-field
             style="width: 190px"
+            class="mb-3"
             v-model="search"
             prepend-inner-icon="search"
             density="compact"
@@ -349,7 +350,6 @@ watch(search, debounce((newValue) => {
           </template>
         </v-data-table-server>
       </v-card>
-
       <v-card>
         <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup.esc="closeFilterModal">
           <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="450"
@@ -359,16 +359,19 @@ watch(search, debounce((newValue) => {
             </div>
             <v-form class="d-flex w-100" @submit.prevent="">
               <v-row class="w-100">
-                <v-col class="d-flex flex-column w-100">
+                <v-col class="d-flex flex-column w-100 ga-4">
                   <div class="d-flex ga-2 w-100">
                   <custom-text-field label="Дата" type="date" min-width="508"  v-model="filterForm.date"/>
                   </div>
                   <div class="d-flex ga-2">
                     <custom-autocomplete label="Огранизация" :items="organizations"  v-model="filterForm.organization_id"/>
-                    <custom-autocomplete label="Склад-отправитель" :items="storages" v-model="filterForm.storage_id"/>
-                  <custom-autocomplete label="Склад-получатель" :items="storages" v-model="filterForm.storage_id"/>               
+                    <custom-autocomplete label="Склад-отправитель" :items="storages" v-model="filterForm.storage_id"/>               
+                    <custom-autocomplete label="Склад-получатель" :items="storages" v-model="filterForm.storage_id"/>               
                  </div>
-                 
+                  <div class="d-flex justify-end ga-2">
+                    <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
+                    <v-btn :color="BASE_COLOR" class="btn"  @click="getMoveData">применить</v-btn>
+                  </div>
                 </v-col>
               </v-row>
             </v-form>
