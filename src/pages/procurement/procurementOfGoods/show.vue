@@ -21,7 +21,7 @@ import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import currencyApi from "../../../api/list/currency.js";
 import procurementApi from "../../../api/documents/procurement.js";
 import goodApi from "../../../api/list/goods.js";
-import { editMessage } from "../../../composables/constant/buttons.js";
+import {editMessage, selectOneItemMessage} from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
 import { TITLE_COLOR } from "../../../composables/constant/colors.js";
 import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
@@ -29,6 +29,9 @@ import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
 import Button from "../../../components/button/button.vue";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";
+import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
+import formatNumber from "../../../composables/format/formatNumber.js";
+import parseFloatNumber from "../../../composables/format/parseFloatNumber.js";
 
 const router = useRouter();
 const route = useRoute();
@@ -171,6 +174,13 @@ const getGoods = async () => {
 };
 
 const decreaseCountOfGoods = () => {
+  if (markedID.value.length === 0) {
+    return showToast(selectOneItemMessage, "warning");
+  }
+  if (markedID.value.length === goods.value.length) {
+    goods.value = [];
+    return goods.value.push([{ id: 1, good_id: null, amount: "1", price: null}])
+  }
   goods.value = goods.value.filter((item) => !markedID.value.includes(item.id));
 };
 
@@ -269,41 +279,18 @@ const updateProcurement = async () => {
   }
 };
 
-const getHistory = () => {
-  router.push({
-    name: "documentHistory",
-    params: route.params.id,
-  });
-};
-
 const totalPrice = computed(() => {
   let sum = 0;
   goods.value.forEach((item) => {
     sum += item.price * item.amount;
   });
-  return sum;
+  return formatNumber(sum);
 });
 
 const totalCount = computed(() =>
   goods.value.reduce((acc, item) => acc + Number(item.amount || 0), 0)
 );
 
-const totalPriceWithSale = computed(() => {
-  let sum = 0;
-  if (form.salePercent !== null) {
-    sum = totalPrice.value - (totalPrice.value * form.salePercent) / 100;
-  } else {
-    goods.value.forEach((item) => {
-      sum += item.price * item.amount;
-    });
-    sum -= form.saleInteger;
-  }
-
-  return sum;
-});
-
-const isSaleIntegerDisabled = computed(() => !!form.salePercent);
-const isSalePercentDisabled = computed(() => !!form.saleInteger);
 
 const arraysEqual = (arr1, arr2) => {
   if (arr1.length !== arr2.length) {
@@ -382,6 +369,7 @@ const closeWindow = () => {
 onMounted(() => {
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
   getProcurementDetails();
+
   Promise.all([
     getOrganizations(),
     getCounterparties(),
@@ -521,12 +509,10 @@ onMounted(() => {
                   </td>
                   <td>
                     <custom-text-field
-                      v-model="item.price"
-                      :base-color="
-                        hoveredRowId === item.id ? FIELD_GOODS : '#fff'
-                      "
-                      v-mask="'##########'"
-                      min-width="80"
+                        v-model="item.price"
+                        @input="validateNumberInput(item.price)"
+                        :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                        min-width="80"
                     />
                   </td>
                   <td>
@@ -536,7 +522,7 @@ onMounted(() => {
                       :base-color="
                         hoveredRowId === item.id ? FIELD_GOODS : '#fff'
                       "
-                      :value="item.amount * item.price"
+                      :value="formatNumber(item.amount * item.price)"
                       min-width="100"
                     />
                   </td>
@@ -545,45 +531,43 @@ onMounted(() => {
                   <td></td>
                   <td style="width: 150%" class="d-flex ga-2" colspan="10">
                     <ButtonGoods name="add" @click="increaseCountOfGoods" />
-                    <ButtonGoods name="delete" @click="decreaseCountOfGoods" />
+                    <ButtonGoods v-if="goods.length !== 1" name="delete" @click="decreaseCountOfGoods" />
                   </td>
                 </tr>
               </template>
             </v-data-table>
           </div>
         </div>
-        <div
-          class="d-flex flex-wrap ga-4 justify-space-between w-100 mt-2 bottomField"
-        >
-          <div class="d-flex ga-6">
+        <div class="d-flex flex-wrap ga-4 justify-space-between w-100 mt-2 bottomField">
+          <div class="d-flex ga-10">
             <custom-text-field readonly :value="author" min-width="110" />
             <custom-text-field
-              label="Комментарий"
-              v-model="form.comment"
-              min-width="310"
+                label="Комментарий"
+                v-model="form.comment"
+                min-width="310"
             />
           </div>
           <div class="d-flex ga-6">
             <custom-text-field
-              readonly
-              label="Количество"
-              v-model="totalCount"
-              min-width="130"
+                readonly
+                label="Количество"
+                v-model="totalCount"
+                min-width="130"
             />
             <custom-text-field
-              readonly
-              label="Общая сумма:"
-              v-model="totalPrice"
-              min-width="180"
-              max-width="110"
+                readonly
+                label="Общая сумма:"
+                v-model="totalPrice"
+                min-width="180"
+                max-width="110"
             />
             <custom-autocomplete
-              readonly
-              v-model="form.currency"
-              label="Валюта"
-              :items="currencies"
-              min-width="190"
-              maxWidth="190px"
+                readonly
+                v-model="form.currency"
+                label="Валюта"
+                :items="currencies"
+                min-width="190"
+                maxWidth="190px"
             />
           </div>
         </div>

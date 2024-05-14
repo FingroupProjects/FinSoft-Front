@@ -1,3 +1,4 @@
 export default function parseFloatNumber(data) {
-  return parseFloat(data.replace(/\s/g, '').replace(',', '.'))
+  if (data === null) return data
+  return parseFloat(data.toString().replace(/[^\d.]/g, ''))
 }

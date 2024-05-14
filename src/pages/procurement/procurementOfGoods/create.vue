@@ -27,6 +27,7 @@ import Button from "../../../components/button/button.vue";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";
 import "../../../assets/css/procurement.css";
 import parseFloatNumber from "../../../composables/format/parseFloatNumber.js";
+import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
 
 const router = useRouter();
 const emits = defineEmits(["changed"]);
@@ -263,22 +264,6 @@ const isChanged = () => {
   );
 }
 
-const updatePrice = (item, event) => {
-  const inputValue = event.target.value;
-
-  if (!inputValue.trim()) {
-    item.price = null;
-    return;
-  }
-
-  const numericValue = parseFloat(inputValue.replace(/[^0-9.]/g, ''));
-  if (!isNaN(numericValue)) {
-    item.price = numericValue;
-  } else {
-    console.error('Invalid input value:', inputValue);
-  }
-}
-
 const totalPrice = computed(() => {
   let sum = 0;
   goods.value.forEach((item) => {
@@ -460,7 +445,8 @@ onMounted( () => {
                   </td>
                   <td>
                     <custom-text-field
-                        @input="updatePrice(item, $event)"
+                        v-model="item.price"
+                        :value="validateNumberInput(item.price)"
                         :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                         min-width="80"
                     />
