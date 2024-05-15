@@ -1,8 +1,17 @@
 const routes = [
   {
     path: "/",
-    name: "dashboard",
+    name: "mainpage",
+    component: () => import("../pages/mainpage/index.vue"),
+    meta: {
+      hideSideBarAndHeader: true,
+    }
+  },
+  {
+    path: '/dashboard',
+    name: 'dashboard',
     component: () => import("../pages/homepage/index.vue"),
+  
   },
   {
     path: "/procurementOfGoods",
@@ -384,6 +393,7 @@ const routes = [
     component: () => import("../pages/homepage/index.vue"),
   },
 ];
+
 
 routes.forEach((route) => {
   route.meta ??= {};
