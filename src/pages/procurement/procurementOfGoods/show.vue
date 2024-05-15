@@ -1,19 +1,11 @@
 <script setup>
-import {
-  computed,
-  defineEmits,
-  defineProps,
-  onMounted,
-  reactive,
-  ref,
-  watch,
-} from "vue";
+import {computed, defineEmits, defineProps, onMounted, reactive, ref, watch,} from "vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../../composables/toast/index.js";
 import validate from "./validate.js";
-import { useRoute, useRouter } from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import storageApi from "../../../api/list/storage.js";
@@ -23,15 +15,14 @@ import procurementApi from "../../../api/documents/procurement.js";
 import goodApi from "../../../api/list/goods.js";
 import {editMessage, selectOneItemMessage} from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
-import { TITLE_COLOR } from "../../../composables/constant/colors.js";
-import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
+import {FIELD_GOODS, TITLE_COLOR} from "../../../composables/constant/colors.js";
+import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
 import Button from "../../../components/button/button.vue";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";
 import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
 import formatNumber from "../../../composables/format/formatNumber.js";
-import parseFloatNumber from "../../../composables/format/parseFloatNumber.js";
 
 const router = useRouter();
 const route = useRoute();
@@ -67,8 +58,6 @@ const currencies = ref([]);
 const listGoods = ref([]);
 const prevForm = ref({});
 const prevGoods = ref([]);
-
-const FIELD_GOODS = ref("#274D87");
 const hoveredRowId = ref(null);
 
 const headers = ref([
@@ -82,7 +71,7 @@ const getProcurementDetails = async () => {
   try {
     const { data } = await procurementApi.getById(route.params.id);
     form.doc_number = data.result.doc_number;
-    form.date = getDateTimeInShow(data.result.date, "-", true);
+    // form.date = getDateTimeInShow(data.result.date, "-", true);
     form.organization = {
       id: data.result.organization.id,
       name: data.result.organization.name,
@@ -91,20 +80,14 @@ const getProcurementDetails = async () => {
       id: data.result.counterparty.id,
       name: data.result.counterparty.name,
     };
-    // setTimeout(() => {
     form.cpAgreement = {
       id: data.result.counterpartyAgreement.id,
       name: data.result.counterpartyAgreement.name,
     };
-    // }, 100);
     form.storage = {
       id: data.result.storage.id,
       name: data.result.storage.name,
     };
-    form.saleInteger =
-      data.result.saleInteger !== 0 ? data.result.saleInteger : null;
-    form.salePercent =
-      data.result.salePercent !== 0 ? data.result.salePercent : null;
     form.comment = data.result.comment;
     form.currency = data.result.currency;
     goods.value = data.result.goods.map((item) => ({

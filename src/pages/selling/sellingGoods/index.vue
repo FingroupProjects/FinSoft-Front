@@ -48,7 +48,6 @@ const paginations = ref([]);
 const count = ref(0);
 
 const organizations = ref([]);
-const providers = ref([]);
 const storages = ref([]);
 const authors = ref([]);
 const currencies = ref([]);
@@ -104,12 +103,12 @@ const headerButtons = ref([
   {
     name: "delete",
     function: () => {
-      massDel({});
+      massDel();
     },
   },
 ]);
 
-const getSellingGoods = async ({ page, itemsPerPage, sortBy, search }) => {
+const getSellingGoods = async ({ page, itemsPerPage, sortBy, search } = {}) => {
   count.value = 0;
   countFilter();
   const filterData = filterForm.value;
@@ -144,7 +143,7 @@ const massDel = async () => {
     const { status } = await saleApi.delete({ ids: markedID.value });
     if (status === 200) {
       showToast(removeMessage, "red");
-      await getSellingGoods({});
+      await getSellingGoods();
       markedID.value = [];
     }
   } catch (e) {}

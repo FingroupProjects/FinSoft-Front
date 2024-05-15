@@ -17,13 +17,15 @@ import {
   removeMessage,
   warningMessage,
   ErrorSelectMessage,
-  restoreMessage
+  restoreMessage, approveDocument, selectOneItemMessage
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
 import providerApi from '../../../api/documents/providerReturn.js';
 import showDate from "../../../composables/date/showDate.js";
 import Button from "../../../components/button/button.vue";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
+import getColor from "../../../composables/displayed/getColor.js";
+import procurement from "../../../api/documents/procurement.js";
 const router = useRouter()
 
 const loading = ref(true)
@@ -36,9 +38,7 @@ const markedID = ref([]);
 const markedItem = ref([])
 const search = ref('')
 const debounceSearch = ref('')
-const nameRef = ref(null)
-const descriptionRef = ref(null)
-const procurements = ref([])
+const providerReturns = ref([])
 const paginations = ref([])
 const showConfirmDialog = ref(false);
 const showModal = ref(false);
@@ -49,7 +49,6 @@ const authors = ref([])
 const currencies = ref([])
 const counterparties = ref([])
 const counterpartyAgreements = ref([])
-
 
 const filterForm = ref({
   date: null,
@@ -66,6 +65,7 @@ const filterForm = ref({
 const headers = ref([
   {title: 'Номер', key: 'name'},
   {title: 'Дата', key: 'currency.name'},
+  {title: 'Статус', key: 'status'},
   {title: 'Поставщик', key: 'currency.name'},
   {title: 'Организация', key: 'currency.name'},
   {title: 'Склад', key: 'currency.name'},
@@ -77,7 +77,6 @@ const rules = {
   required: v => !!v,
 }
 
-
 const getProviderData = async ({page, itemsPerPage, sortBy, search}) => {
   count.value = 0;
   countFilter()
@@ -86,8 +85,9 @@ const getProviderData = async ({page, itemsPerPage, sortBy, search}) => {
   loading.value = true
   try {
     const { data } = await providerApi.get({page, itemsPerPage, sortBy}, search, filterData)
+    console.log(data)
+    providerReturns.value = data.result.data
     paginations.value = data.result.pagination
-    procurements.value = data.result.data
     loading.value = false
   } catch (e) {
   }
@@ -100,15 +100,31 @@ const headerButtons = ref([
   },
   {
     name: "createBasedOn",
-    function: () => {},
+    function: async () => {
+      // if (markedID.value.length !== 1) {
+      //   return showToast(selectOneItemMessage, 'red')
+      // }
+      // const item = providerReturns.value.find(item => item.id === markedID.value[0]) || {}
+      // localStorage.setItem('createBasedOn', JSON.stringify(item))
+      // await router.push({ name: "providerReturnCreate", query: { id: markedID.value[0] } })
+    },
   },
   {
-    name: "copy",
+    name: "approve",
+    function: () => {
+      approve();
+    },
+  },
+  {
+    name: "cancel",
+    function: () => {
+      unApprove();
+    },
   },
   {
     name: "delete",
     function: () => {
-      massDel({});
+      compute();
     },
   },
 ]);
@@ -126,7 +142,7 @@ function countFilter() {
 
 const massDel = async () => {
   try {
-    const {status} = await providerApi.massDeletion({ids: markedID.value})
+    const {status} = await providerApi.delete({ids: markedID.value})
 
     if (status === 200) {
 
@@ -137,7 +153,7 @@ const massDel = async () => {
     }
 
   } catch (e) {
-
+    console.log(e)
   }
 }
 const massRestore = async () => {
@@ -156,20 +172,43 @@ const massRestore = async () => {
   }
 }
 
-const compute = ({ page, itemsPerPage, sortBy, search }) => {
+const compute = () => {
   if(markedID.value.length === 0) return showToast(warningMessage, 'warning')
 
   if(markedItem.value.deleted_at) {
-    return massRestore({ page, itemsPerPage, sortBy })
+    return massRestore()
   }
   else{
-    return massDel({ page, itemsPerPage, sortBy, search })
+    return massDel()
   }
 }
 
+const approve = async () => {
+  try {
+    const res = await providerApi.approve({ ids: markedID.value });
+    showToast(approveDocument);
+    await getProviderData({});
+    markedID.value = [];
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+const unApprove = async () => {
+  try {
+    await providerApi.unApprove({ ids: markedID.value });
+    showToast(approveDocument);
+    await getProviderData({});
+    markedID.value = [];
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
-    const firstMarkedItem = procurements.value.find(el => el.id === markedID.value[0]);
+    const firstMarkedItem = providerReturns.value.find(el => el.id === markedID.value[0]);
     if (firstMarkedItem && firstMarkedItem.deleted_at) {
       if(item.deleted_at === null) {
         showToast(ErrorSelectMessage, 'warning')
@@ -202,18 +241,10 @@ const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
 const cleanFilterForm = () => {
   filterForm.value = {}
 }
-watch(dialog, newVal => {
-  if (!newVal) {
-    nameRef.value = null
-    descriptionRef.value = null
-    loadingRate.value = true
-  } else {
-    markedID.value = [markedID.value[markedID.value.length - 1]];
-  }
-})
+
 
 watch(markedID, (newVal) => {
-  markedItem.value = procurements.value.find((el) => el.id === newVal[0]);
+  markedItem.value = providerReturns.value.find((el) => el.id === newVal[0]);
 })
 
 watch(search, debounce((newValue) => {
@@ -264,7 +295,6 @@ onMounted(() => {
   getStorages()
   getCurrencies()
   getAuthors()
- 
 })
 
 </script>
@@ -313,7 +343,7 @@ onMounted(() => {
             @click="filterModal = true"
             class="mt-1"
           />
-          <span v-if="counterFilter !== 0" class="countFilter">{{
+          <span v-if="count !== 0" class="countFilter">{{
             count
           }}</span>
         </div>
@@ -329,7 +359,7 @@ onMounted(() => {
             :loading="loading"
             :headers="headers"
             :items-length="paginations.total || 0"
-            :items="procurements"
+            :items="providerReturns"
             :item-value="headers.title"
             :search="debounceSearch"
             v-model="markedID"
@@ -359,10 +389,24 @@ onMounted(() => {
                       @change="lineMarking(item)"
                   >
                   </CustomCheckbox>
-                 
               </td>
               <td>{{ item.doc_number }}</td>
               <td>{{ getDateTimeInShow(item.date) }}</td>
+              <td>
+                <v-chip
+                    style="height: 50px !important"
+                    class="w-100 d-flex justify-center"
+                    :color="getColor(item.active, item.deleted_at)"
+                >
+                <span class="padding: 5px;">{{
+                    item.active
+                        ? "Проведен"
+                        : item.deleted_at !== null
+                            ? "Удален"
+                            : "Не проведен"
+                  }}</span>
+                </v-chip>
+              </td>
               <td>{{ item.counterparty.name }}</td>
               <td>{{ item.organization.name }}</td>
               <td>{{ item.storage.name }}</td>

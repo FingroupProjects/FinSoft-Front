@@ -1,7 +1,6 @@
 <script setup>
 import {computed, defineEmits, onMounted, onUnmounted, reactive, ref, watch} from "vue";
 import Icons from "../../../composables/Icons/Icons.vue";
-import Button from "../../../components/button/button.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
@@ -14,18 +13,23 @@ import storageApi from "../../../api/list/storage.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import providerApi from "../../../api/documents/providerReturn.js";
 import goodApi from "../../../api/list/goods.js";
-import {addMessage} from "../../../composables/constant/buttons.js";
+import {addMessage, selectOneItemMessage} from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
-import {BASE_COLOR} from "../../../composables/constant/colors.js";
 import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
 import currentDateWithTime from "../../../composables/date/currentDateWithTime.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
 import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
+import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
+import formatNumber from "../../../composables/format/formatNumber.js";
+import ButtonGoods from "../../../components/button/buttonGoods.vue";
+import {FIELD_GOODS, TITLE_COLOR} from "../../../composables/constant/colors.js";
+import Button from "../../../components/button/button.vue";
 
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter()
 const emits = defineEmits(['changed'])
 const confirmDocument = useConfirmDocumentStore()
+const hoveredRowId = ref(null);
 
 const form = reactive({
   date: null,
@@ -93,7 +97,14 @@ const getGoods = async () => {
 }
 
 const decreaseCountOfGoods = () => {
-  goods.value = goods.value.filter((item) => !markedID.value.includes(item.id))
+  if (markedID.value.length === 0) {
+    return showToast(selectOneItemMessage, "warning");
+  }
+  if (markedID.value.length === goods.value.length) {
+    goods.value = [];
+    return goods.value.push([{ id: 1, good_id: null, amount: "1", price: null}])
+  }
+  goods.value = goods.value.filter((item) => !markedID.value.includes(item.id));
 }
 
 const lineMarking = (item) => {
@@ -146,8 +157,6 @@ const addNewProvider = async () => {
     counterparty_id: typeof form.counterparty === 'object' ? form.counterparty.id : form.counterparty,
     counterparty_agreement_id: typeof form.cpAgreement === 'object' ? form.cpAgreement.id : form.cpAgreement,
     storage_id: form.storage,
-    saleInteger: Number(form.saleInteger),
-    salePercent: Number(form.salePercent),
     currency_id: typeof form.currency === 'object' ? form.currency.id : form.currency,
     comment : form.comment, 
     goods: goods.value.map((item) => ({
@@ -156,29 +165,27 @@ const addNewProvider = async () => {
       price: Number(item.price),
     })),
   }
-
   console.log(body)
 
-
- try {
-   const res = await providerApi.add(body)
-   if (res.status === 201) {
-     showToast(addMessage)
-     router.push('/providerReturn')
+   try {
+     const res = await providerApi.add(body)
+     if (res.status === 201) {
+       showToast(addMessage)
+       router.push('/providerReturn')
+     }
+   } catch (e) {
+     console.log(e)
    }
- } catch (e) {
-   console.log(e)
- }
 }
 
 
 const isChanged = () => {
-  const {saleInteger, salePercent, counterparty, cpAgreement, currency, date} = form;
+  const {counterparty, cpAgreement, currency, date} = form;
 
   const goodsValues = goods.value.flatMap(good => [good.good_id, good.amount, good.price]);
 
   const cleanedGoodsValues = goodsValues.filter(val => val !== undefined);
-  const valuesToCheck = [saleInteger, salePercent, counterparty, cpAgreement, currency, date, ...cleanedGoodsValues];
+  const valuesToCheck = [ counterparty, cpAgreement, currency, date, ...cleanedGoodsValues];
 
   return valuesToCheck.every(val => val === null || val === '' || val === currentDateWithTime() || val === "1");
 }
@@ -189,26 +196,12 @@ const totalPrice = computed(() => {
   goods.value.forEach(item => {
     sum += item.price * item.amount
   })
-  return sum
+  return formatNumber(sum)
 })
 
-const totalPriceWithSale = computed(() => {
-  let sum = 0
-  if (form.salePercent !== null) {
-    console.log(1)
-      sum = totalPrice.value - (totalPrice.value * form.salePercent / 100)
-  } else {
-    goods.value.forEach(item => {
-      sum += (item.price * item.amount)
-    })
-    sum -= form.saleInteger
-  }
-
-  return sum
-})
-
-const isSaleIntegerDisabled = computed(() => !!form.salePercent);
-const isSalePercentDisabled = computed(() => !!form.saleInteger);
+const totalCount = computed(() =>
+    goods.value.reduce((acc, item) => acc + Number(item.amount || 0), 0)
+);
 
 watch(
     () => form.counterparty,
@@ -230,26 +223,10 @@ watch(
     }
 );
 
-watch(() => form.saleInteger, (newValue) => {
-  if (form.saleInteger > totalPrice.value) {
-    form.saleInteger = totalPrice.value
-  }
-
-  if (!newValue) {
-    form.saleInteger = ''
-  }
-
-})
-
-watch(() => form.salePercent, (newValue) => {
-  if (!newValue) {
-    form.salePercent = ''
-  }
-})
 
 watch(confirmDocument, () => {
   if (confirmDocument.isUpdateOrCreateDocument) {
-    addNewProviderOrder()
+    addNewProvider()
   }
 })
 
@@ -279,15 +256,18 @@ onMounted(() => {
 <template>
   <div class="document">
     <v-col>
-      <div class="d-flex justify-space-between text-uppercase ">
+      <div class="d-flex justify-space-between text-uppercase">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Возврат поставщику (создание)</span>
+          <span :style="`color: ${TITLE_COLOR}`">Возврат поставщику (создание)</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="addNewProvider" name="save" />
-              <Icons title="Закрыть" @click="router.push('/providerReturn')" name="close" />
+              <Button @click="addNewProvider" name="save" />
+              <Button
+                  @click="router.push('/providerReturn')"
+                  name="close"
+              />
             </div>
           </div>
         </v-card>
@@ -304,77 +284,121 @@ onMounted(() => {
           <custom-autocomplete label="Поставщик" :items="counterparties" v-model="form.counterparty"/>
           <custom-autocomplete label="Договор" :disabled="!form.counterparty" :items="cpAgreements" v-model="form.cpAgreement"/>
           <custom-autocomplete label="Склад" :items="storages" v-model="form.storage"/>
-          <custom-text-field label="Руч. скидка (сумма)" v-model="form.saleInteger" :disabled="isSaleIntegerDisabled"/>
-          <custom-text-field label="Руч. скидка (процент)" v-mask="'###'" v-model="form.salePercent" :disabled="isSalePercentDisabled"/>
         </div>
       </v-col>
       <v-col>
-        <div :style="`border: 1px solid ${BASE_COLOR}`" class="rounded">
-          <div class="d-flex pa-1 ga-1">
-            <Icons name="add" title="Добавить поле" @click="increaseCountOfGoods"/>
-            <Icons name="delete" @click="decreaseCountOfGoods"/>
-          </div>
-          <div class="d-flex flex-column w-100 goods">
-            <v-data-table
-                style="height: 50vh"
-                items-per-page-text="Элементов на странице:"
-                loading-text="Загрузка"
-                no-data-text="Нет данных"
-                :headers="headers"
-                :items="goods"
-                v-model="markedID"
-                item-value="id"
-                page-text='{0}-{1} от {2}'
-                :items-per-page-options="[
-                  {value: 25, title: '25'},
-                  {value: 50, title: '50'},
-                  {value: 100, title: '100'},
-                ]"
-                show-select
-                fixed-header
-            >
-              <template v-slot:item="{ item, index }">
-                <tr :key="index">
-                  <td>
-                    <CustomCheckbox
+        <div class="d-flex flex-column w-100">
+          <v-data-table
+              style="height: 50vh"
+              items-per-page-text="Элементов на странице:"
+              loading-text="Загрузка"
+              no-data-text="Нет данных"
+              :headers="headers"
+              :items="goods"
+              v-model="markedID"
+              item-value="id"
+              page-text="{0}-{1} от {2}"
+              :items-per-page-options="[
+                { value: 25, title: '25' },
+                { value: 50, title: '50' },
+                { value: 100, title: '100' },
+              ]"
+              show-select
+              fixed-header
+          >
+            <template v-slot:item="{ item, index }">
+              <tr :key="index" @mouseenter="hoveredRowId = item.id" @mouseleave="hoveredRowId = null">
+                <td>
+                  <CustomCheckbox
                       v-model="markedID"
                       @change="lineMarking(item)"
                       :checked="markedID.includes(item.id)"
-                    >
-                      <span>{{ index + 1}}</span>
-                    </CustomCheckbox>
-                  </td>
-                  <td>
-                    <custom-autocomplete v-model="item.good_id" :items="listGoods" min-width="150" />
-                  </td>
-                  <td>
-                    <custom-text-field v-model="item.amount" v-mask="'########'" min-width="50" max-width="90" />
-                  </td>
-                  <td>
-                    <custom-text-field v-model="item.price" v-mask="'##########'" min-width="80" max-width="110"/>
-                  </td>
-                  <td>
-                    <custom-text-field readonly :value="item.amount * item.price"  min-width="100" max-width="110"/>
-                  </td>
-                </tr>
-                <tr v-if="index === goods.length - 1">
-                 <td>
-                   <Button name="add" @click="increaseCountOfGoods"/>
-                 </td>
-                </tr>
-              </template>
-            </v-data-table>
-          </div>
+                  >
+                    <span class="fz-12">{{ index + 1 }}</span>
+                  </CustomCheckbox>
+                </td>
+                <td style="width: 40%">
+                  <custom-autocomplete
+                      v-model="item.good_id"
+                      :items="listGoods"
+                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                      min-width="150"
+                      max-width="100%"
+                      :isAmount="true"
+                  />
+                </td>
+                <td>
+                  <custom-text-field
+                      v-model="item.amount"
+                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                      v-mask="'########'"
+                      min-width="50"
+                  />
+                </td>
+                <td>
+                  <custom-text-field
+                      v-model="item.price"
+                      :value="validateNumberInput(item.price)"
+                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                      min-width="80"
+                  />
+                </td>
+                <td>
+                  <custom-text-field
+                      readonly
+                      v-model="item.summa"
+                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                      :value="formatNumber(item.amount * item.price)"
+                      min-width="100"
+                  />
+                </td>
+              </tr>
+              <tr v-if="index === goods.length - 1">
+                <td></td>
+                <td style="width: 150%" class="d-flex ga-2" colspan="10">
+                  <ButtonGoods name="add" @click="increaseCountOfGoods"/>
+                  <ButtonGoods v-if="goods.length !== 1" name="delete" @click="decreaseCountOfGoods"/>
+                </td>
+              </tr>
+            </template>
+          </v-data-table>
         </div>
         <div class="d-flex justify-space-between w-100 mt-2 bottomField">
           <div class="d-flex ga-10">
-            <custom-text-field readonly :value="author"  min-width="140" max-width="110"/>
-            <custom-text-field label="Комментарий" v-model="form.comment" min-width="310"/>
+            <custom-text-field
+                readonly
+                v-model="author"
+                label="Автор"
+                min-width="140"
+                max-width="110"
+            />
+            <custom-text-field
+                label="Комментарий"
+                v-model="form.comment"
+                min-width="310"
+            />
           </div>
           <div class="d-flex ga-6">
-            <custom-text-field readonly :value="'Сумма со скидкой: ' + totalPriceWithSale" min-width="180" />
-            <custom-text-field readonly  :value="'Сумма без скидки: ' + totalPrice" min-width="180" max-width="110"/>
-            <custom-autocomplete readonly v-model="form.currency" label="Валюта" :items="currencies" min-width="110" max-width="110" />
+            <custom-text-field
+                readonly
+                label="Количество"
+                v-model="totalCount"
+                min-width="130"
+            />
+            <custom-text-field
+                readonly
+                :value="'Общая сумма: ' + totalPrice"
+                min-width="180"
+                max-width="110"
+            />
+            <custom-autocomplete
+                readonly
+                v-model="form.currency"
+                label="Валюта"
+                :items="currencies"
+                min-width="110"
+                max-width="110"
+            />
           </div>
         </div>
       </v-col>

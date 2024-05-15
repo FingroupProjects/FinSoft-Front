@@ -1,26 +1,20 @@
 <script setup>
-import { onMounted, ref, watch } from "vue";
-import { useRouter } from "vue-router";
+import {onMounted, ref, watch} from "vue";
+import {useRouter} from "vue-router";
 import showToast from "../../../composables/toast/index.js";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import {
-  BASE_COLOR,
-  FIELD_OF_SEARCH,
-  TITLE_COLOR,
-} from "../../../composables/constant/colors.js";
+import {BASE_COLOR, FIELD_OF_SEARCH, TITLE_COLOR,} from "../../../composables/constant/colors.js";
 import {
   approveDocument,
   ErrorSelectMessage,
   removeMessage,
-  restoreMessage,
-  warningMessage,
+  selectOneItemMessage,
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
 import procurementApi from "../../../api/documents/procurement.js";
-import showDate from "../../../composables/date/showDate.js";
 import organizationApi from "../../../api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import storageApi from "../../../api/list/storage.js";
@@ -29,7 +23,6 @@ import currencyApi from "../../../api/list/currency.js";
 import user from "../../../api/list/user.js";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import Button from "../../../components/button/button.vue";
-import saleApi from "../../../api/documents/sale.js";
 
 const router = useRouter();
 
@@ -107,10 +100,14 @@ const headerButtons = ref([
   },
   {
     name: "createBasedOn",
-    function: () => {},
-  },
-  {
-    name: "copy",
+    function: async () => {
+      // if (markedID.value.length !== 1) {
+      //   return showToast(selectOneItemMessage, 'red')
+      // }
+      // const item = procurements.value.find(item => item.id === markedID.value[0]) || {}
+      // localStorage.setItem('createBasedOn', JSON.stringify(item))
+      // await router.push({ name: "procurementOfGoodsCreate", query: { id: markedID.value[0] } })
+    },
   },
   {
     name: "approve",
@@ -351,7 +348,7 @@ const getColor = (active, deleted_at) => {
             class="mt-1"
           />
           <span v-if="counterFilter !== 0" class="countFilter">{{
-            count
+              counterFilter
           }}</span>
         </div>
       </v-card>

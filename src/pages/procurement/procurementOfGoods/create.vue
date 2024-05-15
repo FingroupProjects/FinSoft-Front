@@ -3,7 +3,7 @@ import {computed, defineEmits, onMounted, onUnmounted, reactive, ref, watch,} fr
 import {addMessage, selectOneItemMessage} from "../../../composables/constant/buttons.js";
 import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
 import {TITLE_COLOR} from "../../../composables/constant/colors.js";
-import {useRouter} from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 import formatNumber from "../../../composables/format/formatNumber.js";
 import showToast from "../../../composables/toast/index.js";
 import validate from "./validate.js";
@@ -23,11 +23,13 @@ import ButtonGoods from "../../../components/button/buttonGoods.vue";
 import "../../../assets/css/procurement.css";
 import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
 import {useHasOneOrganization} from "../../../store/hasOneOrganization.js";
+import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter();
 const emits = defineEmits(["changed"]);
 const confirmDocument = useConfirmDocumentStore();
+const route = useRoute()
 
 const form = reactive({
   date: null,
@@ -272,19 +274,23 @@ const totalCount = computed(() =>
 watch(
   () => form.counterparty,
   async (id) => {
-    form.cpAgreement = null;
-    await getCpAgreements(id);
+    if (!localStorage.getItem('createBasedOn')) {
+      form.cpAgreement = null;
+      await getCpAgreements(id);
+    }
   }
 );
 
 watch(
   () => form.cpAgreement,
   (newValue) => {
-    if (newValue !== null) {
-      const cpAgreement = cpAgreements.value.find((el) =>
-        (el.id === typeof newValue) === "object" ? newValue.id : newValue
-      );
-      form.currency = cpAgreement.currency_id;
+    if (!localStorage.getItem('createBasedOn')) {
+      if (newValue !== null) {
+        const cpAgreement = cpAgreements.value.find((el) =>
+            (el.id === typeof newValue) === "object" ? newValue.id : newValue
+        );
+        form.currency = cpAgreement.currency_id;
+      }
     }
   }
 );
@@ -317,13 +323,47 @@ watch([form, goods.value], () => {
 
 onUnmounted(() => {
   emits("changed", false);
+  localStorage.removeItem('createBasedOn');
 });
+
+const getDataBased = async () => {
+  if (route.query.id) {
+    const {data} = await procurementApi.getById(route.query.id)
+    console.log(data)
+    form.date = getDateTimeInShow(data.result.date, "-", true);
+    form.organization = {
+      id: data.result.organization.id,
+      name: data.result.organization.name,
+    };
+    form.counterparty = {
+      id: data.result.counterparty.id,
+      name: data.result.counterparty.name,
+    };
+    form.cpAgreement = {
+      id: data.result.counterpartyAgreement.id,
+      name: data.result.counterpartyAgreement.name,
+    };
+    form.storage = {
+      id: data.result.storage.id,
+      name: data.result.storage.name,
+    };
+    form.comment = data.result.comment;
+    form.currency = data.result.currency;
+    goods.value = data.result.goods.map((item) => ({
+      id: item.id,
+      good_id: item.good.id,
+      amount: item.amount,
+      price: item.price,
+    }));
+  }
+}
 
 onMounted( () => {
   form.date = currentDateWithTime();
   form.organization =  JSON.parse(localStorage.getItem("user")).organization || null;
   author.value =  JSON.parse(localStorage.getItem("user")).name || null;
 
+  getDataBased()
   getOrganizations();
   getCounterparties();
   getStorages();
