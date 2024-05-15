@@ -28,7 +28,7 @@ const listProfile = async (item) => {
     if (res.status === 200) {
       deleteUser();
       deleteToken();
-      router.push("/login");
+      router.push("/mainpage");
     }
   }
 };
