@@ -1,22 +1,17 @@
 <script setup>
-import { onMounted, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import {onMounted, ref, watch} from "vue";
+import {useRoute, useRouter} from "vue-router";
 import showToast from "../../../composables/toast/index.js";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
+import {BASE_COLOR, FIELD_OF_SEARCH, TITLE_COLOR,} from "../../../composables/constant/colors.js";
 import {
-  BASE_COLOR,
-  FIELD_OF_SEARCH,
-  TITLE_COLOR,
-} from "../../../composables/constant/colors.js";
-import {
-  removeMessage,
-  warningMessage,
+  approveDocument, copyMessage,
   ErrorSelectMessage,
-  restoreMessage,
-  approveDocument,
+  removeMessage,
+  selectOneItemMessage,
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
 import saleApi from "../../../api/documents/sale.js";
@@ -26,9 +21,10 @@ import storageApi from "../../../api/list/storage.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import currencyApi from "../../../api/list/currency.js";
 import user from "../../../api/list/user.js";
-import deleteRestoreApi from "../../../api/documents/deleteRestore.js";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import Button from "../../../components/button/button.vue";
+import getColor from "../../../composables/displayed/getColor.js";
+import copyDocument from "../../../api/documents/copyDocument.js";
 
 const route = useRoute();
 const router = useRouter();
@@ -83,10 +79,32 @@ const headerButtons = ref([
   },
   {
     name: "createBasedOn",
-    function: () => {},
+    function: async () => {
+      if (markedID.value.length !== 1) {
+        return showToast(selectOneItemMessage, 'red')
+      }
+      const item = sales.value.find(item => item.id === markedID.value[0]) || {}
+      localStorage.setItem('createBasedOn', JSON.stringify(item))
+      await router.push({ name: "sellingGoodsCreate", query: { id: markedID.value[0] } })
+    },
   },
   {
     name: "copy",
+    function: async () => {
+      if (markedID.value.length !== 1) {
+        return showToast(selectOneItemMessage, 'red')
+      }
+
+      try {
+        const res = await copyDocument.copy(markedID.value[0])
+        if (res.status === 200) {
+          showToast(copyMessage)
+          await getSellingGoods()
+        }
+      } catch (e) {
+        console.error(e)
+      }
+    }
   },
   {
     name: "approve",
@@ -124,9 +142,9 @@ const getSellingGoods = async ({ page, itemsPerPage, sortBy, search } = {}) => {
     sales.value = data.result.data;
     loading.value = false;
   } catch (e) {
-    console.error(e);
+    console.error(e)
   }
-};
+}
 
 function countFilter() {
   for (const key in filterForm.value) {
@@ -261,6 +279,22 @@ const getCurrencies = async () => {
   currencies.value = data.result.data;
 };
 
+const show = (item) => {
+  window.open(`/SellingGoodsEdit/${item.id}`, "_blank");
+};
+
+watch(markedID, (newVal) => {
+  markedItem.value = sales.value.find((el) => el.id === newVal[0])
+})
+
+watch(
+    search,
+    debounce((newValue) => {
+      debounceSearch.value = newValue;
+    }, 500)
+);
+
+
 onMounted(() => {
   getOrganizations();
   getCounterparties();
@@ -269,31 +303,6 @@ onMounted(() => {
   getCurrencies();
   getAuthors();
 });
-
-watch(markedID, (newVal) => {
-  markedItem.value = sales.value.find((el) => el.id === newVal[0]);
-});
-
-watch(
-  search,
-  debounce((newValue) => {
-    debounceSearch.value = newValue;
-  }, 500)
-);
-
-const show = (item) => {
-  window.open(`/SellingGoodsEdit/${item.id}`, "_blank");
-};
-
-const getColor = (active, deleted_at) => {
-  if (active) {
-    return "green";
-  } else if (deleted_at) {
-    return "red";
-  } else {
-    return "orange";
-  }
-};
 </script>
 
 <template>
@@ -346,7 +355,7 @@ const getColor = (active, deleted_at) => {
     </div>
     <v-card class="table">
       <v-data-table-server
-        style="height: 78vh"
+        style="height: calc(100vh - 150px)"
         items-per-page-text="Элементов на странице:"
         loading-text="Загрузка"
         no-data-text="Нет данных"

@@ -8,7 +8,7 @@ import CustomAutocomplete from "../../../components/formElements/CustomAutocompl
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import {BASE_COLOR, FIELD_OF_SEARCH, TITLE_COLOR,} from "../../../composables/constant/colors.js";
 import {
-  approveDocument,
+  approveDocument, copyMessage,
   ErrorSelectMessage,
   removeMessage,
   selectOneItemMessage,
@@ -23,6 +23,8 @@ import currencyApi from "../../../api/list/currency.js";
 import user from "../../../api/list/user.js";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import Button from "../../../components/button/button.vue";
+import getColor from "../../../composables/displayed/getColor.js";
+import copyDocument from "../../../api/documents/copyDocument.js";
 
 const router = useRouter();
 
@@ -101,13 +103,29 @@ const headerButtons = ref([
   {
     name: "createBasedOn",
     function: async () => {
-      // if (markedID.value.length !== 1) {
-      //   return showToast(selectOneItemMessage, 'red')
-      // }
-      // const item = procurements.value.find(item => item.id === markedID.value[0]) || {}
-      // localStorage.setItem('createBasedOn', JSON.stringify(item))
-      // await router.push({ name: "procurementOfGoodsCreate", query: { id: markedID.value[0] } })
+      if (markedID.value.length !== 1) {
+        return showToast(selectOneItemMessage, 'red')
+      }
+      await router.push({ name: "procurementOfGoodsCreate", query: { id: markedID.value[0] } })
     },
+  },
+  {
+    name: "copy",
+    function: async () => {
+      if (markedID.value.length !== 1) {
+        return showToast(selectOneItemMessage, 'red')
+      }
+
+      try {
+        const res = await copyDocument.copy(markedID.value[0])
+        if (res.status === 200) {
+          showToast(copyMessage)
+          await getProcurementData()
+        }
+      } catch (e) {
+        console.error(e)
+      }
+    }
   },
   {
     name: "approve",
@@ -124,7 +142,7 @@ const headerButtons = ref([
   {
     name: "delete",
     function: () => {
-      massDel({});
+      compute();
     },
   },
 ]);
@@ -266,6 +284,17 @@ const show = (item) => {
   window.open(`/procurementOfGoods/${item.id}`, "_blank");
 };
 
+watch(markedID, (newVal) => {
+  markedItem.value = procurements.value.find((el) => el.id === newVal[0]);
+});
+
+watch(
+    search,
+    debounce((newValue) => {
+      debounceSearch.value = newValue;
+    }, 500)
+);
+
 onMounted(() => {
   getOrganizations();
   getCounterparties();
@@ -274,33 +303,6 @@ onMounted(() => {
   getCurrencies();
   getAuthors();
 });
-
-watch(dialog, (newVal) => {
-  if (newVal) {
-    markedID.value = [markedID.value[markedID.value.length - 1]];
-  }
-});
-
-watch(markedID, (newVal) => {
-  markedItem.value = procurements.value.find((el) => el.id === newVal[0]);
-});
-
-watch(
-  search,
-  debounce((newValue) => {
-    debounceSearch.value = newValue;
-  }, 500)
-);
-
-const getColor = (active, deleted_at) => {
-  if (active && !deleted_at) {
-    return "green";
-  } else if (active && deleted_at) {
-    return "red";
-  } else {
-    return "orange";
-  }
-};
 </script>
 
 <template>
@@ -355,7 +357,7 @@ const getColor = (active, deleted_at) => {
     </div>
     <v-card class="table">
       <v-data-table-server
-        style="height: 78vh"
+        style="height: calc(100vh - 150px)"
         items-per-page-text="Элементов на странице:"
         loading-text="Загрузка"
         no-data-text="Нет данных"

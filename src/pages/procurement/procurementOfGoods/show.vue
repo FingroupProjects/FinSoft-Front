@@ -71,7 +71,7 @@ const getProcurementDetails = async () => {
   try {
     const { data } = await procurementApi.getById(route.params.id);
     form.doc_number = data.result.doc_number;
-    // form.date = getDateTimeInShow(data.result.date, "-", true);
+    form.date = getDateTimeInShow(data.result.date, "-", true);
     form.organization = {
       id: data.result.organization.id,
       name: data.result.organization.name,
