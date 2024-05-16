@@ -8,7 +8,7 @@ const route = useRoute();
 
 const id = ref(null);
 
-const selectedBlock = ref(null);
+const selectedBlock = ref("История");
 
 const loading = ref(true);
 
@@ -132,7 +132,6 @@ watch(selectedBlock, (newVal, oldVal) => {
 
 onMounted(async () => {
   id.value = route.params.id;
-  selectedBlock.value = "История";
 });
 </script>
 
