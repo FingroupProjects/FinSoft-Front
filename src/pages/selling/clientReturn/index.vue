@@ -50,6 +50,8 @@ const counterpartyAgreements = ref([])
 
 
 const filterForm = ref({
+  startDate: null,
+  endDate: null,
   name: null,
   description: null,
   currency_id: null
@@ -355,9 +357,10 @@ onMounted(() => {
             <v-form class="d-flex w-100" @submit.prevent="">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100 ga-4">
-                  <div class="d-flex ga-2 w-100 ">
-                    <custom-text-field label="Дата" type="date" min-width="508"  v-model="filterForm.date"/>
-                  </div>
+                  <div class="d-flex flex-column ga-2 w-100 ">
+                    <custom-text-field label="Дата от" type="date" min-width="508"  v-model="filterForm.startDate"/>
+                    <custom-text-field label="Дата до" type="date" min-width="508"  v-model="filterForm.endDate"/>
+                  </div>ч
                   <div class="d-flex ga-2">
                     <custom-autocomplete label="Организация" :items="organizations"  v-model="filterForm.organization_id"/>
                     <custom-autocomplete label="Клиент" :items="counterparties" v-model="filterForm.counterparty_id"/>

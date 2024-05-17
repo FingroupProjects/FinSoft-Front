@@ -7,6 +7,7 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../../composables/toast/index.js";
 import currentDate from "../../../composables/date/currentDate.js";
 import validate from "./validate.js";
+import Button from "../../../components/button/button.vue";
 import {useRouter} from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
@@ -14,18 +15,22 @@ import storageApi from "../../../api/list/storage.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import clientReturnApi from "../../../api/documents/clientReturn.js";
 import goodApi from "../../../api/list/goods.js";
-import {addMessage} from "../../../composables/constant/buttons.js";
+import {addMessage,selectOneItemMessage} from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
-import {BASE_COLOR} from "../../../composables/constant/colors.js";
+import {BASE_COLOR, FIELD_GOODS} from "../../../composables/constant/colors.js";
 import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
 import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
 import currentDateWithTime from "../../../composables/date/currentDateWithTime.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
+import formatNumber from "../../../composables/format/formatNumber.js";
+import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
+import ButtonGoods from "../../../components/button/buttonGoods.vue";
 
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter()
 const emits = defineEmits(['changed'])
 const confirmDocument = useConfirmDocumentStore()
+const hoveredRowId = ref(null);
 
 const form = reactive({
   date: null,
@@ -97,6 +102,13 @@ const getGoods = async () => {
 }
 
 const decreaseCountOfGoods = () => {
+  if (markedID.value.length === 0) {
+    return showToast(selectOneItemMessage, "warning");
+  }
+  if (markedID.value.length === goods.value.length) {
+    goods.value = [];
+    return goods.value.push([{ id: 1, good_id: null, amount: "1", price: null}])
+  }
   goods.value = goods.value.filter((item) => !markedID.value.includes(item.id))
 }
 
@@ -283,9 +295,11 @@ onMounted(() => {
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="addNewClientReturn" name="add"/>
-              <Icons title="Скопировать" @click="" name="copy"/>
-              <Icons title="Удалить" @click="" name="delete"/>
+              <Button @click="addNewClientReturn" name="save" />
+              <Button
+                  @click="router.push('/clientReturnСreate')"
+                  name="close"
+              />
             </div>
           </div>
 
@@ -308,12 +322,8 @@ onMounted(() => {
         </div>
       </v-col>
       <v-col>
-        <div :style="`border: 1px solid ${BASE_COLOR}`" class="rounded">
-          <div class="d-flex pa-1 ga-1">
-            <Icons name="add" title="Добавить поле" @click="increaseCountOfGoods"/>
-            <Icons name="delete" @click="decreaseCountOfGoods"/>
-          </div>
-          <div class="d-flex flex-column w-100 goods">
+        <div class="rounded">
+          <div class="d-flex flex-column w-100">
             <v-data-table
                 style="height: 78vh"
                 items-per-page-text="Элементов на странице:"
@@ -333,7 +343,7 @@ onMounted(() => {
                 fixed-header
             >
               <template v-slot:item="{ item, index }">
-                <tr :key="index">
+                <tr :key="index" @mouseenter="hoveredRowId = item.id" @mouseleave="hoveredRowId = null">
                   <td>
                     <CustomCheckbox
                       v-model="markedID"
@@ -343,23 +353,63 @@ onMounted(() => {
                       <span>{{ index + 1}}</span>
                     </CustomCheckbox>
                   </td>
-                  <td style="width: 30%">
-                    <custom-autocomplete v-model="item.good_id" :items="listGoods" min-width="150" max-width="100%"/>
+                  <td style="width: 40%">
+                    <custom-autocomplete 
+                    v-model="item.good_id" 
+                    :items="listGoods" 
+                    :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                    min-width="150" 
+                    max-width="100%"
+                    :isAmount="true"
+                    />
                   </td>
                   <td>
-                    <custom-text-field v-model="item.amount" v-mask="'########'" min-width="50" max-width="130" />
+                    <custom-text-field 
+                    v-model="item.amount" 
+                    v-mask="'########'" 
+                    min-width="50" 
+                    :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                    max-width="130" />
                   </td>
                   <td>
-                    <custom-text-field v-model="item.auto_sale_percent" v-mask="'##########'" min-width="80" max-width="150"/>
+                    <custom-text-field 
+                    v-model="item.auto_sale_percent" 
+                    :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                    v-mask="'##########'" 
+                    min-width="80" 
+                    max-width="150"/>
                   </td>
                   <td>
-                    <custom-text-field v-model="item.auto_sale_sum" v-mask="'##########'" min-width="80" max-width="140"/>
+                    <custom-text-field 
+                    v-model="item.auto_sale_sum" 
+                    :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                    v-mask="'##########'" 
+                    min-width="80" 
+                    max-width="140"/>
                   </td>
                   <td>
-                    <custom-text-field v-model="item.price" v-mask="'##########'" min-width="80" max-width="150"/>
+                    <custom-text-field 
+                    v-model="item.price" 
+                    :value="validateNumberInput(item.price)"
+                    :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                    v-mask="'##########'" 
+                    min-width="80" 
+                    max-width="150"/>
                   </td>
                   <td>
-                    <custom-text-field readonly :value="item.amount * item.price"  min-width="100" max-width="150"/>
+                    <custom-text-field 
+                    readonly 
+                    :value="formatNumber(item.amount * item.price)"  
+                    min-width="100" 
+                    :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                    max-width="150"/>
+                  </td>
+                </tr>
+                <tr v-if="index === goods.length - 1">
+                  <td></td>
+                  <td style="width: 150%" class="d-flex ga-2" colspan="10">
+                    <ButtonGoods name="add" @click="increaseCountOfGoods"/>
+                    <ButtonGoods v-if="goods.length !== 1" name="delete" @click="decreaseCountOfGoods"/>
                   </td>
                 </tr>
               </template>
@@ -368,13 +418,38 @@ onMounted(() => {
         </div>
         <div class="d-flex justify-space-between w-100 mt-2 bottomField">
           <div class="d-flex ga-10">
-            <custom-text-field readonly :value="author"  min-width="140" max-width="110"/>
-            <custom-text-field label="Комментарий" v-model="form.comment" min-width="310"/>
+            <custom-text-field 
+            readonly 
+            v-model="author"
+            min-width="110" 
+            label="Автор"
+            />
+            <custom-text-field 
+            label="Комментарий" 
+            v-model="form.comment" 
+            min-width="310"
+            />
           </div>
           <div class="d-flex ga-6">
-            <custom-text-field readonly :value="'Сумма со скидкой: ' + totalPriceWithSale" min-width="180" />
-            <custom-text-field readonly  :value="'Сумма без скидки: ' + totalPrice" min-width="180" max-width="110"/>
-            <custom-autocomplete readonly v-model="form.currency" label="Валюта" :items="currencies" min-width="110" max-width="110" />
+            <custom-text-field 
+            readonly 
+            :value="'Сумма со скидкой: ' + totalPriceWithSale" 
+            min-width="180" 
+            />
+            <custom-text-field 
+            readonly  
+            :value="'Сумма без скидки: ' + totalPrice" 
+            min-width="180" 
+            max-width="110"
+            />
+            <custom-autocomplete 
+            readonly 
+            v-model="form.currency" 
+            label="Валюта" 
+            :items="currencies" 
+            min-width="190" 
+            maxWidth="190px" 
+            />
           </div>
         </div>
       </v-col>

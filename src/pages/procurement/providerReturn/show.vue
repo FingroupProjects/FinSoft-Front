@@ -179,8 +179,6 @@ const increaseCountOfGoods = () => {
   const missingData = goods.value.some(validateItem)
   if (missingData) return
 
-  
-
   goods.value.push({id: goods.value.length + 1, good_id: null, amount: 1, price: null })
 }
 

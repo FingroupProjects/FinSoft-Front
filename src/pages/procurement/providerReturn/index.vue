@@ -52,6 +52,8 @@ const counterpartyAgreements = ref([])
 
 const filterForm = ref({
   date: null,
+  startDate: null,
+  endDate: null,
   provider_id: null,
   counterparty_id: null,
   counterparty_agreement_id: null,
@@ -60,6 +62,9 @@ const filterForm = ref({
   author_id: null,
   currency_id: null
 })
+
+const statusOptions = ['проведён', 'не проведён'];
+const deletionStatuses = ['не удален', 'удален'];
 
 
 const headers = ref([
@@ -427,9 +432,14 @@ onMounted(() => {
             <v-form class="d-flex w-100" @submit.prevent="">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100 ga-4">
-                  <div class="d-flex ga-2 w-100">
-                  <custom-text-field label="Дата" type="date" min-width="508"  v-model="filterForm.date"/>
+                  <div class="d-flex flex-column ga-2 w-100">
+                  <custom-text-field label="Дата от" type="date" min-width="508"  v-model="filterForm.startDate"/>
+                  <custom-text-field label="Дата до" type="date" min-width="508"  v-model="filterForm.endDate"/>
                   </div>
+                  <div class="d-flex ga-2">                
+                    <custom-autocomplete label="Статус" :items="statusOptions" v-model="filterForm.status"/>
+                    <custom-autocomplete label="Удалён" :items="deletionStatuses" v-model="filterForm.deletion_status"/>               
+                 </div>
                   <div class="d-flex ga-2">
                     <custom-autocomplete label="Организация" :items="organizations"  v-model="filterForm.organization_id"/>
                   <custom-autocomplete label="Поставщик" :items="counterparties" v-model="filterForm.counterparty_id"/>               
