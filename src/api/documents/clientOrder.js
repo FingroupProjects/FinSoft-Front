@@ -12,7 +12,7 @@ export default {
     return api.get(`/document/client/order/show/${id}`)
   },
   update(id, data) {
-    return api.patch(`/document/update-order/${id}`, data)
+    return api.patch(`/document/client/update-order/${id}`, data)
   },
   getStatuses() {
     return api.get('document/client/order/statuses')

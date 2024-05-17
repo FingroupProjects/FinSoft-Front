@@ -469,7 +469,7 @@ onMounted(() => {
             </v-data-table>
           </div>
         </div>
-        <div class="d-flex flex-wrap ga-4 justify-space-between w-100 mt-2 bottomField">
+        <div class="d-flex justify-space-between w-100 mt-2 bottomField0">
           <div class="d-flex ga-10">
             <custom-text-field
                 readonly
