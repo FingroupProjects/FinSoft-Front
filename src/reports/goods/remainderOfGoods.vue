@@ -51,41 +51,46 @@ const getRemainderOfGoods = async ({ page, itemsPerPage, sortBy, search }) => {
   }
 };
 
-const totalGoods = computed(() => {
-  return goods.value.length  
-});
+const totalGoods = (itemName) => {
+  const filteredGoods = goods.value.filter((item) => item.group.name === itemName)  
+  return filteredGoods.length
+};
 
-const totalIncomes = computed(() => {
-  const total = goods.value.reduce((acc, curr) => {
+const totalIncomes = (itemName) => {
+  let filteredGoods = goods.value.filter((item) => item.group.name === itemName)  
+  const total = filteredGoods.reduce((acc, curr) => {
     return acc + curr.income;
   }, 0);
   
   return total;
-});
+};
 
-const totalOutcomes = computed(() => {
-  const total = goods.value.reduce((acc, curr) => {
+const totalOutcomes = (itemName) => {
+  let filteredGoods = goods.value.filter((item) => item.group.name === itemName)  
+  const total = filteredGoods.reduce((acc, curr) => {
     return acc + curr.outcome;
   }, 0);
   
   return total;
-});
+};
 
-const totalRemainder = computed(() => {
-  const total = goods.value.reduce((acc, curr) => {
+const totalRemainder = (itemName) => {
+  let filteredGoods = goods.value.filter((item) => item.group.name === itemName)  
+  const total = filteredGoods.reduce((acc, curr) => {
     return acc + curr.remainder;
   }, 0);
   
   return total;
-});
+};
 
-const totalTotals = computed(() => {
-  const total = goods.value.reduce((acc, curr) => {
+const totalTotals = (itemName) => {
+  let filteredGoods = goods.value.filter((item) => item.group.name === itemName)  
+  const total = filteredGoods.reduce((acc, curr) => {
     return acc + curr.total;
   }, 0);
   
   return total;
-});
+};
 
 const countFilter = () => {
   for (const key in filterForm.value) {
@@ -104,10 +109,10 @@ const groupBy = ref([
 
 const headers = ref([
   { title: "Товар", align: "start", key: "good.name",},
-  { title: "Начало", key: "start" },
+  { title: "Остаток на начало", key: "start" },
   { title: "Приход", key: "income" },
   { title: "Расход", key: "outcome" },
-  { title: "Все", key: "total" },
+  { title: "Остаток в конец", key: "total" },
   { title: "Остаток", key: "remainder" },
 ]);
 
@@ -173,22 +178,22 @@ const headers = ref([
               {{ item.value ? item.value : "Gluten free" }}
             </td>
             <td>
-              {{ totalGoods }}
+              {{ totalGoods(item.value) }}
             </td>
             <td>
               
             </td>
             <td>
-              {{ totalIncomes }}
+              {{ totalIncomes(item.value) }}
             </td>
             <td>
-              {{ totalOutcomes }}
+              {{ totalOutcomes(item.value) }}
             </td>
             <td>
-              {{ totalTotals }}
+              <!-- {{ totalTotals(item.value) }} -->
             </td>
             <td>
-              {{ totalRemainder }}
+              {{ totalRemainder(item.value) }}
             </td>
           </tr>
         </template>
