@@ -116,8 +116,8 @@ const storage = ref({
       title: "Отчеты",
       link: "/",
       child: [
-        { id: 1, title: "Движение склада", link: "" },
-        { id: 2, title: "Остаток товаров", link: "/remainderOfGoods" },
+        { id: 1, title: "Движение склада", link: "/remainderOfGoods" },
+        { id: 2, title: "Остаток товаров", link: "" },
       ],
     },
   ],
