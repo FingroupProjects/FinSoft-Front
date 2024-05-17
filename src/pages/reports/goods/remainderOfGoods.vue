@@ -1,14 +1,35 @@
 <script setup>
-import { computed, reactive, ref } from "vue";
-import Icons from "../../composables/Icons/Icons.vue";
-import { BASE_COLOR } from "../../composables/constant/colors.js";
-import CustomTextField from "../../components/formElements/CustomTextField.vue";
-import remainderOfGoodsApi from "../../api/reports/remainderOfGoods";
+import storageApi from "../../../api/list/storage";
+import { computed, onMounted, reactive, ref } from "vue";
+import Icons from "../../../composables/Icons/Icons.vue";
+import organizationApi from "../../../api/list/organizations";
+import { BASE_COLOR } from "../../../composables/constant/colors.js";
+import remainderOfGoodsApi from "../../../api/reports/remainderOfGoods";
+import CustomTextField from "../../../components/formElements/CustomTextField.vue";
+import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
+
+const groupBy = ref([
+  {
+    key: "group.name",
+    order: "asc",
+  },
+]);
+
+const headers = ref([
+  { title: "Товар", align: "start", key: "good.name" },
+  { title: "Остаток на начало", key: "start" },
+  { title: "Приход", key: "income" },
+  { title: "Расход", key: "outcome" },
+  { title: "Остаток на конец", key: "total" },
+  { title: "Остаток", key: "remainder" },
+]);
 
 const filterForm = reactive({
-  from: null,
-  to: null,
+  start_date: null,
+  end_date: null,
   date: null,
+  organization_id: null,
+  storage_id: null,
 });
 
 const counterFilter = ref(0);
@@ -19,15 +40,15 @@ const filterModal = ref(false);
 const loading = ref(false);
 
 const goods = ref([]);
+const storages = ref([]);
 const pagination = ref([]);
+const organizations = ref([]);
 
 const seletectBlock = async (name) => {
   closeFilterModal();
   loading.value = true;
   selectedBlock.value = await name;
-  setTimeout(() => {
-    loading.value = false;
-  }, 500);
+  loading.value = false;
 };
 
 const closeFilterModal = async () => {
@@ -35,60 +56,102 @@ const closeFilterModal = async () => {
 };
 
 const getRemainderOfGoods = async ({ page, itemsPerPage, sortBy, search }) => {
+  loading.value = true
   countFilter();
-  const filterData = filterForm.value;
+  const filterData = filterForm;
   try {
     const res = await remainderOfGoodsApi.get(
       { page, itemsPerPage, sortBy },
       search,
       filterData
     );
-    goods.value = res.data.result.data
-    pagination.value = res.data.result.pagination
     console.log(res);
+    goods.value = res.data.result.data;
+    pagination.value = res.data.result.pagination;
+    loading.value = false
+    filterModal.value = false
   } catch (e) {
     console.error(e);
   }
 };
 
+const getStorages = async () => {
+  const { data } = await storageApi.get({
+    page: 1,
+    itemsPerPage: 100000,
+    sortBy: "name",
+  });
+  storages.value = data.result.data;
+};
+
+const getOrganizations = async () => {
+  const { data } = await organizationApi.get({
+    page: 1,
+    itemsPerPage: 100000,
+    sortBy: "name",
+  });
+  organizations.value = data.result.data;
+};
+
 const totalGoods = (itemName) => {
-  const filteredGoods = goods.value.filter((item) => item.group.name === itemName)  
-  return filteredGoods.length
+  const filteredGoods = goods.value.filter(
+    (item) => item.group.name === itemName
+  );
+  return filteredGoods.length;
 };
 
 const totalIncomes = (itemName) => {
-  let filteredGoods = goods.value.filter((item) => item.group.name === itemName)  
+  let filteredGoods = goods.value.filter(
+    (item) => item.group.name === itemName
+  );
   const total = filteredGoods.reduce((acc, curr) => {
     return acc + curr.income;
   }, 0);
-  
+
   return total;
 };
 
 const totalOutcomes = (itemName) => {
-  let filteredGoods = goods.value.filter((item) => item.group.name === itemName)  
+  let filteredGoods = goods.value.filter(
+    (item) => item.group.name === itemName
+  );
   const total = filteredGoods.reduce((acc, curr) => {
     return acc + curr.outcome;
   }, 0);
-  
+
   return total;
 };
 
 const totalRemainder = (itemName) => {
-  let filteredGoods = goods.value.filter((item) => item.group.name === itemName)  
+  let filteredGoods = goods.value.filter(
+    (item) => item.group.name === itemName
+  );
   const total = filteredGoods.reduce((acc, curr) => {
     return acc + curr.remainder;
   }, 0);
-  
+
   return total;
 };
 
-const totalTotals = (itemName) => {
-  let filteredGoods = goods.value.filter((item) => item.group.name === itemName)  
+const totalStartRemainders = (itemName) => {
+  let filteredGoods = goods.value.filter(
+    (item) => item.group.name === itemName
+  );
   const total = filteredGoods.reduce((acc, curr) => {
-    return acc + curr.total;
+    return acc + curr.start_reminder;
   }, 0);
-  
+
+  return total;
+};
+
+const totalEndRemainders = (itemName) => {
+  let filteredGoods = goods.value.filter(
+    (item) => item.group.name === itemName
+  );
+  const total = filteredGoods.reduce((acc, curr) => {
+    return acc + curr.start_reminder;
+  }, 0);
+
   return total;
 };
 
@@ -100,22 +163,10 @@ const countFilter = () => {
   }
 };
 
-const groupBy = ref([
-  {
-    key: "group.name",
-    order: "asc",
-  },
-]);
-
-const headers = ref([
-  { title: "Товар", align: "start", key: "good.name",},
-  { title: "Остаток на начало", key: "start" },
-  { title: "Приход", key: "income" },
-  { title: "Расход", key: "outcome" },
-  { title: "Остаток в конец", key: "total" },
-  { title: "Остаток", key: "remainder" },
-]);
-
+onMounted(async () => {
+  await getStorages();
+  await getOrganizations();
+});
 </script>
 <template>
   <div class="pa-4">
@@ -152,7 +203,7 @@ const headers = ref([
         style="height: calc(100vh - 165px)"
         page-text="{0}-{1} от {2}"
         loading-text="Загрузка"
-        :group-by="selectedBlock === 'По группам' ? groupBy : [] "
+        :group-by="selectedBlock === 'По группам' ? groupBy : []"
         :headers="headers"
         :loading="loading"
         item-value="name"
@@ -165,7 +216,7 @@ const headers = ref([
         ]"
       >
         <template
-          v-slot:group-header="{ item, columns, toggleGroup, isGroupOpen }"
+          v-slot:group-header="{ item, toggleGroup, isGroupOpen }"
         >
           <tr>
             <td>
@@ -181,7 +232,7 @@ const headers = ref([
               {{ totalGoods(item.value) }}
             </td>
             <td>
-              
+              {{ totalEndRemainders(item.value) > 0 ? totalEndRemainders(item.value) : '' }}
             </td>
             <td>
               {{ totalIncomes(item.value) }}
@@ -190,7 +241,7 @@ const headers = ref([
               {{ totalOutcomes(item.value) }}
             </td>
             <td>
-              <!-- {{ totalTotals(item.value) }} -->
+              {{ totalStartRemainders(item.value) > 0 ? totalStartRemainders(item.value) : '' }}
             </td>
             <td>
               {{ totalRemainder(item.value) }}
@@ -208,7 +259,7 @@ const headers = ref([
       >
         <v-card
           :style="`border: 2px solid ${BASE_COLOR}`"
-          min-width="420"
+          min-width="620"
           class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
           rounded="xl"
         >
@@ -221,23 +272,42 @@ const headers = ref([
                 <div class="d-flex justify-space-between">
                   <custom-text-field
                     class="date"
+                    minWidth="280"  
                     label="От"
                     type="datetime-local"
-                    v-model="filterForm.from"
+                    v-model="filterForm.start_date"
                   />
                   <custom-text-field
                     class="date"
+                    minWidth="280"
                     label="До"
                     type="datetime-local"
-                    v-model="filterForm.to"
+                    v-model="filterForm.end_date"
                   />
                 </div>
-                <custom-text-field
-                  class="date w-100"
-                  label="Дата"
-                  type="datetime-local"
-                  v-model="filterForm.date"
-                />
+                <div>
+                  <custom-text-field
+                    class="date w-100"
+                    label="На дату"
+                    minWidth="575"
+                    type="datetime-local"
+                    v-model="filterForm.date"
+                  />
+                </div>
+                <div class="d-flex justify-space-between">
+                  <custom-autocomplete
+                    minWidth="280"
+                    label="Организация"
+                    :items="organizations"
+                    v-model="filterForm.organization_id"
+                  />
+                  <custom-autocomplete
+                    label="Склад"
+                    minWidth="280"
+                    :items="storages"
+                    v-model="filterForm.storage_id"
+                  />
+                </div>
                 <div class="d-flex justify-end ga-2">
                   <v-btn color="red" class="btn" @click="closeFilterModal"
                     >сбросить</v-btn
@@ -245,7 +315,7 @@ const headers = ref([
                   <v-btn
                     :color="BASE_COLOR"
                     class="btn"
-                    @click="seletectBlock('По группам')"
+                    @click="getRemainderOfGoods"
                     >применить</v-btn
                   >
                 </div>

@@ -78,7 +78,7 @@ const routes = [
   {
     path: "/remainderOfGoods",
     name: "remainderOfGoods",
-    component: () => import("../reports/goods/remainderOfGoods.vue")
+    component: () => import("../pages/reports/goods/remainderOfGoods.vue")
   },
   {
     path: "/clientReturn",
