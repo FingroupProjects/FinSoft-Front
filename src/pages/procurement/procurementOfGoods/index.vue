@@ -29,10 +29,10 @@ import copyDocument from "../../../api/documents/copyDocument.js";
 const router = useRouter();
 
 const loading = ref(true);
-const loadingRate = ref(true);
 const dialog = ref(false);
 const filterModal = ref(false);
 const hoveredRowIndex = ref(null);
+const isCloseCreateBasedModal = ref(false);
 
 const markedID = ref([]);
 const markedItem = ref([]);
@@ -103,9 +103,11 @@ const headerButtons = ref([
   {
     name: "createBasedOn",
     function: async () => {
+      isCloseCreateBasedModal.value = !isCloseCreateBasedModal.value
       if (markedID.value.length !== 1) {
         return showToast(selectOneItemMessage, 'red')
       }
+
       await router.push({ name: "procurementOfGoodsCreate", query: { id: markedID.value[0] } })
     },
   },
@@ -120,7 +122,7 @@ const headerButtons = ref([
         const res = await copyDocument.copy(markedID.value[0])
         if (res.status === 200) {
           showToast(copyMessage)
-          await getProcurementData()
+          router.push(`/procurementOfGoods/${res.data.result.id}`)
         }
       } catch (e) {
         console.error(e)
@@ -164,7 +166,6 @@ const massDel = async () => {
       showToast(removeMessage, "red");
       await getProcurementData({});
       markedID.value = [];
-      dialog.value = false;
     }
   } catch (e) {}
 };
@@ -200,7 +201,6 @@ const lineMarking = (item) => {
 const approve = async () => {
   try {
     const res = await procurementApi.approve({ ids: markedID.value });
-    console.log('res',res)
     showToast(approveDocument);
     await getProcurementData({});
     markedID.value = [];
@@ -503,6 +503,12 @@ onMounted(() => {
         </v-card>
       </v-dialog>
     </v-card>
+  </div>
+
+  <div v-if="isCloseCreateBasedModal" @click.self="isCloseCreateBasedModal = !isCloseCreateBasedModal" class="modalCreateBased">
+    <div class="modal_create_based_body">
+      123
+    </div>
   </div>
 </template>
 
