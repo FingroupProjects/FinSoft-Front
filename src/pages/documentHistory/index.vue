@@ -1,14 +1,16 @@
 <script setup>
-import { onMounted, ref, watch } from "vue";
-import { useRoute } from "vue-router";
+import {onMounted, ref, watch} from "vue";
+import {useRoute} from "vue-router";
 import documentHistoryApi from "../../api/documents/documentHistory";
 import showDate from "../../composables/date/showDate";
 import getDateTimeInShow from "../../composables/date/getDateTimeInShow.js";
+import Button from "../../components/button/button.vue";
+
 const route = useRoute();
 
-const id = ref(null);
+const id = ref(route.params.id);
 
-const selectedBlock = ref(null);
+const selectedBlock = ref("История");
 
 const loading = ref(true);
 
@@ -17,30 +19,25 @@ const data = ref([]);
 const pagination = ref([]);
 
 const balanceHeaders = ref([
-  { title: "Номер", key: "doc_number" },
   { title: "Дата", key: "date" },
   { title: "Кредитная статья", key: "creditArticle.name" },
-  { title: "Организация", key: "organization.name" },
   { title: "Дебетовая статья", key: "debitArticle.name" },
   { title: "Сумма", key: "sum" },
 ]);
 
 const accountingOfGoodsHeaders = ref([
-  { title: "Номер", key: "doc_number" },
   { title: "Дата", key: "date" },
   { title: "Тип движения", key: "movement_type" },
-  { title: "Организация", key: "organization.name" },
+  { title: "Количество", key: "amount" },
   { title: "Сумма", key: "sum" },
 ]);
 
 const counterpartySettlementsHeaders = ref([
-  { title: "Номер", key: "doc_number" },
   { title: "Дата", key: "date" },
   { title: "Тип движения", key: "movement_type" },
   { title: "Поставщик", key: "counterparty.name" },
   { title: "Договор", key: "counterpartyAgreement.name" },
-  { title: "Организация", key: "organization.name" },
-  { title: "Сумма * курс валюты", key: "sale_sum" },
+  { title: "Валютная сумма", key: "sale_sum" },
   { title: "Сумма", key: "sum" },
 ]);
 
@@ -98,6 +95,7 @@ const getAccountingOfGoods = async ({
     data.value = result.data;
     pagination.value = result.pagination;
     loading.value = false;
+    console.log(result.data)
   } catch (e) {
     console.error(e);
   }
@@ -126,49 +124,57 @@ const getCounterpartySettlements = async ({
   }
 };
 
-watch(selectedBlock, (newVal, oldVal) => {
+const closeWindow = () => {
+  window.close();
+};
+
+watch(selectedBlock, newVal => {
   if (newVal === "История") getDocumentHistory();
 });
 
-onMounted(async () => {
+onMounted( () => {
   id.value = route.params.id;
-  selectedBlock.value = "История";
+  getDocumentHistory()
 });
 </script>
 
 <template>
   <div class="pa-4 mb-0">
-    <div class="switcher">
-      <button
-        @click="seletectBlock('История')"
-        :class="selectedBlock === 'История' ? 'active' : ''"
-        class="button"
-      >
-        История
-      </button>
-      <button
-        @click="seletectBlock('Баланс')"
-        :class="selectedBlock === 'Баланс' ? 'active' : ''"
-        class="button"
-      >
-        Баланс
-      </button>
-      <button
-        @click="seletectBlock('Учет товаров')"
-        :class="selectedBlock === 'Учет товаров' ? 'active' : ''"
-        class="button"
-      >
-        Учет товаров
-      </button>
-      <button
-        @click="seletectBlock('Взаимодействие с поставщиками')"
-        :class="
+    <div class="d-flex justify-space-between">
+      <div class="switcher">
+        <button
+            @click="seletectBlock('История')"
+            :class="selectedBlock === 'История' ? 'active' : ''"
+            class="button"
+        >
+          История
+        </button>
+        <button
+            @click="seletectBlock('Баланс')"
+            :class="selectedBlock === 'Баланс' ? 'active' : ''"
+            class="button"
+        >
+          Баланс
+        </button>
+        <button
+            @click="seletectBlock('Учет товаров')"
+            :class="selectedBlock === 'Учет товаров' ? 'active' : ''"
+            class="button"
+        >
+          Учет товаров
+        </button>
+        <button
+            @click="seletectBlock('Взаимодействие с поставщиками')"
+            :class="
           selectedBlock === 'Взаимодействие с поставщиками' ? 'active' : ''
         "
-        class="button"
-      >
-        Взаимодействие с поставщиками
-      </button>
+            class="button"
+        >
+          Взаимодействие с поставщиками
+        </button>
+      </div>
+
+      <Button @click="closeWindow" name="close"/>
     </div>
 
     <div v-if="selectedBlock === 'История'">
@@ -232,10 +238,8 @@ onMounted(async () => {
               @mouseenter="hoveredRowIndex = index"
               @mouseleave="hoveredRowIndex = null"
             >
-              <td>{{ item.id }}</td>
               <td>{{ getDateTimeInShow(item.date) }}</td>
               <td>{{ item.creditArticle?.name }}</td>
-              <td>{{ item.organization?.name }}</td>
               <td>{{ item.debitArticle?.name }}</td>
               <td>{{ item.sum }}</td>
             </tr>
@@ -273,10 +277,18 @@ onMounted(async () => {
               @mouseenter="hoveredRowIndex = index"
               @mouseleave="hoveredRowIndex = null"
             >
-              <td>{{ item.id }}</td>
+
               <td>{{ getDateTimeInShow(item.date) }}</td>
-              <td>{{ item.movement_type }}</td>
-              <td>{{ item.organization?.name }}</td>
+              <td>
+                <v-chip
+                    style="height: 50px !important; width: 140px;"
+                    class="d-flex justify-center"
+                    :color="item.movement_type === 'приход' ? 'red' : 'green'"
+                >
+                  <span class="padding: 5px;">{{ item.movement_type }}</span>
+                </v-chip>
+              </td>
+              <td>{{ item.amount }}</td>
               <td>{{ item.sum }}</td>
             </tr>
           </template>
@@ -313,11 +325,10 @@ onMounted(async () => {
               @mouseenter="hoveredRowIndex = index"
               @mouseleave="hoveredRowIndex = null"
             >
-              <td>{{ item.id }}</td>
+
               <td>{{ getDateTimeInShow(item.date) }}</td>
               <td>{{ item.movement_type }}</td>
-              <td>{{ item.counterparty?.name }}</td>
-              <td>{{ item.counterpartyAgreement?.name }}</td>
+             <td>{{ item.counterpartyAgreement?.name }}</td>
               <td>{{ item.organization ? item.organization.name : "" }}</td>
               <td>{{ item.sale_sum !== null ? item.sale_sum : "" }}</td>
               <td>{{ item.sum }}</td>

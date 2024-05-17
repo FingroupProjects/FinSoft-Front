@@ -75,7 +75,11 @@ const routes = [
     name: "clientOrderCreate",
     component: () => import("../pages/selling/clientOrder/create.vue"),
   },
-
+  {
+    path: "/remainderOfGoods",
+    name: "remainderOfGoods",
+    component: () => import("../pages/reports/goods/remainderOfGoods.vue")
+  },
   {
     path: "/clientReturn",
     name: "clientReturn",

@@ -7,7 +7,7 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../../composables/toast/index.js";
 import currentDate from "../../../composables/date/currentDate.js";
 import validate from "./validate.js";
-import {useRouter} from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import storageApi from "../../../api/list/storage.js";
@@ -25,10 +25,12 @@ import Button from "../../../components/button/button.vue";
 import formatNumber from "../../../composables/format/formatNumber.js";
 import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";
+import getDataBased from "../../../composables/otherQueries/getDataBased.js";
 
 
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter();
+const route = useRoute()
 const emits = defineEmits(['changed'])
 const confirmDocument = useConfirmDocumentStore();
 
@@ -65,7 +67,6 @@ const currencies = ref([]);
 const listGoods = ref([]);
 const FIELD_GOODS = ref("#274D87");
 const hoveredRowId = ref(null);
-
 
 const headers = ref([
   { title: "Товары", key: "goods", sortable: false },
@@ -275,11 +276,11 @@ const totalCount = computed(() =>
     goods.value.reduce((acc, item) => acc + Number(item.amount || 0), 0)
 );
 
-
-
 watch(
     () => form.counterparty,
     async (id) => {
+      if (route.query.id) return
+
       form.cpAgreement = null;
       await getCpAgreements(id);
     }
@@ -288,6 +289,8 @@ watch(
 watch(
     () => form.cpAgreement,
     (newValue) => {
+      if (route.query.id) return
+
       if (newValue !== null) {
         const cpAgreement = cpAgreements.value.find((el) =>
             (el.id === typeof newValue) === "object" ? newValue.id : newValue
@@ -332,6 +335,7 @@ onMounted(() => {
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
   form.organization =  JSON.parse(localStorage.getItem("user")).organization || null;
 
+  getDataBased(route.query.id, form, goods, saleApi);
   getOrganizations();
   getCounterparties();
   getStorages();
