@@ -23,6 +23,8 @@ import Button from "../../../components/button/button.vue";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";
 import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
 import formatNumber from "../../../composables/format/formatNumber.js";
+import goToHistory from "../../../composables/movementByPage/goToHistory.js";
+import goToPrint from "../../../composables/movementByPage/goToPrint.js";
 
 const router = useRouter();
 const route = useRoute();
@@ -375,21 +377,11 @@ onMounted(() => {
           <div class="d-flex ga-2">
             <Button
               name="history"
-              @click="
-                $router.push({
-                  name: 'documentHistory',
-                  params: { id: route.params.id },
-                })
-              "
+              @click="goToHistory(router, route)"
             />
             <Button
               name="print"
-              @click="
-                $router.push({
-                  name: 'documentPrint',
-                  params: { id: route.params.id },
-                })
-              "
+              @click="goToPrint(router, route)"
             />
             <Button name="save" @click="updateProcurement" />
             <Button name="close" @click="closeWindow" />

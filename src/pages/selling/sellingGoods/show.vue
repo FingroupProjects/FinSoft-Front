@@ -1,13 +1,11 @@
 <script setup>
-import { computed, onMounted, onUpdated, reactive, ref, watch } from "vue";
-import Icons from "../../../composables/Icons/Icons.vue";
+import {computed, onMounted, reactive, ref, watch} from "vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../../composables/toast/index.js";
-import currentDate from "../../../composables/date/currentDate.js";
 import validate from "./validate.js";
-import { useRoute, useRouter } from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import storageApi from "../../../api/list/storage.js";
@@ -17,15 +15,16 @@ import saleApi from "../../../api/documents/sale.js";
 import goodApi from "../../../api/list/goods.js";
 import {editMessage, selectOneItemMessage} from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
-import { BASE_COLOR } from "../../../composables/constant/colors.js";
+import {BASE_COLOR} from "../../../composables/constant/colors.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
-import showDate from "../../../composables/date/showDate.js";
-import  {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
+import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
 import Button from "../../../components/button/button.vue";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";
 import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
 import formatNumber from "../../../composables/format/formatNumber.js";
+import goToHistory from "../../../composables/movementByPage/goToHistory.js";
+import goToPrint from "../../../composables/movementByPage/goToPrint.js";
 
 const useOrganization = ref(useHasOneOrganization())
 
@@ -355,16 +354,11 @@ watch(
             <div class="d-flex items-center ga-2 mt-1 me-3">
               <Button
                   name="history"
-                  @click="getHistory()"
+                  @click="goToHistory(router, route)"
               />
               <Button
                   name="print"
-                  @click="
-                $router.push({
-                  name: 'documentPrint',
-                  params: { id: route.params.id },
-                })
-              "
+                  @click="goToPrint(router, route)"
               />
               <Button name="save" @click="updateProcurement" />
               <Button name="close" @click="closeWindow" />
