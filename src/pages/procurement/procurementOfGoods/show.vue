@@ -394,7 +394,7 @@ onMounted(() => {
     <div style="background: #fff">
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
-          <custom-text-field disabled value="Номер" v-model="form.number" />
+          <custom-text-field disabled label="Номер" v-model="form.doc_number" />
           <custom-text-field
             class="date"
             label="Дата"
