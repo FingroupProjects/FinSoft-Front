@@ -103,7 +103,8 @@ const headerButtons = ref([
   {
     name: "createBasedOn",
     function: async () => {
-      isCloseCreateBasedModal.value = !isCloseCreateBasedModal.value
+      // isCloseCreateBasedModal.value = !isCloseCreateBasedModal.value
+
       if (markedID.value.length !== 1) {
         return showToast(selectOneItemMessage, 'red')
       }
@@ -503,13 +504,15 @@ onMounted(() => {
         </v-card>
       </v-dialog>
     </v-card>
-  </div>
 
-  <div v-if="isCloseCreateBasedModal" @click.self="isCloseCreateBasedModal = !isCloseCreateBasedModal" class="modalCreateBased">
-    <div class="modal_create_based_body">
-      123
+    <div v-if="isCloseCreateBasedModal" @click.self="isCloseCreateBasedModal = !isCloseCreateBasedModal" class="modalCreateBased">
+      <div class="modal_create_based_body">
+        123
+      </div>
     </div>
   </div>
+
+
 </template>
 
 <style scoped>

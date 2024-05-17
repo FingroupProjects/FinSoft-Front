@@ -117,9 +117,9 @@ const getGoods = async (good_storage_id, good_organization_id) => {
     search,
     good_storage_id,
     good_organization_id
-  );
+  )
   listGoods.value = data.result.data;
-};
+}
 
 const decreaseCountOfGoods = () => {
   if (markedID.value.length === 0) {
