@@ -128,6 +128,15 @@ body{
   font-size: 16px;
 }
 
-.back{
-  background-color: rgba(122, 127, 176, 0.193)
+.modalCreateBased {
+  position: absolute;
+  z-index: 9999;
+  background-color: rgba(0, 0, 0, 0.3);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+
 }
+

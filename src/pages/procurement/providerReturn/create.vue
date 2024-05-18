@@ -27,7 +27,7 @@ import Button from "../../../components/button/button.vue";
 
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter()
-const emits = defineEmits(['changed'])
+const emits = defineEmits(['changed']) 
 const confirmDocument = useConfirmDocumentStore()
 const hoveredRowId = ref(null);
 
@@ -175,7 +175,7 @@ const addNewProvider = async () => {
      }
    } catch (e) {
      console.log(e)
-   }
+   } 
 }
 
 

@@ -50,12 +50,19 @@ const storages = ref([]);
 
 const filterForm = ref({
   date: null,
+  startDate: null,
+  endDate: null,
+  active: null,
+  deleted: null,
   organization_id: null,
   sender_storage_id: null,
   recipient_storage_id: null,
   storage_id: null,
   comment: null,
 });
+
+const statusOptions = ['проведён', 'не проведён'];
+  const deletionStatuses = ['не удален', 'удален'];
 
 const headers = ref([
   { title: "Номер", key: "doc_number" },
@@ -72,7 +79,11 @@ const rules = {
 const getDataInvertor = async ({ page, itemsPerPage, sortBy, search }) => {
   count.value = 0;
   countFilter();
-  const filterData = filterForm.value;
+  const filterData = {
+      ...filterForm.value,
+      active: filterForm.value.active === 'проведён' ? 1 : 0,
+      deleted: filterForm.value.deleted === 'удален' ? 1 : 0 ,
+    };
   filterModal.value = false;
   loading.value = true;
   try {
@@ -362,8 +373,13 @@ watch(
             <v-form class="d-flex w-100" @submit.prevent="">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100 ga-4">
-                  <div class="d-flex ga-2 w-100">
-                  <custom-text-field label="Дата" type="date" min-width="508"  v-model="filterForm.date"/>
+                  <div class="d-flex flex-column ga-2 w-100">
+                    <custom-text-field label="От" type="date" min-width="508"  v-model="filterForm.startDate"/>
+                    <custom-text-field label="По" type="date" min-width="508"  v-model="filterForm.endDate"/>
+                    </div>
+                    <div class="d-flex ga-2">                
+                      <custom-autocomplete label="Статус" :items="statusOptions" v-model="filterForm.active"/>
+                      <custom-autocomplete label="Удалён" :items="deletionStatuses" v-model="filterForm.deleted"/>               
                   </div>
                   <div class="d-flex ga-2">
                     <custom-autocomplete label="Склад-отправитель" :items="organizations"  v-model="filterForm.organization_id"/>

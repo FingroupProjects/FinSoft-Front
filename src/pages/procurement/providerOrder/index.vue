@@ -56,6 +56,10 @@ const counterpartyAgreements = ref([])
 
 const filterForm = ref({
   date: null,
+  startDate: null,
+  endDate: null,
+  active: null,
+  deleted: null,
   provider_id: null,
   counterparty_id: null,
   counterparty_agreement_id: null,
@@ -74,11 +78,17 @@ const headers = ref([
   {title: 'Автор', key: 'author.name'},
   {title: 'Валюта', key: 'currency.name'},
 ])
-
-const getProviderOrderData = async ({page, itemsPerPage, sortBy, search}) => {
+const statusOptions = ['проведён', 'не проведён'];
+const deletionStatuses = ['не удален', 'удален'];
+  
+const getProviderOrderData = async ({page, itemsPerPage, sortBy, search} = {}) => {
   count.value = 0;
   countFilter()
-  const filterData = filterForm.value
+  const filterData = {
+      ...filterForm.value,
+      active: filterForm.value.active === 'проведён' ? 1 : 0,
+      deleted: filterForm.value.deleted === 'удален' ? 1 : 0 ,
+  };
   filterModal.value = false
   loading.value = true
   try {
@@ -383,8 +393,13 @@ watch(search, debounce((newValue) => {
             <v-form class="d-flex w-100" @submit.prevent="">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100 ga-4">
-                  <div class="d-flex ga-2 w-100">
-                  <custom-text-field label="Дата" type="date" min-width="508"  v-model="filterForm.date"/>
+                  <div class="d-flex flex-column ga-2 w-100">
+                    <custom-text-field label="Дата от" type="date" min-width="508"  v-model="filterForm.startDate"/>
+                    <custom-text-field label="Дата до" type="date" min-width="508"  v-model="filterForm.endDate"/>
+                  </div>
+                  <div class="d-flex ga-2">                
+                      <custom-autocomplete label="Статус" :items="statusOptions" v-model="filterForm.active"/>
+                      <custom-autocomplete label="Удалён" :items="deletionStatuses" v-model="filterForm.deleted"/>               
                   </div>
                   <div class="d-flex ga-2">
                     <custom-autocomplete label="Организация" :items="organizations"  v-model="filterForm.organization_id"/>

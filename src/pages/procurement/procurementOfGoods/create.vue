@@ -117,9 +117,9 @@ const getGoods = async (good_storage_id, good_organization_id) => {
     search,
     good_storage_id,
     good_organization_id
-  );
+  )
   listGoods.value = data.result.data;
-};
+}
 
 const decreaseCountOfGoods = () => {
   if (markedID.value.length === 0) {
@@ -216,9 +216,10 @@ const addNewProcurement = async () => {
 
   try {
     const res = await procurementApi.add(body);
+    console.log(res)
     if (res.status === 201) {
       showToast(addMessage);
-      router.push("/procurementOfGoods");
+      router.push(`/procurementOfGoods/${res.data.result.id}`);
     }
   } catch (e) {
     console.error(e);
@@ -357,13 +358,13 @@ onMounted(() => {
       </v-card>
     </div>
     <v-divider />
-    <div style="background: #fff">
+    <div style="height: calc(100vh - 107px);background: #fff">
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field
             disabled
             value="Номер"
-            v-model="form.number"
+            v-model="form.doc_number"
           />
           <custom-text-field
             class="date"
@@ -399,7 +400,7 @@ onMounted(() => {
         <div  class="rounded">
           <div class="d-flex flex-column w-100">
             <v-data-table
-                style="height: 50vh"
+                style="height: calc(100vh - 285px)"
                 items-per-page-text="Элементов на странице:"
                 loading-text="Загрузка"
                 no-data-text="Нет данных"

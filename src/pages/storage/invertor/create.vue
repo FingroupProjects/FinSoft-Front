@@ -13,14 +13,18 @@ import organizationApi from "../../../api/list/organizations.js";
 import storageApi from "../../../api/list/storage.js";
 import invertorApi from "../../../api/documents/invertor.js";
 import goodApi from "../../../api/list/goods.js";
-import { addMessage } from "../../../composables/constant/buttons.js";
+import { addMessage, selectOneItemMessage } from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
-import { BASE_COLOR } from "../../../composables/constant/colors.js";
+import { BASE_COLOR, FIELD_GOODS, TITLE_COLOR } from "../../../composables/constant/colors.js";
 import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
 import currentDateWithTime from "../../../composables/date/currentDateWithTime.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
+import Button from "../../../components/button/button.vue";
+import ButtonGoods from "../../../components/button/buttonGoods.vue";
+import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
+import formatNumber from "../../../composables/format/formatNumber.js";
 
-
+const hoveredRowId = ref(null);
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter();
 
@@ -97,6 +101,13 @@ const getGoods = async () => {
 };
 
 const decreaseCountOfGoods = () => {
+  if (markedID.value.length === 0) {
+    return showToast(selectOneItemMessage, "warning");
+  }
+  if (markedID.value.length === goods.value.length) {
+    goods.value = [];
+    return goods.value.push([{ id: 1, good_id: null, amount: "1", price: null}])
+  }
   goods.value = goods.value.filter((item) => !markedID.value.includes(item.id));
 };
 
@@ -187,14 +198,16 @@ onMounted(() => {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Инвентаризация товаров (создание)</span>
+          <span :style="`color: ${TITLE_COLOR}`">Инвентаризация товаров (создание)</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="addNewInvertor" name="add" />
-              <Icons title="Скопировать" name="copy" />
-              <Icons title="Удалить" name="delete" />
+            <div class="d-flex ga-2 mt-1 me-3">              
+              <Button @click="addNewInvertor" name="save" />
+              <Button
+                  @click="router.push('/invertory')"
+                  name="close"
+              />
             </div>
           </div>
         </v-card>
@@ -226,15 +239,6 @@ onMounted(() => {
         </div>
       </v-col>
       <v-col>
-        <div :style="`border: 1px solid ${BASE_COLOR}`" class="rounded">
-          <div class="d-flex pa-1 ga-1">
-            <Icons
-              name="add"
-              title="Добавить поле"
-              @click="increaseCountOfGoods"
-            />
-            <Icons name="delete" @click="decreaseCountOfGoods" />
-          </div>
           <div class="d-flex flex-column w-100 goods">
             <v-data-table
               style="height: 78vh"
@@ -255,26 +259,29 @@ onMounted(() => {
               fixed-header
             >
               <template v-slot:item="{ item, index }">
-                <tr :key="index">
+                <tr :key="index" @mouseenter="hoveredRowId = item.id" @mouseleave="hoveredRowId = null">
                   <td>
                     <CustomCheckbox
                       v-model="markedID"
                       @change="lineMarking(item)"
                       :checked="markedID.includes(item.id)"
                     >
-                      <span>{{ index + 1 }}</span>
+                      <span class="fz-12">{{ index + 1 }}</span>
                     </CustomCheckbox>
                   </td>
                   <td style="width: 40%">
                     <custom-autocomplete
                       v-model="item.good_id"
                       :items="listGoods"
+                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                       min-width="150"
                       max-width="100%"
+                      :isAmount="true"
                     />
                   </td>
                   <td>
                     <custom-text-field
+                    :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                       v-model="item.accounting_quantity"
                       v-mask="'########'"
                       min-width="50"
@@ -283,6 +290,7 @@ onMounted(() => {
                   <td>
                     <custom-text-field
                       v-model="item.actual_quantity"
+                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                       v-mask="'########'"
                       min-width="50"
                     />
@@ -290,20 +298,27 @@ onMounted(() => {
                   <td>
                     <custom-text-field
                       v-model="item.difference"
+                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                       v-mask="'########'"
                       min-width="50"
                     />
                   </td>
                 </tr>
+              <tr v-if="index === goods.length - 1">
+                <td></td>
+                <td style="width: 150%" class="d-flex ga-2" colspan="10">
+                  <ButtonGoods name="add" @click="increaseCountOfGoods"/>
+                  <ButtonGoods v-if="goods.length !== 1" name="delete" @click="decreaseCountOfGoods"/>
+                </td>
+              </tr>
               </template>
             </v-data-table>
-          </div>
         </div>
         <div class="d-flex justify-space-between w-100 mt-2 bottomField">
           <div class="d-flex ga-10">
             <custom-text-field
               readonly
-              :value="author"
+              v-model="author"
               min-width="140"
               max-width="110"
             />
