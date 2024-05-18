@@ -28,6 +28,7 @@ import goToPrint from "../../../composables/movementByPage/goToPrint.js";
 
 const useOrganization = ref(useHasOneOrganization())
 
+const doc_name = ref('Продажа')
 const document = ref(null);
 const router = useRouter();
 const route = useRoute();
@@ -154,11 +155,14 @@ const getCurrencies = async () => {
   currencies.value = data.result.data;
 };
 
-const getGoods = async () => {
+const getGoods = async (good_storage_id, good_organization_id) => {
   const { data } = await goodApi.get({
+    for_sale: 1,
     page: 1,
     itemsPerPage: 100000,
     sortBy: "name",
+    good_storage_id: good_storage_id, 
+    good_organization_id: good_organization_id
   });
   listGoods.value = data.result.data;
 };
@@ -308,6 +312,19 @@ watch(form, () => {
   }, 3930);
 });
 
+watch(
+  () => [form.storage, form.organization],
+  (newValue) => {
+    if (newValue[0] !== null && newValue[1] !== null) {
+      const storage_id =
+        typeof newValue[0] === "object" ? newValue[0].id : newValue[0];
+      const organization_id =
+        typeof newValue[1] === "object" ? newValue[1].id : newValue[1];
+      getGoods(storage_id, organization_id);
+    }
+  }
+);
+
 onMounted(() => {
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
   getSellingGoodsDetail()
@@ -317,7 +334,6 @@ onMounted(() => {
     getCpAgreements(),
     getStorages(),
     getCurrencies(),
-    getGoods(),
   ]);
 });
 
@@ -347,7 +363,7 @@ watch(
     <v-col>
       <div class="d-flex justify-space-between text-uppercase">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Продажа (просмотр)</span>
+          <span>{{ doc_name }} (просмотр)</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
@@ -358,7 +374,7 @@ watch(
               />
               <Button
                   name="print"
-                  @click="goToPrint(router, route)"
+                  @click="goToPrint(router, route, doc_name)"
               />
               <Button name="save" @click="updateProcurement" />
               <Button name="close" @click="closeWindow" />
@@ -437,11 +453,10 @@ watch(
                     <custom-autocomplete
                         v-model="item.good_id"
                         :items="listGoods"
-                        :base-color="
-                        hoveredRowId === item.id ? FIELD_GOODS : '#fff'
-                      "
+                        :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                         min-width="150"
                         max-width="100%"
+                        :isAmount="true"
                     />
                   </td>
                   <td>
