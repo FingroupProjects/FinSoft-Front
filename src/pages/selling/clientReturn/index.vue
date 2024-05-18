@@ -52,6 +52,10 @@ const counterpartyAgreements = ref([])
 const filterForm = ref({
   startDate: null,
   endDate: null,
+  startDate: null,
+  endDate: null,
+  active: null,
+  deleted: null,
   name: null,
   description: null,
   currency_id: null
@@ -71,11 +75,19 @@ const rules = {
   required: v => !!v,
 }
 
+const statusOptions = ['проведён', 'не проведён'];
+  const deletionStatuses = ['не удален', 'удален'];
+ 
+
 
 const getClientReturnData = async ({page, itemsPerPage, sortBy, search}) => {
   count.value = 0;
   countFilter()
-  const filterData = filterForm.value
+  const filterData = {
+      ...filterForm.value,
+      active: filterForm.value.active === 'проведён' ? 1 : 0,
+      deleted: filterForm.value.deleted === 'удален' ? 1 : 0 ,
+    };
   filterModal.value = false
   loading.value = true
   try {
@@ -360,7 +372,11 @@ onMounted(() => {
                   <div class="d-flex flex-column ga-2 w-100 ">
                     <custom-text-field label="Дата от" type="date" min-width="508"  v-model="filterForm.startDate"/>
                     <custom-text-field label="Дата до" type="date" min-width="508"  v-model="filterForm.endDate"/>
-                  </div>ч
+                  </div>  
+                  <div class="d-flex ga-2">                
+                      <custom-autocomplete label="Статус" :items="statusOptions" v-model="filterForm.active"/>
+                      <custom-autocomplete label="Удалён" :items="deletionStatuses" v-model="filterForm.deleted"/>               
+                  </div>
                   <div class="d-flex ga-2">
                     <custom-autocomplete label="Организация" :items="organizations"  v-model="filterForm.organization_id"/>
                     <custom-autocomplete label="Клиент" :items="counterparties" v-model="filterForm.counterparty_id"/>
