@@ -129,22 +129,14 @@ body{
 }
 
 .modalCreateBased {
-  position: fixed;
+  position: absolute;
   z-index: 9999;
   background-color: rgba(0, 0, 0, 0.3);
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
+
+
 }
 
-.modal_create_based_body {
-  position: absolute;
-  background: #fff;
-  border-radius: 10px;
-  width: 215px;
-  height: 180px;
-  top: 110px;
-  left: 255px;
-  opacity: 1 !important;
-}

@@ -13,7 +13,7 @@ import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import currencyApi from "../../../api/list/currency.js";
 import procurementApi from "../../../api/documents/procurement.js";
 import goodApi from "../../../api/list/goods.js";
-import {editMessage, selectOneItemMessage} from "../../../composables/constant/buttons.js";
+import {approveDocument, editMessage, selectOneItemMessage} from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
 import {FIELD_GOODS, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
@@ -25,6 +25,8 @@ import validateNumberInput from "../../../composables/mask/validateNumberInput.j
 import formatNumber from "../../../composables/format/formatNumber.js";
 import goToHistory from "../../../composables/movementByPage/goToHistory.js";
 import goToPrint from "../../../composables/movementByPage/goToPrint.js";
+import saleApi from "../../../api/documents/sale.js";
+import getStatus from "../../../composables/displayed/getStatus.js";
 
 const router = useRouter();
 const route = useRoute();
@@ -46,6 +48,8 @@ const form = reactive({
   salePercent: null,
   comment: null,
   currency: null,
+  active: null,
+  deleted_at: null,
 });
 
 const author = ref(null);
@@ -69,9 +73,72 @@ const headers = ref([
   { title: "Сумма", key: "currency.name", sortable: false },
 ]);
 
+const headerButtons = ref([
+  {
+    name: "history",
+    function: () => {
+      goToHistory(router, route)
+    },
+  },
+  {
+    name: "approve",
+    function: () => {
+      approve()
+    },
+  },
+  {
+    name: "cancel",
+    function: () => {
+      unApprove();
+    },
+  },
+  {
+    name: "print",
+    function: () => {
+      goToPrint(router, route);
+    },
+  },
+  {
+    name: "save",
+    function: () => {
+      updateProcurement();
+    },
+  },
+  {
+    name: "close",
+    function: () => {
+      closeWindow()
+    },
+  },
+]);
+
+const approve = async () => {
+  try {
+    await saleApi.approve({ ids: [route.params.id] });
+    showToast(approveDocument);
+    await getProcurementDetails();
+    markedID.value = [];
+  } catch (e) {
+    console.error(e);
+    showToast('Ошибка', 'red');
+  }
+}
+
+const unApprove = async () => {
+  try {
+    await saleApi.unApprove({ ids: [route.params.id] });
+    showToast(approveDocument);
+    await getProcurementDetails();
+    markedID.value = [];
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 const getProcurementDetails = async () => {
   try {
     const { data } = await procurementApi.getById(route.params.id);
+    console.log(data)
     form.doc_number = data.result.doc_number;
     form.date = getDateTimeInShow(data.result.date, "-", true);
     form.organization = {
@@ -92,6 +159,8 @@ const getProcurementDetails = async () => {
     };
     form.comment = data.result.comment;
     form.currency = data.result.currency;
+    form.active = data.result.active;
+    form.deleted_at = data.result.deleted_at;
     goods.value = data.result.goods.map((item) => ({
       id: item.id,
       good_id: item.good.id,
@@ -101,7 +170,9 @@ const getProcurementDetails = async () => {
     prevForm.value = { ...form };
     prevGoods.value = [...goods.value];
     tempForm.value = Object.assign({}, form);
-  } catch (e) {}
+  } catch (e) {
+    console.error(e)
+  }
 };
 
 const getOrganizations = async () => {
@@ -299,14 +370,6 @@ const checkDataChanges = () => {
   return formDataChanged || isArraysEqual;
 };
 
-watch(
-  [goods.value],
-  (newValue) => {
-    console.log(newValue);
-  },
-  { deep: true }
-);
-
 watch(form, () => {
   if (count.value === 0) {
     checkDataChanges();
@@ -353,7 +416,7 @@ const closeWindow = () => {
 
 onMounted(() => {
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
-  getProcurementDetails();
+  getProcurementDetails()
 
   Promise.all([
     getOrganizations(),
@@ -369,22 +432,17 @@ onMounted(() => {
     <div class="d-flex justify-space-between">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
         <span :style="{ color: TITLE_COLOR, fontSize: '22px' }"
-          >Покупка (просмотр)</span
-        >
+          >Покупка (просмотр) - {{ getStatus(form.active, form.deleted_at) }}</span>
       </div>
       <v-card variant="text" style="display: flex; align-items: center">
         <div class="d-flex w-100 justify-end my-3 pr-4">
           <div class="d-flex ga-2">
             <Button
-              name="history"
-              @click="goToHistory(router, route)"
+               v-for="item in headerButtons"
+               :key="item.name"
+               :name="item.name"
+               @click="item.function"
             />
-            <Button
-              name="print"
-              @click="goToPrint(router, route)"
-            />
-            <Button name="save" @click="updateProcurement" />
-            <Button name="close" @click="closeWindow" />
           </div>
         </div>
       </v-card>

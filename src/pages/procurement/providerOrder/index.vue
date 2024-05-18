@@ -77,7 +77,7 @@ const headers = ref([
   {title: 'Валюта', key: 'currency.name'},
 ])
 
-const getProviderOrderData = async ({page, itemsPerPage, sortBy, search}) => {
+const getProviderOrderData = async ({page, itemsPerPage, sortBy, search} = {}) => {
   count.value = 0;
   countFilter()
   const filterData = filterForm.value
