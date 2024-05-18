@@ -78,19 +78,17 @@ const headers = ref([
   {title: 'Автор', key: 'author.name'},
   {title: 'Валюта', key: 'currency.name'},
 ])
-
 const statusOptions = ['проведён', 'не проведён'];
-  const deletionStatuses = ['не удален', 'удален'];
- 
-
-const getProviderOrderData = async ({page, itemsPerPage, sortBy, search}) => {
+const deletionStatuses = ['не удален', 'удален'];
+  
+const getProviderOrderData = async ({page, itemsPerPage, sortBy, search} = {}) => {
   count.value = 0;
   countFilter()
   const filterData = {
       ...filterForm.value,
       active: filterForm.value.active === 'проведён' ? 1 : 0,
       deleted: filterForm.value.deleted === 'удален' ? 1 : 0 ,
-    };
+  };
   filterModal.value = false
   loading.value = true
   try {

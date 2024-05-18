@@ -97,9 +97,9 @@ const getAccountingOfGoods = async ({
     loading.value = false;
     console.log(result.data)
   } catch (e) {
-    console.error(e);
+    console.error(e)
   }
-};
+}
 
 const getCounterpartySettlements = async ({
   page,
@@ -126,7 +126,7 @@ const getCounterpartySettlements = async ({
 
 const closeWindow = () => {
   window.close();
-};
+}
 
 watch(selectedBlock, newVal => {
   if (newVal === "История") getDocumentHistory();
@@ -140,7 +140,7 @@ onMounted( () => {
 
 <template>
   <div class="pa-4 mb-0">
-    <div class="d-flex justify-space-between">
+    <div class="d-flex align-center">
       <div class="switcher">
         <button
             @click="seletectBlock('История')"
@@ -173,8 +173,9 @@ onMounted( () => {
           Взаимодействие с поставщиками
         </button>
       </div>
-
-      <Button @click="closeWindow" name="close"/>
+      <div class="mb-1 ms-2">
+        <Button @click="closeWindow" name="close"/>
+      </div>
     </div>
 
     <div v-if="selectedBlock === 'История'">

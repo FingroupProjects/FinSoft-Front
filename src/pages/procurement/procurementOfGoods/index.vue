@@ -10,8 +10,8 @@ import {BASE_COLOR, FIELD_OF_SEARCH, TITLE_COLOR,} from "../../../composables/co
 import {
   approveDocument, copyMessage,
   ErrorSelectMessage,
-  removeMessage,
-  selectOneItemMessage,
+  removeMessage, restoreMessage,
+  selectOneItemMessage, warningMessage,
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
 import procurementApi from "../../../api/documents/procurement.js";
@@ -25,6 +25,9 @@ import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import Button from "../../../components/button/button.vue";
 import getColor from "../../../composables/displayed/getColor.js";
 import copyDocument from "../../../api/documents/copyDocument.js";
+import providerOrderApi from "../../../api/documents/providerOrder.js";
+import getStatus from "../../../composables/displayed/getStatus.js";
+import {DOCUMENT_ITEMS} from "../../../composables/constant/items.js";
 
 const router = useRouter();
 
@@ -103,7 +106,7 @@ const headerButtons = ref([
   {
     name: "createBasedOn",
     function: async () => {
-      // isCloseCreateBasedModal.value = !isCloseCreateBasedModal.value
+      isCloseCreateBasedModal.value = !isCloseCreateBasedModal.value
 
       if (markedID.value.length !== 1) {
         return showToast(selectOneItemMessage, 'red')
@@ -133,7 +136,7 @@ const headerButtons = ref([
   {
     name: "approve",
     function: () => {
-      approve();
+      approve()
     },
   },
   {
@@ -158,18 +161,48 @@ const countFilter = () => {
   }
 };
 
+const compute = () => {
+  if(markedID.value.length === 0) return showToast(warningMessage, 'warning')
+  console.log(markedItem.value)
+  if(markedItem.value.deleted_at) {
+    return massRestore()
+  }
+  else{
+    return massDel()
+  }
+}
+
 const massDel = async () => {
   try {
-    const { status } = await procurementApi.massDeletion({
+    const { status } = await procurementApi.remove({
       ids: markedID.value,
     });
     if (status === 200) {
       showToast(removeMessage, "red");
-      await getProcurementData({});
-      markedID.value = [];
+      await getProcurementData()
     }
-  } catch (e) {}
-};
+  } catch (e) {
+    console.log(e)
+  } finally {
+    markedID.value = [];
+  }
+}
+
+const massRestore = async () => {
+  try {
+    const {status} = await procurementApi.restore({ids: markedID.value})
+
+    if (status === 200) {
+      showToast(restoreMessage)
+      await getProcurementData()
+      dialog.value = false
+    }
+  } catch (e) {
+    console.error(e)
+  } finally {
+    markedID.value = []
+  }
+}
 
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
@@ -312,15 +345,27 @@ onMounted(() => {
       <div class="d-flex align-center ga-2 pe-2 ms-4">
         <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Покупка</span>
       </div>
-      <v-card variant="text" min-width="350" class="d-flex justify-end ga-2">
+      <div class="d-flex justify-end ga-2">
         <div class="d-flex w-100 justify-end mb-3">
-          <div class="d-flex ga-2">
+          <div class="d-flex ga-2 position-relative">
             <Button
               v-for="(button, idx) in headerButtons"
               :name="button.name"
               :key="idx"
               @click="button.function"
             />
+            <div v-if="isCloseCreateBasedModal" @click.self="isCloseCreateBasedModal = !isCloseCreateBasedModal" class="modalCreateBased">
+              <v-card
+                  style="top: 10%; left: 20%"
+                  max-width="300"
+              >
+                <v-list
+                    :items="DOCUMENT_ITEMS"
+                    item-title="name"
+                    item-value="id"
+                ></v-list>
+              </v-card>
+            </div>
           </div>
         </div>
         <div class="custom_search">
@@ -354,7 +399,7 @@ onMounted(() => {
               counterFilter
           }}</span>
         </div>
-      </v-card>
+      </div>
     </div>
     <v-card class="table">
       <v-data-table-server
@@ -405,13 +450,7 @@ onMounted(() => {
                 class="w-100 d-flex justify-center"
                 :color="getColor(item.active, item.deleted_at)"
               >
-                <span class="padding: 5px;">{{
-                  item.active
-                    ? "Проведен"
-                    : item.deleted_at !== null
-                    ? "Удален"
-                    : "Не проведен"
-                }}</span>
+                <span class="padding: 5px;">{{ getStatus(item.active, item.deleted_at) }}</span>
               </v-chip>
             </td>
             <td>{{ item.counterparty.name }}</td>
@@ -505,11 +544,6 @@ onMounted(() => {
       </v-dialog>
     </v-card>
 
-    <div v-if="isCloseCreateBasedModal" @click.self="isCloseCreateBasedModal = !isCloseCreateBasedModal" class="modalCreateBased">
-      <div class="modal_create_based_body">
-        123
-      </div>
-    </div>
   </div>
 
 
