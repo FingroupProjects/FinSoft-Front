@@ -13,7 +13,10 @@ import {
   addMessage,
   editMessage,
 } from "../../../composables/constant/buttons.js";
-import { FIELD_COLOR, BASE_COLOR } from "../../../composables/constant/colors.js";
+import {
+  FIELD_COLOR,
+  BASE_COLOR,
+} from "../../../composables/constant/colors.js";
 import {
   createAccess,
   readAccess,
@@ -51,11 +54,14 @@ watch(markedID, (newVal) => {
   markedItem.value = barcodes.value.find((el) => el.id === newVal[0]);
 });
 
-watch(() => props.id, (newVal) => {
-  if (newVal !== 0) {
-    getBarcodes({ page: 1, itemsPerPage: 25, });
+watch(
+  () => props.id,
+  (newVal) => {
+    if (newVal !== 0) {
+      getBarcodes({ page: 1, itemsPerPage: 25 });
+    }
   }
-});
+);
 
 watch(
   () => addBarcode.value,
@@ -228,7 +234,6 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
     return del({ page, itemsPerPage, sortBy, search });
   }
 };
-
 </script>
 
 <template>
