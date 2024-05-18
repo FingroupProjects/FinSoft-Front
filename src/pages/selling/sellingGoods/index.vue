@@ -52,6 +52,10 @@ const counterpartyAgreements = ref([]);
 
 const filterForm = ref({
   date: null,
+  startDate: null,
+  endDate: null,
+  active: null,
+  deleted: null,
   provider_id: null,
   counterparty_id: null,
   counterparty_agreement_id: null,
@@ -72,6 +76,11 @@ const headers = ref([
   { title: "Валюта", key: "currency.name" },
 ]);
 
+
+const statusOptions = ['проведён', 'не проведён'];
+  const deletionStatuses = ['не удален', 'удален'];
+ 
+  
 const headerButtons = ref([
   {
     name: "create",
@@ -129,7 +138,11 @@ const headerButtons = ref([
 const getSellingGoods = async ({ page, itemsPerPage, sortBy, search } = {}) => {
   count.value = 0;
   countFilter();
-  const filterData = filterForm.value;
+  const filterData = {
+      ...filterForm.value,
+      active: filterForm.value.active === 'проведён' ? 1 : 0,
+      deleted: filterForm.value.deleted === 'удален' ? 1 : 0 ,
+    };
   filterModal.value = false;
   loading.value = true;
   try {
@@ -140,6 +153,8 @@ const getSellingGoods = async ({ page, itemsPerPage, sortBy, search } = {}) => {
     );
     paginations.value = data.result.pagination;
     sales.value = data.result.data;
+    console.log(data)
+
     loading.value = false;
   } catch (e) {
     console.error(e)
@@ -433,14 +448,24 @@ onMounted(() => {
           <v-form class="d-flex w-100" @submit.prevent="">
             <v-row class="w-100">
               <v-col class="d-flex flex-column w-100 ga-4">
-                <div class="d-flex ga-2 w-100">
+                <div class="d-flex flex-column ga-2 w-100">
                   <custom-text-field
-                    label="Дата"
+                    label="От"
                     type="date"
                     min-width="508"
-                    v-model="filterForm.date"
+                    v-model="filterForm.startDate"
+                  />
+                  <custom-text-field
+                    label="По"
+                    type="date"
+                    min-width="508"
+                    v-model="filterForm.endDate"
                   />
                 </div>
+                <div class="d-flex ga-2">                
+                      <custom-autocomplete label="Статус" :items="statusOptions" v-model="filterForm.active"/>
+                      <custom-autocomplete label="Удалён" :items="deletionStatuses" v-model="filterForm.deleted"/>               
+                  </div>
                 <div class="d-flex ga-2">
                   <custom-autocomplete
                     label="Организация"

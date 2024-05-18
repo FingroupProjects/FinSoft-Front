@@ -47,12 +47,19 @@ const recipient_storages = ref([])
 
 const filterForm = ref({
   date: null,
+  startDate: null,
+  endDate: null,
+  active: null,
+  deleted: null,
   organization_id: null,
   sender_storage_id: null,
   recipient_storage_id: null,
   storage_id: null,
   comment: null,
 })
+
+const statusOptions = ['проведён', 'не проведён'];
+  const deletionStatuses = ['не удален', 'удален'];
 
 
 const headers = ref([
@@ -72,7 +79,11 @@ const rules = {
 const getMoveData = async ({page, itemsPerPage, sortBy, search}) => {
   count.value = 0;
   countFilter()
-  const filterData = filterForm.value
+  const filterData = {
+      ...filterForm.value,
+      active: filterForm.value.active === 'проведён' ? 1 : 0,
+      deleted: filterForm.value.deleted === 'удален' ? 1 : 0 ,
+    };
   filterModal.value = false
   loading.value = true
   try {
@@ -360,14 +371,19 @@ watch(search, debounce((newValue) => {
             <v-form class="d-flex w-100" @submit.prevent="">
               <v-row class="w-100">
                 <v-col class="d-flex flex-column w-100 ga-4">
-                  <div class="d-flex ga-2 w-100">
-                  <custom-text-field label="Дата" type="date" min-width="508"  v-model="filterForm.date"/>
+                  <div class="d-flex flex-column ga-2 w-100">
+                    <custom-text-field label="От" type="date" min-width="508"  v-model="filterForm.startDate"/>
+                    <custom-text-field label="По" type="date" min-width="508"  v-model="filterForm.endDate"/>
+                    </div>
+                    <div class="d-flex ga-2">                
+                      <custom-autocomplete min-width="250" label="Статус" :items="statusOptions" v-model="filterForm.active"/>
+                      <custom-autocomplete min-width="250" label="Удалён" :items="deletionStatuses" v-model="filterForm.deleted"/>               
                   </div>
                   <div class="d-flex ga-2">
-                    <custom-autocomplete label="Огранизация" :items="organizations"  v-model="filterForm.organization_id"/>
-                    <custom-autocomplete label="Склад-отправитель" :items="storages" v-model="filterForm.storage_id"/>               
-                    <custom-autocomplete label="Склад-получатель" :items="storages" v-model="filterForm.storage_id"/>               
-                 </div>
+                    <custom-autocomplete min-width="250" label="Огранизация" :items="organizations"  v-model="filterForm.organization_id"/>
+                    <custom-autocomplete min-width="250" label="Склад-отправитель" :items="storages" v-model="filterForm.storage_id"/>               
+                  </div>
+                  <custom-autocomplete min-width="508" label="Склад-получатель" :items="storages" v-model="filterForm.storage_id"/>               
                   <div class="d-flex justify-end ga-2">
                     <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
                     <v-btn :color="BASE_COLOR" class="btn"  @click="getMoveData">применить</v-btn>
@@ -386,6 +402,7 @@ watch(search, debounce((newValue) => {
 <style scoped>
 .filterElement {
   position: relative;
+  margin-bottom: 10px;  
 }
 .countFilter {
   position: absolute;
