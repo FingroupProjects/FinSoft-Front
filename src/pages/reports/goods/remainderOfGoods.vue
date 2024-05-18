@@ -1,6 +1,6 @@
 <script setup>
 import storageApi from "../../../api/list/storage";
-import { computed, onMounted, reactive, ref } from "vue";
+import { onMounted, reactive, ref } from "vue";
 import Icons from "../../../composables/Icons/Icons.vue";
 import organizationApi from "../../../api/list/organizations";
 import { BASE_COLOR } from "../../../composables/constant/colors.js";
@@ -21,13 +21,11 @@ const headers = ref([
   { title: "Приход", key: "income" },
   { title: "Расход", key: "outcome" },
   { title: "Остаток на конец", key: "total" },
-  { title: "Остаток", key: "remainder" },
 ]);
 
 const filterForm = reactive({
   start_date: null,
   end_date: null,
-  date: null,
   organization_id: null,
   storage_id: null,
 });
@@ -218,7 +216,7 @@ onMounted(async () => {
         <template
           v-slot:group-header="{ item, toggleGroup, isGroupOpen }"
         >
-          <tr>
+          <tr style="background-color: rgba(122, 127, 176, 0.193);">
             <td>
               <VBtn
                 :icon="isGroupOpen(item) ? '$expand' : '$next'"
@@ -229,22 +227,19 @@ onMounted(async () => {
               {{ item.value ? item.value : "Gluten free" }}
             </td>
             <td>
-              {{ totalGoods(item.value) }}
-            </td>
-            <td>
               {{ totalEndRemainders(item.value) > 0 ? totalEndRemainders(item.value) : '' }}
             </td>
             <td>
               {{ totalIncomes(item.value) }}
             </td>
             <td>
+              {{ totalGoods(item.value) }}
+            </td>
+            <td>
               {{ totalOutcomes(item.value) }}
             </td>
             <td>
               {{ totalStartRemainders(item.value) > 0 ? totalStartRemainders(item.value) : '' }}
-            </td>
-            <td>
-              {{ totalRemainder(item.value) }}
             </td>
           </tr>
         </template>
@@ -280,18 +275,9 @@ onMounted(async () => {
                   <custom-text-field
                     class="date"
                     minWidth="280"
-                    label="До"
+                    label="По"
                     type="datetime-local"
                     v-model="filterForm.end_date"
-                  />
-                </div>
-                <div>
-                  <custom-text-field
-                    class="date w-100"
-                    label="На дату"
-                    minWidth="575"
-                    type="datetime-local"
-                    v-model="filterForm.date"
                   />
                 </div>
                 <div class="d-flex justify-space-between">

@@ -376,7 +376,7 @@ const routes = [
     component: () => import("../pages/documentHistory/index.vue"),
   },
   {
-    path: "/documentPrint/:id",
+    path: "/documentPrint/:id/:title",
     name: "documentPrint",
     component: () => import("../pages/documentPrint/index.vue"),
     meta: {

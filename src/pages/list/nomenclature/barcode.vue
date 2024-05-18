@@ -13,7 +13,10 @@ import {
   addMessage,
   editMessage,
 } from "../../../composables/constant/buttons.js";
-import { FIELD_COLOR, BASE_COLOR } from "../../../composables/constant/colors.js";
+import {
+  FIELD_COLOR,
+  BASE_COLOR,
+} from "../../../composables/constant/colors.js";
 import {
   createAccess,
   readAccess,
@@ -52,6 +55,15 @@ watch(markedID, (newVal) => {
 });
 
 watch(
+  () => props.id,
+  (newVal) => {
+    if (newVal !== 0) {
+      getBarcodes({ page: 1, itemsPerPage: 25 });
+    }
+  }
+);
+
+watch(
   () => addBarcode.value,
   (newValue) => {
     if (newValue === false) {
@@ -78,7 +90,7 @@ const getBarcodeById = async (id, { page, itemsPerPage, sortBy, search }) => {
     isEdit.value = true;
     addBarcode.value = true;
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -100,7 +112,7 @@ const createBarcode = async () => {
     loading.value = false;
     await getBarcodes({ page: 1, itemsPerPage: 100 });
   } catch (e) {
-    console.log(e);
+    console.error(e);
     if (e.response.data.errors.barcode) {
       showToast("Такой штрих-код уже существует", "warning");
       loading.value = false;
@@ -124,7 +136,7 @@ const updateBarcode = async () => {
     addBarcode.value = false;
     await getBarcodes({ page: 1, itemsPerPage: 100 });
   } catch (e) {
-    console.log(e);
+    console.error(e);
     if (e.response.data.errors.barcode) {
       showToast("Такой штрих-код уже существует", "warning");
     }
@@ -147,7 +159,7 @@ const getBarcodes = async ({ page, itemsPerPage, sortBy, search }) => {
     barcodes.value = data.result.data;
     pagination.value = data.result.pagination;
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -190,7 +202,7 @@ const del = async ({ page, itemsPerPage, sortBy, search }) => {
       markedID.value = [];
     }
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -206,7 +218,7 @@ const restore = async ({ page, itemsPerPage, sortBy }) => {
       markedID.value = [];
     }
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
