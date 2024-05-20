@@ -157,12 +157,12 @@ const getCurrencies = async () => {
 
 const getGoods = async (good_storage_id, good_organization_id) => {
   const { data } = await goodApi.get({
-    for_sale: 1,
     page: 1,
     itemsPerPage: 100000,
     sortBy: "name",
     good_storage_id: good_storage_id, 
-    good_organization_id: good_organization_id
+    good_organization_id: good_organization_id,
+    for_sale: 1,
   });
   listGoods.value = data.result.data;
 };

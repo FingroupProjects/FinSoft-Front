@@ -1,8 +1,10 @@
 import getDateTimeInShow from "../date/getDateTimeInShow.js";
+import createOnBased from "../../api/documents/createOnBased.js";
 
-export default async function getDataBased(routId, form, goods, documentApi) {
+export default async function getDataBased(routId, form, goods) {
   if (routId) {
-    const {data} = await documentApi.getById(routId)
+    const {data} = await createOnBased.getById(routId)
+    console.log(data)
     form.date = getDateTimeInShow(data.result.date, "-", true);
     form.organization = {
       id: data.result.organization.id,
