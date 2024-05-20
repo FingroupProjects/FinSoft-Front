@@ -20,7 +20,6 @@ import {
   selectOneItemMessage
 } from "@/composables/constant/buttons.js";
 import Icons from "@/composables/Icons/Icons.vue";
-import binarySearch from "@/composables/binarySearch/binarySearch.js";
 
 import {restoreMessage} from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
