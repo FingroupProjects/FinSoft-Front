@@ -288,6 +288,7 @@ watch(
         </div>
         <div class="mt-1 filterElement">
           <Icons
+            style="margin-bottom: 15px;"
             name="filter"
             title="Фильтр"
             @click="filterModal = true"

@@ -297,7 +297,7 @@ onMounted(() => {
             <div class="d-flex ga-2 mt-1 me-3">
               <Button @click="addNewClientReturn" name="save" />
               <Button
-                  @click="router.push('/clientReturnСreate')"
+                  @click="router.push('/clientReturn')"
                   name="close"
               />
             </div>
