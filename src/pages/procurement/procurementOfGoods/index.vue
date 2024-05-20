@@ -1,6 +1,6 @@
 <script setup>
 import {onMounted, ref, watch} from "vue";
-import {useRouter} from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 import showToast from "../../../composables/toast/index.js";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
@@ -31,14 +31,15 @@ import copyDocument from "../../../api/documents/copyDocument.js";
 import getStatus from "../../../composables/displayed/getStatus.js";
 import {DOCUMENT_ITEMS} from "../../../composables/constant/items.js";
 import {useModalCreateBased} from "../../../store/modalCreateBased.js";
+import createBased from "../../../composables/modal/createBased.js";
 
 const router = useRouter();
+const route = useRoute();
 
 const loading = ref(true);
 const dialog = ref(false);
 const filterModal = ref(false);
 const hoveredRowIndex = ref(null);
-const isCloseCreateBasedModal = ref(false);
 
 const markedID = ref([]);
 const markedItem = ref([]);
@@ -375,7 +376,7 @@ onMounted(() => {
                     :items="DOCUMENT_ITEMS"
                     item-title="name"
                     item-value="id"
-                    @click.item="handleClickItem"
+                    @click.item="createBased($event, router, markedID[0])"
                 ></v-list>
               </v-card>
             </div>
