@@ -426,7 +426,6 @@ onMounted(() => {
     getGoods(),
   ]);
 });
-
 </script>
 <template>
   <div class="document">
