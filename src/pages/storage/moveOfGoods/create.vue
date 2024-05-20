@@ -15,9 +15,10 @@ import moveApi from "../../../api/documents/move.js";
 import goodApi from "../../../api/list/goods.js";
 import { addMessage } from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
-import {BASE_COLOR} from "../../../composables/constant/colors.js";
+import {BASE_COLOR, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
 import currentDateWithTime from "../../../composables/date/currentDateWithTime.js";
+import Button from "../../../components/button/button.vue";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
 
 const useOrganization = ref(useHasOneOrganization())
@@ -162,14 +163,16 @@ onMounted(() => {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Перемещение товаров</span>
+          <span :style="`color: ${TITLE_COLOR}`">Перемещение товаров (создание)</span> 
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="addNewMove" name="add"/>
-              <Icons title="Скопировать" @click="" name="copy"/>
-              <Icons title="Удалить" @click="" name="delete"/>
+            <div class="d-flex ga-2 mt-1 me-3">              
+              <Button @click="addNewMove" name="save" />
+              <Button
+                  @click="router.push('/moveOfGoods')"
+                  name="close"
+              />
             </div>
           </div>
 

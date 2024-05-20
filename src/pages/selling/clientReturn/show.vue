@@ -25,6 +25,7 @@ import formatNumber from "../../../composables/format/formatNumber.js";
 import showDate from "../../../composables/date/showDate.js";
 import {BASE_COLOR, FIELD_GOODS,TITLE_COLOR} from "../../../composables/constant/colors.js";
 import goToPrint from "../../../composables/movementByPage/goToPrint.js";
+import goToHistory from "../../../composables/movementByPage/goToHistory.js";
 
 const router = useRouter()
 const route = useRoute()
@@ -309,6 +310,17 @@ watch(() => form.salePercent, (newValue) => {
 })
 const count = ref(10000)
 
+const validatePrice = (price) => {
+  if (price === 0 || price === '0' || Number(price) === 0) {
+    return false;
+  }
+  return true;
+};
+const handlePriceInput = (item) => {
+  if (!validatePrice(item.price)) {
+    item.price = null;  
+  }
+};
 </script>
 <template>
   <div class="document">
@@ -322,7 +334,7 @@ const count = ref(10000)
             <div class="d-flex ga-2">
               <Button
                   name="history"
-                  @click="getHistory()"
+                  @click="goToHistory()"
               />
               <Button
                   name="print"
@@ -429,7 +441,7 @@ const count = ref(10000)
                   </td>
                   <td>
                     <custom-text-field 
-                     @input="validateNumberInput(item.price)"
+                     @input="validateNumberInput(item.price), handlePriceInput(item)"
                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'" 
                      v-mask="'##########'"
                      min-width="80" 

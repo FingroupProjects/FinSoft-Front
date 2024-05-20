@@ -283,6 +283,17 @@ onMounted(() => {
   getStorages()
   getGoods()
 })
+const validatePrice = (price) => {
+  if (price === 0 || price === '0' || Number(price) === 0) {
+    return false;
+  }
+  return true;
+};
+const handlePriceInput = (item) => {
+  if (!validatePrice(item.price)) {
+    item.price = null;  
+  }
+};
 
 </script>
 <template>
@@ -297,7 +308,7 @@ onMounted(() => {
             <div class="d-flex ga-2 mt-1 me-3">
               <Button @click="addNewClientReturn" name="save" />
               <Button
-                  @click="router.push('/clientReturnСreate')"
+                  @click="router.push('/clientReturn')"
                   name="close"
               />
             </div>
@@ -394,7 +405,9 @@ onMounted(() => {
                     :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                     v-mask="'##########'" 
                     min-width="80" 
-                    max-width="150"/>
+                    max-width="150"
+                    @input="handlePriceInput(item)"
+                    />
                   </td>
                   <td>
                     <custom-text-field 

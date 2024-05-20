@@ -136,9 +136,9 @@ const getGoods = async (good_storage_id, good_organization_id) => {
       sortBy: "name",
     },
     search,
-    for_sale,
     good_storage_id,
-    good_organization_id
+    good_organization_id,
+    for_sale,
   );
   listGoods.value = data.result.data;
 };
@@ -367,6 +367,17 @@ onMounted(() => {
   getCounterparties();
   getStorages();
 });
+const validatePrice = (price) => {
+  if (price === 0 || price === '0' || Number(price) === 0) {
+    return false;
+  }
+  return true;
+};
+const handlePriceInput = (item) => {
+  if (!validatePrice(item.price)) {
+    item.price = null;  
+  }
+};
 </script>
 
 <template>
@@ -381,7 +392,7 @@ onMounted(() => {
             <div class="d-flex ga-2 mt-1 me-3">
               <Button @click="addNewSale" name="save" />
               <Button
-                @click="router.push('/sellingGoodsCreate')"
+                @click="router.push('/sellingGoods')"
                 name="close"
               />
             </div>
@@ -492,6 +503,7 @@ onMounted(() => {
                       "
                       v-mask="'##########'"
                       min-width="80"
+                      @input="handlePriceInput(item)"
                     />
                   </td>
                   <td>

@@ -15,7 +15,7 @@ import invertorApi from "../../../api/documents/invertor.js";
 import goodApi from "../../../api/list/goods.js";
 import { editMessage } from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
-import { BASE_COLOR } from "../../../composables/constant/colors.js";
+import { BASE_COLOR, TITLE_COLOR } from "../../../composables/constant/colors.js";
 import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
 import formatDateTime from "../../../composables/date/formatDateTime.js";
 import showDate from "../../../composables/date/showDate.js";

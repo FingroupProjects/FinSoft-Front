@@ -15,7 +15,7 @@ import saleApi from "../../../api/documents/sale.js";
 import goodApi from "../../../api/list/goods.js";
 import {editMessage, selectOneItemMessage} from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
-import {BASE_COLOR} from "../../../composables/constant/colors.js";
+import {BASE_COLOR, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
 import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
 import Button from "../../../components/button/button.vue";
@@ -157,12 +157,12 @@ const getCurrencies = async () => {
 
 const getGoods = async (good_storage_id, good_organization_id) => {
   const { data } = await goodApi.get({
-    for_sale: 1,
     page: 1,
     itemsPerPage: 100000,
     sortBy: "name",
     good_storage_id: good_storage_id, 
-    good_organization_id: good_organization_id
+    good_organization_id: good_organization_id,
+    for_sale: 1,
   });
   listGoods.value = data.result.data;
 };
@@ -356,7 +356,17 @@ watch(
       }
     }
 );
-
+const validatePrice = (price) => {
+  if (price === 0 || price === '0' || Number(price) === 0) {
+    return false;
+  }
+  return true;
+};
+const handlePriceInput = (item) => {
+  if (!validatePrice(item.price)) {
+    item.price = null;  
+  }
+};
 </script>
 <template>
   <div class="document">
@@ -472,7 +482,7 @@ watch(
                   <td>
                     <custom-text-field
                         v-model="item.price"
-                        @input="validateNumberInput(item.price)"
+                        @input="validateNumberInput(item.price), handlePriceInput(item)"
                         :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                         min-width="80"
                     />

@@ -288,12 +288,13 @@ watch(
         </div>
         <div class="mt-1 filterElement">
           <Icons
+            style="margin-bottom: 15px;"
             name="filter"
             title="Фильтр"
             @click="filterModal = true"
             class="mt-1"
           />
-          <span v-if="counterFilter !== 0" class="countFilter">{{
+          <span v-if="count !== 0" class="countFilter">{{
             count
           }}</span>
         </div>
