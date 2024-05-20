@@ -8,10 +8,13 @@ import CustomAutocomplete from "../../../components/formElements/CustomAutocompl
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import {BASE_COLOR, FIELD_OF_SEARCH, TITLE_COLOR,} from "../../../composables/constant/colors.js";
 import {
-  approveDocument, copyMessage,
+  approveDocument,
+  copyMessage,
   ErrorSelectMessage,
-  removeMessage, restoreMessage,
-  selectOneItemMessage, warningMessage,
+  removeMessage,
+  restoreMessage,
+  selectOneItemMessage,
+  warningMessage,
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
 import procurementApi from "../../../api/documents/procurement.js";
@@ -25,9 +28,9 @@ import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import Button from "../../../components/button/button.vue";
 import getColor from "../../../composables/displayed/getColor.js";
 import copyDocument from "../../../api/documents/copyDocument.js";
-import providerOrderApi from "../../../api/documents/providerOrder.js";
 import getStatus from "../../../composables/displayed/getStatus.js";
 import {DOCUMENT_ITEMS} from "../../../composables/constant/items.js";
+import {useModalCreateBased} from "../../../store/modalCreateBased.js";
 
 const router = useRouter();
 
@@ -53,6 +56,7 @@ const authors = ref([]);
 const currencies = ref([]);
 const counterparties = ref([]);
 const counterpartyAgreements = ref([]);
+const modalCreateBased = useModalCreateBased();
 
 const filterForm = ref({
   date: null,
@@ -106,13 +110,11 @@ const headerButtons = ref([
   {
     name: "createBasedOn",
     function: async () => {
-      isCloseCreateBasedModal.value = !isCloseCreateBasedModal.value
-
       if (markedID.value.length !== 1) {
-        return showToast(selectOneItemMessage, 'red')
+        return showToast(selectOneItemMessage, 'warning')
       }
 
-      await router.push({ name: "procurementOfGoodsCreate", query: { id: markedID.value[0] } })
+      modalCreateBased.isModal()
     },
   },
   {
@@ -162,9 +164,8 @@ const countFilter = () => {
 };
 
 const compute = () => {
-  if(markedID.value.length === 0) return showToast(warningMessage, 'warning')
-  console.log(markedItem.value)
-  if(markedItem.value.deleted_at) {
+  if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
+  if (markedItem.value.deleted_at) {
     return massRestore()
   }
   else{
@@ -341,7 +342,7 @@ onMounted(() => {
 
 <template>
   <div class="pa-4">
-    <div class="d-flex justify-space-between">
+    <div class="d-flex justify-space-between ">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
         <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Покупка</span>
       </div>
@@ -354,15 +355,16 @@ onMounted(() => {
               :key="idx"
               @click="button.function"
             />
-            <div v-if="isCloseCreateBasedModal" @click.self="isCloseCreateBasedModal = !isCloseCreateBasedModal" class="modalCreateBased">
+            <div v-if="modalCreateBased.isModalCreateBased" @click.self="modalCreateBased.isModal()" class="modal_create_based">
               <v-card
-                  style="top: 10%; left: 20%"
+                  style="margin-top: 15%; left: -10%"
                   max-width="300"
               >
                 <v-list
                     :items="DOCUMENT_ITEMS"
                     item-title="name"
                     item-value="id"
+                    @click.item="handleClickItem"
                 ></v-list>
               </v-card>
             </div>
@@ -543,7 +545,6 @@ onMounted(() => {
         </v-card>
       </v-dialog>
     </v-card>
-
   </div>
 
 

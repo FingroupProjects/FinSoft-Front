@@ -8,6 +8,7 @@ import Sidebar from "./components/sidebar/Sidebar.vue";
 // import { initializeApp } from "firebase/app";
 // import { getMessaging, getToken, onMessage } from "firebase/messaging";
 import warningModal from "./components/paymentWarning/warningModal.vue";
+import {useModalCreateBased} from "./store/modalCreateBased.js";
 
 const rale = ref(true);
 const procurementOfGoods = ref(false);
@@ -18,6 +19,7 @@ const lists = ref([]);
 const admins = ref([]);
 const isChangedDocument = ref(false)
 const isUpdateOrCreateDocument = ref(false)
+const modalCreateBased = useModalCreateBased()
 
 const toggleSidebar = () => {
   rale.value = !rale.value;
@@ -44,7 +46,6 @@ window.addEventListener("load", () => {
 })
 
 const changed = data => {
-  // console.log(data)
   return isChangedDocument.value = data
 }
 
@@ -108,6 +109,11 @@ const changed = data => {
         />
         <warningModal />
         <router-view class="w-100 block" @changed="changed"/>
+        <div
+          v-if="modalCreateBased.isModalCreateBased"
+          @click="modalCreateBased.isModal()"
+          class="blackout_page"
+        ></div>
       </div>
     </div>
   </v-app>
