@@ -135,8 +135,8 @@ const headerButtons = ref([
         "        </linearGradient>\n" +
         "      </defs>\n" +
         "    </svg>",
-    bgColor: "#524ED8",
-    textColor: "#fff",
+    bgColor: "#d9dce2",
+    textColor: "#10793F",
   },
   {
     title: "История",
