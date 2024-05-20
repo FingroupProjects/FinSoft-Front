@@ -323,11 +323,11 @@ onMounted(() => {
 <template>
   <div class="pa-4">
     <div class="d-flex justify-space-between">
-      <div class="d-flex align-center ga-2 ms-4">
+      <div class="d-flex align-center ga-2 pe-2 ms-4">
         <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Продажа</span>
       </div>
-      <v-card variant="text" min-width="350" class="d-flex justify-end ga-2">
-        <div class="d-flex w-100 justify-end mb-3">
+      <div class="d-flex justify-end ga-2">
+        <div class="d-flex justify-end mb-3">
           <div class="d-flex ga-2">
             <Button
               v-for="(button, idx) in headerButtons"
@@ -366,11 +366,11 @@ onMounted(() => {
           />
           <span v-if="count !== 0" class="countFilter">{{ count }}</span>
         </div>
-      </v-card>
+      </div>
     </div>
-    <v-card class="table">
+    <div class="table">
       <v-data-table-server
-        style="height: calc(100vh - 150px)"
+        style="height: calc(100vh - 150px);"
         items-per-page-text="Элементов на странице:"
         loading-text="Загрузка"
         no-data-text="Нет данных"
@@ -427,7 +427,7 @@ onMounted(() => {
           </tr>
         </template>
       </v-data-table-server>
-    </v-card>
+    </div>
 
     <v-card>
       <v-dialog
