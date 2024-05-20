@@ -15,7 +15,7 @@ import saleApi from "../../../api/documents/sale.js";
 import goodApi from "../../../api/list/goods.js";
 import {editMessage, selectOneItemMessage} from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
-import {BASE_COLOR} from "../../../composables/constant/colors.js";
+import {BASE_COLOR, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
 import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
 import Button from "../../../components/button/button.vue";

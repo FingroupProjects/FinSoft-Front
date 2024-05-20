@@ -15,13 +15,17 @@ import moveApi from "../../../api/documents/move.js";
 import goodApi from "../../../api/list/goods.js";
 import { editMessage } from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
-import {BASE_COLOR} from "../../../composables/constant/colors.js";
+import {BASE_COLOR , TITLE_COLOR} from "../../../composables/constant/colors.js";
 import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
 import formatDateTime from "../../../composables/date/formatDateTime.js";
+import Button from "../../../components/button/button.vue";
+import goToHistory from "../../../composables/movementByPage/goToHistory.js";
+import goToPrint from "../../../composables/movementByPage/goToPrint.js";
 import showDate from "../../../composables/date/showDate.js";
 
-const useOrganization = ref(useHasOneOrganization())
+const useOrganization = ref(useHasOneOrganization()) 
 const router = useRouter()
+const doc_name = ref('Перемещение товаров')
 const route = useRoute()
 
 const form = reactive({
@@ -193,7 +197,9 @@ const totalPriceWithSale = computed(() => {
 
   return sum
 })
-
+const closeWindow = () => {
+  window.close()
+}
 
 onMounted( () => {
   author.value = JSON.parse(localStorage.getItem('user')).name || null
@@ -217,10 +223,17 @@ onMounted( () => {
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="updateMove" name="add"/>
-              <Icons title="Скопировать" @click="" name="copy"/>
-              <Icons title="Удалить" @click="" name="delete"/>
+            <div class="d-flex items-center ga-2 mt-1 me-3">
+              <Button
+                  name="history"
+                  @click="goToHistory(router, route)"
+              />
+              <Button
+                  name="print"
+                  @click="goToPrint(router, route, doc_name)"
+              />
+              <Button name="save" @click="updateMove" />
+              <Button name="close" @click="closeWindow" />
             </div>
           </div>
         </v-card>

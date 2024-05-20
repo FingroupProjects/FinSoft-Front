@@ -269,7 +269,7 @@ onMounted(() => {
             <div class="d-flex ga-2 mt-1 me-3">
               <Button @click="addNewClientOrder" name="save" />
               <Button
-                  @click="router.push('/clientOrderCreate')"
+                  @click="router.push('/clientOrder')"
                   name="close"
               />
             </div>
