@@ -69,6 +69,13 @@ const headerButtons = ref([
     textColor: "#524ED8",
   },
   {
+    title: "Экспорт",
+    key: "excel",
+    icon: "",
+    bgColor: "#524ED8",
+    textColor: "#fff",
+  },
+  {
     title: "История",
     key: "history",
     icon: "<svg  height=\"13\" version=\"1.1\" viewBox=\"0 0 20 21\" width=\"13\" xmlns=\"http://www.w3.org/2000/svg\"\n" +
