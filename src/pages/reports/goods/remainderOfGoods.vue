@@ -2,6 +2,7 @@
 import storageApi from "../../../api/list/storage";
 import { onMounted, reactive, ref } from "vue";
 import Icons from "../../../composables/Icons/Icons.vue";
+import Button from "../../../components/button/button.vue";
 import organizationApi from "../../../api/list/organizations";
 import { BASE_COLOR } from "../../../composables/constant/colors.js";
 import remainderOfGoodsApi from "../../../api/reports/remainderOfGoods";
@@ -54,7 +55,7 @@ const closeFilterModal = async () => {
 };
 
 const getRemainderOfGoods = async ({ page, itemsPerPage, sortBy, search }) => {
-  loading.value = true
+  loading.value = true;
   countFilter();
   const filterData = filterForm;
   try {
@@ -63,11 +64,10 @@ const getRemainderOfGoods = async ({ page, itemsPerPage, sortBy, search }) => {
       search,
       filterData
     );
-    console.log(res);
     goods.value = res.data.result.data;
     pagination.value = res.data.result.pagination;
-    loading.value = false
-    filterModal.value = false
+    loading.value = false;
+    filterModal.value = false;
   } catch (e) {
     console.error(e);
   }
@@ -120,16 +120,16 @@ const totalOutcomes = (itemName) => {
   return total;
 };
 
-const totalRemainder = (itemName) => {
-  let filteredGoods = goods.value.filter(
-    (item) => item.group.name === itemName
-  );
-  const total = filteredGoods.reduce((acc, curr) => {
-    return acc + curr.remainder;
-  }, 0);
+// const totalRemainder = (itemName) => {
+//   let filteredGoods = goods.value.filter(
+//     (item) => item.group.name === itemName
+//   );
+//   const total = filteredGoods.reduce((acc, curr) => {
+//     return acc + curr.remainder;
+//   }, 0);
 
-  return total;
-};
+//   return total;
+// };
 
 const totalStartRemainders = (itemName) => {
   let filteredGoods = goods.value.filter(
@@ -161,6 +161,23 @@ const countFilter = () => {
   }
 };
 
+const getExcel = async () => {
+  try {
+    const { data } = await remainderOfGoodsApi.excel();
+    const url = window.URL.createObjectURL(
+      new Blob([data], { type: "application/vnd.ms-excel" })
+    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "Отчет.xls");
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 onMounted(async () => {
   await getStorages();
   await getOrganizations();
@@ -169,21 +186,24 @@ onMounted(async () => {
 <template>
   <div class="pa-4">
     <div class="d-flex justify-space-between align-center mb-4">
-      <div class="switcher">
-        <button
-          @click="seletectBlock('По группам')"
-          :class="selectedBlock === 'По группам' ? 'active' : ''"
-          class="button"
-        >
-          По группам
-        </button>
-        <button
-          @click="seletectBlock('По элементам')"
-          :class="selectedBlock === 'По элементам' ? 'active' : ''"
-          class="button"
-        >
-          По элементам
-        </button>
+      <div class="d-flex ga-4">
+        <div class="switcher">
+          <button
+            @click="seletectBlock('По группам')"
+            :class="selectedBlock === 'По группам' ? 'active' : ''"
+            class="button"
+          >
+            По группам
+          </button>
+          <button
+            @click="seletectBlock('По элементам')"
+            :class="selectedBlock === 'По элементам' ? 'active' : ''"
+            class="button"
+          >
+            По элементам
+          </button>
+        </div>
+        <Button name="excel" @click="getExcel()" />
       </div>
       <div class="filterElement">
         <Icons name="filter" title="Фильтр" @click="filterModal = true" />
@@ -213,10 +233,8 @@ onMounted(async () => {
           { value: 100, title: '100' },
         ]"
       >
-        <template
-          v-slot:group-header="{ item, toggleGroup, isGroupOpen }"
-        >
-          <tr style="background-color: rgba(122, 127, 176, 0.193);">
+        <template v-slot:group-header="{ item, toggleGroup, isGroupOpen }">
+          <tr style="background-color: rgba(122, 127, 176, 0.193)">
             <td>
               <VBtn
                 :icon="isGroupOpen(item) ? '$expand' : '$next'"
@@ -227,7 +245,11 @@ onMounted(async () => {
               {{ item.value ? item.value : "Gluten free" }}
             </td>
             <td>
-              {{ totalEndRemainders(item.value) > 0 ? totalEndRemainders(item.value) : '' }}
+              {{
+                totalEndRemainders(item.value) > 0
+                  ? totalEndRemainders(item.value)
+                  : ""
+              }}
             </td>
             <td>
               {{ totalIncomes(item.value) }}
@@ -239,7 +261,11 @@ onMounted(async () => {
               {{ totalOutcomes(item.value) }}
             </td>
             <td>
-              {{ totalStartRemainders(item.value) > 0 ? totalStartRemainders(item.value) : '' }}
+              {{
+                totalStartRemainders(item.value) > 0
+                  ? totalStartRemainders(item.value)
+                  : ""
+              }}
             </td>
           </tr>
         </template>
@@ -267,7 +293,7 @@ onMounted(async () => {
                 <div class="d-flex justify-space-between">
                   <custom-text-field
                     class="date"
-                    minWidth="280"  
+                    minWidth="280"
                     label="От"
                     type="datetime-local"
                     v-model="filterForm.start_date"

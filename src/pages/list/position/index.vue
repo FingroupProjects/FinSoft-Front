@@ -5,20 +5,18 @@ import showToast from '../../../composables/toast'
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import position from '../../../api/list/position.js'
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
-import {createAccess, updateAccess, removeAccess} from "../../../composables/access/access.js";
-import {FIELD_COLOR, FIELD_OF_SEARCH ,BASE_COLOR} from "../../../composables/constant/colors.js";
+import {createAccess, removeAccess, updateAccess} from "../../../composables/access/access.js";
+import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 import {
   addMessage,
   editMessage,
+  ErrorSelectMessage,
   removeMessage,
-  warningMessage,
-  selectOneItemMessage, ErrorSelectMessage
+  restoreMessage,
+  selectOneItemMessage
 } from "../../../composables/constant/buttons.js";
 import Icons from "../../../composables/Icons/Icons.vue";
-import binarySearch from "../../../composables/binarySearch/binarySearch.js";
 import validate from "./validate.js";
-
-import {restoreMessage} from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
 
 const router = useRouter()
