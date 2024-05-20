@@ -11,6 +11,7 @@ const router = useRouter();
 const route = useRoute();
 
 const goods = ref([]);
+const doc_name = ref('')
 
 const form = reactive({
   date: null,
@@ -36,7 +37,6 @@ const headers = ref([
 const getProcurementDetails = async () => {
   try {
     const { data } = await procurementApi.getById(route.params.id);
-    console.log(data);
     form.doc_number = data.result.doc_number;
     form.date = showDate(data.result.date, "-", true);
     (form.organization = data.result.organization.name),
@@ -90,18 +90,19 @@ const windowPrint = () => {
   window.print();
 };
 
-onMounted(async () => {
-  await getProcurementDetails();
-  window.addEventListener("afterprint", handleAfterPrint);
-  windowPrint();
-});
-
 const handleAfterPrint = () => {
   window.removeEventListener("afterprint", handleAfterPrint);
   setTimeout(() => {
     router.go(-1);
   }, 500);
 };
+
+onMounted(async () => {
+  doc_name.value = route.params.title
+  await getProcurementDetails();
+  window.addEventListener("afterprint", handleAfterPrint);
+  windowPrint();
+});
 </script>
 
 <template>
@@ -128,16 +129,10 @@ const handleAfterPrint = () => {
             label="Склад"
           />
         </div>
-        <CustomTextField
-          style="min-width: 90px; max-width: 90px"
-          variant="underlined"
-          v-model="form.date"
-          label="Дата"
-        />
       </div>
       <div class="d-flex flex-column justify-center ga-10">
         <div class="text-center">
-          <h2>Накладная № {{ form.doc_number }}</h2>
+          <h2>Накладная {{ doc_name }} № {{ form.doc_number }} от {{ form.date }}</h2>
         </div>
         <table class="border-none table-auto w-full">
           <thead>
@@ -181,7 +176,7 @@ const handleAfterPrint = () => {
 </template>
 
 <style scoped>
-td {
+td{
   padding: 10px;
 }
 
@@ -194,29 +189,24 @@ td {
 }
 
 .border-none tr:last-child td {
-  border-bottom: none;
 }
 
 .border-none tr td:first-child {
-  border-left: none;
 }
 
 .border-none tr td:last-child {
-  border-right: none;
 }
 
 th {
+  padding: 10px;
   border: 1px solid #d9d9d9;
-  border-top: none;
 }
 
 .border-none th:first-child {
-  border-left: none;
   border-radius: 20px;
 }
 
 .border-none th:last-child {
   border-radius: 20px;
-  border-right: none;
 }
 </style>
