@@ -323,7 +323,7 @@ onMounted(() => {
 <template>
   <div class="pa-4">
     <div class="d-flex justify-space-between">
-      <div class="d-flex align-center ga-2 pe-2 ms-4">
+      <div class="d-flex align-center ga-2 ms-4">
         <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Продажа</span>
       </div>
       <v-card variant="text" min-width="350" class="d-flex justify-end ga-2">
