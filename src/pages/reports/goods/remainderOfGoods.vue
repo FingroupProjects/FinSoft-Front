@@ -169,7 +169,7 @@ const getExcel = async () => {
     );
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", "file.xls");
+    link.setAttribute("download", "Отчет.xls");
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -203,7 +203,7 @@ onMounted(async () => {
             По элементам
           </button>
         </div>
-        <Button name="excel" @click="goToHistory()" />
+        <Button name="excel" @click="getExcel()" />
       </div>
       <div class="filterElement">
         <Icons name="filter" title="Фильтр" @click="filterModal = true" />
