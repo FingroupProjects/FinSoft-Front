@@ -136,9 +136,9 @@ const getGoods = async (good_storage_id, good_organization_id) => {
       sortBy: "name",
     },
     search,
-    for_sale,
     good_storage_id,
-    good_organization_id
+    good_organization_id,
+    for_sale,
   );
   listGoods.value = data.result.data;
 };
