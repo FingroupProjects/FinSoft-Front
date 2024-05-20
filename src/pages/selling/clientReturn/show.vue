@@ -23,11 +23,14 @@ import ButtonGoods from "../../../components/button/buttonGoods.vue";
 import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
 import formatNumber from "../../../composables/format/formatNumber.js";
 import showDate from "../../../composables/date/showDate.js";
-import {BASE_COLOR, FIELD_GOODS} from "../../../composables/constant/colors.js";
+import {BASE_COLOR, FIELD_GOODS,TITLE_COLOR} from "../../../composables/constant/colors.js";
+import goToPrint from "../../../composables/movementByPage/goToPrint.js";
 
 const router = useRouter()
 const route = useRoute()
 const hoveredRowId = ref(null);
+
+const doc_name = ref("Возврат от клиента");
 
 const form = reactive({
   doc_number: null,
@@ -310,25 +313,20 @@ const count = ref(10000)
 <template>
   <div class="document">
     <v-col>
-      <div class="d-flex justify-space-between text-uppercase ">
-        <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Возврат от клиента (просмотр)</span>
-        </div>
+      <div class="d-flex justify-space-between">
+      <div class="d-flex align-center ms-4">
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">{{ doc_name }} (просмотр)</span>
+      </div>
         <v-card variant="text" class="d-flex align-center ga-2">
-          <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
+          <div class="d-flex w-100 justify-end mb-1 mt-2">
+            <div class="d-flex ga-2">
               <Button
                   name="history"
                   @click="getHistory()"
               />
               <Button
                   name="print"
-                  @click="
-                $router.push({
-                  name: 'documentPrint', 
-                  params: { id: route.params.id },
-                })
-              "
+                  @click="goToPrint(router, route, doc_name)"
               />
               <Button name="save" @click="updateClientReturn" />
               <Button name="close" @click="closeWindow" />
