@@ -252,6 +252,17 @@ onMounted(() => {
   getStorages()
   getGoods()
 })
+const validatePrice = (price) => {
+  if (price === 0 || price === '0' || Number(price) === 0) {
+    return false;
+  }
+  return true;
+};
+const handlePriceInput = (item) => {
+  if (!validatePrice(item.price)) {
+    item.price = null;  
+  }
+};
 </script>
 <template>
   <div class="document">
@@ -341,6 +352,7 @@ onMounted(() => {
                       :value="validateNumberInput(item.price)"
                       :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                       min-width="80"
+                      @input="handlePriceInput(item)"
                   />
                 </td>
                 <td>
