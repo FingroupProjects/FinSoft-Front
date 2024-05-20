@@ -299,7 +299,7 @@ onMounted(() => {
             @click="filterModal = true"
             class="mt-1"
           />
-          <span v-if="counterFilter !== 0" class="countFilter">{{
+          <span v-if="count !== 0" class="countFilter">{{
             count
           }}</span>
         </div>

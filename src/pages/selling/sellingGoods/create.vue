@@ -367,6 +367,17 @@ onMounted(() => {
   getCounterparties();
   getStorages();
 });
+const validatePrice = (price) => {
+  if (price === 0 || price === '0' || Number(price) === 0) {
+    return false;
+  }
+  return true;
+};
+const handlePriceInput = (item) => {
+  if (!validatePrice(item.price)) {
+    item.price = null;  
+  }
+};
 </script>
 
 <template>
@@ -492,6 +503,7 @@ onMounted(() => {
                       "
                       v-mask="'##########'"
                       min-width="80"
+                      @input="handlePriceInput(item)"
                     />
                   </td>
                   <td>

@@ -322,8 +322,17 @@ onMounted( () => {
   ])
 })
 
-
-
+const validatePrice = (price) => {
+  if (price === 0 || price === '0' || Number(price) === 0) {
+    return false;
+  }
+  return true;
+};
+const handlePriceInput = (item) => {
+  if (!validatePrice(item.price)) {
+    item.price = null;  
+  }
+};
 </script>
 <template>
   <div class="document">
@@ -431,7 +440,7 @@ onMounted( () => {
                   <td>
                     <custom-text-field 
                     v-model="item.price" 
-                    @input="validateNumberInput(item.price)"
+                    @input="validateNumberInput(item.price), handlePriceInput(item)"
                         :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                     v-mask="'##########'"
                      min-width="80"/>
