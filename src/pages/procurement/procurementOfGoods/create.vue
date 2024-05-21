@@ -333,7 +333,6 @@ onMounted(() => {
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
 
   getDataBased(route.query.id, form, goods);
-
   getOrganizations();
   getCounterparties();
   getStorages();

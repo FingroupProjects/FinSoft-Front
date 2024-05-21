@@ -8,8 +8,8 @@ export default function getDateTimeInShow(dateTimeString, sign = '.', reverse = 
 
   // Форматируем дату и время в зависимости от параметра reverse
   if (reverse) {
-    return `${year}${sign}${month}${sign}${day} ${hours}:${minutes}`;
+    return `${year}${sign}${month}${sign}${day} ${hours}:${minutes}:00`;
   } else {
-    return `${day}${sign}${month}${sign}${year} ${hours}:${minutes}`;
+    return `${day}${sign}${month}${sign}${year} ${hours}:${minutes}:00`;
   }
 }
