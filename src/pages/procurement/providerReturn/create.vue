@@ -1,12 +1,11 @@
 <script setup>
 import {computed, defineEmits, onMounted, onUnmounted, reactive, ref, watch} from "vue";
-import Icons from "../../../composables/Icons/Icons.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../../composables/toast/index.js";
 import validate from "./validate.js";
-import {useRouter} from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import storageApi from "../../../api/list/storage.js";
@@ -24,12 +23,16 @@ import formatNumber from "../../../composables/format/formatNumber.js";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";
 import {FIELD_GOODS, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import Button from "../../../components/button/button.vue";
+import {useModalCreateBased} from "../../../store/modalCreateBased.js";
+import getDataBased from "../../../composables/otherQueries/getDataBased.js";
 
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter()
-const emits = defineEmits(['changed']) 
+const route = useRoute()
+const emits = defineEmits(['changed'])
 const confirmDocument = useConfirmDocumentStore()
-const hoveredRowId = ref(null);
+const modalCreateBased = useModalCreateBased()
+const hoveredRowId = ref(null)
 
 const form = reactive({
   date: null,
@@ -206,6 +209,8 @@ const totalCount = computed(() =>
 watch(
     () => form.counterparty,
     async (id) => {
+      if (route.query.id) return
+
       form.cpAgreement = null;
       await getCpAgreements(id);
     }
@@ -214,10 +219,12 @@ watch(
 watch(
     () => form.cpAgreement,
     (newValue) => {
+      if (route.query.id) return
+
       if (newValue !== null) {
         const cpAgreement = cpAgreements.value.find((el) =>
             (el.id === typeof newValue) === "object" ? newValue.id : newValue
-        );
+        )
         form.currency = cpAgreement.currency_id;
       }
     }
@@ -247,6 +254,7 @@ onMounted(() => {
   form.organization =  JSON.parse(localStorage.getItem("user")).organization || null;
   author.value = JSON.parse(localStorage.getItem('user')).name || null
 
+  getDataBased(route.query.id, form, goods)
   getOrganizations()
   getCounterparties()
   getStorages()

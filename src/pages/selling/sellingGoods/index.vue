@@ -25,6 +25,8 @@ import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import Button from "../../../components/button/button.vue";
 import getColor from "../../../composables/displayed/getColor.js";
 import copyDocument from "../../../api/documents/copyDocument.js";
+import {useModalCreateBased} from "../../../store/modalCreateBased.js";
+import CreateBase from "../../../components/modal/CreateBase.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -32,6 +34,7 @@ const router = useRouter();
 const loading = ref(true);
 const filterModal = ref(false);
 const hoveredRowIndex = ref(null);
+const modalCreateBased = useModalCreateBased();
 
 const markedID = ref([]);
 const markedItem = ref([]);
@@ -90,11 +93,10 @@ const headerButtons = ref([
     name: "createBasedOn",
     function: async () => {
       if (markedID.value.length !== 1) {
-        return showToast(selectOneItemMessage, 'red')
+        return showToast(selectOneItemMessage, 'warning')
       }
-      const item = sales.value.find(item => item.id === markedID.value[0]) || {}
-      localStorage.setItem('createBasedOn', JSON.stringify(item))
-      await router.push({ name: "sellingGoodsCreate", query: { id: markedID.value[0] } })
+
+      modalCreateBased.isModal()
     },
   },
   {
@@ -153,8 +155,6 @@ const getSellingGoods = async ({ page, itemsPerPage, sortBy, search } = {}) => {
     );
     paginations.value = data.result.pagination;
     sales.value = data.result.data;
-    console.log(data)
-
     loading.value = false;
   } catch (e) {
     console.error(e)
@@ -328,13 +328,14 @@ onMounted(() => {
       </div>
       <div class="d-flex justify-end ga-2">
         <div class="d-flex justify-end mb-3">
-          <div class="d-flex ga-2">
+          <div class="d-flex ga-2 position-relative">
             <Button
               v-for="(button, idx) in headerButtons"
               :name="button.name"
               :key="idx"
               @click="button.function"
             />
+            <create-base :marked-i-d="markedID[0]" />
           </div>
         </div>
         <div class="custom_search">

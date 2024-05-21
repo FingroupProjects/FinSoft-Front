@@ -1,12 +1,10 @@
 <script setup>
 import {computed, defineEmits, defineProps, onMounted, reactive, ref, watch} from "vue";
-import Icons from "../../../composables/Icons/Icons.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../../composables/toast/index.js";
 import validate from "./validate.js";
-import showDate from "../../../composables/date/showDate.js";
 import {useRoute, useRouter} from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
 import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
@@ -16,15 +14,15 @@ import currencyApi from "../../../api/list/currency.js";
 import providerOrderApi from "../../../api/documents/providerOrder.js";
 import goodApi from "../../../api/list/goods.js";
 import formatNumber from "../../../composables/format/formatNumber.js";
-import { editMessage, selectOneItemMessage } from "../../../composables/constant/buttons.js";
-import {BASE_COLOR} from "../../../composables/constant/colors.js";
-import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
+import {editMessage, selectOneItemMessage} from "../../../composables/constant/buttons.js";
+import {FIELD_GOODS} from "../../../composables/constant/colors.js";
+import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
 import "../../../assets/css/procurement.css";
 import Button from "../../../components/button/button.vue";
+import ButtonGoods from "../../../components/button/buttonGoods.vue";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
 import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
-
 
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter()
