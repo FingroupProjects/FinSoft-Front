@@ -1,12 +1,10 @@
 <script setup>
 import {computed, defineEmits, defineProps, onMounted, reactive, ref, watch} from "vue";
-import Icons from "../../../composables/Icons/Icons.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../../composables/toast/index.js";
 import validate from "./validate.js";
-import showDate from "../../../composables/date/showDate.js";
 import {useRoute, useRouter} from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
 import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
@@ -16,15 +14,17 @@ import currencyApi from "../../../api/list/currency.js";
 import providerOrderApi from "../../../api/documents/providerOrder.js";
 import goodApi from "../../../api/list/goods.js";
 import formatNumber from "../../../composables/format/formatNumber.js";
-import { editMessage, selectOneItemMessage } from "../../../composables/constant/buttons.js";
-import {BASE_COLOR} from "../../../composables/constant/colors.js";
-import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
+import {editMessage, selectOneItemMessage} from "../../../composables/constant/buttons.js";
+import {FIELD_GOODS} from "../../../composables/constant/colors.js";
+import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
 import "../../../assets/css/procurement.css";
 import Button from "../../../components/button/button.vue";
+import ButtonGoods from "../../../components/button/buttonGoods.vue";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
 import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
-
+import goToHistory from "../../../composables/movementByPage/goToHistory.js";
+import goToPrint from "../../../composables/movementByPage/goToPrint.js";
 
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter()
@@ -36,6 +36,7 @@ const emits = defineEmits(['changed'])
 const props = defineProps(['isUpdateOrCreateDocument'])
 const confirmDocument = useConfirmDocumentStore()
 const tempForm = ref({})
+const doc_name = ref('Заказ Поставщику')
 
 const form = reactive({
   doc_number: null,
@@ -272,34 +273,25 @@ watch(form, () => {
   }
 })
 
-watch(() => form.counterparty, async (data) => {
-  form.cpAgreement = null
-
-  const id = typeof data === 'object' ? data.id : data
-
-  try {
-    const res = await cpAgreementApi.getById(id)
-    form.currency = {
-      id: res.data.result.currency_id.id,
-      name: res.data.result.currency_id.name
+watch(
+    () => form.counterparty,
+    async (id) => {
+      form.cpAgreement = null;
+      await getCpAgreements(id);
     }
+);
 
-    setTimeout(() => {
-      tempForm.value.currency = {
-        id: res.data.result.currency_id.id,
-        name: res.data.result.currency_id.name
+watch(
+    () => form.cpAgreement,
+    (newValue) => {
+      if (newValue !== null) {
+        const cpAgreement = cpAgreements.value.find((el) =>
+            (el.id === typeof newValue) === "object" ? newValue.id : newValue
+        );
+        form.currency = cpAgreement.currency_id;
       }
-    }, 500)
-
-    const array = Object.prototype.toString.call(res.data.result) === '[object Array]'
-    const obj = Object.prototype.toString.call(res.data.result) === '[object Object]'
-
-    cpAgreements.value = array ? res.data.result : obj ? [res.data.result] : []
-
-  } catch (e) {
-    cpAgreements.value = []
-  }
-})
+    }
+);
 const closeWindow = () => {
   window.close()
 }
@@ -339,28 +331,18 @@ const handlePriceInput = (item) => {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Заказ поставщику (просмотр)</span>
+          <span>{{ doc_name }} (просмотр)</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
               <Button
                   name="history"
-                  @click="
-                  $router.push({
-                  name: 'documentHistory',
-                  params: { id: route.params.id },
-                })
-              "
+                  @click="goToHistory(router, route)"
               />
               <Button
                   name="print"
-                  @click="
-                  $router.push({
-                  name: 'documentPrint',
-                  params: { id: route.params.id },
-                })
-              "
+                  @click="goToPrint(router, route, doc_name)"
               />
               <Button name="save" @click="updateProviderOrder" />
               <Button name="close" @click="closeWindow" />

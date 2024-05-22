@@ -23,13 +23,15 @@ import Button from "../../../components/button/button.vue";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";  
 import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
 import formatNumber from "../../../composables/format/formatNumber.js";
+import goToPrint from "../../../composables/movementByPage/goToPrint.js";
+import goToHistory from "../../../composables/movementByPage/goToHistory.js";
 
 const useOrganization = ref(useHasOneOrganization())
 
 const router = useRouter()
 const route = useRoute()
 const hoveredRowId = ref(null);
-
+const doc_name = ref("Заказ от клиента");
 
 const form = reactive({
   doc_number: null,
@@ -252,27 +254,25 @@ onMounted( () => {
 const closeWindow = () => {
   window.close();
 };
-watch(() => form.counterparty, async (data) => {
-  form.cpAgreement = null
-
-  const id = typeof data === 'object' ? data.id : data
-
-  try {
-    const res = await cpAgreementApi.getById(id)
-    form.currency = {
-      id: res.data.result.currency_id.id,
-      name: res.data.result.currency_id.name
+watch(
+    () => form.counterparty,
+    async (id) => {
+      form.cpAgreement = null;
+      await getCpAgreements(id);
     }
+);
 
-    const array = Object.prototype.toString.call(res.data.result) === '[object Array]'
-    const obj = Object.prototype.toString.call(res.data.result) === '[object Object]'
-
-    cpAgreements.value = array ? res.data.result : obj ? [res.data.result] : []
-
-  } catch (e) {
-    cpAgreements.value = []
-  }
-})
+watch(
+    () => form.cpAgreement,
+    (newValue) => {
+      if (newValue !== null) {
+        const cpAgreement = cpAgreements.value.find((el) =>
+            (el.id === typeof newValue) === "object" ? newValue.id : newValue
+        );
+        form.currency = cpAgreement.currency_id;
+      }
+    }
+);
 
 const validatePrice = (price) => {
   if (price === 0 || price === '0' || Number(price) === 0) {
@@ -291,32 +291,22 @@ const handlePriceInput = (item) => {
       <div  class="d-flex justify-space-between">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
           <span :style="{ color: TITLE_COLOR, fontSize: '22px' }"
-          >Заказ от клиента (просмотр)</span
+          >{{ doc_name }} (просмотр)</span
         >
         </div>
         <v-card variant="text" style="display: flex; align-items: center">
           <div class="d-flex w-100 justify-end my-3 pr-4">
             <div class="d-flex ga-2">
               <Button
-              name="history"
-              @click="
-                $router.push({
-                  name: 'documentHistory',
-                  params: { id: route.params.id },
-                })
-              "
-            />
-            <Button
-              name="print"
-              @click="
-                $router.push({
-                  name: 'documentPrint',
-                  params: { id: route.params.id },
-                })
-              "
-            />
-            <Button name="save" @click="updateProcurement" />
-            <Button name="close" @click="closeWindow" />
+                  name="history"
+                  @click="goToHistory(router, route)"
+              />
+              <Button
+                  name="print"
+                  @click="goToPrint(router, route, doc_name)"
+              />
+              <Button name="save" @click="updateProcurement" />
+              <Button name="close" @click="closeWindow" />
             </div>
           </div>
         </v-card>
@@ -421,13 +411,13 @@ const handlePriceInput = (item) => {
                   </td>
                   <td>
                     <custom-text-field 
-                    readonly 
+                    readonly
                     v-model="item.summa"
                     :value="formatNumber(item.amount * item.price)"
                     :base-color="
                         hoveredRowId === item.id ? FIELD_GOODS : '#fff'
                       "
-                     min-width="100" 
+                     min-width="100"
                      />
                   </td>
                 </tr>
@@ -444,15 +434,15 @@ const handlePriceInput = (item) => {
         </div>
         <div class="d-flex justify-space-between w-100 mt-2 bottomField">
           <div class="d-flex ga-10">
-            <custom-text-field 
-            readonly 
+            <custom-text-field
+            readonly
             v-model="author"
-            label="Автор" 
+            label="Автор"
             min-width="110"
             />
-            <custom-text-field 
-            label="Комментарий" 
-            v-model="form.comment" 
+            <custom-text-field
+            label="Комментарий"
+            v-model="form.comment"
             min-width="310"
             />
           </div>

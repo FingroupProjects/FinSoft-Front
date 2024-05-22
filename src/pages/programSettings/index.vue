@@ -30,7 +30,7 @@ const getOrganizationName = async () => {
 };
 
 onMounted(async () => {
-  getOrganizationName();
+  await getOrganizationName();
 });
 </script>
 

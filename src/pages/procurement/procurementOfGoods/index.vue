@@ -32,6 +32,8 @@ import getStatus from "../../../composables/displayed/getStatus.js";
 import {DOCUMENT_ITEMS} from "../../../composables/constant/items.js";
 import {useModalCreateBased} from "../../../store/modalCreateBased.js";
 import createBased from "../../../composables/modal/createBased.js";
+import CreateBase from "../../../components/modal/CreateBase.vue";
+import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -354,7 +356,8 @@ onMounted(() => {
 
 <template>
   <div class="pa-4">
-    <div class="d-flex justify-space-between ">
+    <filter-canvas />
+    <div class="d-flex justify-space-between">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
         <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Покупка</span>
       </div>
@@ -367,19 +370,7 @@ onMounted(() => {
               :key="idx"
               @click="button.function"
             />
-            <div v-if="modalCreateBased.isModalCreateBased" @click.self="modalCreateBased.isModal()" class="modal_create_based">
-              <v-card
-                  style="margin-top: 15%; left: -10%"
-                  max-width="300"
-              >
-                <v-list
-                    :items="DOCUMENT_ITEMS"
-                    item-title="name"
-                    item-value="id"
-                    @click.item="createBased($event, router, markedID[0])"
-                ></v-list>
-              </v-card>
-            </div>
+            <create-base :marked-i-d="markedID[0]" />
           </div>
         </div>
         <div class="custom_search">
@@ -401,7 +392,6 @@ onMounted(() => {
             flat
           />
         </div>
-
         <div class="mt-1 filterElement">
           <Icons
             name="filter"
@@ -563,8 +553,6 @@ onMounted(() => {
       </v-dialog>
     </v-card>
   </div>
-
-
 </template>
 
 <style scoped>

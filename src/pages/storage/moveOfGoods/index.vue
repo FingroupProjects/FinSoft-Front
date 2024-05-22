@@ -1,30 +1,31 @@
 <script setup>
-import {ref, watch, onMounted} from "vue";
+import {onMounted, ref, watch} from "vue";
 import {useRouter} from "vue-router";
 import showToast from '../../../composables/toast/index.js'
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
-import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH, TITLE_COLOR} from "../../../composables/constant/colors.js";
+import {BASE_COLOR, FIELD_OF_SEARCH, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import {
-  removeMessage,
-  warningMessage,
   ErrorSelectMessage,
-  restoreMessage
+  removeMessage,
+  restoreMessage,
+  selectOneItemMessage,
+  warningMessage
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
 import organizationApi from "../../../api/list/organizations.js";
 import storageApi from "../../../api/list/storage.js";
-import moveApi from '../../../api/documents/move.js'; 
+import moveApi from '../../../api/documents/move.js';
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import Button from "../../../components/button/button.vue";
+import CreateBase from "../../../components/modal/CreateBase.vue";
+import {useModalCreateBased} from "../../../store/modalCreateBased.js";
 
 const router = useRouter()
-
+const modalCreateBased = useModalCreateBased()
 const loading = ref(true)
-const loadingRate = ref(true)
-const dialog = ref(false)
 const filterModal = ref(false)
 const hoveredRowIndex = ref(null)
 
@@ -103,7 +104,13 @@ const headerButtons = ref([
   },
   {
     name: "createBasedOn",
-    function: () => {},
+    function: () => {
+      if (markedID.value.length !== 1) {
+        return showToast(selectOneItemMessage, 'warning')
+      }
+
+      modalCreateBased.isModal()
+    },
   },
   {
     name: "copy",
@@ -238,15 +245,6 @@ const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
 const cleanFilterForm = () => {
   filterForm.value = {}
 }
-watch(dialog, newVal => {
-  if (!newVal) {
-    nameRef.value = null
-    descriptionRef.value = null
-    loadingRate.value = true
-  } else {
-    markedID.value = [markedID.value[markedID.value.length - 1]];
-  }
-})
 
 watch(markedID, (newVal) => {
   markedItem.value = moves.value.find((el) => el.id === newVal[0]);
@@ -264,18 +262,18 @@ watch(search, debounce((newValue) => {
         <div class="d-flex align-center ga-2 pe-2 ms-4">
           <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Перемещение товаров</span>
         </div>
-        <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
+        <div class="d-flex align-center ga-2">
           <div class="d-flex w-100 justify-end mb-3">
-            <div class="d-flex ga-2">
-            <Button
-              v-for="(button, idx) in headerButtons"
-              :name="button.name"
-              :key="idx"
-              @click="button.function"
-            />
+            <div class="d-flex ga-2 position-relative">
+              <Button
+                v-for="(button, idx) in headerButtons"
+                :name="button.name"
+                :key="idx"
+                @click="button.function"
+              />
+              <create-base :marked-i-d="markedID[0]" />
           </div>
         </div>
-
         <div class="custom_search">
           <v-text-field
             style="width: 190px"
@@ -297,17 +295,17 @@ watch(search, debounce((newValue) => {
           />
         </div>
           <div class=" filterElement">
-          <Icons
-            name="filter"
-            title="Фильтр"
-            @click="filterModal = true"
-            class="mt-1"
-          />
-          <span v-if="count !== 0" class="countFilter">{{
-            count
-          }}</span>
+            <Icons
+              name="filter"
+              title="Фильтр"
+              @click="filterModal = true"
+              class="mt-1"
+            />
+            <span v-if="count !== 0" class="countFilter">{{
+              count
+            }}</span>
+          </div>
         </div>
-        </v-card>
       </div>
       <v-card class="table">
         <v-data-table-server

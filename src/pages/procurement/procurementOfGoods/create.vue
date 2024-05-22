@@ -275,10 +275,9 @@ const totalCount = computed(() =>
 watch(
   () => form.counterparty,
   async (id) => {
-    if (route.query.id) return
-
     form.cpAgreement = null;
-    await getCpAgreements(id);
+    const counterpartyId = typeof id === 'object' ? id.id : id;
+    await getCpAgreements(counterpartyId);
   }
 );
 
@@ -333,7 +332,6 @@ onMounted(() => {
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
 
   getDataBased(route.query.id, form, goods);
-
   getOrganizations();
   getCounterparties();
   getStorages();

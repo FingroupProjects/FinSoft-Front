@@ -18,6 +18,8 @@ import "../../../assets/css/procurement.css";
 import { BASE_COLOR, TITLE_COLOR } from "../../../composables/constant/colors.js";
 import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
 import formatDateTime from "../../../composables/date/formatDateTime.js";
+import goToHistory from "../../../composables/movementByPage/goToHistory.js";
+import goToPrint from "../../../composables/movementByPage/goToPrint.js";
 import showDate from "../../../composables/date/showDate.js";
 
 
@@ -25,6 +27,7 @@ import showDate from "../../../composables/date/showDate.js";
 const useOrganization = ref(useHasOneOrganization())
  const router = useRouter();
 const route = useRoute();
+const doc_name = ref('Инвентаризация товаров')
 
 const form = reactive({
   doc_number: null,
@@ -286,6 +289,10 @@ const getHistory = () => {
   });
 };
 
+const closeWindow = () => {
+  window.close()
+}
+
 const isSaleIntegerDisabled = computed(() => !!form.salePercent);
 const isSalePercentDisabled = computed(() => !!form.saleInteger);
 
@@ -312,16 +319,24 @@ watch(
     <v-col>
       <div class="d-flex justify-space-between text-uppercase">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Инвентаризация товаров (просмотр)</span>
+          <span>{{ doc_name }} (просмотр)</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <span style="color: #08072E" class="mt-1 ms-2 cursor-pointer" @click="getHistory()">История</span>
-              <Icons title="Добавить" @click="updateInvertor" name="add" />
-              <Icons title="Скопировать" name="copy" />
-              <Icons title="Удалить" name="delete" />
+            <div class="d-flex w-100">
+            <div class="d-flex items-center ga-2 mt-1 me-3">
+              <Button
+                  name="history"
+                  @click="goToHistory(router, route)"
+              />
+              <Button
+                  name="print"
+                  @click="goToPrint(router, route, doc_name)"
+              />
+              <Button name="save" @click="updateInvertor" />
+              <Button name="close" @click="closeWindow" />
             </div>
+          </div>
           </div>
         </v-card>
       </div>

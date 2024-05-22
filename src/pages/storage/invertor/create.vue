@@ -8,7 +8,7 @@ import showToast from "../../../composables/toast/index.js";
 import currentDate from "../../../composables/date/currentDate.js";
 import validate from "./validate.js";
 import usersApi from "../../../api/list/user.js";
-import { useRouter } from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
 import storageApi from "../../../api/list/storage.js";
 import invertorApi from "../../../api/documents/invertor.js";
@@ -23,10 +23,12 @@ import Button from "../../../components/button/button.vue";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";
 import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
 import formatNumber from "../../../composables/format/formatNumber.js";
+import getDataBased from "../../../composables/otherQueries/getDataBased.js";
 
 const hoveredRowId = ref(null);
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter();
+const route = useRoute();
 
 const form = reactive({
   date: null,
@@ -187,6 +189,7 @@ onMounted(() => {
   form.organization = JSON.parse(localStorage.getItem("user")).organization || null;
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
 
+  getDataBased(route.query.id, form, goods)
   getOrganizations();
   getStorages();
   getGoods();

@@ -11,7 +11,7 @@ import {
   removeMessage,
   warningMessage,
   ErrorSelectMessage,
-  restoreMessage
+  restoreMessage, selectOneItemMessage
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
 import providerOrderApi from '../../../api/documents/providerOrder.js';
@@ -24,6 +24,8 @@ import currencyApi from "../../../api/list/currency.js";
 import user from "../../../api/list/user.js";
 import Button from "../../../components/button/button.vue";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
+import {useModalCreateBased} from "../../../store/modalCreateBased.js";
+import CreateBase from "../../../components/modal/CreateBase.vue";
 
 const router = useRouter()
 
@@ -32,6 +34,7 @@ const loadingRate = ref(true)
 const dialog = ref(false)
 const filterModal = ref(false)
 const hoveredRowIndex = ref(null)
+const modalCreateBased = useModalCreateBased()
 
 const markedID = ref([]);
 const markedItem = ref([])
@@ -107,7 +110,13 @@ const headerButtons = ref([
   },
   {
     name: "createBasedOn",
-    function: () => {},
+    function: async () => {
+      if (markedID.value.length !== 1) {
+        return showToast(selectOneItemMessage, 'warning')
+      }
+
+      modalCreateBased.isModal()
+    }
   },
   {
     name: "copy",
@@ -286,15 +295,16 @@ watch(search, debounce((newValue) => {
         <div class="d-flex align-center ga-2 pe-2 ms-4">
           <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Заказ поставщику</span>
         </div>
-        <v-card variant="text" min-width="350" class="d-flex justify-end ga-2">
+        <div class="d-flex justify-end ga-2">
           <div class="d-flex w-100 justify-end mb-3">
-          <div class="d-flex ga-2">
+          <div class="d-flex ga-2 position-relative">
             <Button
               v-for="(button, idx) in headerButtons"
               :name="button.name"
               :key="idx"
               @click="button.function"
             />
+            <create-base :marked-i-d="markedID[0]" />
           </div>
         </div>
 
@@ -329,7 +339,7 @@ watch(search, debounce((newValue) => {
             count
           }}</span>
         </div>
-        </v-card>
+        </div>
       </div>
       <v-card class="table">
         <v-data-table-server
