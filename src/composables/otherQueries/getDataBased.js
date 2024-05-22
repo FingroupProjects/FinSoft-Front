@@ -4,7 +4,6 @@ import createOnBased from "../../api/documents/createOnBased.js";
 export default async function getDataBased(routId, form, goods) {
   if (routId) {
     const {data} = await createOnBased.getById(routId)
-    console.log(data)
     form.date = getDateTimeInShow(data.result.date, "-", true);
     form.organization = {
       id: data.result?.organization?.id,
@@ -24,11 +23,17 @@ export default async function getDataBased(routId, form, goods) {
     };
     form.comment = data.result?.comment;
     form.currency = data.result?.currency;
-    goods.value = data.result?.goods?.map((item) => ({
+    goods.value = data.result.goods.length !== 0 ?
+      data.result?.goods?.map(item => ({
       id: item.id,
       good_id: item.good.id,
       amount: item.amount,
       price: item.price,
-    })) || [];
+    })) : [{
+      id: 1,
+      good_id: null,
+      amount: "1",
+      price: null,
+    }];
   }
 }

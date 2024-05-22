@@ -23,6 +23,7 @@ import storageApi from "../../../api/list/storage.js";
 import invertorApi from "../../../api/documents/invertor.js";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import Button from "../../../components/button/button.vue";
+import CreateBase from "../../../components/modal/CreateBase.vue";
 
 
 const router = useRouter();
@@ -254,15 +255,16 @@ watch(
         <div class="d-flex align-center ga-2 pe-2 ms-4">
           <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Инвентаризация товаров</span>
         </div>
-        <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
+        <div class="d-flex align-center ga-2">
           <div class="d-flex w-100 justify-end mb-3">
-          <div class="d-flex ga-2">
+          <div class="d-flex ga-2 position-relative">
             <Button
               v-for="(button, idx) in headerButtons"
               :name="button.name"
               :key="idx"
               @click="button.function"
             />
+            <create-base :marked-i-d="markedID[0]" />
           </div>
         </div>
 
@@ -298,7 +300,7 @@ watch(
             count
           }}</span>
         </div>
-        </v-card>
+        </div>
       </div>
       <v-card class="table">
         <v-data-table-server

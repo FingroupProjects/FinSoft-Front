@@ -91,7 +91,6 @@ const getOrganizations = async () => {
     sortBy: "name",
   });
   organizations.value = data.result.data;
-  console.log("organization", data);
 };
 
 const getCounterparties = async () => {
@@ -123,7 +122,6 @@ const getStorages = async () => {
     sortBy: "name",
   });
   storages.value = data.result.data;
-  console.log(data);
 };
 
 const getGoods = async (good_storage_id, good_organization_id) => {
@@ -303,17 +301,15 @@ const totalCount = computed(() =>
 watch(
   () => form.counterparty,
   async (id) => {
-    if (route.query.id) return;
-
     form.cpAgreement = null;
-    await getCpAgreements(id);
+    const counterpartyId = typeof id === 'object' ? id.id : id;
+    await getCpAgreements(counterpartyId);
   }
 );
 
 watch(
   () => form.cpAgreement,
   (newValue) => {
-    if (route.query.id) return;
 
     if (newValue !== null) {
       const cpAgreement = cpAgreements.value.find((el) =>
@@ -342,6 +338,7 @@ watch([form, goods.value], () => {
 watch(
   () => [form.storage, form.organization],
   (newValue) => {
+    console.log(newValue)
     if (newValue[0] !== null && newValue[1] !== null) {
       const storage_id =
         typeof newValue[0] === "object" ? newValue[0].id : newValue[0];
@@ -362,7 +359,7 @@ onMounted(() => {
   form.organization =
     JSON.parse(localStorage.getItem("user")).organization || null;
 
-  getDataBased(route.query.id, form, goods, saleApi);
+  getDataBased(route.query.id, form, goods);
   getOrganizations();
   getCounterparties();
   getStorages();

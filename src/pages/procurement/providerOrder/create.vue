@@ -198,10 +198,9 @@ const isSalePercentDisabled = computed(() => !!form.saleInteger);
 watch(
     () => form.counterparty,
     async (id) => {
-      if (route.query.id) return
-
       form.cpAgreement = null;
-      await getCpAgreements(id);
+      const counterpartyId = typeof id === 'object' ? id.id : id;
+      await getCpAgreements(counterpartyId);
     }
 )
 
