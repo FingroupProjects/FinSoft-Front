@@ -55,6 +55,7 @@ const form = reactive({
 const author = ref(null);
 const markedID = ref([]);
 const goods = ref([]);
+const doc_name = ref('Покупка')
 
 const organizations = ref([]);
 const counterparties = ref([]);
@@ -73,44 +74,7 @@ const headers = ref([
   { title: "Сумма", key: "currency.name", sortable: false },
 ]);
 
-const headerButtons = ref([
-  {
-    name: "history",
-    function: () => {
-      goToHistory(router, route)
-    },
-  },
-  {
-    name: "approve",
-    function: () => {
-      approve()
-    },
-  },
-  {
-    name: "cancel",
-    function: () => {
-      unApprove();
-    },
-  },
-  {
-    name: "print",
-    function: () => {
-      goToPrint(router, route);
-    },
-  },
-  {
-    name: "save",
-    function: () => {
-      updateProcurement();
-    },
-  },
-  {
-    name: "close",
-    function: () => {
-      closeWindow()
-    },
-  },
-]);
+
 
 const approve = async () => {
   try {
@@ -432,18 +396,24 @@ onMounted(() => {
     <div class="d-flex justify-space-between">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
         <span :style="{ color: TITLE_COLOR, fontSize: '22px' }"
-          >Покупка (просмотр) - {{ getStatus(form.active, form.deleted_at) }}</span>
+          >{{ doc_name }} (просмотр) - {{ getStatus(form.active, form.deleted_at) }}</span>
       </div>
       <v-card variant="text" style="display: flex; align-items: center">
         <div class="d-flex w-100 justify-end my-3 pr-4">
-          <div class="d-flex ga-2">
-            <Button
-               v-for="item in headerButtons"
-               :key="item.name"
-               :name="item.name"
-               @click="item.function"
-            />
-          </div>
+          <div class="d-flex items-center ga-2 mt-1 me-3">
+              <Button
+                  name="history"
+                  @click="goToHistory(router, route)"
+              />
+              <Button name="approve" @click="approve" />
+              <Button name="cancel" @click="unApprove"/>
+              <Button
+                  name="print"
+                  @click="goToPrint(router, route, doc_name)"
+              />
+              <Button name="save" @click="updateProcurement" />
+              <Button name="close" @click="closeWindow" />
+            </div>
         </div>
       </v-card>
     </div>

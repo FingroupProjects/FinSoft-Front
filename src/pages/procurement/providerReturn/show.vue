@@ -26,6 +26,8 @@ import Button from "../../../components/button/button.vue";
 import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
 import formatNumber from "../../../composables/format/formatNumber.js";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";
+import goToPrint from "../../../composables/movementByPage/goToPrint.js";
+import goToHistory from "../../../composables/movementByPage/goToHistory.js";
 
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter()
@@ -37,6 +39,7 @@ const props = defineProps(['isUpdateOrCreateDocument'])
 const confirmDocument = useConfirmDocumentStore()
 const tempForm = ref({})
 const hoveredRowId = ref(null);
+const doc_name = ref('Возврат Поставшику')
 
 
 const form = reactive({
@@ -343,28 +346,18 @@ const handlePriceInput = (item) => {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Возврат поставщику (просмотр)</span>
+          <span>{{doc_name}} (просмотр)</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
               <Button
                   name="history"
-                  @click="
-                $router.push({
-                  name: 'documentHistory',
-                  params: { id: route.params.id },
-                })
-              "
+                  @click="goToHistory(router, route)"
               />
               <Button
                   name="print"
-                  @click="
-                $router.push({
-                  name: 'documentPrint',
-                  params: { id: route.params.id },
-                })
-              "
+                  @click="goToPrint(router, route, doc_name)"
               />
               <Button name="save" @click="updateProvider" />
               <Button name="close" @click="closeWindow" />
