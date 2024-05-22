@@ -33,6 +33,7 @@ import {DOCUMENT_ITEMS} from "../../../composables/constant/items.js";
 import {useModalCreateBased} from "../../../store/modalCreateBased.js";
 import createBased from "../../../composables/modal/createBased.js";
 import CreateBase from "../../../components/modal/CreateBase.vue";
+import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -355,7 +356,8 @@ onMounted(() => {
 
 <template>
   <div class="pa-4">
-    <div class="d-flex justify-space-between ">
+    <filter-canvas />
+    <div class="d-flex justify-space-between">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
         <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Покупка</span>
       </div>
@@ -390,7 +392,6 @@ onMounted(() => {
             flat
           />
         </div>
-
         <div class="mt-1 filterElement">
           <Icons
             name="filter"
@@ -552,8 +553,6 @@ onMounted(() => {
       </v-dialog>
     </v-card>
   </div>
-
-
 </template>
 
 <style scoped>
