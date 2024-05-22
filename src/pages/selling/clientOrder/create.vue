@@ -7,7 +7,7 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../../composables/toast/index.js";
 import currentDate from "../../../composables/date/currentDate.js";
 import validate from "./validate.js";
-import {useRouter} from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
@@ -24,9 +24,11 @@ import Button from "../../../components/button/button.vue";
 import formatNumber from "../../../composables/format/formatNumber.js";
 import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";
+import getDataBased from "../../../composables/otherQueries/getDataBased.js";
 
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter()
+const route = useRoute()
 const emits = defineEmits(['changed'])
 const confirmDocument = useConfirmDocumentStore()
 
@@ -225,7 +227,8 @@ watch(
     () => form.counterparty,
     async (id) => {
       form.cpAgreement = null;
-      await getCpAgreements(id);
+      const counterpartyId = typeof id === 'object' ? id.id : id;
+      await getCpAgreements(counterpartyId);
     }
 )
 
@@ -251,6 +254,7 @@ onMounted(() => {
   form.organization = JSON.parse(localStorage.getItem('user')).organization || null
   author.value = JSON.parse(localStorage.getItem('user')).name || null
 
+  getDataBased(route.query.id, form, goods);
   getCounterparties()
   getOrganizations()
   getStatuses()

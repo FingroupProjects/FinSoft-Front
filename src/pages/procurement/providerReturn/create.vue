@@ -209,18 +209,15 @@ const totalCount = computed(() =>
 watch(
     () => form.counterparty,
     async (id) => {
-      if (route.query.id) return
-
       form.cpAgreement = null;
-      await getCpAgreements(id);
+      const counterpartyId = typeof id === 'object' ? id.id : id;
+      await getCpAgreements(counterpartyId);
     }
 )
 
 watch(
     () => form.cpAgreement,
     (newValue) => {
-      if (route.query.id) return
-
       if (newValue !== null) {
         const cpAgreement = cpAgreements.value.find((el) =>
             (el.id === typeof newValue) === "object" ? newValue.id : newValue
