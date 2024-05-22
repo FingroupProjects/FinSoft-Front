@@ -23,6 +23,8 @@ import ButtonGoods from "../../../components/button/buttonGoods.vue";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
 import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
+import goToHistory from "../../../composables/movementByPage/goToHistory.js";
+import goToPrint from "../../../composables/movementByPage/goToPrint.js";
 
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter()
@@ -34,6 +36,7 @@ const emits = defineEmits(['changed'])
 const props = defineProps(['isUpdateOrCreateDocument'])
 const confirmDocument = useConfirmDocumentStore()
 const tempForm = ref({})
+const doc_name = ref('Заказ Поставщику')
 
 const form = reactive({
   doc_number: null,
@@ -270,34 +273,25 @@ watch(form, () => {
   }
 })
 
-watch(() => form.counterparty, async (data) => {
-  form.cpAgreement = null
-
-  const id = typeof data === 'object' ? data.id : data
-
-  try {
-    const res = await cpAgreementApi.getById(id)
-    form.currency = {
-      id: res.data.result.currency_id.id,
-      name: res.data.result.currency_id.name
+watch(
+    () => form.counterparty,
+    async (id) => {
+      form.cpAgreement = null;
+      await getCpAgreements(id);
     }
+);
 
-    setTimeout(() => {
-      tempForm.value.currency = {
-        id: res.data.result.currency_id.id,
-        name: res.data.result.currency_id.name
+watch(
+    () => form.cpAgreement,
+    (newValue) => {
+      if (newValue !== null) {
+        const cpAgreement = cpAgreements.value.find((el) =>
+            (el.id === typeof newValue) === "object" ? newValue.id : newValue
+        );
+        form.currency = cpAgreement.currency_id;
       }
-    }, 500)
-
-    const array = Object.prototype.toString.call(res.data.result) === '[object Array]'
-    const obj = Object.prototype.toString.call(res.data.result) === '[object Object]'
-
-    cpAgreements.value = array ? res.data.result : obj ? [res.data.result] : []
-
-  } catch (e) {
-    cpAgreements.value = []
-  }
-})
+    }
+);
 const closeWindow = () => {
   window.close()
 }
@@ -337,28 +331,18 @@ const handlePriceInput = (item) => {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Заказ поставщику (просмотр)</span>
+          <span>{{ doc_name }} (просмотр)</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
               <Button
                   name="history"
-                  @click="
-                  $router.push({
-                  name: 'documentHistory',
-                  params: { id: route.params.id },
-                })
-              "
+                  @click="goToHistory(router, route)"
               />
               <Button
                   name="print"
-                  @click="
-                  $router.push({
-                  name: 'documentPrint',
-                  params: { id: route.params.id },
-                })
-              "
+                  @click="goToPrint(router, route, doc_name)"
               />
               <Button name="save" @click="updateProviderOrder" />
               <Button name="close" @click="closeWindow" />

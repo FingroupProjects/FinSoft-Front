@@ -74,7 +74,7 @@ const headers = ref([
 
 const getClientReturnDetails = async () => {
   const { data } = await clientReturnApi.getById(route.params.id)
-  form.doc_number = data.result.doc_number
+  form.doc_number = data.result.doc_number;
   form.date = showDate(data.result.date, '-', true);
   form.organization = {
     id: data.result.organization.id,
@@ -116,7 +116,8 @@ const getOrganizations = async () => {
 
 const getCounterparties = async () => {
   const { data } = await counterpartyApi.getClientCounterparty({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  counterparties.value = data.result
+  counterparties.value = data.result.data 
+  console.log(data);
 }
 
 const getCpAgreements = async () => {
@@ -263,27 +264,25 @@ onMounted( () => {
 })
 
 
-watch(() => form.counterparty, async (data) => {
-  form.cpAgreement = null
-
-  const id = typeof data === 'object' ? data.id : data
-
-  try {
-    const res = await cpAgreementApi.getById(id)
-    form.currency = {
-      id: res.data.result.currency_id.id,
-      name: res.data.result.currency_id.name
+watch(
+    () => form.counterparty,
+    async (id) => {
+      form.cpAgreement = null;
+      await getCpAgreements(id);
     }
+);
 
-    const array = Object.prototype.toString.call(res.data.result) === '[object Array]'
-    const obj = Object.prototype.toString.call(res.data.result) === '[object Object]'
-
-    cpAgreements.value = array ? res.data.result : obj ? [res.data.result] : []
-
-  } catch (e) {
-    cpAgreements.value = []
-  }
-})
+watch(
+    () => form.cpAgreement,
+    (newValue) => {
+      if (newValue !== null) {
+        const cpAgreement = cpAgreements.value.find((el) =>
+            (el.id === typeof newValue) === "object" ? newValue.id : newValue
+        );
+        form.currency = cpAgreement.currency_id;
+      }
+    }
+);
 const closeWindow = () => {
   window.close()
 }
@@ -310,17 +309,7 @@ watch(() => form.salePercent, (newValue) => {
 })
 const count = ref(10000)
 
-const validatePrice = (price) => {
-  if (price === 0 || price === '0' || Number(price) === 0) {
-    return false;
-  }
-  return true;
-};
-const handlePriceInput = (item) => {
-  if (!validatePrice(item.price)) {
-    item.price = null;  
-  }
-};
+
 </script>
 <template>
   <div class="document">
@@ -334,7 +323,7 @@ const handlePriceInput = (item) => {
             <div class="d-flex ga-2">
               <Button
                   name="history"
-                  @click="goToHistory()"
+                  @click="goToHistory(router, route)"
               />
               <Button
                   name="print"
@@ -438,10 +427,10 @@ const handlePriceInput = (item) => {
                     v-mask="'##########'" 
                     min-width="80" 
                     max-width="140"/>
-                  </td>
+                  </td> 
                   <td>
                     <custom-text-field 
-                     @input="validateNumberInput(item.price), handlePriceInput(item)"
+                     @input="validateNumberInput(item.price)"
                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'" 
                      v-mask="'##########'"
                      min-width="80" 
