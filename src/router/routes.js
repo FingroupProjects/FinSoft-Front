@@ -81,6 +81,11 @@ const routes = [
     component: () => import("../pages/reports/goods/remainderOfGoods.vue")
   },
   {
+    path: "/counterpartySettlement",
+    name: "counterpartySettlement",
+    component: () => import("../pages/reports/provider/counterpartySettlement.vue")
+  },
+  {
     path: "/clientReturn",
     name: "clientReturn",
     component: () => import("../pages/selling/clientReturn/index.vue"),
