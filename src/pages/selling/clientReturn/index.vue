@@ -8,7 +8,7 @@ import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH, TITLE_COLOR} from "../../../co
 import {
   ErrorSelectMessage,
   removeMessage,
-  restoreMessage,
+  restoreMessage, selectOneItemMessage,
   warningMessage
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
@@ -25,10 +25,12 @@ import currencyApi from "../../../api/list/currency.js";
 import deleteRestoreApi from "../../../api/documents/deleteRestore.js";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import Button from "../../../components/button/button.vue";
+import CreateBase from "../../../components/modal/CreateBase.vue";
+import {useModalCreateBased} from "../../../store/modalCreateBased.js";
 
 
 const router = useRouter()
-
+const modalCreateBased = useModalCreateBased()
 const loading = ref(true)
 const filterModal = ref(false)
 const hoveredRowIndex = ref(null)
@@ -106,7 +108,13 @@ const headerButtons = ref([
   },
   {
     name: "createBasedOn",
-    function: () => {},
+    function: () => {
+      if (markedID.value.length !== 1) {
+        return showToast(selectOneItemMessage, 'warning')
+      }
+
+      modalCreateBased.isModal()
+    },
   },
   {
     name: "copy",
@@ -261,49 +269,50 @@ onMounted(() => {
         <div class="d-flex align-center ga-2 pe-2 ms-4">
           <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Возврат от клиента</span>
         </div>
-        <v-card variant="text" min-width="350" class="d-flex justify-end ga-2">
+        <div class="d-flex justify-end ga-2">
           <div class="d-flex w-100 justify-end mb-3">
-          <div class="d-flex ga-2">
-            <Button
-              v-for="(button, idx) in headerButtons"
-              :name="button.name"
-              :key="idx"
-              @click="button.function"
+            <div class="d-flex ga-2 position-relative">
+              <Button
+                v-for="(button, idx) in headerButtons"
+                :name="button.name"
+                :key="idx"
+                @click="button.function"
+              />
+              <create-base :marked-i-d="markedID[0]" />
+            </div>
+          </div>
+          <div class="custom_search">
+            <v-text-field
+              style="width: 190px"
+              v-model="search"
+              prepend-inner-icon="search"
+              density="compact"
+              label="Поиск..."
+              variant="outlined"
+              :color="BASE_COLOR"
+              rounded="lg"
+              :base-color="FIELD_OF_SEARCH"
+              clear-icon="close"
+              hide-details
+              single-line
+              :append-inner-icon="search ? 'close' : ''"
+              @click:append-inner="search = ''"
+              flat
             />
           </div>
+
+          <div class="mt-1 filterElement">
+            <Icons
+              name="filter"
+              title="Фильтр"
+              @click="filterModal = true"
+              class="mt-1"
+            />
+            <span v-if="count !== 0" class="countFilter">{{
+              count
+            }}</span>
+          </div>
         </div>
-        <div class="custom_search">
-          <v-text-field
-            style="width: 190px"
-            v-model="search"
-            prepend-inner-icon="search"
-            density="compact"
-            label="Поиск..."
-            variant="outlined"
-            :color="BASE_COLOR"
-            rounded="lg"
-            :base-color="FIELD_OF_SEARCH"
-            clear-icon="close"
-            hide-details
-            single-line
-            :append-inner-icon="search ? 'close' : ''"
-            @click:append-inner="search = ''"
-            flat
-          />
-        </div>
-          
-        <div class="mt-1 filterElement">
-          <Icons
-            name="filter"
-            title="Фильтр"
-            @click="filterModal = true"
-            class="mt-1"
-          />
-          <span v-if="count !== 0" class="countFilter">{{
-            count
-          }}</span>
-        </div>
-        </v-card>
       </div>
       <v-card class="table">
         <v-data-table-server

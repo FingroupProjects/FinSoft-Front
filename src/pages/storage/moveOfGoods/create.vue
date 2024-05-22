@@ -8,7 +8,7 @@ import showToast from "../../../composables/toast/index.js";
 import currentDate from "../../../composables/date/currentDate.js";
 import validate from "./validate.js";
 
-import { useRouter } from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
 import storageApi from "../../../api/list/storage.js";
 import moveApi from "../../../api/documents/move.js";
@@ -20,9 +20,11 @@ import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
 import currentDateWithTime from "../../../composables/date/currentDateWithTime.js";
 import Button from "../../../components/button/button.vue";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
+import getDataBased from "../../../composables/otherQueries/getDataBased.js";
 
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter()
+const route = useRoute()
 
 const form = reactive({
   date: null,
@@ -153,6 +155,7 @@ onMounted(() => {
   form.organization = JSON.parse(localStorage.getItem('user')).organization || null
   author.value = JSON.parse(localStorage.getItem('user')).name || null
 
+  getDataBased(route.query.id, form, goods)
   getOrganizations()
   getStorages()
   getGoods()
@@ -175,7 +178,6 @@ onMounted(() => {
               />
             </div>
           </div>
-
         </v-card>
       </div>
     </v-col>
