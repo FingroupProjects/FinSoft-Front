@@ -207,7 +207,6 @@ watch(
 watch(
     () => form.cpAgreement,
     (newValue) => {
-      if (route.query.id) return
 
       if (newValue !== null) {
         const cpAgreement = cpAgreements.value.find((el) =>

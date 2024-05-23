@@ -284,8 +284,6 @@ watch(
 watch(
   () => form.cpAgreement,
   (newValue) => {
-    if (route.query.id) return
-
     if (newValue !== null) {
       const cpAgreement = cpAgreements.value.find((el) =>
           (el.id === typeof newValue) === "object" ? newValue.id : newValue
@@ -370,7 +368,7 @@ const handlePriceInput = (item) => {
       </v-card>
     </div>
     <v-divider />
-    <div style="height: calc(100vh - 107px);background: #fff">
+    <div style="height: calc(100vh - 107px); background: #fff">
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field
