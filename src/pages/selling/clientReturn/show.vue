@@ -338,7 +338,7 @@ const count = ref(10000)
     </v-col>
     <v-divider/>
     <v-divider/>
-    <div style="background: #fff;">
+    <div style="height: calc(99vh - 125px); background: #fff">
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field  :value="form.doc_number"/>
@@ -355,7 +355,7 @@ const count = ref(10000)
         <div :style="`border: 1px solid ${BASE_COLOR}`" class="rounded">
           <div class="d-flex flex-column w-100">
             <v-data-table
-                style="height: 98vh"
+                style="height: calc(100vh - 315px)"
                 items-per-page-text="Элементов на странице:"
                 loading-text="Загрузка"
                 no-data-text="Нет данных"

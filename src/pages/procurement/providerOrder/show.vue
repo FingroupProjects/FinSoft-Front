@@ -353,8 +353,8 @@ const handlePriceInput = (item) => {
     </v-col>
     <v-divider/>
     <v-divider/>
-    <div style="background: #fff;">
-      <v-col class="d-flex flex-column ga-2 pb-0">
+    <div style="height: calc(99vh - 116px); background: #fff">
+      <v-col class="d-flex flex-column ga-2 pb-0"> 
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field readonly label="Номер" v-model="form.doc_number"/>
           <custom-text-field label="Дата" type="datetime-local" class="date" v-model="form.date"/>
@@ -369,7 +369,7 @@ const handlePriceInput = (item) => {
           </div>
           <div class="d-flex flex-column w-100">
             <v-data-table
-                style="height: 50vh"
+                style="height: calc(100vh - 250px)"
                 items-per-page-text="Элементов на странице:"
                 loading-text="Загрузка"
                 no-data-text="Нет данных"
