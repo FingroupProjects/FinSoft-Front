@@ -21,6 +21,7 @@ body{
 }
 
 .table {
+  width: calc(100vw - 90px);
   background: white;
   padding: 5px;
   border-radius: 16px;
