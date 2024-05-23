@@ -215,7 +215,6 @@ watch(confirmDocument, () => {
 })
 
 watch([form, goods.value], () => {
-  console.log(!isChanged())
   if (!isChanged()) {
     emits('changed', true);
   } else {

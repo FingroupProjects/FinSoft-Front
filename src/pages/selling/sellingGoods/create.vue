@@ -327,7 +327,6 @@ watch(confirmDocument, () => {
 });
 
 watch([form, goods.value], () => {
-  console.log(!isChanged());
   if (!isChanged()) {
     emits("changed", true);
   } else {
@@ -338,7 +337,6 @@ watch([form, goods.value], () => {
 watch(
   () => [form.storage, form.organization],
   (newValue) => {
-    console.log(newValue)
     if (newValue[0] !== null && newValue[1] !== null) {
       const storage_id =
         typeof newValue[0] === "object" ? newValue[0].id : newValue[0];
