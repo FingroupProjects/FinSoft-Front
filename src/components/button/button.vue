@@ -190,6 +190,6 @@ const handleClick = () => {
 <template>
   <v-btn v-for="item in filteredButtons" :key="item.id" @click="handleClick" style="padding: 15px 20px !important; height: auto;" class="d-flex align-center text-none" :color="item.bgColor" rounded="lg">
     <span class="d-flex justify-center me-1" v-html="item.icon"></span>
-    <span :style="[' font-size: 14px; white-space: wrap; letter-spacing: 0', {color: item.textColor}]">{{ item.title }}</span>
+    <span :style="[' font-size: 14px; letter-spacing: 0', {color: item.textColor}]">{{ item.title }}</span>
   </v-btn>
 </template>

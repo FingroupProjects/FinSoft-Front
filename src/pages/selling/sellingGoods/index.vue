@@ -322,11 +322,11 @@ onMounted(() => {
 
 <template>
   <div class="pa-4">
-    <div class="d-flex justify-space-between">
+    <div style="width:  calc(100vw - 90px);" class="d-flex justify-space-between">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
         <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Продажа</span>
       </div>
-      <div class="d-flex justify-end ga-2">
+      <div class="d-flex justify-between ga-2">
         <div class="d-flex justify-end mb-3">
           <div class="d-flex ga-2 position-relative">
             <Button
