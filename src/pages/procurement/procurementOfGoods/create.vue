@@ -369,7 +369,7 @@ const handlePriceInput = (item) => {
     </div>
     <v-divider />
     <div style="height: calc(100vh - 107px); background: #fff">
-      <v-col class="d-flex flex-column ga-2 pb-0">
+      <v-col class="d-flex flex-column ga-2 pb-0"> 
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field
             disabled

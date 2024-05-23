@@ -86,6 +86,11 @@ const routes = [
     component: () => import("../pages/reports/provider/counterpartySettlement.vue")
   },
   {
+    path: '/reconciliationReport',
+    name: 'reconciliationReport',
+    component: () => import("../pages/reports/providerReconciliation/reconciliationReport.vue")
+  },
+  {
     path: "/clientReturn",
     name: "clientReturn",
     component: () => import("../pages/selling/clientReturn/index.vue"),

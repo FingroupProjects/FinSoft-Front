@@ -44,7 +44,7 @@ const doc_name = ref('Возврат Поставшику')
 
 const form = reactive({
   doc_number: null,
-  date: null,
+  date: null, 
   organization: null,
   counterparty: null,
   cpAgreement: null,
@@ -368,7 +368,7 @@ const handlePriceInput = (item) => {
     </v-col>
     <v-divider/>
     <v-divider/>
-    <div style="background: #fff;">
+    <div style="height: calc(99vh - 116px); background: #fff">
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field  :value="form.doc_number"/>
@@ -383,7 +383,7 @@ const handlePriceInput = (item) => {
         <div class="rounded">
           <div class="d-flex flex-column w-100 goods">
             <v-data-table
-                style="height: 78vh"
+                style="height: calc(100vh - 310px)"
                 items-per-page-text="Элементов на странице:"
                 loading-text="Загрузка"
                 no-data-text="Нет данных"

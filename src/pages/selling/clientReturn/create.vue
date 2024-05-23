@@ -320,7 +320,7 @@ const handlePriceInput = (item) => {
     </v-col>
     <v-divider/>
     <v-divider/>
-    <div style="background: #fff;">
+    <div style="height: calc(99vh - 116px); background: #fff">
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field disabled value="Номер" v-model="form.number"/>
@@ -337,7 +337,7 @@ const handlePriceInput = (item) => {
         <div class="rounded">
           <div class="d-flex flex-column w-100">
             <v-data-table
-                style="height: 78vh"
+                style="height: calc(100vh - 305px)"
                 items-per-page-text="Элементов на странице:"
                 loading-text="Загрузка"
                 no-data-text="Нет данных"

@@ -64,7 +64,7 @@ const procurementOfGoods = ref({
       link: "/return",
       child: [
         { id: 1, title: "Взаимодействие с поставщиками", link: "/counterpartySettlement" },
-        { id: 2, title: "Акт сверки с поставщиками", link: "" },
+        { id: 2, title: "Акт сверки с поставщиками", link: "/reconciliationReport" },
         { id: 3, title: "Отчет покупки поставщиков", link: "" },
       ],
     },

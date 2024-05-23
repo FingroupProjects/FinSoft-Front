@@ -291,7 +291,7 @@ const handlePriceInput = (item) => {
     </v-col>
     <v-divider/>
     <v-divider/>
-    <div style="background: #fff;">
+    <div style="height: calc(99vh - 116px); background: #fff">
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field disabled value="Номер" v-model="form.number"/>
@@ -303,82 +303,84 @@ const handlePriceInput = (item) => {
         </div>
       </v-col>
       <v-col>
-        <div class="d-flex flex-column w-100">
-          <v-data-table
-              style="height: 50vh"
-              items-per-page-text="Элементов на странице:"
-              loading-text="Загрузка"
-              no-data-text="Нет данных"
-              :headers="headers"
-              :items="goods"
-              v-model="markedID"
-              item-value="id"
-              page-text="{0}-{1} от {2}"
-              :items-per-page-options="[
-                { value: 25, title: '25' },
-                { value: 50, title: '50' },
-                { value: 100, title: '100' },
-              ]"
-              show-select
-              fixed-header
-          >
-            <template v-slot:item="{ item, index }">
-              <tr :key="index" @mouseenter="hoveredRowId = item.id" @mouseleave="hoveredRowId = null">
-                <td>
-                  <CustomCheckbox
-                      v-model="markedID"
-                      @change="lineMarking(item)"
-                      :checked="markedID.includes(item.id)"
-                  >
-                    <span class="fz-12">{{ index + 1 }}</span>
-                  </CustomCheckbox>
-                </td>
-                <td style="width: 40%">
-                  <custom-autocomplete
-                      v-model="item.good_id"
-                      :items="listGoods"
-                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                      min-width="150"
-                      max-width="100%"
-                      :isAmount="true"
-                  />
-                </td>
-                <td>
-                  <custom-text-field
-                      v-model="item.amount"
-                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                      v-mask="'########'"
-                      min-width="50"
-                  />
-                </td>
-                <td>
-                  <custom-text-field
-                      v-model="item.price"
-                      :value="validateNumberInput(item.price)"
-                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                      min-width="80"
-                      @input="handlePriceInput(item)"
-                  />
-                </td>
-                <td>
-                  <custom-text-field
-                      readonly
-                      v-model="item.summa"
-                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                      :value="formatNumber(item.amount * item.price)"
-                      min-width="100"
-                  />
-                </td>
-              </tr>
-              <tr v-if="index === goods.length - 1">
-                <td></td>
-                <td style="width: 150%" class="d-flex ga-2" colspan="10">
-                  <ButtonGoods name="add" @click="increaseCountOfGoods"/>
-                  <ButtonGoods v-if="goods.length !== 1" name="delete" @click="decreaseCountOfGoods"/>
-                </td>
-              </tr>
-            </template>
-          </v-data-table>
+        <div class="rounded">
+          <div class="d-flex flex-column w-100">
+            <v-data-table
+                style="height: calc(100vh - 310px)"
+                items-per-page-text="Элементов на странице:"
+                loading-text="Загрузка"
+                no-data-text="Нет данных"
+                :headers="headers"
+                :items="goods"
+                v-model="markedID"
+                item-value="id"
+                page-text="{0}-{1} от {2}"
+                :items-per-page-options="[
+                  { value: 25, title: '25' },
+                  { value: 50, title: '50' },
+                  { value: 100, title: '100' },
+                ]"
+                show-select
+                fixed-header
+            >
+              <template v-slot:item="{ item, index }">
+                <tr :key="index" @mouseenter="hoveredRowId = item.id" @mouseleave="hoveredRowId = null">
+                  <td>
+                    <CustomCheckbox
+                        v-model="markedID"
+                        @change="lineMarking(item)"
+                        :checked="markedID.includes(item.id)"
+                    >
+                      <span class="fz-12">{{ index + 1 }}</span>
+                    </CustomCheckbox>
+                  </td>
+                  <td style="width: 40%">
+                    <custom-autocomplete
+                        v-model="item.good_id"
+                        :items="listGoods"
+                        :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                        min-width="150"
+                        max-width="100%"
+                        :isAmount="true"
+                    />
+                  </td>
+                  <td>
+                    <custom-text-field
+                        v-model="item.amount"
+                        :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                        v-mask="'########'"
+                        min-width="50"
+                    />
+                  </td>
+                  <td>
+                    <custom-text-field
+                        v-model="item.price"
+                        :value="validateNumberInput(item.price)"
+                        :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                        min-width="80"
+                        @input="handlePriceInput(item)"
+                    />
+                  </td>
+                  <td>
+                    <custom-text-field
+                        readonly
+                        v-model="item.summa"
+                        :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                        :value="formatNumber(item.amount * item.price)"
+                        min-width="100"
+                    />
+                  </td>
+                </tr>
+                <tr v-if="index === goods.length - 1">
+                  <td></td>
+                  <td style="width: 150%" class="d-flex ga-2" colspan="10">
+                    <ButtonGoods name="add" @click="increaseCountOfGoods"/>
+                    <ButtonGoods v-if="goods.length !== 1" name="delete" @click="decreaseCountOfGoods"/>
+                  </td>
+                </tr>
+              </template>
+            </v-data-table>
+          </div>
         </div>
         <div class="d-flex justify-space-between w-100 mt-2 bottomField">
           <div class="d-flex ga-10">
@@ -406,15 +408,15 @@ const handlePriceInput = (item) => {
                 readonly
                 :value="'Общая сумма: ' + totalPrice"
                 min-width="180"
-                max-width="110"
+               max-width="110"
             />
             <custom-autocomplete
                 readonly
                 v-model="form.currency"
                 label="Валюта"
                 :items="currencies"
-                min-width="110"
-                max-width="110"
+                min-width="190"
+                maxWidth="190px"
             />
           </div>
         </div>
