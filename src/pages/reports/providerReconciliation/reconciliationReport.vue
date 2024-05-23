@@ -13,17 +13,17 @@ import CustomAutocomplete from "../../../components/formElements/CustomAutocompl
 
 const groupBy = ref([
   {
-    key: "currency.name",
+    key: "id",
     order: "asc",
   },
 ]);
 
 const counterparty_id = ref(null);
 const headers = ref([
-  { title: "Тип операции", sortable: false },
-  { title: "Сумма Прихода", key: "income" },
-  { title: "Сумма Расхода", key: "outcome" },
-  { title: "Остаток", key: "debt" },
+  { title: "Дата", key: "date", sortable: false },
+  { title: "Тип операции", key: "movement_type", sortable: false },
+  { title: "Сумма Прихода", key: "sum" },
+  { title: "Сумма Расхода", key: "sale_sum" },
 ]);
 
 const filterForm = reactive({
@@ -74,6 +74,7 @@ const getItems = async ({ page, itemsPerPage, sortBy, search }) => {
       search,
       filterData
     );
+    console.log(result);
     items.value = result.data;
     pagination.value = result.pagination;
     loading.value = false;
@@ -115,43 +116,43 @@ const getOrganizations = async () => {
 };
 
 const totalCount = (itemName) => {
-  const filteredGoods = items.value.filter(
-    (item) => item.currency.name === itemName
-  );
-  return filteredGoods.length;
+  // const filteredGoods = items.value.filter(
+  //   (item) => item.currency.name === itemName
+  // );
+  // return filteredGoods.length;
 };
 
 const totalIncomes = (itemName) => {
-  let filteredGoods = items.value.filter(
-    (item) => item.currency.name === itemName
-  );
-  const total = filteredGoods.reduce((acc, curr) => {
-    return acc + curr.income;
-  }, 0);
+  // let filteredGoods = items.value.filter(
+  //   (item) => item.currency.name === itemName
+  // );
+  // const total = filteredGoods.reduce((acc, curr) => {
+  //   return acc + curr.income;
+  // }, 0);
 
-  return total;
+  // return total;
 };
 
 const totalOutcomes = (itemName) => {
-  let filteredGoods = items.value.filter(
-    (item) => item.currency.name === itemName
-  );
-  const total = filteredGoods.reduce((acc, curr) => {
-    return acc + curr.outcome;
-  }, 0);
+  // let filteredGoods = items.value.filter(
+  //   (item) => item.currency.name === itemName
+  // );
+  // const total = filteredGoods.reduce((acc, curr) => {
+  //   return acc + curr.outcome;
+  // }, 0);
 
-  return total;
+  // return total;
 };
 
 const totalRemainder = (itemName) => {
-  let filteredGoods = items.value.filter(
-    (item) => item.currency.name === itemName
-  );
-  const total = filteredGoods.reduce((acc, curr) => {
-    return acc + curr.debt;
-  }, 0);
+  // let filteredGoods = items.value.filter(
+  //   (item) => item.currency.name === itemName
+  // );
+  // const total = filteredGoods.reduce((acc, curr) => {
+  //   return acc + curr.debt;
+  // }, 0);
 
-  return total;
+  // return total;
 };
 
 const countFilter = () => {
@@ -179,7 +180,7 @@ const getExcel = async () => {
   }
 };
 
-watch(counterparty_id, (newVal) => {
+watch(counterparty_id, () => {
   getItems({ page: 1, itemsPerPage: 10, sortBy: "name", search: "" });
 });
 
@@ -252,16 +253,16 @@ onMounted(async () => {
               {{ item.value ? item.value : "Gluten free" }}
             </td>
             <td>
-              {{ totalCount(item.value) }}
+              {{ item.date }}
             </td>
             <td>
-              {{ totalIncomes(item.value) }}
+              {{ item.movement_type }}
             </td>
             <td>
-              {{ totalOutcomes(item.value) }}
+              {{ item.sum }}
             </td>
             <td>
-              {{ totalRemainder(item.value) }}
+              {{ item.sale_sum }}
             </td>
        
           </tr>
