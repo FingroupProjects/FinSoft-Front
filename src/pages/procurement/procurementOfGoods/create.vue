@@ -351,13 +351,13 @@ const handlePriceInput = (item) => {
 </script>
 <template>
   <div class="document">
-    <div class="d-flex justify-space-between text-uppercase pa-1">
+    <div class="d-flex justify-space-between">
       <div class="d-flex align-center ga-2 pe-2 ms-4" >
-        <span :style="`color: ${TITLE_COLOR}`">Покупка (создание)</span>
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Покупка (создание)</span>
       </div>
       <v-card variant="text" class="d-flex align-center ga-2">
         <div class="d-flex w-100">
-          <div class="d-flex ga-2 mt-1 me-3">
+          <div class="d-flex ga-2 mt-1 me-3 py-2">
             <Button @click="addNewProcurement" name="save1" />
             <Button
               @click="router.push('/procurementOfGoods')"
