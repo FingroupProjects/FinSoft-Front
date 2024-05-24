@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import {useModalCreateBased} from "./modalCreateBased.js";
 
 export const useFilterCanvasVisible = defineStore('filterCanvasVisible', {
   state: () => {
@@ -6,9 +7,11 @@ export const useFilterCanvasVisible = defineStore('filterCanvasVisible', {
   },
   actions: {
     toggleFilterCanvas() {
+      useModalCreateBased().darkenThePage()
       this.isFilterCanvasVisible = !this.isFilterCanvasVisible
     },
     closeFilterCanvas() {
+      useModalCreateBased().darkenThePage()
       this.isFilterCanvasVisible = false
     }
   },

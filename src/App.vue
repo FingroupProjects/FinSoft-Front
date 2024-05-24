@@ -114,6 +114,10 @@ const changed = data => {
           @click="modalCreateBased.isModal()"
           class="blackout_page"
         ></div>
+        <div
+            v-if="modalCreateBased.isDarkenThePage"
+            class="blackout_page"
+        ></div>
       </div>
     </div>
   </v-app>

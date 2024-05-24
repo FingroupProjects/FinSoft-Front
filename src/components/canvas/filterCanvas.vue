@@ -1,5 +1,4 @@
 <script setup>
-import { ref } from 'vue';
 import {useFilterCanvasVisible} from "../../store/canvasVisible.js";
 const canvasVisible = useFilterCanvasVisible()
 
@@ -8,19 +7,17 @@ const canvasVisible = useFilterCanvasVisible()
 <template>
     <div :class="['cartOffcanvas', 'offcanvas-end', { show: canvasVisible.isFilterCanvasVisible }]" tabindex="-1" id="cartOffcanvas" aria-labelledby="cartOffcanvasLabel">
       <div class="offcanvas-header">
-        <h3 class="offcanvas-title" id="cartOffcanvasLabel">Cart <span id="item-count">(0)</span></h3>
-        <i class="bi bi-x" @click="canvasVisible.closeFilterCanvas"></i>
+        <h3 class="offcanvas-title" id="cartOffcanvasLabel">Фильтр</h3>
+        <i class="bi bi-x text-h4 cursor-pointer" @click="canvasVisible.closeFilterCanvas"></i>
       </div>
-      <div class="offcanvas-body">
-        <p class="cart-empty">Your cart is currently empty.</p>
+      <div class="offcanvas-body" >
+        <slot></slot>
       </div>
     </div>
 </template>
 
 <style scoped>
 @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
-
-
 
 button {
   border: none;
@@ -38,14 +35,15 @@ button:hover{
 }
 
 .cartOffcanvas {
-  position: fixed;
+  position: absolute;
   top: 0;
   right: -100%;
   width: 35%;
+  border-radius: 20px 0 0 20px;
   background-color: white;
   height: 100%;
   transition: right 0.3s ease;
-  z-index: 1050;
+  z-index: 999;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -63,10 +61,13 @@ button:hover{
 
 .offcanvas-title {
   font-weight: bold;
+  font-size: 20px;
   flex: 1;
 }
 
 .offcanvas-body {
+  max-width: 200px !important;
+  width: 100%;
   padding: 20px;
 }
 
@@ -126,7 +127,7 @@ button:hover{
     background-color: white;
     height: 100%;
     transition: right 0.3s ease;
-    z-index: 1050;
+    z-index: 999;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 

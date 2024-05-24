@@ -4,12 +4,12 @@ import { BASE_COLOR, FIELD_COLOR } from "../../composables/constant/colors.js";
 defineProps({
   minWidth: {
     type: String,
-    default: "220",
+    default: "100",
     required: false,
   },
   maxWidth: {
     type: String,
-    default: "160px",
+    default: "100",
     required: false,
   },
   disabled: {
@@ -29,8 +29,8 @@ defineProps({
   <v-autocomplete
     :disabled="disabled"
     :style="[
-      `max-width: ${maxWidth}`,
-      `min-width: ${minWidth}px`,
+      `max-width: ${maxWidth}%`,
+      `min-width: ${minWidth}%`,
       'max-height: 40px !important',
     ]"
     variant="outlined"
