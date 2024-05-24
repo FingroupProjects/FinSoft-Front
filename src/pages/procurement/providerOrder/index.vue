@@ -293,7 +293,7 @@ watch(search, debounce((newValue) => {
 
 <template>
   <div class="pa-4">
-      <div class="d-flex justify-space-between">
+      <div class="d-flex justify-space-between calcWidth">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
           <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Заказ поставщику</span>
         </div>
@@ -343,7 +343,7 @@ watch(search, debounce((newValue) => {
         </div>
         </div>
       </div>
-      <v-card class="table">
+      <v-card class="table calcWidth">
         <v-data-table-server
             style="height: 78vh"
             items-per-page-text="Элементов на странице:"

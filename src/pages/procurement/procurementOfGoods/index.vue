@@ -368,7 +368,7 @@ onMounted(() => {
 
 <template>
   <div class="pa-4">
-    <div class="d-flex justify-space-between">
+    <div class="d-flex justify-space-between calcWidth">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
         <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Покупка</span>
       </div>
@@ -416,7 +416,7 @@ onMounted(() => {
         </div>
       </div>
     </div>
-    <v-card class="table">
+    <v-card class="table calcWidth">
       <v-data-table-server
         style="height: calc(100vh - 150px)"
         items-per-page-text="Элементов на странице:"

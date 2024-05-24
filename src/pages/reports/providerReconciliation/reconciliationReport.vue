@@ -4,16 +4,20 @@ import { onMounted, reactive, ref, watch } from "vue";
 import Icons from "../../../composables/Icons/Icons.vue";
 import Button from "../../../components/button/button.vue";
 import organizationApi from "../../../api/list/organizations.js";
-import counterpartyApi from "../../../api/list/counterparty.js"
-import { BASE_COLOR } from "../../../composables/constant/colors.js";
-import cpAgreementApi from "../../../api/list/counterpartyAgreement.js"
+import counterpartyApi from "../../../api/list/counterparty.js";
+import {
+  BASE_COLOR,
+  TITLE_COLOR,
+} from "../../../composables/constant/colors.js";
+import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
-import reconciliationActApi from '../../../api/reports/reconciliationAct.js'
+import reconciliationActApi from "../../../api/reports/reconciliationAct.js";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
+import showToast from "../../../composables/toast";
 
 const groupBy = ref([
   {
-    key: "counterparty_id",
+    key: "id",
     order: "asc",
   },
 ]);
@@ -21,8 +25,7 @@ const groupBy = ref([
 const headers = ref([
   { title: "Дата", key: "date", sortable: false },
   { title: "Тип операции", key: "movement_type", sortable: false },
-  { title: "Сумма Прихода", key: "sum" },
-  { title: "Сумма Расхода", key: "sale_sum" },
+  { title: "Сумма", key: "sum" },
 ]);
 
 const filterForm = reactive({
@@ -68,14 +71,16 @@ const getItems = async ({ page, itemsPerPage, sortBy, search }) => {
   countFilter();
   const filterData = filterForm;
   try {
-    const { data: {result} } = await reconciliationActApi.get(
+    const {
+      data: { result },
+    } = await reconciliationActApi.get(
       counterparty_id.value,
       { page, itemsPerPage, sortBy },
       search,
       filterData
     );
-    console.log(result);
     items.value = result.data;
+    console.log(items.value);
     pagination.value = result.pagination;
     loading.value = false;
     filterModal.value = false;
@@ -107,7 +112,9 @@ const getCpAgreements = async () => {
 };
 
 const getOrganizations = async () => {
-  const { data: {result} } = await organizationApi.get({
+  const {
+    data: { result },
+  } = await organizationApi.get({
     page: 1,
     itemsPerPage: 100000,
     sortBy: "name",
@@ -115,33 +122,23 @@ const getOrganizations = async () => {
   organizations.value = result.data;
 };
 
-const totalCount = (itemName) => {
-  const filteredGoods = items.value.filter(
-    (item) => item.counterparty_id === itemName
-  );
-  return filteredGoods.length;
+const totalCount = (goods) => {
+  return goods.length;
 };
 
-const totalIncomes = (itemName) => {
-  let filteredGoods = items.value.filter(
-    (item) => item.counterparty_id === itemName
-  );
-  const total = filteredGoods.reduce((acc, curr) => {
-    return acc + curr.income;
+const totalAmount = (goods) => {
+  const total = goods.reduce((acc, item) => {
+    return acc + item.amount;
   }, 0);
-
   return total;
 };
 
-const totalOutcomes = (itemName) => {
-  let filteredGoods = items.value.filter(
-    (item) => item.counterparty_id === itemName
-  );
-  const total = filteredGoods.reduce((acc, curr) => {
-    return acc + curr.outcome;
+const totalSum = (goods) => {
+  const total = goods.reduce((acc, item) => {
+    return acc + item.sum;
   }, 0);
 
-  return total;
+  return total.toFixed(2);
 };
 
 const totalRemainder = (itemName) => {
@@ -164,6 +161,9 @@ const countFilter = () => {
 };
 
 const getExcel = async () => {
+  if(counterparty_id.value === null) {
+    return showToast('Выберите поставщика', 'warning')
+  }
   try {
     const { data } = await reconciliationActApi.excel(counterparty_id.value);
     const url = window.URL.createObjectURL(
@@ -185,45 +185,56 @@ watch(counterparty_id, () => {
 });
 
 onMounted(async () => {
-  await getCpAgreements()
+  await getCpAgreements();
   await getOrganizations();
-  await getCounterparties()
+  await getCounterparties();
 });
 </script>
 <template>
   <div class="pa-4">
     <div class="d-flex justify-space-between align-center mb-4">
-      <div class="d-flex ga-4">
-        <div class="switcher">
-          <button
-            @click="seletectBlock('По группам')"
-            :class="selectedBlock === 'По группам' ? 'active' : ''"
-            class="button"
-          >
-            По группам
-          </button>
-          <button
-            @click="seletectBlock('По элементам')"
-            :class="selectedBlock === 'По элементам' ? 'active' : ''"
-            class="button"
-          >
-            По элементам
-          </button>
-        </div>
-        <Button name="excel" @click="getExcel()" />
-        <custom-autocomplete label="Поставщик" :items="counterparties" v-model="counterparty_id" class="button mt-1"></custom-autocomplete>
+      <div class="d-flex align-center ga-2 pe-2 ms-4">
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }"
+          >Акт сверки с поставщиками</span
+        >
       </div>
-      <div class="filterElement">
-        <Icons name="filter" title="Фильтр" @click="filterModal = true" />
-        <span v-if="counterFilter !== 0" class="countFilter">{{
-          counterFilter
-        }}</span>
+      <div class="d-flex align-center">
+        <div class="d-flex ga-2">
+          <div class="switcher">
+            <button
+              @click="seletectBlock('По группам')"
+              :class="selectedBlock === 'По группам' ? 'active' : ''"
+              class="button"
+            >
+              По группам
+            </button>
+            <button
+              @click="seletectBlock('По элементам')"
+              :class="selectedBlock === 'По элементам' ? 'active' : ''"
+              class="button"
+            >
+              По элементам
+            </button>
+          </div>
+          <Button name="excel" @click="getExcel()" />
+          <custom-autocomplete
+            label="Поставщик"
+            :items="counterparties"
+            v-model="counterparty_id"
+            class="button mt-1"
+          />
+        </div>
+        <div class="filterElement">
+          <Icons name="filter" title="Фильтр" @click="filterModal = true" />
+          <span v-if="counterFilter !== 0" class="countFilter">{{
+            counterFilter
+          }}</span>
+        </div>
       </div>
     </div>
     <v-card class="table">
       <v-data-table
         :items="items"
-        title="ewrgthy"
         v-model:items-per-page="pagination.per_page"
         items-per-page-text="Элементов на странице"
         style="height: calc(100vh - 165px)"
@@ -241,6 +252,9 @@ onMounted(async () => {
           { value: 100, title: '100' },
         ]"
       >
+        <template v-slot:no-data>
+          <div class="text-center">Нет данных для отображения</div>
+        </template>
         <template v-slot:group-header="{ item, toggleGroup, isGroupOpen }">
           <tr style="background-color: rgba(122, 127, 176, 0.193)">
             <td>
@@ -250,21 +264,43 @@ onMounted(async () => {
                 variant="text"
                 @click="toggleGroup(item)"
               ></VBtn>
-              {{ item.value ? item.value : "Gluten free" }}
+              <!-- {{ item.value ? item.value : "Gluten free" }} -->
             </td>
             <td>
-              {{ totalCount(item.value) }}
+              {{ item.items[0].columns.date }}
             </td>
             <td>
-              {{ totalIncomes(item.value) }}
+              {{ item.items[0].columns.movement_type }}
             </td>
             <td>
-              {{ totalOutcomes(item.value) }}
+              {{ item.items[0].columns.sum }}
+            </td>
+          </tr>
+        </template>
+        <template v-slot:item="{ item }">
+          <tr  v-if="selectedBlock === 'По группам'" style="background-color: rgba(122, 127, 176, 0.193)">
+            <td />
+            <td>
+              {{ totalCount(item.goods) }}
             </td>
             <td>
-              {{ totalRemainder(item.value) }}
+              {{ totalAmount(item.goods) }}
             </td>
-       
+            <td>
+              {{ totalSum(item.goods) }}
+            </td>
+          </tr>
+          <tr v-for="good in item.goods" :key="good.id">
+            <td v-if="selectedBlock === 'По группам'"></td>
+            <td>
+              {{ good.good.name }}
+            </td>
+            <td>
+              {{ good.amount }}
+            </td>
+            <td>
+              {{ good.sum }}
+            </td>
           </tr>
         </template>
       </v-data-table>
@@ -328,10 +364,7 @@ onMounted(async () => {
                   <v-btn color="red" class="btn" @click="closeFilterModal"
                     >сбросить</v-btn
                   >
-                  <v-btn
-                    :color="BASE_COLOR"
-                    class="btn"
-                    @click="getItems"
+                  <v-btn :color="BASE_COLOR" class="btn" @click="getItems"
                     >применить</v-btn
                   >
                 </div>

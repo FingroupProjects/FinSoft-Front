@@ -172,10 +172,10 @@ onMounted( () => {
         >
           Взаимодействие с поставщиками
         </button>
-      </div>
-      <div class="mb-1 ms-2">
         <Button @click="closeWindow" name="close"/>
       </div>
+      <!-- <div class="mb-1 ms-2"> -->
+      <!-- </div> -->
     </div>
 
     <div v-if="selectedBlock === 'История'">
@@ -347,7 +347,7 @@ onMounted( () => {
   padding: 10px 16px;
   display: flex;
   gap: 10px;
-  width: 640px;
+  width: 760px;
   border-radius: 12px;
 }
 

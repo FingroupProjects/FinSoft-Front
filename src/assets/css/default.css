@@ -20,8 +20,11 @@ body{
   color: #757575;
 }
 
+.calcWidth {
+  width:  calc(100vw - 90px);
+}
+
 .table {
-  width: calc(100vw - 90px);
   background: white;
   padding: 5px;
   border-radius: 16px;
