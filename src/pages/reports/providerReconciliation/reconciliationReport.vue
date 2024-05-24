@@ -13,12 +13,11 @@ import CustomAutocomplete from "../../../components/formElements/CustomAutocompl
 
 const groupBy = ref([
   {
-    key: "id",
+    key: "counterparty_id",
     order: "asc",
   },
 ]);
 
-const counterparty_id = ref(null);
 const headers = ref([
   { title: "Дата", key: "date", sortable: false },
   { title: "Тип операции", key: "movement_type", sortable: false },
@@ -34,6 +33,7 @@ const filterForm = reactive({
   cpAgreement_id: null,
 });
 
+const counterparty_id = ref(null);
 const counterFilter = ref(0);
 
 const selectedBlock = ref("По группам");
@@ -116,43 +116,43 @@ const getOrganizations = async () => {
 };
 
 const totalCount = (itemName) => {
-  // const filteredGoods = items.value.filter(
-  //   (item) => item.currency.name === itemName
-  // );
-  // return filteredGoods.length;
+  const filteredGoods = items.value.filter(
+    (item) => item.counterparty_id === itemName
+  );
+  return filteredGoods.length;
 };
 
 const totalIncomes = (itemName) => {
-  // let filteredGoods = items.value.filter(
-  //   (item) => item.currency.name === itemName
-  // );
-  // const total = filteredGoods.reduce((acc, curr) => {
-  //   return acc + curr.income;
-  // }, 0);
+  let filteredGoods = items.value.filter(
+    (item) => item.counterparty_id === itemName
+  );
+  const total = filteredGoods.reduce((acc, curr) => {
+    return acc + curr.income;
+  }, 0);
 
-  // return total;
+  return total;
 };
 
 const totalOutcomes = (itemName) => {
-  // let filteredGoods = items.value.filter(
-  //   (item) => item.currency.name === itemName
-  // );
-  // const total = filteredGoods.reduce((acc, curr) => {
-  //   return acc + curr.outcome;
-  // }, 0);
+  let filteredGoods = items.value.filter(
+    (item) => item.counterparty_id === itemName
+  );
+  const total = filteredGoods.reduce((acc, curr) => {
+    return acc + curr.outcome;
+  }, 0);
 
-  // return total;
+  return total;
 };
 
 const totalRemainder = (itemName) => {
-  // let filteredGoods = items.value.filter(
-  //   (item) => item.currency.name === itemName
-  // );
-  // const total = filteredGoods.reduce((acc, curr) => {
-  //   return acc + curr.debt;
-  // }, 0);
+  let filteredGoods = items.value.filter(
+    (item) => item.counterparty_id === itemName
+  );
+  const total = filteredGoods.reduce((acc, curr) => {
+    return acc + curr.debt;
+  }, 0);
 
-  // return total;
+  return total;
 };
 
 const countFilter = () => {
@@ -253,16 +253,16 @@ onMounted(async () => {
               {{ item.value ? item.value : "Gluten free" }}
             </td>
             <td>
-              {{ item.date }}
+              {{ totalCount(item.value) }}
             </td>
             <td>
-              {{ item.movement_type }}
+              {{ totalIncomes(item.value) }}
             </td>
             <td>
-              {{ item.sum }}
+              {{ totalOutcomes(item.value) }}
             </td>
             <td>
-              {{ item.sale_sum }}
+              {{ totalRemainder(item.value) }}
             </td>
        
           </tr>
