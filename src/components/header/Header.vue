@@ -61,7 +61,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <v-app-bar :elevation="2" color="#F2FAFF" height="45">
+  <v-app-bar style="z-index: 98 !important;" :elevation="2" color="#F2FAFF" height="45">
     <template v-slot:prepend>
       <Icons class="ml-2" name="menu" @click="$emit('rale')"></Icons>
     </template>
