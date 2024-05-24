@@ -34,6 +34,9 @@ import {useModalCreateBased} from "../../../store/modalCreateBased.js";
 import createBased from "../../../composables/modal/createBased.js";
 import CreateBase from "../../../components/modal/CreateBase.vue";
 import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
+import {useFilterCanvasVisible} from "../../../store/canvasVisible.js";
+import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
+import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -135,7 +138,7 @@ const headerButtons = ref([
     name: "copy",
     function: async () => {
       if (markedID.value.length !== 1) {
-        return showToast(selectOneItemMessage, 'red')
+        return showToast(selectOneItemMessage, 'warning')
       }
 
       try {
@@ -248,6 +251,10 @@ const lineMarking = (item) => {
 };
 
 const approve = async () => {
+  if (markedID.value.length !== 1) {
+    return showToast(selectOneItemMessage, 'warning')
+  }
+
   try {
     const res = await procurementApi.approve({ ids: markedID.value });
     showToast(approveDocument);
@@ -259,6 +266,10 @@ const approve = async () => {
 };
 
 const unApprove = async () => {
+  if (markedID.value.length !== 1) {
+    return showToast(selectOneItemMessage, 'warning')
+  }
+
   try {
     await procurementApi.unApprove({ ids: markedID.value });
     showToast(approveDocument);
@@ -273,6 +284,7 @@ const closeFilterModal = async () => {
   filterModal.value = false;
   cleanFilterForm();
   await getProcurementData();
+  useFilterCanvasVisible().closeFilterCanvas()
 };
 
 const cleanFilterForm = () => {
@@ -356,7 +368,6 @@ onMounted(() => {
 
 <template>
   <div class="pa-4">
-    <filter-canvas />
     <div class="d-flex justify-space-between">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
         <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Покупка</span>
@@ -396,7 +407,7 @@ onMounted(() => {
           <Icons
             name="filter"
             title="Фильтр"
-            @click="filterModal = true"
+            @click="useFilterCanvasVisible().toggleFilterCanvas()"
             class="mt-1"
           />
           <span v-if="counterFilter !== 0" class="countFilter">{{
@@ -466,92 +477,65 @@ onMounted(() => {
         </template>
       </v-data-table-server>
     </v-card>
-    <v-card>
-      <v-dialog
-        persistent
-        class="mt-2 pa-2"
-        v-model="filterModal"
-        @keyup.esc="closeFilterModal"
-      >
-        <v-card
-          :style="`border: 2px solid ${BASE_COLOR}`"
-          min-width="450"
-          class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
-          rounded="xl"
-        >
-          <div class="d-flex justify-space-between align-center mb-2">
-            <span>Фильтр</span>
-          </div>
-          <v-form class="d-flex w-100" @submit.prevent="">
-            <v-row class="w-100">
-              <v-col class="d-flex flex-column w-100 ga-4">
-                <div class="d-flex flex-column ga-2 w-100">
-                    <custom-text-field label="От" type="date" min-width="508"  v-model="filterForm.startDate"/>
-                    <custom-text-field label="По" type="date" min-width="508"  v-model="filterForm.endDate"/>
-                    </div>
-                    <div class="d-flex ga-2">                
-                      <custom-autocomplete min-width="250" label="Статус" :items="statusOptions" v-model="filterForm.active"/>
-                      <custom-autocomplete min-width="250" label="Удалён" :items="deletionStatuses" v-model="filterForm.deleted"/>               
-                  </div>
-                <div class="d-flex ga-2">
-                  <custom-autocomplete
-                  min-width="250"
-                    label="Организация"
-                    :items="organizations"
-                    v-model="filterForm.organization_id"
-                  />
-                  <custom-autocomplete
-                  min-width="250"
-                    label="Поставщик"
-                    :items="counterparties"
-                    v-model="filterForm.counterparty_id"
-                  />
-                </div>
-                <div class="d-flex ga-2">
-                  <custom-autocomplete
-                  min-width="250"
-                    label="Склад"
-                    :items="storages"
-                    v-model="filterForm.storage_id"
-                  />
-                  <custom-autocomplete
-                  min-width="250"
-                    label="Валюта"
-                    :items="currencies"
-                    v-model="filterForm.currency_id"
-                  />
-                </div>
-                <div class="d-flex ga-2">
-                  <custom-autocomplete
-                  min-width="250"
-                    label="Автор"
-                    :items="authors"
-                    v-model="filterForm.author_id"
-                  />
-                  <custom-autocomplete
-                  min-width="250"
-                    label="Договор"
-                    :items="counterpartyAgreements"
-                    v-model="filterForm.counterparty_agreement_id"
-                  />
-                </div>
-                <div class="d-flex justify-end ga-2">
-                  <v-btn color="red" class="btn" @click="closeFilterModal"
-                    >сбросить</v-btn
-                  >
-                  <v-btn
-                    :color="BASE_COLOR"
-                    class="btn"
-                    @click="getProcurementData"
-                    >применить</v-btn
-                  >
-                </div>
-              </v-col>
-            </v-row>
-          </v-form>
-        </v-card>
-      </v-dialog>
-    </v-card>
+    <filter-canvas>
+      <div class="d-flex flex-column ga-4 w-100">
+        <custom-filter-text-field label="От" type="date" class="date" min-width="106"  v-model="filterForm.startDate"/>
+        <custom-filter-text-field label="По" type="date" class="date" min-width="106"  v-model="filterForm.endDate"/>
+      </div>
+      <div class="d-flex ga-2">
+        <custom-filter-autocomplete min-width="52" label="Статус" :items="statusOptions" v-model="filterForm.active"/>
+        <custom-filter-autocomplete min-width="52" label="Удалён" :items="deletionStatuses" v-model="filterForm.deleted"/>
+      </div>
+      <div class="d-flex ga-2">
+        <custom-filter-autocomplete
+            label="Организация"
+            :items="organizations"
+            v-model="filterForm.organization_id"
+        />
+        <custom-filter-autocomplete
+            label="Поставщик"
+            :items="counterparties"
+            v-model="filterForm.counterparty_id"
+        />
+      </div>
+      <div class="d-flex ga-2">
+        <custom-filter-autocomplete
+            label="Склад"
+            :items="storages"
+            v-model="filterForm.storage_id"
+        />
+        <custom-filter-autocomplete
+            label="Валюта"
+            :items="currencies"
+            v-model="filterForm.currency_id"
+        />
+      </div>
+      <div class="d-flex ga-2">
+        <custom-filter-autocomplete
+            label="Автор"
+            :items="authors"
+            v-model="filterForm.author_id"
+        />
+        <custom-filter-autocomplete
+            label="Договор"
+            :items="counterpartyAgreements"
+            v-model="filterForm.counterparty_agreement_id"
+        />
+      </div>
+      <div class="d-flex justify-end ">
+        <div class="d-flex ga-2" style="margin-right: -6%;">
+          <v-btn color="red" class="btn" @click="closeFilterModal"
+          >сбросить</v-btn
+          >
+          <v-btn
+              :color="BASE_COLOR"
+              class="btn"
+              @click="() => {getProcurementData(); useFilterCanvasVisible().closeFilterCanvas()}"
+          >применить</v-btn
+          >
+        </div>
+      </div>
+    </filter-canvas>
   </div>
 </template>
 

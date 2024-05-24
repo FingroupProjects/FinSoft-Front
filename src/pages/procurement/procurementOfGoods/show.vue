@@ -113,10 +113,12 @@ const getProcurementDetails = async () => {
       id: data.result.counterparty.id,
       name: data.result.counterparty.name,
     };
+    console.log(form.counterparty, 'form.counterparty')
     form.cpAgreement = {
       id: data.result.counterpartyAgreement.id,
       name: data.result.counterpartyAgreement.name,
     };
+    console.log(form.cpAgreement, 'form.cpAgreement')
     form.storage = {
       id: data.result.storage.id,
       name: data.result.storage.name,

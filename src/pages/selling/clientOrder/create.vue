@@ -281,7 +281,7 @@ const handlePriceInput = (item) => {
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <Button @click="addNewClientOrder" name="save" />
+              <Button @click="addNewClientOrder" name="save1" />
               <Button
                   @click="router.push('/clientOrder')"
                   name="close"
