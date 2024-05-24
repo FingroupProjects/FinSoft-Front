@@ -72,6 +72,7 @@ const getItems = async ({ page, itemsPerPage, sortBy, search }) => {
       search,
       filterData
     );
+    console.log(result);
     items.value = result.data;
     pagination.value = result.pagination;
     loading.value = false;
