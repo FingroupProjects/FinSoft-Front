@@ -324,7 +324,7 @@ onMounted(() => {
 
 <template>
   <div class="pa-4">
-    <div style="width:  calc(100vw - 90px);" class="d-flex justify-space-between">
+    <div class="d-flex justify-space-between calcWidth">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
         <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Продажа</span>
       </div>
@@ -371,7 +371,7 @@ onMounted(() => {
         </div>
       </div>
     </div>
-    <div class="table">
+    <div class="table calcWidth">
       <v-data-table-server
         style="height: calc(100vh - 150px);"
         items-per-page-text="Элементов на странице:"

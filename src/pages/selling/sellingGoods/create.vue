@@ -27,7 +27,7 @@ import {
   selectOneItemMessage,
 } from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
-import { BASE_COLOR } from "../../../composables/constant/colors.js";
+import { BASE_COLOR, TITLE_COLOR } from "../../../composables/constant/colors.js";
 import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
 import { useHasOneOrganization } from "../../../store/hasOneOrganization.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
@@ -377,12 +377,11 @@ const handlePriceInput = (item) => {
 
 <template>
   <div class="document">
-    <v-col>
-      <div class="d-flex justify-space-between text-uppercase">
+      <div class="d-flex justify-space-between">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Продажа (создание)</span>
+          <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Продажа (создание)</span>
         </div>
-        <v-card variant="text" class="d-flex align-center ga-2">
+        <v-card variant="text" class="d-flex align-center ga-2 py-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
               <Button @click="addNewSale" name="save1" />
@@ -394,7 +393,6 @@ const handlePriceInput = (item) => {
           </div>
         </v-card>
       </div>
-    </v-col>
     <v-divider />
     <v-divider />
     <div style="height: calc(99vh - 117px); background: #fff">
