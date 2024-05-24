@@ -30,6 +30,8 @@ import {useModalCreateBased} from "../../../store/modalCreateBased.js";
 import CreateBase from "../../../components/modal/CreateBase.vue";
 import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
 import {useFilterCanvasVisible} from "../../../store/canvasVisible.js";
+import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
+import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
 
 const router = useRouter()
 
@@ -431,37 +433,33 @@ onMounted(() => {
       </v-data-table-server>
     </v-card>
     <filter-canvas>
-      <v-form class="d-flex w-100">
-        <v-row class="w-100">
-          <v-col class="d-flex flex-column w-100 ga-4">
-            <div class="d-flex flex-column ga-2 w-100">
-              <custom-text-field label="От" type="date" min-width="508" v-model="filterForm.startDate"/>
-              <custom-text-field label="По" type="date" min-width="508" v-model="filterForm.endDate"/>
-            </div>
-            <div class="d-flex ga-2">
-              <custom-autocomplete label="Статус" :items="statusOptions" v-model="filterForm.active"/>
-              <custom-autocomplete label="Удалён" :items="deletionStatuses" v-model="filterForm.deleted"/>
-            </div>
-            <div class="d-flex ga-2">
-              <custom-autocomplete label="Организация" :items="organizations" v-model="filterForm.organization_id"/>
-              <custom-autocomplete label="Поставщик" :items="counterparties" v-model="filterForm.counterparty_id"/>
-            </div>
-            <div class="d-flex ga-2">
-              <custom-autocomplete label="Склад" :items="storages" v-model="filterForm.storage_id"/>
-              <custom-autocomplete label="Валюта" :items="currencies" v-model="filterForm.currency_id"/>
-            </div>
-            <div class="d-flex ga-2">
-              <custom-autocomplete label="Автор" :items="authors" v-model="filterForm.author_id"/>
-              <custom-autocomplete label="Договор" :items="counterpartyAgreements"
-                                   v-model="filterForm.counterparty_agreement_id"/>
-            </div>
-            <div class="d-flex justify-end ga-2">
-              <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-              <v-btn :color="BASE_COLOR" class="btn" @click="getProviderData">применить</v-btn>
-            </div>
-          </v-col>
-        </v-row>
-      </v-form>
+      <div class="d-flex flex-column ga-4 w-100">
+        <custom-filter-text-field label="От" type="date" class="date" min-width="106" v-model="filterForm.startDate"/>
+        <custom-filter-text-field label="По" type="date" class="date" min-width="106" v-model="filterForm.endDate"/>
+      </div>
+      <div class="d-flex ga-2">
+        <custom-filter-autocomplete min-width="52" label="Статус" :items="statusOptions" v-model="filterForm.active"/>
+        <custom-filter-autocomplete min-width="52" label="Удалён" :items="deletionStatuses" v-model="filterForm.deleted"/>
+      </div>
+      <div class="d-flex ga-2">
+        <custom-filter-autocomplete min-width="52" label="Организация" :items="organizations" v-model="filterForm.organization_id"/>
+        <custom-filter-autocomplete min-width="52" label="Поставщик" :items="counterparties" v-model="filterForm.counterparty_id"/>
+      </div>
+      <div class="d-flex ga-2">
+        <custom-filter-autocomplete min-width="52" label="Склад" :items="storages" v-model="filterForm.storage_id"/>
+        <custom-filter-autocomplete min-width="52" label="Валюта" :items="currencies" v-model="filterForm.currency_id"/>
+      </div>
+      <div class="d-flex ga-2">
+        <custom-filter-autocomplete min-width="52" label="Автор" :items="authors" v-model="filterForm.author_id"/>
+        <custom-filter-autocomplete min-width="52" label="Договор" :items="counterpartyAgreements"
+                                    v-model="filterForm.counterparty_agreement_id"/>
+      </div>
+      <div class="d-flex justify-end ga-2">
+        <div class="d-flex ga-2" style="margin-right: -6%;">
+          <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
+          <v-btn :color="BASE_COLOR" class="btn" @click="() => {getProviderData(); useFilterCanvasVisible().closeFilterCanvas()}">применить</v-btn>
+        </div>
+      </div>
     </filter-canvas>
   </div>
 
