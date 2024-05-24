@@ -281,7 +281,7 @@ const handlePriceInput = (item) => {
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1">
           
-              <Button @click="addNewProviderOrder" name="save" />
+              <Button @click="addNewProviderOrder" name="save1" />
               <Button
                   @click="router.push('/providerOrder')"
                   name="close"

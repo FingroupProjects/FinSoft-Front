@@ -171,7 +171,7 @@ onMounted(() => {
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">              
-              <Button @click="addNewMove" name="save" />
+              <Button @click="addNewMove" name="save1" />
               <Button
                   @click="router.push('/moveOfGoods')"
                   name="close"

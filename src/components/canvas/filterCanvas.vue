@@ -11,7 +11,13 @@ const canvasVisible = useFilterCanvasVisible()
         <i class="bi bi-x text-h4 cursor-pointer" @click="canvasVisible.closeFilterCanvas"></i>
       </div>
       <div class="offcanvas-body" >
-        <slot></slot>
+        <v-form tabindex="-1" style="position: absolute" class="d-flex w-100">
+          <v-row class="w-100">
+            <v-col style="max-width: calc(100% - 65px)" class="d-flex flex-column w-100 ga-4">
+              <slot></slot>
+            </v-col>
+          </v-row>
+        </v-form>
       </div>
     </div>
 </template>
@@ -66,8 +72,8 @@ button:hover{
 }
 
 .offcanvas-body {
-  max-width: 200px !important;
-  width: 100%;
+  max-width: 220px !important;
+  width: 105%;
   padding: 20px;
 }
 
