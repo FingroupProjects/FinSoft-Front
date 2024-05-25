@@ -310,7 +310,7 @@ defineProps({
         stroke-linejoin="round"
       />
     </svg>
-    <!-- <svg
+    <svg
       v-if="name === 'save'"
       width="24"
       height="24"
@@ -325,8 +325,8 @@ defineProps({
         stroke-linecap="round"
         stroke-linejoin="round"
       />
-    </svg> -->
-    <button v-if="name === 'save'"
+    </svg>
+    <!-- <button v-if="name === 'save'"
      class="btn"
      style="font-size: 12px;
      padding: 4px 10px;
@@ -335,8 +335,8 @@ defineProps({
      border-radius: 4px;
      border: 1px solid #060526">
       Сохранить
-    </button>
-    <!-- <svg
+    </button> -->
+    <svg
       v-if="name === 'close'"
       width="18"
       height="18"
@@ -348,11 +348,11 @@ defineProps({
         d="M1.39989 13.308L0.691895 12.6L6.29189 7.00002L0.691895 1.40002L1.39989 0.692017L6.99989 6.29202L12.5999 0.692017L13.3079 1.40002L7.70789 7.00002L13.3079 12.6L12.5999 13.308L6.99989 7.70802L1.39989 13.308Z"
         fill="#F24E1E"
       />
-    </svg> -->
-    <button v-if="name === 'close'" class="btn"
+    </svg>
+    <!-- <button v-if="name === 'close'" class="btn"
      style="">
       Закрыть
-    </button>
+    </button> -->
     <svg
       v-if="name === 'checked'"
       width="14"

@@ -1,7 +1,24 @@
 <script setup>
-import { onMounted, ref, watch } from "vue";
+import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import counterpartyApi from "../../../api/list/counterparty";
+import Button from "../../../components/button/button.vue";
 import showDate from "../../../composables/date/showDate";
+import Icons from "../../../composables/Icons/Icons.vue";
+import showToast from "../../../composables/toast";
+import createCounterparty from "./create.vue";
+import debounce from "lodash.debounce";
+import { onMounted, ref, watch } from "vue";
+import {
+  removeAccess,
+  updateAccess,
+  createAccess,
+} from "../../../composables/access/access.js";
+import {
+  FIELD_COLOR,
+  BASE_COLOR,
+  TITLE_COLOR,
+  FIELD_OF_SEARCH,
+} from "../../../composables/constant/colors.js";
 import {
   ErrorSelectMessage,
   removeMessage,
@@ -9,13 +26,6 @@ import {
   selectOneItemMessage,
   warningMessage,
 } from "../../../composables/constant/buttons.js";
-import showToast from "../../../composables/toast";
-import Icons from "../../../composables/Icons/Icons.vue";
-import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import createCounterparty from "./create.vue";
-import { FIELD_COLOR, BASE_COLOR } from "../../../composables/constant/colors.js";
-import debounce from "lodash.debounce";
-import {removeAccess, updateAccess, createAccess} from "../../../composables/access/access.js";
 
 const loading = ref(true);
 const isCreate = ref(false);
@@ -47,12 +57,14 @@ const a = ref(false);
 const b = ref(false);
 const c = ref(false);
 
+const count = ref(0);
 const search = ref("");
 const debounceSearch = ref("");
 
 const headers = ref([
   { title: "Наименование", key: "name" },
   { title: "Баланс", key: "balance" },
+  { title: "Роль", key: "roles" },
   { title: "Адрес", key: "address" },
   { title: "Телефон", key: "phone" },
 ]);
@@ -67,7 +79,24 @@ const formatRole = (roles) => {
   return roles.map((role) => roleMap[role] || "Неизвестная роль");
 };
 
-const count = ref(0);
+const headerButtons = ref([
+  {
+    name: "create",
+    function: () => (isCreate.value = true),
+  },
+  {
+    name: "copy",
+    function: async () => {
+      createBase()
+    },
+  },
+  {
+    name: "delete",
+    function: () => {
+      compute({ page: 1, itemsPerPage: 25, search: '' });
+    },
+  },
+]);
 
 watch(
   () => isEdit.value,
@@ -118,8 +147,6 @@ const createBase = () => {
   createOnBase.value = true;
   editItem(markedItem.value);
 };
-
-
 
 const editItem = (item) => {
   isCreate.value = true;
@@ -308,13 +335,14 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div>
-    <v-col>
-      <div class="d-flex justify-space-between text-uppercase" >
-        <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Контрагенты</span>
-        </div>
-        <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
+  <div class="pa-4">
+    <div class="d-flex justify-space-between calcWidth">
+      <div class="d-flex align-center ga-2 pe-2 ms-4">
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">
+          Контрагенты
+        </span>
+      </div>
+      <!-- <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100 align-center">
             <div class="d-flex ga-2 mt-2 me-3">
               <Icons title="Добавить" v-if="createAccess('counterparty')" @click="isCreate = true" name="add" />
@@ -326,238 +354,252 @@ onMounted(async () => {
                 name="delete"
               />
             </div>
-            <div class="w-100">
-              <v-text-field
-                v-model="search"
-                prepend-inner-icon="search"
-                base-:color="BASE_COLOR"
-                density="compact"
-                label="Поиск..."
-                variant="outlined"
-                :color="BASE_COLOR"
-                rounded="lg"
-                clear-icon="close"
-                hide-details
-                single-line
-                clearable
-                flat
-              ></v-text-field>
-            </div>
           </div>
-          <div class="filterElement">
-            <Icons
-              name="filter"
-              title="фильтр"
-              @click="filterDialog = true"
-              class="mt-1"
+        </v-card> -->
+      <div class="d-flex justify-between ga-2">
+        <div class="d-flex justify-end mb-3">
+          <div class="d-flex ga-2 position-relative">
+            <Button
+              v-for="(button, idx) in headerButtons"
+              :name="button.name"
+              :key="idx"
+              @click="button.function"
             />
-
-            <span v-if="count !== 0" class="countFilter">{{ count }}</span>
           </div>
-        </v-card>
+        </div>
+        <div class="custom_search">
+          <v-text-field
+            style="width: 190px"
+            v-model="search"
+            prepend-inner-icon="search"
+            density="compact"
+            label="Поиск..."
+            variant="outlined"
+            :color="BASE_COLOR"
+            rounded="lg"
+            :base-color="FIELD_OF_SEARCH"
+            clear-icon="close"
+            hide-details
+            single-line
+            :append-inner-icon="search ? 'close' : ''"
+            @click:append-inner="search = ''"
+            flat
+          />
+        </div>
+
+        <div class="mt-1 filterElement">
+          <Icons
+            name="filter"
+            title="Фильтр"
+            @click="useFilterCanvasVisible().toggleFilterCanvas()"
+            class="mt-1"
+          />
+          <span v-if="count !== 0" class="countFilter">{{ count }}</span>
+        </div>
       </div>
+    </div>
 
-      <v-card class="table mt-2">
-        <v-data-table-server
-          style="height: 78vh"
-          show-select
-          v-model="markedID"
-          fixed-header
-          :items="counterparty"
-          :headers="headers"
-          :loading="loading"
-          items-per-page-text="Элементов на странице:"
-          loading-text="Загрузка"
-          no-data-text="Нет данных"
-          :search="debounceSearch"
-          @update:options="getCounterparty"
-          v-model:items-per-page="pagination.per_page"
-          :items-length="pagination.total || 0"
-          :item-value="headers.title"
-          hover
-          fixed-footer
-          page-text="{0}-{1} от {2}"
-          :items-per-page-options="[
-            { value: 25, title: '25' },
-            { value: 50, title: '50' },
-            { value: 100, title: '100' },
-          ]"
-        >
-          <template v-slot:item="{ item, index }">
-            <tr
-              @mouseenter="hoveredRowIndex = index"
-              @mouseleave="hoveredRowIndex = null"
-              @dblclick="editItem(item)"
-              :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
-            >
-              <td>
-                <template
-                  v-if="hoveredRowIndex === index || markedID.includes(item.id)"
+    <div class="table calcWidth">
+      <v-data-table-server
+        style="height: 78vh"
+        show-select
+        v-model="markedID"
+        fixed-header
+        :items="counterparty"
+        :headers="headers"
+        :loading="loading"
+        items-per-page-text="Элементов на странице:"
+        loading-text="Загрузка"
+        no-data-text="Нет данных"
+        :search="debounceSearch"
+        @update:options="getCounterparty"
+        v-model:items-per-page="pagination.per_page"
+        :items-length="pagination.total || 0"
+        :item-value="headers.title"
+        hover
+        fixed-footer
+        page-text="{0}-{1} от {2}"
+        :items-per-page-options="[
+          { value: 25, title: '25' },
+          { value: 50, title: '50' },
+          { value: 100, title: '100' },
+        ]"
+      >
+        <template v-slot:item="{ item, index }">
+          <tr
+            @mouseenter="hoveredRowIndex = index"
+            @mouseleave="hoveredRowIndex = null"
+            @dblclick="editItem(item)"
+            :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
+          >
+            <td>
+              <template
+                v-if="hoveredRowIndex === index || markedID.includes(item.id)"
+              >
+                <CustomCheckbox
+                  v-model="markedID"
+                  :checked="markedID.includes(item.id)"
+                  @change="handleCheckboxClick(item)"
                 >
-                  <CustomCheckbox
-                    v-model="markedID"
-                    :checked="markedID.includes(item.id)"
-                    @click="lineMarking(item)"
-                    @change="handleCheckboxClick(item)"
-                  >
-                    <span>{{ index + 1 }}</span>
-                  </CustomCheckbox>
-                </template>
+                  <span>{{ index + 1 }}</span>
+                </CustomCheckbox>
+              </template>
 
-                <template v-else>
-                  <span class="d-flex align-center">
-                    <Icons
-                      style="margin-right: 10px; margin-top: 4px"
-                      :name="item.deleted_at === null ? 'valid' : 'inValid'"
-                    />
-                    <span>{{ index + 1 }}</span>
-                  </span>
-                </template>
-              </td>
-              <td>
-                <span>{{ item.name }}</span>
-              </td>
-              <td>
-                <span>{{ item.balance }}</span>
-              </td>
-              <td>
-                <span>{{ item.address }}</span>
-              </td>
-              <td>
-                <span>{{ item.phone }}</span>
-              </td>
-            </tr>
-          </template>
-        </v-data-table-server>
-      </v-card>
-      <create-counterparty
-        :isEdit="isEdit"
-        :isOpen="isCreate"
-        @toggleIsOpen="toggleModal()"
-        :item="markedItem"
-        :createOnBase="createOnBase"
-        :counterparty="counterparty"
-        @computeCounterparty="
-          compute({ page, itemsPerPage, sortBy, search });
-          toggleModal();
-        "
-      />
-
-      <v-dialog persistent v-model="filterDialog" class="mt-2 pa-2" @keyup.esc="closeFilterDialog">
-        <v-card
-          :style="`border: 2px solid ${BASE_COLOR}`"
-          min-width="650"
-          class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
-          rounded="xl"
-        >
-          <div class="d-flex justify-space-between align-center mb-2">
-            <span>Фильтр</span>
-          </div>
-          <v-form class="d-flex w-100">
-            <v-row class="w-100">
-              <v-col class="d-flex flex-column w-100">
-                <div class="d-flex justify-space-between ga-6">
-                  <v-text-field
-                    v-model="filterForm.name"
-                    :color="BASE_COLOR"
-                    :base-color="FIELD_COLOR"
-                    rounded="md"
-                    variant="outlined"
-                    class="w-auto text-sm-body-1"
-                    density="compact"
-                    autofocus
-                    placeholder="Контрагент"
-                    label="Наименование"
-                    clear-icon="close"
-                    clearable
-                    hide-details
+              <template v-else>
+                <span class="d-flex align-center">
+                  <Icons
+                    style="margin-right: 10px; margin-top: 4px"
+                    :name="item.deleted_at === null ? 'valid' : 'inValid'"
                   />
-                </div>
+                  <span>{{ index + 1 }}</span>
+                </span>
+              </template>
+            </td>
+            <td>
+              <span>{{ item.name }}</span>
+            </td>
+            <td>
+              <span>{{ item.balance }}</span>
+            </td>
+            <td>
+              <span>{{ item.roles.join(" ") }}</span>
+            </td>
+            <td>
+              <span>{{ item.address }}</span>
+            </td>
+            <td>
+              <span>{{ item.phone }}</span>
+            </td>
+          </tr>
+        </template>
+      </v-data-table-server>
+    </div>
+    <create-counterparty
+      :isEdit="isEdit"
+      :isOpen="isCreate"
+      @toggleIsOpen="toggleModal()"
+      :item="markedItem"
+      :createOnBase="createOnBase"
+      :counterparty="counterparty"
+      @computeCounterparty="
+        compute({ page, itemsPerPage, sortBy, search });
+        toggleModal();
+      "
+    />
+
+    <v-dialog
+      persistent
+      v-model="filterDialog"
+      class="mt-2 pa-2"
+      @keyup.esc="closeFilterDialog"
+    >
+      <v-card
+        :style="`border: 2px solid ${BASE_COLOR}`"
+        min-width="650"
+        class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
+        rounded="xl"
+      >
+        <div class="d-flex justify-space-between align-center mb-2">
+          <span>Фильтр</span>
+        </div>
+        <v-form class="d-flex w-100">
+          <v-row class="w-100">
+            <v-col class="d-flex flex-column w-100">
+              <div class="d-flex justify-space-between ga-6">
+                <v-text-field
+                  v-model="filterForm.name"
+                  :color="BASE_COLOR"
+                  :base-color="FIELD_COLOR"
+                  rounded="lg"
+                  variant="outlined"
+                  class="w-auto text-sm-body-1"
+                  density="compact"
+                  autofocus
+                  placeholder="Контрагент"
+                  label="ание"
+                  clear-icon="close"
+                  clearable
+                  hide-details
+                />
+              </div>
+              <div
+                :class="isEdit ? 'justify-space-between' : 'justify-end'"
+                class="d-flex justify-space-between ga-5 align-center my-3"
+              >
                 <div
-                  :class="isEdit ? 'justify-space-between' : 'justify-end'"
-                  class="d-flex justify-space-between ga-5 align-center my-3"
+                  v-if="isEdit"
+                  style="
+                    border: 1.5px solid #cbc8c8;
+                    border-radius: 4px;
+                    padding: 2px 12px;
+                  "
                 >
-                  <div
-                    v-if="isEdit"
-                    style="
-                      border: 1.5px solid #cbc8c8;
-                      border-radius: 4px;
-                      padding: 2px 12px;
-                    "
-                  >
-                    <span>
-                      {{ date }}
-                    </span>
-                  </div>
-                  <CustomCheckbox :checked="a" @change="handleCheckboxChange(0)"
-                    >Клиент</CustomCheckbox
-                  >
-                  <CustomCheckbox :checked="b" @change="handleCheckboxChange(1)"
-                    >Поставщик</CustomCheckbox
-                  >
-                  <CustomCheckbox :checked="c" @change="handleCheckboxChange(2)"
-                    >Прочее</CustomCheckbox
-                  >
+                  <span>
+                    {{ date }}
+                  </span>
                 </div>
-                <div class="d-flex ga-4 mb-3">
-                  <v-text-field
-                    variant="outlined"
-                    :base-color="FIELD_COLOR"
-                    label="Тел номер"
-                    v-model.trim="filterForm.phone"
-                    density="compact"
-                    v-mask="'+992#########'"
-                    rounded="md"
-                    :color="BASE_COLOR"
-                    hide-details
-                    :append-inner-icon="
-                      filterForm.phone !== null ? 'close' : ''
-                    "
-                    @click:append-inner="filterForm.phone = null"
-                  />
-                  <v-text-field
-                    variant="outlined"
-                    :base-color="FIELD_COLOR"
-                    label="Почта"
-                    v-model="filterForm.email"
-                    density="compact"
-                    rounded="md"
-                    :color="BASE_COLOR"
-                    hide-details
-                    :append-inner-icon="
-                      filterForm.email !== null ? 'close' : ''
-                    "
-                    @click:append-inner="filterForm.email = null"
-                  />
-                </div>
+                <CustomCheckbox :checked="a" @change="handleCheckboxChange(0)"
+                  >Клиент</CustomCheckbox
+                >
+                <CustomCheckbox :checked="b" @change="handleCheckboxChange(1)"
+                  >Поставщик</CustomCheckbox
+                >
+                <CustomCheckbox :checked="c" @change="handleCheckboxChange(2)"
+                  >Прочее</CustomCheckbox
+                >
+              </div>
+              <div class="d-flex ga-4 mb-3">
                 <v-text-field
                   variant="outlined"
                   :base-color="FIELD_COLOR"
-                  label="Адрес"
-                  v-model="filterForm.address"
+                  label="Тел номер"
+                  v-model.trim="filterForm.phone"
+                  density="compact"
+                  v-mask="'+992#########'"
+                  rounded="md"
+                  :color="BASE_COLOR"
+                  hide-details
+                  :append-inner-icon="filterForm.phone !== null ? 'close' : ''"
+                  @click:append-inner="filterForm.phone = null"
+                />
+                <v-text-field
+                  variant="outlined"
+                  :base-color="FIELD_COLOR"
+                  label="Почта"
+                  v-model="filterForm.email"
                   density="compact"
                   rounded="md"
                   :color="BASE_COLOR"
                   hide-details
-                  :append-inner-icon="
-                    filterForm.address !== null ? 'close' : ''
-                  "
-                  @click:append-inner="filterForm.address = null"
+                  :append-inner-icon="filterForm.email !== null ? 'close' : ''"
+                  @click:append-inner="filterForm.email = null"
                 />
-                <div class="d-flex justify-end ga-2 mt-2">
-                  <v-btn color="red" class="btn" @click="closeFilterDialog"
-                    >сбросить</v-btn
-                  >
-                  <v-btn :color="BASE_COLOR" class="btn" @click="getCounterparty"
-                    >применить</v-btn
-                  >
-                </div>
-              </v-col>
-            </v-row>
-          </v-form>
-        </v-card>
-      </v-dialog>
-    </v-col>
+              </div>
+              <v-text-field
+                variant="outlined"
+                :base-color="FIELD_COLOR"
+                label="Адрес"
+                v-model="filterForm.address"
+                density="compact"
+                rounded="md"
+                :color="BASE_COLOR"
+                hide-details
+                :append-inner-icon="filterForm.address !== null ? 'close' : ''"
+                @click:append-inner="filterForm.address = null"
+              />
+              <div class="d-flex justify-end ga-2 mt-2">
+                <v-btn color="red" class="btn" @click="closeFilterDialog"
+                  >сбросить</v-btn
+                >
+                <v-btn :color="BASE_COLOR" class="btn" @click="getCounterparty"
+                  >применить</v-btn
+                >
+              </div>
+            </v-col>
+          </v-row>
+        </v-form>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 <style scoped>
