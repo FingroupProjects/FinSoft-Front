@@ -1,10 +1,11 @@
-<script setup>
+  <script setup>
 import {computed, onMounted, ref, watch} from "vue";
 import {useRouter} from "vue-router";
 import showToast from '../../../composables/toast'
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import CreateGroup from "./createGroup.vue"
+import Button from "../../../components/button/button.vue"
 import ChangePassword from "./changePassword.vue";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import {createAccess, removeAccess, updateAccess} from "../../../composables/access/access.js";
@@ -20,9 +21,13 @@ import organizationApi from "../../../api/list/organizations.js";
 import user from "../../../api/list/user.js";
 import validate from "./validate.js";
 import groupApi from "../../../api/list/userGroup.js";
-import {FIELD_COLOR, FIELD_OF_SEARCH ,BASE_COLOR} from "../../../composables/constant/colors.js";
+import {FIELD_COLOR, FIELD_OF_SEARCH, BASE_COLOR, TITLE_COLOR} from "../../../composables/constant/colors.js";
+import {useFilterCanvasVisible} from "../../../store/canvasVisible.js";
+import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
+
 const showModal = ref(false);
 const showConfirmDialog = ref(false);
+
 const toggleModal = () => {
   showModal.value = !showModal.value;
 }
@@ -63,6 +68,8 @@ const phoneFilter = ref(null)
 const emailFilter = ref(null)
 const organizationFilter = ref(null)
 const groupFilter = ref(null)
+const showModalDialog = ref(null)
+
 
 const users = ref([])
 const organizations = ref([])
@@ -70,6 +77,7 @@ const groups = ref([])
 const paginations = ref([])
 const paginationsGroup = ref([])
 const count = ref(0)
+const selectedBlock = ref("По группам")
 
 const filterForm = ref({
   name: null,
@@ -79,14 +87,20 @@ const filterForm = ref({
   organization_id: null
 })
 
-const showModalDialog = ref(null)
+
+const groupBy = ref([
+  {
+    key: "group.name",
+    order: "asc",
+  },
+])
 
 const headers = ref([
-  {title: 'ФИО', key: 'name', align: 'start'},
+  {title: '№', key: 'id'},
+  {title: 'ФИО', key: 'name'},
 ])
 
 const headersGroup = ref([
-  {title: '№', key: 'id', align: 'start'},
   {title: 'Название группы', key: 'name', align: 'start'},
 ])
 
@@ -100,6 +114,8 @@ const isOrganizationFieldDisabled = computed(() => {
   return !createAccess('organization') && !updateAccess('organization');
 });
 
+
+
 const getGroup = async ({page, itemsPerPage, sortBy}) => {
   loadingGroup.value = true
   try {
@@ -111,18 +127,19 @@ const getGroup = async ({page, itemsPerPage, sortBy}) => {
       deleted_at: item.deleted_at
     }))
   } catch (e) {
-    console.log(e)
+    console.error(e)
   } finally {
     loadingGroup.value = false
   }
 }
 
-const getUsers = async ({page, itemsPerPage, sortBy, search}) => {
+const getUsers = async ({page, itemsPerPage, sortBy, search} = {}) => {
   loading.value = true
   try {
     const {data} = await user.get({page, itemsPerPage, sortBy}, search, filterForm.value)
     paginations.value = data.result.pagination
     users.value = data.result.data
+    console.log(users.value)
     groupIdRef.value = 0
   } catch (e) {
 
@@ -387,7 +404,7 @@ const closeFilterModal = async ({
   sortBy,
   search,
   filterData,
-}) => {
+} = {}) => {
   filterModal.value = false;
   await getUser({ page, itemsPerPage, sortBy, search, filterData });
   fioFilter.value = null;
@@ -398,10 +415,6 @@ const closeFilterModal = async ({
     groupFilter.value = null;
 };
 
-
-const handleCheckboxClick = item => {
-  lineMarking(item)
-}
 
 const openDialog = item => {
   dialog.value = true
@@ -489,8 +502,6 @@ const addBasedOnUser = () => {
 const compute = ({ page, itemsPerPage, sortBy, search }) => {
   if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
 
-
-
   if (markedItem.value.deleted_at) {
     return restore({ page, itemsPerPage, sortBy })
   } else {
@@ -529,7 +540,7 @@ const lineMarkingGroup = group_id => {
   getUser({})
 }
 
-const getUser = async ({page, itemsPerPage, sortBy, search}) => {
+const getUser = async ({page, itemsPerPage, sortBy, search} = {}) => {
   const filterData = filterForm.value
   showModalDialog.value = false
   loading.value = true
@@ -542,6 +553,7 @@ const getUser = async ({page, itemsPerPage, sortBy, search}) => {
     const { data } = await groupApi.getUsers({page, itemsPerPage, sortBy}, search, groupIdRef.value, filterData)
     paginations.value = data.result.pagination
     users.value = data.result.data
+    console.log(users.value)
   } catch (e) {
     users.value = []
   } finally {
@@ -595,6 +607,12 @@ const isImage = computed(() => {
   }
 })
 
+const selectBlock = name => {
+  closeFilterModal();
+  selectedBlock.value = name;
+  loading.value = false;
+};
+
 
 watch(markedID, (newVal) => {
   markedItem.value = users.value.find((el) => el.id === newVal[0]);
@@ -628,165 +646,130 @@ onMounted(async () =>  {
 </script>
 
 <template>
-  <div>
-    <v-col>
-      <div class="d-flex justify-space-between text-uppercase ">
-        <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Пользователи</span>
+  <div class="pa-4">
+    <div class="d-flex justify-space-between calcWidth ">
+      <div class="d-flex align-center ga-2 pe-2 ms-4">
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Пользователи</span>
+      </div>
+      <v-card variant="text" min-width="420" class="d-flex align-center ga-2">
+        <div class="d-flex ga-4 mb-1">
+          <div class="switcher">
+            <button
+                @click="selectBlock('По группам')"
+                :class="{'active': selectedBlock === 'По группам'}"
+                class="button"
+            >
+              По группам
+            </button>
+            <button
+                @click="selectBlock('По элементам')"
+                :class="{'active': selectedBlock === 'По элементам'}"
+                class="button"
+            >
+              По элементам
+            </button>
+          </div>
+          <Button name="excel" @click="getExcel()" />
         </div>
-        <v-card variant="text" min-width="420" class="d-flex align-center ga-2">
-          <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <button
-                style="
-                  background-color: #6bd68a;
-                  border-radius: 8px;
-                  white-space: nowrap;
-                  height: 32px;
-                  padding: 0px 4px;
-                  font-size: 12px;
-                  color: white;
-                  text-transform: uppercase;
-                "
-                @click="isCreateGroup = true"
-                v-if="createAccess('user')"
-              >
-                <span class="px-2 pb-0">создать группу</span>
-              </button>
-              <Icons title="Создать" v-if="createAccess('user')" @click="openDialog(0)" name="add"/>
-              <Icons title="Скопировать" v-if="createAccess('user')" @click="addBasedOnUser" name="copy"/>
-              <Icons title="Удалить" v-if="removeAccess('user')" @click="compute" name="delete"/>
-            </div>
-            <v-text-field
-                v-model="search"
-                prepend-inner-icon="search"
-                density="compact"
-                label="Поиск..."
-                variant="outlined"
-                :color="BASE_COLOR"
-                :base-color="FIELD_OF_SEARCH"
-                rounded="lg"
-                clear-icon="close"
-                hide-details
-                single-line
-                clearable
-                flat
-            ></v-text-field>
+        <div class="d-flex w-100">
+          <div class="d-flex ga-2 mb-1 me-3">
+            <Button name="group" @click="isCreateGroup = true" v-if="createAccess('user')"  />
+            <Button name="save1" v-if="createAccess('user')" @click="openDialog(0)" />
+            <Button name="copy" v-if="createAccess('user')" @click="addBasedOnUser" />
+            <Button name="delete" v-if="removeAccess('user')" @click="compute" />
           </div>
-          <div class="filterElement">
-            <Icons
-              name="filter"
-              title="фильтр"
-              @click="showModalDialog = true"
-              class="mt-1"
-            />
+          <v-text-field
+            style="width: 190px"
+            v-model="search"
+            prepend-inner-icon="search"
+            density="compact"
+            label="Поиск..."
+            variant="outlined"
+            :color="BASE_COLOR"
+            :base-color="FIELD_OF_SEARCH"
+            rounded="lg"
+            clear-icon="close"
+            hide-details
+            single-line
+            clearable
+            flat
+          ></v-text-field>
+        </div>
+        <div class="filterElement">
+          <Icons
+            name="filter"
+            title="фильтр"
+            @click="useFilterCanvasVisible().toggleFilterCanvas()"
+            class="mt-1"
+          />
 
-            <span v-if="count !== 0" class="countFilter">{{ count }}</span>
-          </div>
-        </v-card>
-      </div>
-      <div class="d-flex ga-4 w-100">
-        <v-card class="mt-2 table w-50">
-          <v-data-table-server
-              style="height: 78vh;"
-              items-per-page-text="Элементов на странице:"
-              loading-text="Загрузка"
-              no-data-text="Нет данных"
-              v-model:items-per-page="paginationsGroup.per_page"
-              :loading="loadingGroup"
-              :headers="headersGroup"
-              :items-length="paginationsGroup.total || 0"
-              :items="groups"
-              :item-value="headers.title"
-              @update:options="getGroup"
-              page-text='{0}-{1} от {2}'
-              :items-per-page-options="[
-                {value: 25, title: '25'},
-                {value: 50, title: '50'},
-                {value: 100, title: '100'},
-               ]"
-              fixed-header
-              hover
-          >
-            <template v-slot:loading>
-              <v-skeleton-loader type="table-row@9"></v-skeleton-loader>
-            </template>
-            <template v-slot:item="{ item, index }">
-              <tr :class="{'bg-grey-lighten-2': item.id === groupIdRef }" @mouseenter="hoveredRowIndex = index + 100000" @mouseleave="hoveredRowIndex = null" @click="lineMarkingGroup(item.id)" @dblclick="openGroupDialog(item)" >
-                <td>
-                 <div class="d-flex">
-                  <Icons
-                     style="margin-right: 10px; margin-top: 4px"
-                     :name="item.deleted_at === null ? 'valid' : 'inValid'"
-                  />
-                   <span>{{ item.id }}</span>
-                 </div>
-                </td>
-                <td>{{ item.name }}</td>
-              </tr>
-            </template>
-          </v-data-table-server>
-        </v-card>
-        <v-card class="mt-2 table w-100">
-          <v-data-table-server
-              style="height: 78vh"
-              items-per-page-text="Элементов на странице:"
-              loading-text="Загрузка"
-              no-data-text="Нет данных"
-              v-model:items-per-page="paginations.per_page"
-              :loading="loading"
-              :headers="headers"
-              :items-length="paginations.total || 0"
-              :items="users"
-              :item-value="headers.title"
-              show-select
-              v-model="markedID"
-              :search="search"
-              @update:options="getUsers"
-              page-text =  '{0}-{1} от {2}'
-              :items-per-page-options="[
-                {value: 25, title: '25'},
-                {value: 50, title: '50'},
-                {value: 100, title: '100'},
-            ]"
-              fixed-header
-              hover
-          >
-            <template v-slot:loading>
-              <v-skeleton-loader type="table-row@9"></v-skeleton-loader>
-            </template>
-            <template v-slot:item="{ item, index }">
-              <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null"  @dblclick="openDialog(item)"
-                  :class="{'bg-grey-lighten-2': markedID.includes(item.id) }">
-                <td>
-                  <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
-                    <CustomCheckbox
-                        v-model="markedID"
-                        :checked="markedID.includes(item.id)"
-                        @click="lineMarking(item)"
-                        @change="handleCheckboxClick(item)"
-                    >
-                      <span>{{ item.id }}</span>
-                    </CustomCheckbox>
-                  </template>
-                  <template v-else>
-                    <div  class="d-flex align-center">
-                      <Icons style="margin-right: 10px; margin-top: 4px" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
-                      <span>{{ item.id }}</span>
-                    </div>
-                  </template>
-                </td>
-                <td>{{ item.name }}</td>
-              </tr>
-            </template>
-          </v-data-table-server>
-        </v-card>
-      </div>
+          <span v-if="count !== 0" class="countFilter">{{ count }}</span>
+        </div>
+      </v-card>
+    </div>
+    <div class="d-flex ga-4 w-100">
+      <v-card class="mt-2 table w-100">
+        <v-data-table-server
+            style="height: 78vh;"
+            items-per-page-text="Элементов на странице:"
+            loading-text="Загрузка"
+            no-data-text="Нет данных"
+            v-model:items-per-page="paginations.per_page"
+            :loading="loading"
+            :headers="selectedBlock === 'По группам' ? headersGroup : headers"
+            :items-length="paginations.total || 0"
+            :items="users"
+            :group-by="selectedBlock === 'По группам' ? groupBy : []"
+            @update:options="getUsers"
+            page-text='{0}-{1} от {2}'
+            :items-per-page-options="[
+              {value: 25, title: '25'},
+              {value: 50, title: '50'},
+              {value: 100, title: '100'},
+             ]"
+            fixed-header
+            hover
+        >
+          <template v-slot:group-header="{ item, toggleGroup, isGroupOpen, index }">
+            <tr style="background-color: rgba(122, 127, 176, 0.193)">
+              <td>
+                <VBtn
+                    :icon="isGroupOpen(item) ? '$expand' : '$next'"
+                    size="small"
+                    variant="text"
+                    @click="toggleGroup(item)"
+                ></VBtn>
+                {{ index + 1 }}
+              </td>
+              <td>{{ item.value }}</td>
+            </tr>
+          </template>
+          <template v-slot:item="{ item, index }">
+            <tr
+              :class="{'bg-grey-lighten-2': item.id === groupIdRef }"
+              @mouseenter="hoveredRowIndex = index + 100000"
+              @mouseleave="hoveredRowIndex = null"
+              @dblclick="openGroupDialog(item)"
+            >
+              <td>
+               <div class="d-flex align-center ga-2">
+                 <CustomCheckbox
+                     v-model="markedID"
+                     :checked="markedID.includes(item.id)"
+                     @change="lineMarking(item)"
+                 >
+                 </CustomCheckbox>
+               </div>
+              </td>
+              <td>{{ item.name }}</td>
+            </tr>
+          </template>
+        </v-data-table-server>
+      </v-card>
+    </div>
 
-
-
-      <!-- Modal -->
-      <v-card>
+    <!-- Modal -->
+    <v-card>
         <v-dialog persistent class="mt-2 pa-2" v-model="dialog" @keyup.esc="isExistsUser ? checkUpdate() : checkAndClose()">
           <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="600"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
@@ -965,147 +948,14 @@ onMounted(async () =>  {
           <change-password @toggleDialogPassword="isDialogPassword = false" :id="idUser" />
         </div>
 
-        <v-dialog persistent class="mt-2 pa-2" v-model="showModalDialog" @keyup.esc="closeFilterDialog()">
-          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="600"
-                  class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
-            <div class="d-flex justify-space-between align-center mb-2">
-              <span>Фильтр</span>
-              <div class="d-flex align-center justify-space-between">
-                <div class="d-flex ga-3 align-center mt-2 me-4">
-                </div>
-              </div>
-            </div>
-            <v-form class="d-flex w-100" >
-              <v-row class="w-100">
-                <v-col class="d-flex flex-column w-100">
-                  <div class="d-flex" :style="isExistsUser ?? { width: '98%' }">
-                    <v-text-field
-                        v-model="filterForm.name"
-                        :color="BASE_COLOR"
-                        :base-color="FIELD_COLOR"
-                        variant="outlined"
-                        class="w-auto text-sm-body-1"
-                        density="compact"
-                        placeholder="Иван Иванов Иванович"
-                        autofocus
-                        label="ФИО"
-                        clear-icon="close"
-                        :append-inner-icon="fioRef ? 'close' : ''"
-                        @click:append-inner="fioRef = null"
-                    />
-                    <div class="mt-2 ms-4" v-if="isExistsUser">
-                      <CustomCheckbox @change="filterForm.status" :checked="filterForm.status">
-                        <span>Активный</span>
-                      </CustomCheckbox>
-                    </div>
-                  </div>
-                  <div class="d-flex w-100 ga-4">
-                    <div class="border d-flex justify-center align-center" style="width: 70%;">
-                      <input
-                          accept="image/*"
-                          type="file"
-                          @change="selectAvatar"
-                          style="display: none;"
-                          ref="fileInput"
-                      />
-                    </div>
-                    <div class="w-100">
-                      <v-autocomplete
-                          v-model="filterForm.organization_id"
-                          :items="organizations"
-                          :color="BASE_COLOR"
-                          :base-color="FIELD_COLOR"
-                          item-title="name"
-                          item-value="id"
-                          variant="outlined"
-                          label="Организация"
-                      />
-                      <v-text-field
-                          v-model="filterForm.login"
-
-                          :color="BASE_COLOR"
-                          :base-color="FIELD_COLOR"
-                          variant="outlined"
-                          class="w-auto text-sm-body-1"
-                          density="compact"
-                          placeholder="Ivan"
-                          label="Логин"
-                          clear-icon="close"
-                          :append-inner-icon="filterForm.login ? 'close' : ''"
-                          @click:append-inner="filterForm.login = null"
-                      />
-                    </div>
-                  </div>
-                  <div class="d-flex ga-4 mt-5">
-                    <v-text-field
-                        v-model="filterForm.phone"
-                        :color="BASE_COLOR"
-                        :base-color="FIELD_COLOR"
-                        variant="outlined"
-                        class="w-auto text-sm-body-1"
-                        density="compact"
-                        placeholder="+992119111881"
-                        label="Номер телефона"
-                        clear-icon="close"
-                        :append-inner-icon="filterForm.phone ? 'close' : ''"
-                        @click:append-inner="filterForm.phone = null"
-                        hide-details
-                    />
-                    <v-text-field
-                        v-model="filterForm.email"
-                        :color="BASE_COLOR"
-                        :base-color="FIELD_COLOR"
-                        variant="outlined"
-                        class="w-auto text-sm-body-1"
-                        density="compact"
-                        placeholder="ivan@gmail.com"
-                        label="Почта"
-                        clear-icon="close"
-                        :append-inner-icon="filterForm.email ? 'close' : ''"
-                        @click:append-inner="filterForm.email = null"
-                        hide-details
-                    />
-                  </div>
-                  <div class="d-flex justify-end ga-2 mt-2">
-                <v-btn color="red" class="btn" @click="closeFilterDialog">сбросить</v-btn>
-                <v-btn :color="BASE_COLOR" class="btn"  @click="getUser">применить</v-btn>
-              </div>
-                </v-col>
-              </v-row>
-            </v-form>
-          </v-card>
-        </v-dialog>
-
         <div v-if="showModal">
         <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" @closeWithSaving="closingWithSaving()"/>
       </div>
 
       </v-card>
-    </v-col>
   </div>
-
-
-
-
-
 </template>
 
 <style scoped>
-.filterElement {
-  position: relative;
-}
-.countFilter {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  width: 16px;
-  height: 16px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #82abf6;
-  border-radius: 50%;
-  font-size: 10px;
-  color: white;
-}
+
 </style>

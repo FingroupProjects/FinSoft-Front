@@ -14,10 +14,11 @@ import Icons from "../../../composables/Icons/Icons.vue";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import validate from "../../../composables/validate/validate.js";
-import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
+import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import debounce from "lodash.debounce";
 import schedule from "../../../api/list/schedule.js";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
+import Button from "../../../components/button/button.vue";
 
 const router = useRouter()
 const loading = ref(false);
@@ -428,34 +429,33 @@ onMounted(() => {
 <template>
   <div>
     <v-col>
-      <div class="d-flex justify-space-between text-uppercase ">
+      <div class="d-flex justify-space-between calcWidth ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>График работы</span>
+          <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">График работы</span>
         </div>
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
-          <div class="d-flex w-100">
-            <div class="d-flex ga-2 me-3">
-              <Icons title="Добавить" v-if="createAccess('currency')" @click="openDialog(0)" name="add"/>
-              <Icons title="Удалить" v-if="removeAccess('currency')" @click="compute" name="delete"/>
+          <div class="d-flex justify-end w-100">
+            <div class="d-flex ga-2 me-3 mb-1 ">
+              <Button name="save1" v-if="createAccess('currency')" @click="openDialog(0)" />
+              <Button name="copy" v-if="createAccess('currency')" @click="" />
+              <Button name="delete" v-if="removeAccess('currency')" @click="compute" />
             </div>
-
-            <div class="w-100">
-              <v-text-field
-                  v-model="search"
-                  prepend-inner-icon="search"
-                  density="compact"
-                  label="Поиск..."
-                  variant="outlined"
-                  :color="BASE_COLOR"
-                  :base-color="FIELD_OF_SEARCH"
-                  rounded="lg"
-                  clear-icon="close"
-                  hide-details
-                  single-line
-                  clearable
-                  flat
-              ></v-text-field>
-            </div>
+            <v-text-field
+               style="max-width: 190px !important; width: 190px"
+               v-model="search"
+               prepend-inner-icon="search"
+               density="compact"
+               label="Поиск..."
+               variant="outlined"
+               :color="BASE_COLOR"
+               :base-color="FIELD_OF_SEARCH"
+               rounded="lg"
+               clear-icon="close"
+               hide-details
+               single-line
+               clearable
+               flat
+           />
           </div>
           <div class="filterElement">
             <Icons
@@ -657,5 +657,22 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.filterElement {
+  position: relative;
+}
 
+.countFilter {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #82abf6;
+  border-radius: 50%;
+  font-size: 10px;
+  color: white;
+}
 </style>

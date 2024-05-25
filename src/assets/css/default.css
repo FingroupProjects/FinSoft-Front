@@ -146,3 +146,22 @@ body{
   position: absolute;
   z-index: 99999;
 }
+
+.switcher {
+  background-color: #d9dce2;
+  padding: 8px 16px;
+  display: flex;
+  gap: 10px;
+  width: 290px;
+  border-radius: 12px;
+}
+
+.button {
+  padding: 8px 10px;
+  transition: all 400ms ease-in-out;
+}
+.active {
+  background-color: #4f4cd1;
+  border-radius: 12px;
+  color: white;
+}

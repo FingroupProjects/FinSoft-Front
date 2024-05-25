@@ -1,11 +1,10 @@
 <script setup>
-import storageApi from "../../../api/list/storage";
-import { onMounted, reactive, ref } from "vue";
+import {onMounted, reactive, ref} from "vue";
 import Icons from "../../../composables/Icons/Icons.vue";
 import Button from "../../../components/button/button.vue";
 import organizationApi from "../../../api/list/organizations";
 import counterpartyApi from "../../../api/list/counterparty.js"
-import { BASE_COLOR } from "../../../composables/constant/colors.js";
+import {BASE_COLOR} from "../../../composables/constant/colors.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js"
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import counterpartySettlementApi from "../../../api/reports/counterpartySettlement.js"
@@ -46,10 +45,9 @@ const cpAgreements = ref([]);
 const pagination = ref([]);
 const organizations = ref([]);
 
-const seletectBlock = async (name) => {
+const selectBlock = name => {
   closeFilterModal();
-  loading.value = true;
-  selectedBlock.value = await name;
+  selectedBlock.value = name;
   loading.value = false;
 };
 
@@ -190,14 +188,14 @@ onMounted(async () => {
       <div class="d-flex ga-4">
         <div class="switcher">
           <button
-            @click="seletectBlock('По группам')"
+            @click="selectBlock('По группам')"
             :class="selectedBlock === 'По группам' ? 'active' : ''"
             class="button"
           >
             По группам
           </button>
           <button
-            @click="seletectBlock('По элементам')"
+            @click="selectBlock('По элементам')"
             :class="selectedBlock === 'По элементам' ? 'active' : ''"
             class="button"
           >
@@ -338,28 +336,9 @@ onMounted(async () => {
   </div>
 </template>
 <style scoped>
-.filterElement {
-  position: relative;
-}
-
-.countFilter {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  width: 16px;
-  height: 16px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #82abf6;
-  border-radius: 50%;
-  font-size: 10px;
-  color: white;
-}
-
 .switcher {
   background-color: #d9dce2;
-  padding: 10px 16px;
+  padding: 8px 16px;
   display: flex;
   gap: 10px;
   width: 290px;

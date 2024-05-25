@@ -14,6 +14,15 @@ const headerButtons = ref([
     textColor: "#fff",
   },
   {
+    title: "Создать группу",
+    key: "group",
+    icon: "<svg width=\"10\" height=\"10\" viewBox=\"0 0 10 10\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n" +
+        "<path d=\"M10 4.61538V5.38462H5.38462V10H4.61538V5.38462H0V4.61538H4.61538V0H5.38462V4.61538H10Z\" fill=\"white\"/>\n" +
+        "</svg>\n",
+    bgColor: "#524ED8",
+    textColor: "#fff",
+  },
+  {
     title: "Сохранить",
     key: "save",
     icon: "<svg width=\"11\" height=\"12\" viewBox=\"0 0 11 12\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n" +
@@ -81,8 +90,8 @@ const headerButtons = ref([
     title: "Экспорт",
     key: "excel",
     icon: "<svg\n" +
-        "      width=\"18\"\n" +
-        "      height=\"17\"\n" +
+        "      width=\"13\"\n" +
+        "      height=\"13\"\n" +
         "      viewBox=\"0 0 14 13\"\n" +
         "      fill=\"none\"\n" +
         "      xmlns=\"http://www.w3.org/2000/svg\"\n" +
