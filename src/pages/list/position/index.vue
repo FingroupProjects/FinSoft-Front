@@ -4,6 +4,7 @@ import {useRouter} from "vue-router";
 import showToast from '../../../composables/toast'
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import position from '../../../api/list/position.js'
+import Button from "../../../components/button/button.vue";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import {createAccess, removeAccess, updateAccess} from "../../../composables/access/access.js";
 import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
@@ -349,29 +350,33 @@ watch(search, debounce((newValue) => {
         </div>
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Сохранить" v-if="createAccess('position')" @click="openDialog(0)" name="add" />
-              <Icons title="Скопировать" v-if="createAccess('position')" @click="addBasedOnPosition" name="copy" />
-              <Icons title="Удалить" v-if="removeAccess('position')" @click="compute" name="delete" />
-            </div>
+            <div class="d-flex w-100">
+          <div class="d-flex ga-2 mt-1 me-3 py-2">
+            <Button v-if="createAccess('organizationBill')" @click="openDialog(0)" name="create" title="Создать" />
+            <Button v-if="createAccess('organizationBill')" @click="addBasedOnPosition" name="copy" title="Скопировать" />
+            <Button v-if="removeAccess('organizationBill')" @click="compute" name="delete" title="Удалить"/>
+          </div>
+        </div>
 
-            <div class="w-100">
-              <v-text-field
-                  v-model="search"
-                  prepend-inner-icon="search"
-                  density="compact"
-                  label="Поиск..."
-                  variant="outlined"
-                  :color="BASE_COLOR"
-                  rounded="lg"
-                  clear-icon="close"
-                  :base-color="FIELD_OF_SEARCH"
-                  hide-details
-                  single-line
-                  clearable
-                  flat
-              ></v-text-field>
-            </div>
+        <div class="custom_search">
+          <v-text-field
+            style="width: 190px; margin-top: 10px;"
+            v-model="search"
+            prepend-inner-icon="search"
+            density="compact"
+            label="Поиск..."
+            variant="outlined"
+            :color="BASE_COLOR"
+            rounded="lg"
+            :base-color="FIELD_OF_SEARCH"
+            clear-icon="close"
+            hide-details
+            single-line
+            :append-inner-icon="search ? 'close' : ''"
+            @click:append-inner="search = ''"
+            flat
+          />
+        </div>
           </div>
           <div class="filterElement">
             <Icons
@@ -423,7 +428,6 @@ watch(search, debounce((newValue) => {
                   <CustomCheckbox
                       v-model="markedID"
                       :checked="markedID.includes(item.id)"
-                      @click="lineMarking(item)"
                       @change="handleCheckboxClick(item)"
                   >
                     <span>{{ item.id }}</span>

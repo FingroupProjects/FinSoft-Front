@@ -8,6 +8,7 @@ import priceType from '../../../api/list/priceType.js';
 import currency from '../../../api/list/currency.js';
 import {createAccess, updateAccess, removeAccess} from "../../../composables/access/access.js";
 import {FIELD_COLOR, FIELD_OF_SEARCH ,BASE_COLOR} from "../../../composables/constant/colors.js";
+import Button from "../../../components/button/button.vue";
 import validate from "./validate.js";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import {
@@ -417,30 +418,33 @@ onMounted(async () => {
         </div>
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" v-if="createAccess('priceType')" @click="openDialog(0)" name="add"/>
-              <Icons title="Скопировать" v-if="createAccess('priceType')" @click="addBasedOnPriceType" name="copy"/>
-              <Icons title="Удалить" v-if="removeAccess('priceType')" @click="compute" name="delete"/>
-            </div>
+            <div class="d-flex w-100">
+          <div class="d-flex ga-2 mt-1 me-3 py-2">
+            <Button v-if="createAccess('organizationBill')" @click="openDialog(0)" name="create" title="Создать" />
+            <Button v-if="createAccess('organizationBill')" @click="addBasedOnPriceType" name="copy" title="Скопировать" />
+            <Button v-if="removeAccess('organizationBill')" @click="compute" name="delete" title="Удалить"/>
+          </div>
+        </div>
 
-            <div class="w-100">
-              <v-text-field
-                  v-model="search"
-                  prepend-inner-icon="search"
-                  density="compact"
-                  label="Поиск..."
-                  variant="outlined"
-                  :color="BASE_COLOR"
-                  rounded="lg"
-                  :base-color="FIELD_OF_SEARCH"
-                  clear-icon="close"
-                  hide-details
-                  single-line
-                  :append-inner-icon="search ? 'close' : ''"
-                  @click:append-inner="search = ''"
-                  flat
-              ></v-text-field>
-            </div>
+        <div class="custom_search">
+          <v-text-field
+            style="width: 190px; margin-top: 10px;"
+            v-model="search"
+            prepend-inner-icon="search"
+            density="compact"
+            label="Поиск..."
+            variant="outlined"
+            :color="BASE_COLOR"
+            rounded="lg"
+            :base-color="FIELD_OF_SEARCH"
+            clear-icon="close"
+            hide-details
+            single-line
+            :append-inner-icon="search ? 'close' : ''"
+            @click:append-inner="search = ''"
+            flat
+          />
+        </div>
           </div>
           <div class="filterElement">
             <Icons
@@ -490,7 +494,6 @@ onMounted(async () => {
                   <CustomCheckbox
                       v-model="markedID"
                       :checked="markedID.includes(item.id)"
-                      @click="lineMarking(item)"
                       @change="handleCheckboxClick(item)"
                   >
                     <span>{{ item.id }}</span>
@@ -550,7 +553,7 @@ onMounted(async () => {
                       variant="outlined"
                       class="w-auto text-sm-body-1"
                       density="compact"
-                      placeholder="Доллар"
+                      placeholder="Названия"
                       label="Название"
                       clear-icon="close"
                       clearable
@@ -560,7 +563,6 @@ onMounted(async () => {
                       hide-details
                       no-data-text="Нет данных"
                       :color="BASE_COLOR"
-                      :disabled="isCurrencyFieldDisabled"
                       label="Выберите валюту"
                       :base-color="FIELD_COLOR"
                       v-model="currencyAdd"

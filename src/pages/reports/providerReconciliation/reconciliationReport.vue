@@ -175,7 +175,7 @@ const getExcel = async () => {
     document.body.appendChild(link);
     link.click();
     link.remove();
-  } catch (e) {
+  } catch (e) { 
     console.error(e);
   }
 };
