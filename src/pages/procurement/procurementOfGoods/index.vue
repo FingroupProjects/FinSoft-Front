@@ -237,7 +237,7 @@ const lineMarking = (item) => {
       if (item.deleted_at !== null) {
         showToast(ErrorSelectMessage, "warning");
         return;
-      }
+      } 
     }
   }
 

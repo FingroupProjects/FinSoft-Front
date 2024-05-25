@@ -8,9 +8,10 @@ import currencyApi from "../../../api/list/currency.js";
 import organizationApi from "../../../api/list/organizations.js";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showDate from "../../../composables/date/showDate.js";
+import Button from "../../../components/button/button.vue";
 import validate from "./validate.js";
 import {createAccess, removeAccess, updateAccess} from "../../../composables/access/access.js";
-import {FIELD_COLOR, FIELD_OF_SEARCH , BASE_COLOR} from "../../../composables/constant/colors.js";
+import {FIELD_COLOR, FIELD_OF_SEARCH , BASE_COLOR, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import {
   addMessage,
@@ -56,6 +57,9 @@ const currenciesCopy = ref([])
 const organizationCopy = ref([])
 const showModal = ref(false);
 
+const validateNumber = () => {
+  bill_number.value = bill_number.value.replace(/\D/g, ''); 
+};
 
 const count = ref(0);
 const filterForm = ref({
@@ -79,13 +83,7 @@ const headers = ref([
   {title: "Валюта", key: "currency.name"},
 ]);
 
-const isOrganizationFieldDisabled = computed(() => {
-  return !createAccess('organizations') && !updateAccess('organizations');
-});
 
-const isCurrencyFieldDisabled = computed(() => {
-  return !createAccess('currencies') && !updateAccess('currencies');
-});
 
 function countFilter() {
 
@@ -336,6 +334,26 @@ const openDialog = (item) => {
     organizationBillInDialogTitle.value = item.name;
   }
 };
+const getExcel = async () => {
+  if(organizationBill.value === null) {
+    return showToast('Выберите поставщика', 'warning')
+  }
+  try {
+    const { data } = await organizationBill.excel(organizationBill.value);
+    const url = window.URL.createObjectURL(
+      new Blob([data], { type: "application/vnd.ms-excel" })
+    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "Отчет.xls");
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 
 const cleanForm = () => {
   nameRef.value = null;
@@ -366,15 +384,18 @@ const addBasedOnOrganizationBill = () => {
 
 };
 
-const compute = ({page, itemsPerPage, sortBy, search}) => {
+const compute = (params = {}) => {
+  const {page, itemsPerPage, sortBy, search} = params;
+  
   if (markedID.value.length === 0) return showToast(warningMessage, "warning");
 
   if (markedItem.value.deleted_at) {
-    return restore({page, itemsPerPage, sortBy});
+    return restore({page, itemsPerPage, sortBy, search});
   } else {
     return remove({page, itemsPerPage, sortBy, search});
   }
 };
+
 
 const closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
   filterModal.value = false;
@@ -444,33 +465,39 @@ onMounted(() => {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Банковские счета организации</span>
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Банковские счета организации</span>
+
         </div>
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <Icons v-if="createAccess('organizationBill')" @click="openDialog(0)" name="add" title="Создать"/>
-              <Icons v-if="createAccess('organizationBill')" @click="addBasedOnOrganizationBill" title="Скопировать" name="copy"/>
-              <Icons v-if="removeAccess('organizationBill')" @click="compute" title="Удалить" name="delete"/>
-            </div>
+        <div class="d-flex w-100">
+          <div class="d-flex ga-2 mt-1 me-3 py-2">
+            <Button v-if="createAccess('organizationBill')" @click="openDialog(0)" name="create" title="Создать" />
+            <Button v-if="createAccess('organizationBill')" @click="addBasedOnOrganizationBill" name="copy" title="Скопировать" />
+            <Button v-if="removeAccess('organizationBill')" @click="compute" name="delete" title="Удалить"/>
+            <Button name="excel" @click="getExcel()" />
+          </div>
+        </div>
 
-            <div class="w-100">
-              <v-text-field
-                  v-model="search"
-                  :base-color="FIELD_OF_SEARCH"
-                  prepend-inner-icon="search"
-                  density="compact"
-                  label="Поиск..."
-                  variant="outlined"
-                  :color="BASE_COLOR"
-                  rounded="lg"
-                  clear-icon="close"
-                  hide-details
-                  single-line
-                  clearable
-                  flat
-              ></v-text-field>
-            </div>
+            <div class="custom_search">
+          <v-text-field
+            style="width: 190px; margin-top: 10px;"
+            v-model="search"
+            prepend-inner-icon="search"
+            density="compact"
+            label="Поиск..."
+            variant="outlined"
+            :color="BASE_COLOR"
+            rounded="lg"
+            :base-color="FIELD_OF_SEARCH"
+            clear-icon="close"
+            hide-details
+            single-line
+            :append-inner-icon="search ? 'close' : ''"
+            @click:append-inner="search = ''"
+            flat
+          />
+        </div>
           </div>
           <div class="filterElement">
             <Icons
@@ -524,7 +551,6 @@ onMounted(() => {
                 >
                   <CustomCheckbox
                       v-model="markedID"
-                      @click="lineMarking(item)"
                       :checked="markedID.includes(item.id)"
                       @change="handleCheckboxClick(item)"
                   >
@@ -633,11 +659,13 @@ onMounted(() => {
                     <v-text-field
                         v-model="bill_number"
                         :rules="[rules.required]"
+                        maxlength="20"
                         variant="outlined"
                         :base-color="FIELD_COLOR"
                         label="Номер счёта"
                         density="compact"
                         rounded="md"
+                        @input="validateNumber"
                         :color="BASE_COLOR"
                         :append-inner-icon="bill_number ? 'close' : ''"
                         @click:append-inner="bill_number = null"
@@ -646,7 +674,6 @@ onMounted(() => {
                     <v-autocomplete
                         style="max-width: 40%; min-width: 40%"
                         v-model="currencyAdd"
-                        :disabled="isCurrencyFieldDisabled"
                         no-data-text="Валюта не найдена"
                         :color="BASE_COLOR"
                         :items="currencies"
@@ -667,7 +694,6 @@ onMounted(() => {
                       v-model="organizationAdd"
                       :items="organizations"
                       item-title="name"
-                      :disabled="isOrganizationFieldDisabled"
                       :base-color="FIELD_COLOR"
                       item-value="id"
                       :rules="[rules.required]"
