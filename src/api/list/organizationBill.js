@@ -26,7 +26,11 @@ export default {
   filter(body) 
   {
     return api.get('/organizationBill/filter', body)
+  },
+  excel(id) {
+    return api.get(`/organizationBill/data/export/`, {
+      responseType: 'blob'
+    })
   }
-
 
 }

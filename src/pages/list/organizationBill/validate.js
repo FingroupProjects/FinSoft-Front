@@ -12,9 +12,9 @@ export default function validate(
       }
 
       if (!bill_number.value) {
-       return showToast("Поле Номер счета не может быть пустым", "warning") 
+        return showToast("Поле Номер счета не может быть пустым", "warning");
       }
-      
+    
       if (!date.value) {
       return  showToast("Поле Дата не может быть пустым", "warning")
       }
