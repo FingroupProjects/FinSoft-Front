@@ -336,7 +336,6 @@ const getId = async () => {
 };
 
 const CreateCounterparty = async () => {
-  isValid.value = true;
   if (validate(name, phone, address, email, roles) !== true) return;
 
   try {
@@ -358,12 +357,11 @@ const CreateCounterparty = async () => {
     } else if (error.response.data.errors.phone) {
       showToast("Такой номер телефона уже существует", "warning");
     }
-  } finally {
-    isValid.value = false;
   }
 };
 
 const getDocuments = async ({ page, itemsPerPage, sortBy, search }) => {
+  if(props.createOnBase) return loading.value = false
   if (props.isEdit === false) {
     loading.value = false;
     result.value = [];
@@ -715,7 +713,7 @@ const currencyProps = (item) => {
                 name="delete"
               ></Icons>
               <Icons
-                v-if="createAccess('counterparty') && isEdit"
+                v-if="createAccess('counterparty') || isEdit && updateAccess('counterparty')"
                 title="Сохранить"
                 @click="
                   isEdit && !createOnBase
@@ -747,7 +745,7 @@ const currencyProps = (item) => {
                 <v-text-field
                   v-model="name"
                   max-length="25"
-                  :rules="isValid ? [rules.required] : []"
+                  :rules="rules.required"
                   :color="BASE_COLOR"
                   :base-color="FIELD_COLOR"
                   rounded="md"
@@ -798,7 +796,7 @@ const currencyProps = (item) => {
                 <v-text-field
                   variant="outlined"
                   :base-color="FIELD_COLOR"
-                  :rules="isValid ? [rules.required, rules.phone] : []"
+                  :rules="[rules.required, rules.phone]"
                   label="Тел номер"
                   v-model.trim="phone"
                   density="compact"
@@ -813,7 +811,7 @@ const currencyProps = (item) => {
                 <v-text-field
                   variant="outlined"
                   :base-color="FIELD_COLOR"
-                  :rules="isValid ? [rules.required, rules.email] : []"
+                  :rules="[rules.required, rules.email]"
                   label="Почта"
                   v-model="email"
                   density="compact"
@@ -913,7 +911,6 @@ const currencyProps = (item) => {
                     <CustomCheckbox
                       v-model="markedID"
                       :checked="markedID.includes(item.id)"
-                      @click="lineMarking(item)"
                       @change="lineMarking(item)"
                     >
                       <span>{{ item.id }}</span>
@@ -1011,7 +1008,7 @@ const currencyProps = (item) => {
                     border: 1.5px solid #cbc8c8;
                     border-radius: 4px;
                     padding: 6px 12px;
-                    width: 110px;
+                    width: 120px;
                     height: 40px;
                   "
                 >

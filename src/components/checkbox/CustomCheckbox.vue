@@ -6,7 +6,7 @@ const props = defineProps(['checked'])
 </script>
 
 <template>
-  <div class="d-flex ga-1 checkbox-wrapper-13">
+  <div class="d-flex ga-1 align-center checkbox-wrapper-13">
     <input id="c1-13" type="checkbox" :checked="props.checked">
     <slot></slot>
   </div>
