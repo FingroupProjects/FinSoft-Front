@@ -4,7 +4,7 @@ export default {
   add(data) {
     return  api.post('/user', data)
   },
-  get({page = 1, itemsPerPage = 10, sortBy}, search = '', filterData) {
+    get({page = 1, itemsPerPage = 10, sortBy}, search = '', filterData) {
     const params = buildParams(page, itemsPerPage, sortBy, search, filterData);
     return api.get('/user', { params });
   },

@@ -24,6 +24,8 @@ import groupApi from "../../../api/list/userGroup.js";
 import {FIELD_COLOR, FIELD_OF_SEARCH, BASE_COLOR, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import {useFilterCanvasVisible} from "../../../store/canvasVisible.js";
 import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
+import CustomFilterTextField from "@/components/formElements/CustomFilterTextField.vue";
+import CustomFilterAutocomplete from "@/components/formElements/CustomFilterAutocomplete.vue";
 
 const showModal = ref(false);
 const showConfirmDialog = ref(false);
@@ -299,7 +301,7 @@ const addUser = async ({page, itemsPerPage, sortBy}) => {
     const res = await user.add(formData)
 
     if (res.status === 201) {
-      await getUser({page, itemsPerPage, sortBy,})
+      await getUsers({page, itemsPerPage, sortBy,})
       showToast(addMessage)
       idUser.value = res.data.result.id
       dialog.value = false
@@ -360,7 +362,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
     cleanForm()
     if (response.status === 200) {
       dialog.value = null
-      await getUser({page, itemsPerPage, sortBy})
+      await getUsers({page, itemsPerPage, sortBy})
       showToast(editMessage)
     }
   } catch (e) {
@@ -373,7 +375,7 @@ const remove = async ({page, itemsPerPage, sortBy}) => {
     const { status } = await user.remove({ids: markedID.value})
     if (status === 200) {
       showToast(removeMessage, 'red')
-      await getUser({page, itemsPerPage, sortBy})
+      await getUsers({page, itemsPerPage, sortBy})
       markedID.value = []
       dialog.value = false
     }
@@ -388,7 +390,7 @@ const restore = async ({page, itemsPerPage, sortBy, search}) => {
 
     if (status === 200) {
       showToast(restoreMessage)
-      await getUser({page, itemsPerPage, sortBy}, search)
+      await getUsers({page, itemsPerPage, sortBy}, search)
       markedID.value = []
       dialog.value = false
     }
@@ -406,7 +408,7 @@ const closeFilterModal = async ({
   filterData,
 } = {}) => {
   filterModal.value = false;
-  await getUser({ page, itemsPerPage, sortBy, search, filterData });
+  await getUsers({ page, itemsPerPage, sortBy, search, filterData });
   fioFilter.value = null;
     organizationFilter.value = null;
     loginFilter.value = null;
@@ -534,38 +536,10 @@ const lineMarking = item => {
   markedItem.value = item;
 }
 
-const lineMarkingGroup = group_id => {
-  markedID.value = []
-  groupIdRef.value = group_id
-  getUser({})
-}
-
-const getUser = async ({page, itemsPerPage, sortBy, search} = {}) => {
-  const filterData = filterForm.value
-  showModalDialog.value = false
-  loading.value = true
-  count.value = 0
-  countFilter()
-
-  if (groupIdRef.value === 0) return loading.value = false
-
-  try {
-    const { data } = await groupApi.getUsers({page, itemsPerPage, sortBy}, search, groupIdRef.value, filterData)
-    paginations.value = data.result.pagination
-    users.value = data.result.data
-    console.log(users.value)
-  } catch (e) {
-    users.value = []
-  } finally {
-    loading.value = false
-  }
-}
-
-
 const closeFilterDialog = () => {
   showModalDialog.value = false
   filterForm.value = {}
-  getUser({})
+  getUsers({})
 }
 
 const toggleGroup = async () => {
@@ -580,7 +554,6 @@ const deleteImage = async () => {
     imageRef.value = null
     return
   }
-
 
   const userVal = users.value.find(item => item.id === idUser.value)
   userVal.image = null
@@ -646,8 +619,8 @@ onMounted(async () =>  {
 </script>
 
 <template>
-  <div class="pa-4">
-    <div class="d-flex justify-space-between calcWidth ">
+  <div class="pa-2">
+    <div class="d-flex justify-space-between ">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
         <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Пользователи</span>
       </div>
@@ -674,7 +647,7 @@ onMounted(async () =>  {
         <div class="d-flex w-100">
           <div class="d-flex ga-2 mb-1 me-3">
             <Button name="group" @click="isCreateGroup = true" v-if="createAccess('user')"  />
-            <Button name="save1" v-if="createAccess('user')" @click="openDialog(0)" />
+            <Button name="create" v-if="createAccess('user')" @click="openDialog(0)" />
             <Button name="copy" v-if="createAccess('user')" @click="addBasedOnUser" />
             <Button name="delete" v-if="removeAccess('user')" @click="compute" />
           </div>
@@ -721,6 +694,7 @@ onMounted(async () =>  {
             :items="users"
             :group-by="selectedBlock === 'По группам' ? groupBy : []"
             @update:options="getUsers"
+            :search="search"
             page-text='{0}-{1} от {2}'
             :items-per-page-options="[
               {value: 25, title: '25'},
@@ -739,7 +713,7 @@ onMounted(async () =>  {
                     variant="text"
                     @click="toggleGroup(item)"
                 ></VBtn>
-                {{ index + 1 }}
+                {{ item.items[0].raw.group.id }}
               </td>
               <td>{{ item.value }}</td>
             </tr>
@@ -759,6 +733,7 @@ onMounted(async () =>  {
                      @change="lineMarking(item)"
                  >
                  </CustomCheckbox>
+                 {{ item.id }}
                </div>
               </td>
               <td>{{ item.name }}</td>
@@ -953,9 +928,55 @@ onMounted(async () =>  {
       </div>
 
       </v-card>
+
+    <filter-canvas>
+      <div class="d-flex ga-2">
+        <custom-filter-text-field label="Название" v-model="filterForm.name"/>
+        <custom-filter-text-field label="Логин" v-model="filterForm.login"/>
+      </div>
+      <div class="d-flex ga-2">
+        <custom-filter-text-field label="Почта" v-model="filterForm.email"/>
+        <custom-filter-text-field label="Телефон" v-model="filterForm.phone"/>
+      </div>
+      <div class="d-flex ga-2">
+        <custom-filter-autocomplete label="Организация" min-width="106" v-model="filterForm.organization_id" :items="organizations" />
+      </div>
+
+      <div class="d-flex justify-end mt-2">
+        <div class="d-flex ga-2" style="margin-right: -6%;">
+          <v-btn color="red" class="btn" @click="closeFilterDialog"
+          >сбросить</v-btn
+          >
+          <v-btn
+              :color="BASE_COLOR"
+              class="btn"
+              @click="() => {getUsers(); useFilterCanvasVisible().closeFilterCanvas()}"
+          >применить</v-btn
+          >
+        </div>
+      </div>
+    </filter-canvas>
+
   </div>
 </template>
 
 <style scoped>
+.filterElement {
+  position: relative;
+}
 
+.countFilter {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #82abf6;
+  border-radius: 50%;
+  font-size: 10px;
+  color: white;
+}
 </style>
