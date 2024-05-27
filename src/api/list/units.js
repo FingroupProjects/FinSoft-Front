@@ -24,5 +24,10 @@ export default {
 
   massRestore(data) {
     return api.post('/units/massRestore', data)
+  },
+  excel() {
+    return api.get(`/units/export/`, {
+      responseType: 'blob'
+    })
   }
 }

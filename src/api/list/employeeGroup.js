@@ -21,5 +21,11 @@ export default {
 
   restore (id) {
     return api.get('/group/restore/' + id)
+  },
+  excel(id) {
+    return api.get(`/group/employees/excel/export/${id}`, {
+      responseType: 'blob'
+    })
   }
+
 }
