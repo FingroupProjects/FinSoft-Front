@@ -21,8 +21,6 @@ import Button from "../../../components/button/button.vue";
 import {restoreMessage} from "../../../composables/constant/buttons.js";
 import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
 import {useFilterCanvasVisible} from "../../../store/canvasVisible.js";
-import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
-import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
 import debounce from "lodash.debounce";
 
 const router = useRouter()
