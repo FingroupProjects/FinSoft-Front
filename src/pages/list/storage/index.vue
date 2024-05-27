@@ -155,7 +155,7 @@ const getStorage = async ({page, itemsPerPage, sortBy, search}) => {
   }
 }
 
-const getStoragesFromTheGroup = async ({page, itemsPerPage, sortBy, search}) => {
+const getStoragesFromTheGroup = async ({page, itemsPerPage, sortBy, search} = {}) => {
   try {
     count.value = 0
     countFilter()
@@ -390,13 +390,13 @@ const massDel = async ({page, itemsPerPage, sortBy, search}) => {
 }
 
 
-const massRestore = async ({page, itemsPerPage, sortBy, search}) => {
+const massRestore = async () => {
   try {
     const {status} = await storage.massRestore({ids: markedID.value})
 
     if (status === 200) {
       showToast(restoreMessage)
-      await getStoragesFromTheGroup({page, itemsPerPage, sortBy, search})
+      await getStoragesFromTheGroup()
       markedID.value = []
       dialog.value = false
     }
@@ -614,14 +614,14 @@ const addBasedOnStorage = () => {
   })
 }
 
-const compute = ({page, itemsPerPage, sortBy}) => {
+const compute = () => {
 
   if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
 
   if (markedItem.value.deleted_at) {
-    return massRestore({page, itemsPerPage, sortBy})
+    return massRestore()
   } else {
-    return massDel({page, itemsPerPage, sortBy})
+    return massDel()
   }
 }
 
