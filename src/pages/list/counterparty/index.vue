@@ -88,7 +88,7 @@ const formatRole = (roles) => {
 const headerButtons = ref([
   {
     name: "create",
-    function: () => (isCreate.value = true),
+    function: () => {isCreate.value = true},
   },
   {
     name: "copy",
@@ -476,8 +476,8 @@ onMounted(async () => {
             </td>
             <td>
               <v-chip
-                style="height: 50px !important"
-                class="w-100 d-flex justify-center"
+                style="height: 50px !important; max-width: 200px;"
+                class="d-flex justify-center"
                 :color="getListColor(item.deleted_at)"
               >
                 <span class="padding: 5px;">{{
@@ -544,18 +544,6 @@ onMounted(async () => {
           :class="isEdit ? 'justify-space-between' : 'justify-end'"
           class="d-flex justify-space-between ga-5 align-center my-3 w-100"
         >
-          <div
-            v-if="isEdit"
-            style="
-              border: 1.5px solid #cbc8c8;
-              border-radius: 4px;
-              padding: 2px 12px;
-            "
-          >
-            <span>
-              {{ date }}
-            </span>
-          </div>
           <CustomCheckbox :checked="a" @change="handleCheckboxChange(0)"
             >Клиент</CustomCheckbox
           >

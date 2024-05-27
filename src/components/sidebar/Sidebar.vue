@@ -256,7 +256,7 @@ const push = (item) => {
             :class="item.id === activeItemId ? 'activeBg' : ''"
           >
             <v-list-item-title>
-              <span :class="item.id === activeItemId ? 'active' : 'title'">{{
+              <span :class="item.id === activeItemId ? 'active_sidebar' : 'title'">{{
                 item.title
               }}</span></v-list-item-title
             >
@@ -296,7 +296,7 @@ const push = (item) => {
   background: #111165;
 }
 
-.active {
+.active_sidebar {
   color: rgb(214, 209, 209);
   font-family: "Inter", sans-serif;
   font-weight: 400;
