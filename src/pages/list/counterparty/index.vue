@@ -1,5 +1,10 @@
 <script setup>
+import CustomFilterTextField from "@/components/formElements/CustomFilterTextField.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
+import getListColor from "../../../composables/displayed/getListColor.js";
+import getListStatus from "../../../composables/displayed/getListStatus";
+import filterCanvas from "../../../components/canvas/filterCanvas.vue";
+import { useFilterCanvasVisible } from "../../../store/canvasVisible";
 import counterpartyApi from "../../../api/list/counterparty";
 import Button from "../../../components/button/button.vue";
 import showDate from "../../../composables/date/showDate";
@@ -63,6 +68,7 @@ const debounceSearch = ref("");
 
 const headers = ref([
   { title: "Наименование", key: "name" },
+  { title: "Статус", key: "deleted_at" },
   { title: "Баланс", key: "balance" },
   { title: "Роль", key: "roles" },
   { title: "Адрес", key: "address" },
@@ -82,18 +88,24 @@ const formatRole = (roles) => {
 const headerButtons = ref([
   {
     name: "create",
-    function: () => (isCreate.value = true),
+    function: () => {isCreate.value = true},
   },
   {
     name: "copy",
     function: async () => {
-      createBase()
+      createBase();
     },
   },
   {
     name: "delete",
     function: () => {
-      compute({ page: 1, itemsPerPage: 25, search: '' });
+      compute({ page: 1, itemsPerPage: 25, search: "" });
+    },
+  },
+  {
+    name: "excel",
+    function: () => {
+      getExcel();
     },
   },
 ]);
@@ -224,6 +236,7 @@ const closeFilterDialog = async (page, itemsPerPage, sortBy) => {
   c.value = false;
   filterDialog.value = false;
   await getCounterparty({ page, itemsPerPage, sortBy });
+  useFilterCanvasVisible().closeFilterCanvas();
 };
 
 const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
@@ -282,6 +295,23 @@ const getCurrencies = async () => {
       };
     });
   } catch (e) {}
+};
+
+const getExcel = async () => {
+  try {
+    const { data } = await counterpartyApi.excel();
+    const url = window.URL.createObjectURL(
+      new Blob([data], { type: "application/vnd.ms-excel" })
+    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "Отчет.xls");
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (e) {
+    console.error(e);
+  }
 };
 
 const getOrganizations = async () => {
@@ -401,7 +431,7 @@ onMounted(async () => {
 
     <div class="table calcWidth">
       <v-data-table-server
-        style="height: 78vh"
+        style="height: calc(100vh - 150px)"
         show-select
         v-model="markedID"
         fixed-header
@@ -433,30 +463,27 @@ onMounted(async () => {
             :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
           >
             <td>
-              <template
-                v-if="hoveredRowIndex === index || markedID.includes(item.id)"
+              <CustomCheckbox
+                v-model="markedID"
+                :checked="markedID.includes(item.id)"
+                @change="handleCheckboxClick(item)"
               >
-                <CustomCheckbox
-                  v-model="markedID"
-                  :checked="markedID.includes(item.id)"
-                  @change="handleCheckboxClick(item)"
-                >
-                  <span>{{ index + 1 }}</span>
-                </CustomCheckbox>
-              </template>
-
-              <template v-else>
-                <span class="d-flex align-center">
-                  <Icons
-                    style="margin-right: 10px; margin-top: 4px"
-                    :name="item.deleted_at === null ? 'valid' : 'inValid'"
-                  />
-                  <span>{{ index + 1 }}</span>
-                </span>
-              </template>
+                <span>{{ item.id }}</span>
+              </CustomCheckbox>
             </td>
             <td>
               <span>{{ item.name }}</span>
+            </td>
+            <td>
+              <v-chip
+                style="height: 50px !important; max-width: 200px;"
+                class="d-flex justify-center"
+                :color="getListColor(item.deleted_at)"
+              >
+                <span class="padding: 5px;">{{
+                  getListStatus(item.deleted_at)
+                }}</span>
+              </v-chip>
             </td>
             <td>
               <span>{{ item.balance }}</span>
@@ -487,119 +514,66 @@ onMounted(async () => {
       "
     />
 
-    <v-dialog
-      persistent
-      v-model="filterDialog"
-      class="mt-2 pa-2"
-      @keyup.esc="closeFilterDialog"
-    >
-      <v-card
-        :style="`border: 2px solid ${BASE_COLOR}`"
-        min-width="650"
-        class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
-        rounded="xl"
-      >
-        <div class="d-flex justify-space-between align-center mb-2">
-          <span>Фильтр</span>
+    <filterCanvas>
+      <div>
+        <div class="d-flex ga-2">
+          <custom-filter-text-field
+            v-model="filterForm.name"
+            placeholder="Контрагент"
+            label="Наименование"
+          />
+          <custom-filter-text-field
+            v-model="filterForm.phone"
+            placeholder="Тел номер"
+            label="Тел номер"
+          />
         </div>
-        <v-form class="d-flex w-100">
-          <v-row class="w-100">
-            <v-col class="d-flex flex-column w-100">
-              <div class="d-flex justify-space-between ga-6">
-                <v-text-field
-                  v-model="filterForm.name"
-                  :color="BASE_COLOR"
-                  :base-color="FIELD_COLOR"
-                  rounded="lg"
-                  variant="outlined"
-                  class="w-auto text-sm-body-1"
-                  density="compact"
-                  autofocus
-                  placeholder="Контрагент"
-                  label="ание"
-                  clear-icon="close"
-                  clearable
-                  hide-details
-                />
-              </div>
-              <div
-                :class="isEdit ? 'justify-space-between' : 'justify-end'"
-                class="d-flex justify-space-between ga-5 align-center my-3"
-              >
-                <div
-                  v-if="isEdit"
-                  style="
-                    border: 1.5px solid #cbc8c8;
-                    border-radius: 4px;
-                    padding: 2px 12px;
-                  "
-                >
-                  <span>
-                    {{ date }}
-                  </span>
-                </div>
-                <CustomCheckbox :checked="a" @change="handleCheckboxChange(0)"
-                  >Клиент</CustomCheckbox
-                >
-                <CustomCheckbox :checked="b" @change="handleCheckboxChange(1)"
-                  >Поставщик</CustomCheckbox
-                >
-                <CustomCheckbox :checked="c" @change="handleCheckboxChange(2)"
-                  >Прочее</CustomCheckbox
-                >
-              </div>
-              <div class="d-flex ga-4 mb-3">
-                <v-text-field
-                  variant="outlined"
-                  :base-color="FIELD_COLOR"
-                  label="Тел номер"
-                  v-model.trim="filterForm.phone"
-                  density="compact"
-                  v-mask="'+992#########'"
-                  rounded="md"
-                  :color="BASE_COLOR"
-                  hide-details
-                  :append-inner-icon="filterForm.phone !== null ? 'close' : ''"
-                  @click:append-inner="filterForm.phone = null"
-                />
-                <v-text-field
-                  variant="outlined"
-                  :base-color="FIELD_COLOR"
-                  label="Почта"
-                  v-model="filterForm.email"
-                  density="compact"
-                  rounded="md"
-                  :color="BASE_COLOR"
-                  hide-details
-                  :append-inner-icon="filterForm.email !== null ? 'close' : ''"
-                  @click:append-inner="filterForm.email = null"
-                />
-              </div>
-              <v-text-field
-                variant="outlined"
-                :base-color="FIELD_COLOR"
-                label="Адрес"
-                v-model="filterForm.address"
-                density="compact"
-                rounded="md"
-                :color="BASE_COLOR"
-                hide-details
-                :append-inner-icon="filterForm.address !== null ? 'close' : ''"
-                @click:append-inner="filterForm.address = null"
-              />
-              <div class="d-flex justify-end ga-2 mt-2">
-                <v-btn color="red" class="btn" @click="closeFilterDialog"
-                  >сбросить</v-btn
-                >
-                <v-btn :color="BASE_COLOR" class="btn" @click="getCounterparty"
-                  >применить</v-btn
-                >
-              </div>
-            </v-col>
-          </v-row>
-        </v-form>
-      </v-card>
-    </v-dialog>
+        <div class="d-flex ga-2 my-2">
+          <custom-filter-text-field
+            v-model="filterForm.email"
+            placeholder="test@gmail.com"
+            label="Почта"
+          />
+          <custom-filter-text-field
+            v-model="filterForm.address"
+            placeholder="Адрес"
+            label="Адрес"
+          />
+        </div>
+        <div
+          :class="isEdit ? 'justify-space-between' : 'justify-end'"
+          class="d-flex justify-space-between ga-5 align-center my-3 w-100"
+        >
+          <CustomCheckbox :checked="a" @change="handleCheckboxChange(0)"
+            >Клиент</CustomCheckbox
+          >
+          <CustomCheckbox :checked="b" @change="handleCheckboxChange(1)"
+            >Поставщик</CustomCheckbox
+          >
+          <CustomCheckbox :checked="c" @change="handleCheckboxChange(2)"
+            >Прочее</CustomCheckbox
+          >
+        </div>
+        <div class="d-flex justify-end">
+          <div class="d-flex ga-2" style="margin-right: -6%">
+            <v-btn color="red" class="btn" @click="closeFilterDialog"
+              >сбросить</v-btn
+            >
+            <v-btn
+              :color="BASE_COLOR"
+              class="btn"
+              @click="
+                () => {
+                  getCounterparty({});
+                  useFilterCanvasVisible().closeFilterCanvas();
+                }
+              "
+              >применить</v-btn
+            >
+          </div>
+        </div>
+      </div>
+    </filterCanvas>
   </div>
 </template>
 <style scoped>

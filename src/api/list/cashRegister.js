@@ -20,5 +20,10 @@ export default {
   },
   massRestore(data) {
     return api.post('/cashRegister/massRestore', data)
+  },
+  excel() {
+    return api.get('/cashRegister/excel/export', {
+      responseType: 'blob'
+    })
   }
 }
