@@ -26,6 +26,7 @@ import {useFilterCanvasVisible} from "../../../store/canvasVisible.js";
 import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
 import CustomFilterTextField from "@/components/formElements/CustomFilterTextField.vue";
 import CustomFilterAutocomplete from "@/components/formElements/CustomFilterAutocomplete.vue";
+import getExcel from "../../../composables/otherQueries/getExcel.js";
 
 const showModal = ref(false);
 const showConfirmDialog = ref(false);
@@ -103,7 +104,7 @@ const headers = ref([
 ])
 
 const headersGroup = ref([
-  {title: 'Название группы', key: 'name', align: 'start'},
+  {title: 'ФИО', key: 'name', align: 'start'},
 ])
 
 const rules = {
@@ -136,12 +137,13 @@ const getGroup = async ({page, itemsPerPage, sortBy}) => {
 }
 
 const getUsers = async ({page, itemsPerPage, sortBy, search} = {}) => {
+  count.value = 0;
+  countFilter()
   loading.value = true
   try {
     const {data} = await user.get({page, itemsPerPage, sortBy}, search, filterForm.value)
     paginations.value = data.result.pagination
     users.value = data.result.data
-    console.log(users.value)
     groupIdRef.value = 0
   } catch (e) {
 
@@ -244,7 +246,7 @@ const getOrganization = async () => {
       name: item.name
     }))
   } catch (e) {
-
+    console.error(e)
   }
 }
 
@@ -370,12 +372,12 @@ const update = async ({page, itemsPerPage, sortBy}) => {
   }
 }
 
-const remove = async ({page, itemsPerPage, sortBy}) => {
+const remove = async () => {
   try {
     const { status } = await user.remove({ids: markedID.value})
     if (status === 200) {
       showToast(removeMessage, 'red')
-      await getUsers({page, itemsPerPage, sortBy})
+      await getUsers()
       markedID.value = []
       dialog.value = false
     }
@@ -384,13 +386,13 @@ const remove = async ({page, itemsPerPage, sortBy}) => {
   }
 }
 
-const restore = async ({page, itemsPerPage, sortBy, search}) => {
+const restore = async () => {
   try {
     const {status} = await user.restore({ids: markedID.value})
 
     if (status === 200) {
       showToast(restoreMessage)
-      await getUsers({page, itemsPerPage, sortBy}, search)
+      await getUsers()
       markedID.value = []
       dialog.value = false
     }
@@ -419,6 +421,8 @@ const closeFilterModal = async ({
 
 
 const openDialog = item => {
+  console.log(item)
+
   dialog.value = true
   if (groupIdRef.value !== 0) {
     const groupValue = groups.value.find(item => item.id === groupIdRef.value)
@@ -468,8 +472,7 @@ const openDialog = item => {
 const openGroupDialog = (item) => {
   isEditGroup.value = true
   isCreateGroup.value = true
-  group.value = item
-  
+  group.value = item.items[0].raw.group
 }
 
 const addBasedOnUser = () => {
@@ -501,13 +504,13 @@ const addBasedOnUser = () => {
   })
 
 }
-const compute = ({ page, itemsPerPage, sortBy, search }) => {
+const compute = () => {
   if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
 
   if (markedItem.value.deleted_at) {
-    return restore({ page, itemsPerPage, sortBy })
+    return restore()
   } else {
-    return remove({ page, itemsPerPage, sortBy, search })
+    return remove()
   }
 }
 
@@ -539,12 +542,12 @@ const lineMarking = item => {
 const closeFilterDialog = () => {
   showModalDialog.value = false
   filterForm.value = {}
-  getUsers({})
+  getUsers()
 }
 
 const toggleGroup = async () => {
   isCreateGroup.value = false
-  await getGroup({})
+  await getUsers()
 }
 
 const deleteImage = async () => {
@@ -642,7 +645,7 @@ onMounted(async () =>  {
               По элементам
             </button>
           </div>
-          <Button name="excel" @click="getExcel()" />
+          <Button name="excel" @click="getExcel(user)" />
         </div>
         <div class="d-flex w-100">
           <div class="d-flex ga-2 mb-1 me-3">
@@ -705,17 +708,18 @@ onMounted(async () =>  {
             hover
         >
           <template v-slot:group-header="{ item, toggleGroup, isGroupOpen, index }">
-            <tr style="background-color: rgba(122, 127, 176, 0.193)">
-              <td>
+            <tr style="background-color: rgba(122, 127, 176, 0.193)" @dblclick="openGroupDialog(item)">
+              <td style="width: 350px;">
                 <VBtn
                     :icon="isGroupOpen(item) ? '$expand' : '$next'"
                     size="small"
                     variant="text"
                     @click="toggleGroup(item)"
+
                 ></VBtn>
-                {{ item.items[0].raw.group.id }}
+                {{ item.value }}
               </td>
-              <td>{{ item.value }}</td>
+              <td></td>
             </tr>
           </template>
           <template v-slot:item="{ item, index }">
@@ -723,9 +727,9 @@ onMounted(async () =>  {
               :class="{'bg-grey-lighten-2': item.id === groupIdRef }"
               @mouseenter="hoveredRowIndex = index + 100000"
               @mouseleave="hoveredRowIndex = null"
-              @dblclick="openGroupDialog(item)"
+              @dblclick="openDialog(item)"
             >
-              <td>
+              <td style="width: 350px;">
                <div class="d-flex align-center ga-2">
                  <CustomCheckbox
                      v-model="markedID"
@@ -944,7 +948,7 @@ onMounted(async () =>  {
 
       <div class="d-flex justify-end mt-2">
         <div class="d-flex ga-2" style="margin-right: -6%;">
-          <v-btn color="red" class="btn" @click="closeFilterDialog"
+          <v-btn color="red" class="btn" @click="() => {closeFilterDialog; useFilterCanvasVisible().closeFilterCanvas()}"
           >сбросить</v-btn
           >
           <v-btn
