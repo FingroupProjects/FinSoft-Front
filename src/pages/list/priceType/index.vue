@@ -420,9 +420,9 @@ onMounted(async () => {
           <div class="d-flex w-100">
             <div class="d-flex w-100">
           <div class="d-flex ga-2 mt-1 me-3 py-2">
-            <Button v-if="createAccess('organizationBill')" @click="openDialog(0)" name="create" title="Создать" />
-            <Button v-if="createAccess('organizationBill')" @click="addBasedOnPriceType" name="copy" title="Скопировать" />
-            <Button v-if="removeAccess('organizationBill')" @click="compute" name="delete" title="Удалить"/>
+            <Button v-if="createAccess('pryceType')" @click="openDialog(0)" name="create" title="Создать" />
+            <Button v-if="createAccess('pryceType')" @click="addBasedOnPriceType" name="copy" title="Скопировать" />
+            <Button v-if="removeAccess('pryceType')" @click="compute" name="delete" title="Удалить"/>
           </div>
         </div>
 

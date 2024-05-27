@@ -384,17 +384,7 @@ const addBasedOnOrganizationBill = () => {
 
 };
 
-const compute = (params = {}) => {
-  const {page, itemsPerPage, sortBy, search} = params;
-  
-  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
-
-  if (markedItem.value.deleted_at) {
-    return restore({page, itemsPerPage, sortBy, search});
-  } else {
-    return remove({page, itemsPerPage, sortBy, search});
-  }
-};
+~``
 
 
 const closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
