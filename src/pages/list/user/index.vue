@@ -366,6 +366,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
 const remove = async () => {
   try {
     const {status} = await user.remove({ids: markedID.value})
+
     if (status === 200) {
       showToast(removeMessage, 'red')
       await getGroups()
@@ -495,7 +496,7 @@ const addBasedOnUser = () => {
 const compute = () => {
   if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
 
-  if (markedItem.value.deleted_at) {
+  if (markedItem.value?.deleted_at) {
     return restore()
   } else {
     return remove()
@@ -525,6 +526,7 @@ const lineMarking = item => {
     }
   }
   markedItem.value = item;
+  console.log(1)
 }
 
 const closeFilterDialog = () => {
@@ -578,10 +580,25 @@ const selectBlock = name => {
   loading.value = false;
 };
 
+const isGroupChecked = item => {
+  return item.items[0].raw.users.every(item => markedID.value.includes(item.id))
+}
 
-watch(markedID, (newVal) => {
-  markedItem.value = users.value.find((el) => el.id === newVal[0]);
-});
+const toggleGroupSelection = group => {
+  const users = group.items[0].raw.users
+  if (users.length === 0) return
+
+  markedItem.value = users[0]
+
+  const allIds = users.map(item => item.id);
+  if (isGroupChecked(group)) {
+    markedID.value = markedID.value.filter(id => !allIds.includes(id));
+  } else {
+    // Add all IDs of the group
+    markedID.value = [...new Set([...markedID.value, ...allIds])];
+  }
+}
+
 
 watch(dialog, newVal => {
   if (!newVal) {
@@ -705,14 +722,24 @@ onMounted(async () => {
         <template v-slot:group-header="{ item, toggleGroup, isGroupOpen, index }">
           <tr style="background-color: rgba(122, 127, 176, 0.193)" @dblclick="openGroupDialog(item)">
             <td style="width: 350px;">
-              <VBtn
-                  :icon="isGroupOpen(item) ? '$expand' : '$next'"
-                  size="small"
-                  variant="text"
-                  @click="toggleGroup(item)"
+              <div class="d-flex align-center">
+                <CustomCheckbox
+                    v-if="isGroupOpen(item)"
+                    v-model="markedID"
+                    :checked="isGroupChecked(item)"
+                    @change="toggleGroupSelection(item)"
+                >
+                </CustomCheckbox>
+                <VBtn
+                    :icon="isGroupOpen(item) ? '$expand' : '$next'"
+                    size="small"
+                    variant="text"
+                    @click="toggleGroup(item)"
 
-              ></VBtn>
-              {{ item.value }}
+                ></VBtn>
+                <span>{{ item.value }}</span>
+              </div>
+
             </td>
             <td style="width: 390px;">
               <v-chip

@@ -129,6 +129,7 @@ const getGroup = async ({page, itemsPerPage, sortBy}) => {
   try {
     const {data} = await storageGroup.get({page, itemsPerPage, sortBy})
     paginationsGroup.value = data.result.pagination
+    console.log(data)
     groups.value = data.result.data.map(item => ({
       id: item.id,
       name: item.name,

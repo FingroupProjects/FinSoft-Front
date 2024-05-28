@@ -8,7 +8,7 @@ import {
   editMessage,
   ErrorSelectMessage,
   removeMessage,
-  restoreMessage,
+  restoreMessage, warningMessage,
 } from "../../../composables/constant/buttons.js";
 import Icons from "../../../composables/Icons/Icons.vue";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
@@ -19,6 +19,9 @@ import debounce from "lodash.debounce";
 import schedule from "../../../api/list/schedule.js";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import Button from "../../../components/button/button.vue";
+import FilterCanvas from "@/components/canvas/filterCanvas.vue";
+import {useFilterCanvasVisible} from "@/store/canvasVisible.js";
+import CustomFilterTextField from "@/components/formElements/CustomFilterTextField.vue";
 
 const router = useRouter()
 const loading = ref(false);
@@ -167,7 +170,7 @@ const closeDialogWithoutSaving = () => {
 
 const closingWithSaving = async () => {
   if (isExistsSchedule.value) {
-    await update({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+    await update();
     showModal.value = false
   } else {
     const isValid = validate(
@@ -175,7 +178,7 @@ const closingWithSaving = async () => {
       );
       showModal.value = false
     if (isValid === true) {
-      await addSchedule({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      await addSchedule();
       dialog.value = false;
       showModal.value = false;
       showConfirmDialog.value = false;
@@ -212,6 +215,7 @@ const addSchedule = async () => {
   ]
 
   if (validate(validateValue) !== true) return
+  if (months.value.length === 0) return showToast('С начала вычислите!', "warning")
 
   const body = {
     "name" : nameRef.value,
@@ -242,7 +246,7 @@ const addSchedule = async () => {
   }
 }
 
-const update = async ({page, itemsPerPage, sortBy, search}) => {
+const update = async () => {
   const body = {
     "name" : nameRef.value,
     "data" : months.value.map((item) => ({
@@ -255,7 +259,7 @@ const update = async ({page, itemsPerPage, sortBy, search}) => {
   try {
     const {status} = await schedule.update(idSchedule.value, body)
     if (status === 200) {
-      await getScheduleData({page, itemsPerPage, sortBy, search})
+      await getScheduleData()
       showToast(editMessage)
       cleanForm()
       dialog.value = false
@@ -324,6 +328,11 @@ const openDialog = (item) => {
   }
 }
 
+const addBasedSchedule = () => {
+  if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
+
+}
+
 
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
@@ -353,12 +362,10 @@ const lineMarking = (item) => {
   markedItem.value = item;
 }
 
-const handleCheckboxClick = (item) => {
-  lineMarking(item)
-}
-
 const compute = () => {
-  if (markedItem.value.deleted_at !== null) {
+  if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
+
+  if (markedItem.value.deleted_at) {
     return restoreSchedule()
   } else {
     return removeSchedule()
@@ -396,8 +403,9 @@ const calculate = async () => {
   }
 }
 
+
 onMounted(async () => {
-  await getScheduleData({page: 1, itemsPerPage: 10, sortBy: 'id', search: ''})
+  await getScheduleData()
 })
 
 watch(markedID, (newVal) => {
@@ -421,9 +429,6 @@ watch(search, debounce(newValue => {
   debounceSearch.value = newValue
 }, 500))
 
-onMounted(() => {
-  localStorage.setItem('weeks', JSON.stringify(weeks))
-})
 </script>
 
 <template>
@@ -437,7 +442,7 @@ onMounted(() => {
           <div class="d-flex justify-end w-100">
             <div class="d-flex ga-2 me-3 mb-1 ">
               <Button name="create" v-if="createAccess('currency')" @click="openDialog(0)" />
-              <Button name="copy" v-if="createAccess('currency')" @click="" />
+              <Button name="copy" v-if="createAccess('currency')" @click="addBasedSchedule" />
               <Button name="delete" v-if="removeAccess('currency')" @click="compute" />
             </div>
             <v-text-field
@@ -461,7 +466,7 @@ onMounted(() => {
             <Icons
               name="filter"
               title="фильтр"
-              @click="filterModal = true"
+              @click="useFilterCanvasVisible().toggleFilterCanvas()"
               class="mt-1"
             />
             <span v-if="count !== 0" class="countFilter">{{ count }}</span>
@@ -495,19 +500,22 @@ onMounted(() => {
             hover
         >
            <template v-slot:item="{ item, index }">
-            <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null"
-                @dblclick="openDialog(item)"
-                :class="{'bg-grey-lighten-1': markedID.includes(item.id) }">
+            <tr
+              @mouseenter="hoveredRowIndex = index"
+              @mouseleave="hoveredRowIndex = null"
+              @dblclick="openDialog(item)"
+            >
               <td>
-                <CustomCheckbox
-                    v-model="markedID"
-                    :checked="markedID.includes(item.id)"
-                    @change="handleCheckboxClick(item)"
-                    @click="lineMarking(item)"
-                >
-                  <span>{{ index + 1 }}</span>
-                </CustomCheckbox>
+                <div class="d-flex ga-2 align-center">
+                  <CustomCheckbox
+                      v-model="markedID"
+                      :checked="markedID.includes(item.id)"
+                      @click="lineMarking(item)"
+                  >
+                  </CustomCheckbox>
+                  <span>{{ item.id }}</span>
 
+                </div>
               </td>
               <td>{{ item.name }}</td>
             </tr>
@@ -603,43 +611,27 @@ onMounted(() => {
         </v-dialog>
       </v-card>
 
-      <v-card>
-        <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup.esc="closeFilterModal">
-          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="600"
-                  class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
-            <div class="d-flex justify-space-between align-center mb-2">
-              <span>Фильтр</span>
-            </div>
-            <v-form class="d-flex w-100">
-              <v-row class="w-100">
-                <v-col class="d-flex flex-column w-100">
-                  <div class="d-flex justify-space-between ga-6 mb-3">
-                    <v-text-field
-                        v-model="filterForm.name"
-                        :color="BASE_COLOR"
-                        rounded="md"
-                        variant="outlined"
-                        class="w-auto text-sm-body-1"
-                        density="compact"
-                        :base-color="FIELD_COLOR"
-                        placeholder="Наименование"
-                        label="Наименование"
-                        clear-icon="close"
-                        clearable
-                        hide-details
-                        autofocus
-                    />
-                  </div>
-                  <div class="d-flex justify-end ga-2">
-                  <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-                  <v-btn :color="BASE_COLOR" class="btn"  @click="getScheduleData">применить</v-btn>
-                </div>
-                  </v-col>
-              </v-row>
-            </v-form>
-          </v-card>
-        </v-dialog>
-      </v-card>
+     <filter-canvas>
+       <div class="d-flex w-100">
+         <custom-filter-text-field min-width="106" label="Наименование" v-model="filterForm.name" />
+       </div>
+       <div class="d-flex justify-end ga-2" style="margin-right: -6%;">
+         <v-btn
+             color="red"
+             class="btn"
+             @click="() => {closeFilterModal(); useFilterCanvasVisible().closeFilterCanvas()}"
+         >
+           сбросить
+         </v-btn>
+         <v-btn
+             :color="BASE_COLOR"
+             class="btn"
+             @click="() => {getScheduleData(); useFilterCanvasVisible().closeFilterCanvas()}"
+         >
+           применить
+         </v-btn>
+       </div>
+     </filter-canvas>
 
 
       <div v-if="showModal">
