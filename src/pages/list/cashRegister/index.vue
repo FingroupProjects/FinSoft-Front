@@ -3,6 +3,9 @@ import CustomFilterAutocomplete from "../../../components/formElements/CustomFil
 import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import { restoreMessage } from "../../../composables/constant/buttons.js";
+import getListColor from "../../../composables/displayed/getListColor.js";
+import getListStatus from "../../../composables/displayed/getListStatus";
+import {markedForDeletion} from "../../../composables/constant/items.js";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import filterCanvas from "../../../components/canvas/filterCanvas.vue";
 import { useFilterCanvasVisible } from "../../../store/canvasVisible";
@@ -79,6 +82,7 @@ const count = ref(0);
 
 const filterForm = ref({
   name: null,
+  deleted: null,
   currency_id: null,
   employee_id: null,
   organization_id: null,
@@ -88,6 +92,7 @@ const showFilterModal = ref(false);
 
 const headers = ref([
   { title: "Наименование", key: "name" },
+  { title: "Статус", key: "deleted_at" },
   { title: "Баланс", key: "name", sortable: false },
   { title: "Валюта", key: "currency.name" },
 ]);
@@ -229,14 +234,13 @@ const getcashRegisterData = async ({ page, itemsPerPage, sortBy, search }) => {
   loading.value = true;
   count.value = 0;
   countFilter();
-  const filterData = filterForm.value;
   showFilterModal.value = false;
 
   try {
     const { data } = await cashRegister.get(
       { page, itemsPerPage, sortBy },
       search,
-      filterData
+      filterForm.value
     );
 
     paginations.value = data.result.pagination;
@@ -461,7 +465,7 @@ const closeFilterModal = async ({ page, itemsPerPage, sortBy, search }) => {
   showFilterModal.value = false;
   filterForm.value = {};
   await getcashRegisterData({ page, itemsPerPage, sortBy, search });
-  useFilterCanvasVisible().closeFilterCanvas()
+  useFilterCanvasVisible().closeFilterCanvas();
 };
 
 watch(markedID, (newVal) => {
@@ -589,6 +593,17 @@ onMounted(() => {
               </CustomCheckbox>
             </td>
             <td>{{ item.name }}</td>
+            <td>
+              <v-chip
+                style="height: 50px !important; max-width: 200px"
+                class="d-flex justify-center"
+                :color="getListColor(item.deleted_at)"
+              >
+                <span class="padding: 5px;">{{
+                  getListStatus(item.deleted_at)
+                }}</span>
+              </v-chip>
+            </td>
             <td>+2500</td>
             <td>{{ item.currency.name }}</td>
           </tr>
@@ -658,7 +673,6 @@ onMounted(() => {
                 <div class="d-flex">
                   <v-text-field
                     v-model="nameRef"
-                    :rules="[rules.required]"
                     :color="BASE_COLOR"
                     :base-color="FIELD_COLOR"
                     rounded="lg"
@@ -699,32 +713,31 @@ onMounted(() => {
                     item-value="id"
                   />
                   <v-autocomplete
-                    style="max-width: 47%; min-width: 46%"
                     variant="outlined"
-                    hide-details
-                    rounded="lg"
-                    no-data-text="нет данных"
                     :color="BASE_COLOR"
-                    :disabled="isEmployeeFieldDisabled"
+                    no-data-text="нет данных"
+                    label="Организация"
+                    rounded="lg"
+                    hide-details
+                    :disabled="isOrganizationFieldDisabled"
+                    v-model="organizationAdd"
+                    :items="organizations"
                     :base-color="FIELD_COLOR"
-                    label="Ответственное лицо"
-                    v-model="employeeAdd"
-                    :items="employees"
                     item-title="name"
                     item-value="id"
                   />
                 </div>
                 <v-autocomplete
                   variant="outlined"
-                  :color="BASE_COLOR"
-                  no-data-text="нет данных"
-                  label="Организация"
-                  rounded="lg"
                   hide-details
-                  :disabled="isOrganizationFieldDisabled"
-                  v-model="organizationAdd"
-                  :items="organizations"
+                  rounded="lg"
+                  no-data-text="нет данных"
+                  :color="BASE_COLOR"
+                  :disabled="isEmployeeFieldDisabled"
                   :base-color="FIELD_COLOR"
+                  label="Ответственное лицо"
+                  v-model="employeeAdd"
+                  :items="employees"
                   item-title="name"
                   item-value="id"
                 />
@@ -761,16 +774,24 @@ onMounted(() => {
         </div>
         <div class="d-flex ga-2 my-2">
           <custom-filter-autocomplete
-            v-model="filterForm.employee_id"
-            placeholder="Ответственное лицо"
-            :items="employees"
-            label="Ответственное лицо"
-          />
-          <custom-filter-autocomplete
             v-model="filterForm.organization_id"
             placeholder="Организация"
             :items="organizations"
             label="Организация"
+          />
+          <custom-filter-autocomplete
+            label="Помечен на удаление"
+            v-model="filterForm.deleted"
+            :items="markedForDeletion"
+          />
+        </div>
+        <div class="my-2">
+          <custom-filter-autocomplete
+            min-width="106"
+            v-model="filterForm.employee_id"
+            placeholder="Ответственное лицо"
+            :items="employees"
+            label="Ответственное лицо"
           />
         </div>
         <div class="d-flex justify-end">
@@ -793,7 +814,6 @@ onMounted(() => {
         </div>
       </div>
     </filterCanvas>
-
   </div>
 </template>
 

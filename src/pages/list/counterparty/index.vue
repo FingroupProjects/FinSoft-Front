@@ -1,8 +1,10 @@
 <script setup>
+import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
 import CustomFilterTextField from "@/components/formElements/CustomFilterTextField.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import getListColor from "../../../composables/displayed/getListColor.js";
 import getListStatus from "../../../composables/displayed/getListStatus";
+import { markedForDeletion } from "../../../composables/constant/items.js";
 import filterCanvas from "../../../components/canvas/filterCanvas.vue";
 import { useFilterCanvasVisible } from "../../../store/canvasVisible";
 import counterpartyApi from "../../../api/list/counterparty";
@@ -50,12 +52,13 @@ const counterparties = ref([]);
 const currencies = ref([]);
 
 const filterForm = ref({
+  roles: [],
   name: null,
   email: null,
   phone: null,
+  deleted: null,
   comment: null,
   address: null,
-  roles: [],
 });
 
 const a = ref(false);
@@ -88,7 +91,9 @@ const formatRole = (roles) => {
 const headerButtons = ref([
   {
     name: "create",
-    function: () => {isCreate.value = true},
+    function: () => {
+      isCreate.value = true;
+    },
   },
   {
     name: "copy",
@@ -204,7 +209,6 @@ watch(markedID, (newVal) => {
 });
 
 const getCounterparty = async ({ page, itemsPerPage, sortBy, search }) => {
-  const filterData = filterForm.value;
   filterDialog.value = false;
   count.value = 0;
   countFilter();
@@ -214,7 +218,7 @@ const getCounterparty = async ({ page, itemsPerPage, sortBy, search }) => {
     const { data } = await counterpartyApi.get(
       { page, itemsPerPage, sortBy },
       search,
-      filterData
+      filterForm.value
     );
     counterparty.value = data.result.data.map((item) => ({
       ...item,
@@ -476,7 +480,7 @@ onMounted(async () => {
             </td>
             <td>
               <v-chip
-                style="height: 50px !important; max-width: 200px;"
+                style="height: 50px !important; max-width: 200px"
                 class="d-flex justify-center"
                 :color="getListColor(item.deleted_at)"
               >
@@ -538,6 +542,14 @@ onMounted(async () => {
             v-model="filterForm.address"
             placeholder="Адрес"
             label="Адрес"
+          />
+        </div>
+        <div>
+          <custom-filter-autocomplete
+            min-width="106"
+            label="Помечен на удаление"
+            v-model="filterForm.deleted"
+            :items="markedForDeletion"
           />
         </div>
         <div
