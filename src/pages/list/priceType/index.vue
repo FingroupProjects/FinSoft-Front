@@ -11,6 +11,12 @@ import {FIELD_COLOR, FIELD_OF_SEARCH ,BASE_COLOR} from "../../../composables/con
 import Button from "../../../components/button/button.vue";
 import validate from "./validate.js";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
+import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
+import {useFilterCanvasVisible} from "../../../store/canvasVisible.js";
+import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
+import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
+import {markedForDeletion} from "../../../composables/constant/items.js";
+
 import {
   addMessage,
   editMessage,
@@ -311,7 +317,7 @@ const  closeFilterModal = async ({page, itemsPerPage, sortBy, search, filterData
   filterModal.value = {}
   cleanFilterForm()
   await getPriceTypeData({page, itemsPerPage, sortBy, search})
-  
+  useFilterCanvasVisible().closeFilterCanvas()
 }
 
 const cleanFilterForm = () => {
@@ -411,7 +417,6 @@ onMounted(async () => {
 
 <template>
   <div>
-    <v-col>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
           <span>Виды цен</span>
@@ -450,7 +455,7 @@ onMounted(async () => {
             <Icons
               name="filter"
               title="фильтр"
-              @click="filterModal = true"
+              @click="useFilterCanvasVisible().toggleFilterCanvas()"
               class="mt-1"
             />
             <span v-if="count !== 0" class="countFilter">{{ count }}</span>
@@ -590,66 +595,30 @@ onMounted(async () => {
         </v-dialog>
       </v-card>
 
-      <v-card>
-        <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup.esc="closeFilterModal">
-          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="450"
-                  class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
-            <div class="d-flex justify-space-between align-center mb-2">
-              <span>Фильтр</span>
-            </div>
-            <v-form class="d-flex w-100" @submit.prevent="addPriceType">
-              <v-row class="w-100">
-                <v-col class="d-flex flex-column w-100">
-                  <v-text-field
-                      v-model="filterForm.name"
-                      :color="BASE_COLOR"
-                      rounded="md"
-                      :base-color="FIELD_COLOR"
-                      variant="outlined"
-                      autofocus
-                      class="w-auto text-sm-body-1"
-                      density="compact"
-                      placeholder="Наименование"
-                      label="Наименование"
-                      clear-icon="close"
-                      clearable
-                  />
-                  <v-autocomplete
-                      variant="outlined"
-                      :color="BASE_COLOR"
-                      no-data-text="Нет данных"
-                      label="Валюта"
-                      v-model="filterForm.currency_id"
-                      :items="currencies"
-                      :base-color="FIELD_COLOR"
-                      item-title="name"
-                      item-value="id"
-                  />
-                  <v-textarea
-                      v-model="filterForm.description"
-                      :color="BASE_COLOR"
-                      rounded="md"
-                      variant="outlined"
-                      :base-color="FIELD_COLOR"
-                      class="w-auto text-sm-body-1"
-                      density="compact"
-                      placeholder="Описание"
-                      label="Описание"
-                  />
-                  <div class="d-flex justify-end ga-2">
-                  <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-                  <v-btn :color="BASE_COLOR" class="btn"  @click="getPriceTypeData">применить</v-btn>
-                </div>
-                </v-col>
-              </v-row>
-            </v-form>
-          </v-card>
-        </v-dialog>
-      </v-card>
       <div v-if="showModal">
         <ConfirmModal :showModal="true" @close="toggleModal" @closeClear="closeDialogWithoutSaving"  @closeWithSaving="closingWithSaving()"/>
       </div>
-    </v-col>
+    <filter-canvas >
+        <div class="d-flex flex-column ga-4 w-100">
+          <custom-filter-text-field min-width="106" v-model="filterForm.name" label="Наименование"/>
+          <custom-filter-autocomplete min-width="106"  label="Валюта" v-model="filterForm.currency_id" :items="currencies"/>
+          <custom-filter-text-field min-width="106" v-model="filterForm.description" label="Описание"/>
+          <custom-filter-autocomplete min-width="106"  label="Помечен на удаление" v-model="filterForm.deleted" :items="markedForDeletion"/>
+        </div>      
+        <div class="d-flex justify-end ">
+          <div class="d-flex ga-2" style="margin-right: -6%;">
+            <v-btn color="red" class="btn" @click="closeFilterModal"
+            >сбросить</v-btn
+            >
+            <v-btn
+                :color="BASE_COLOR"
+                class="btn"
+                @click="() => {getPriceTypeData({}); useFilterCanvasVisible().closeFilterCanvas()}"
+            >применить</v-btn
+            >
+          </div>
+        </div>
+      </filter-canvas>
   </div>
 
 
