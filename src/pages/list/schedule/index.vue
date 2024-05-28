@@ -494,24 +494,24 @@ onMounted(() => {
             fixed-header
             hover
         >
-        <template v-slot:item="{ item, index }">
-              <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null"
-                  @dblclick="openDialog(item)"
-                  :class="{'bg-grey-lighten-1': markedID.includes(item.id) }">
-                <td>
-                  <CustomCheckbox
-                      v-model="markedID"
-                      :checked="markedID.includes(item.id)"
-                      @change="handleCheckboxClick(item)"
-                      @click="lineMarking(item)"
-                  >
-                    <span>{{ index + 1 }}</span>
-                  </CustomCheckbox>
+           <template v-slot:item="{ item, index }">
+            <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null"
+                @dblclick="openDialog(item)"
+                :class="{'bg-grey-lighten-1': markedID.includes(item.id) }">
+              <td>
+                <CustomCheckbox
+                    v-model="markedID"
+                    :checked="markedID.includes(item.id)"
+                    @change="handleCheckboxClick(item)"
+                    @click="lineMarking(item)"
+                >
+                  <span>{{ index + 1 }}</span>
+                </CustomCheckbox>
 
-                </td>
-                <td>{{ item.name }}</td>
-              </tr>
-            </template>
+              </td>
+              <td>{{ item.name }}</td>
+            </tr>
+          </template>
         </v-data-table-server>
       </v-card>
       <!-- Modal -->
