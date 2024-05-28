@@ -209,7 +209,7 @@ const getDated = () => {
   agreementDialog.value = true;
   const page = 1;
   const Items = 100;
-  form.value.counterparty_id = editID.value;
+  form.value.counterparty_id = props.item.id;
   getOrganization(page, Items);
   getPriceType({ page, Items });
   getCounterparties({ page, Items });
@@ -350,7 +350,9 @@ const CreateCounterparty = async () => {
     await counterpartyApi.create(body);
     showToast("Успешно добавлена", "green");
     emits("toggleIsOpen");
-    clearForm();
+    setTimeout(() => {
+      clearForm();
+    }, 500);
   } catch (error) {
     console.error(error);
     if (error.response.data.errors.email) {
@@ -1027,7 +1029,7 @@ const currencyProps = (item) => {
                   :color="BASE_COLOR"
                   rounded="lg"
                   variant="outlined"
-                  style="width: 230px"
+                  style="width: 160px"
                   class="text-sm-body-1"
                   density="compact"
                   placeholder="Дата создания"
@@ -1072,6 +1074,7 @@ const currencyProps = (item) => {
               />
               <div class="d-flex ga-4 my-3">
                 <v-autocomplete
+                  :disabled="true"
                   :color="BASE_COLOR"
                   class="w-50"
                   variant="outlined"
