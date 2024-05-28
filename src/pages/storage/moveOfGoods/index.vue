@@ -1,28 +1,31 @@
 <script setup>
-import {ref, watch, onMounted} from "vue";
+import {onMounted, ref, watch} from "vue";
 import {useRouter} from "vue-router";
 import showToast from '../../../composables/toast/index.js'
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
-import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
+import {BASE_COLOR, FIELD_OF_SEARCH, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import {
-  removeMessage,
-  warningMessage,
   ErrorSelectMessage,
-  restoreMessage
+  removeMessage,
+  restoreMessage,
+  selectOneItemMessage,
+  warningMessage
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
 import organizationApi from "../../../api/list/organizations.js";
 import storageApi from "../../../api/list/storage.js";
-import moveApi from '../../../api/documents/move.js'; 
-import showDate from "../../../composables/date/showDate.js";
-const router = useRouter()
+import moveApi from '../../../api/documents/move.js';
+import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
+import Button from "../../../components/button/button.vue";
+import CreateBase from "../../../components/modal/CreateBase.vue";
+import {useModalCreateBased} from "../../../store/modalCreateBased.js";
 
+const router = useRouter()
+const modalCreateBased = useModalCreateBased()
 const loading = ref(true)
-const loadingRate = ref(true)
-const dialog = ref(false)
 const filterModal = ref(false)
 const hoveredRowIndex = ref(null)
 
@@ -32,7 +35,7 @@ const search = ref('')
 const debounceSearch = ref('')
 const nameRef = ref(null)
 const descriptionRef = ref(null)
-const procurements = ref([])
+const moves = ref([])
 const paginations = ref([])
 const showConfirmDialog = ref(false);
 const showModal = ref(false);
@@ -40,18 +43,24 @@ const count = ref(0);
 
 const organizations = ref([])
 const storages = ref([])
-
-
-
+const sender_storages = ref([])
+const recipient_storages = ref([])
 
 const filterForm = ref({
   date: null,
+  startDate: null,
+  endDate: null,
+  active: null,
+  deleted: null,
   organization_id: null,
   sender_storage_id: null,
   recipient_storage_id: null,
   storage_id: null,
   comment: null,
 })
+
+const statusOptions = ['проведён', 'не проведён'];
+  const deletionStatuses = ['не удален', 'удален'];
 
 
 const headers = ref([
@@ -71,18 +80,55 @@ const rules = {
 const getMoveData = async ({page, itemsPerPage, sortBy, search}) => {
   count.value = 0;
   countFilter()
-  const filterData = filterForm.value
+  const filterData = {
+      ...filterForm.value,
+      active: filterForm.value.active === 'проведён' ? 1 : 0,
+      deleted: filterForm.value.deleted === 'удален' ? 1 : 0 ,
+    };
   filterModal.value = false
   loading.value = true
   try {
     const { data } = await moveApi.get({page, itemsPerPage, sortBy}, search, filterData)
     console.log(data);
     paginations.value = data.result.pagination
-    procurements.value = data.result.data
+    moves.value = data.result.data
     loading.value = false
   } catch (e) {
   }
 }
+
+const headerButtons = ref([
+  {
+    name: "create",
+    function: () => router.push({ name: "moveOfGoodsCreate" }),
+  },
+  {
+    name: "createBasedOn",
+    function: () => {
+      if (markedID.value.length !== 1) {
+        return showToast(selectOneItemMessage, 'warning')
+      }
+
+      modalCreateBased.isModal()
+    },
+  },
+  {
+    name: "copy",
+  },
+ 
+   
+  {
+    name: "delete",
+    function: () => {
+      massDel({});
+    },
+  },
+]);
+
+const show = (item) => {
+  window.open(`/moveOfGoods/${item.id}`, "_blank");
+};
+
 const getOrganizations = async () => {
   const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   organizations.value = data.result.data
@@ -93,9 +139,20 @@ const getStorages = async () => {
   storages.value = data.result.data
 }
 
+const getSenderStorage = async () => {
+  const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  sender_storages.value = data.result.data
+}
+const getRecipientStorage = async () => {
+  const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  recipient_storages.value = data.result.data
+}
+
 onMounted(() => {
   getOrganizations()
   getStorages()
+  getSenderStorage()
+  getRecipientStorage()
 })
 
 
@@ -155,7 +212,7 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
 
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
-    const firstMarkedItem = procurements.value.find(el => el.id === markedID.value[0]);
+    const firstMarkedItem = moves.value.find(el => el.id === markedID.value[0]);
     if (firstMarkedItem && firstMarkedItem.deleted_at) {
       if(item.deleted_at === null) {
         showToast(ErrorSelectMessage, 'warning')
@@ -188,18 +245,9 @@ const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
 const cleanFilterForm = () => {
   filterForm.value = {}
 }
-watch(dialog, newVal => {
-  if (!newVal) {
-    nameRef.value = null
-    descriptionRef.value = null
-    loadingRate.value = true
-  } else {
-    markedID.value = [markedID.value[markedID.value.length - 1]];
-  }
-})
 
 watch(markedID, (newVal) => {
-  markedItem.value = procurements.value.find((el) => el.id === newVal[0]);
+  markedItem.value = moves.value.find((el) => el.id === newVal[0]);
 })
 
 watch(search, debounce((newValue) => {
@@ -209,51 +257,57 @@ watch(search, debounce((newValue) => {
 </script>
 
 <template>
-  <div>
-    <v-col>
-      <div class="d-flex justify-space-between text-uppercase" >
+  <div class="pa-4"> 
+      <div class="d-flex justify-space-between calcWidth">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Перемещение товаров</span>
+          <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Перемещение товаров</span>
         </div>
-        <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
-          <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="$router.push('/moveOfGoods/create')" name="add"/>
-              <Icons title="Скопировать" @click="" name="copy"/>
-              <Icons title="Удалить" @click="compute" name="delete"/>
-            </div>
-
-            <div class="w-100">
-              <v-text-field
-                  v-model="search"
-                  prepend-inner-icon="search"
-                  density="compact"
-                  label="Поиск..."
-                  variant="outlined"
-                  :color="BASE_COLOR"
-                  rounded="lg"
-                  :base-color="FIELD_OF_SEARCH"
-                  clear-icon="close"
-                  hide-details
-                  single-line
-                  :append-inner-icon="search ? 'close' : ''"
-                  @click:append-inner="search = ''"
-                  flat
-              ></v-text-field>
-            </div>
+        <div class="d-flex align-center ga-2">
+          <div class="d-flex w-100 justify-end mb-3">
+            <div class="d-flex ga-2 position-relative">
+              <Button
+                v-for="(button, idx) in headerButtons"
+                :name="button.name"
+                :key="idx"
+                @click="button.function"
+              />
+              <create-base :marked-i-d="markedID[0]" />
           </div>
-          <div class="filterElement">
+        </div>
+        <div class="custom_search">
+          <v-text-field
+            style="width: 190px"
+            class="mb-3"
+            v-model="search"
+            prepend-inner-icon="search"
+            density="compact"
+            label="Поиск..."
+            variant="outlined"
+            :color="BASE_COLOR"
+            rounded="lg"
+            :base-color="FIELD_OF_SEARCH"
+            clear-icon="close"
+            hide-details
+            single-line
+            :append-inner-icon="search ? 'close' : ''"
+            @click:append-inner="search = ''"
+            flat
+          />
+        </div>
+          <div class=" filterElement">
             <Icons
-                name="filter"
-                title="фильтр"
-                @click="filterModal = true"
-                class="mt-1"
+              name="filter"
+              title="Фильтр"
+              @click="filterModal = true"
+              class="mt-1"
             />
-            <span v-if="count !== 0" class="countFilter">{{ count }}</span>
+            <span v-if="count !== 0" class="countFilter">{{
+              count
+            }}</span>
           </div>
-        </v-card>
+        </div>
       </div>
-      <v-card class="mt-2 table">
+      <v-card class="table calcWidth">
         <v-data-table-server
             style="height: 78vh"
             items-per-page-text="Элементов на странице:"
@@ -263,7 +317,7 @@ watch(search, debounce((newValue) => {
             :loading="loading"
             :headers="headers"
             :items-length="paginations.total || 0"
-            :items="procurements"
+            :items="moves"
             :item-value="headers.title"
             :search="debounceSearch"
             v-model="markedID"
@@ -282,31 +336,21 @@ watch(search, debounce((newValue) => {
             <tr
                 @mouseenter="hoveredRowIndex = index"
                 @mouseleave="hoveredRowIndex = null"
-                @dblclick="$router.push(`/moveOfGoods/${item.id}`)"
+                @dblclick="show(item)"
                 :class="{'bg-grey-lighten-2': markedID.includes(item.id) }"
+                style="font-size: 12px"
             >
               <td>
-                <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
                   <CustomCheckbox
                       v-model="markedID"
                       :checked="markedID.includes(item.id)"
                       @change="lineMarking(item)"
                   >
-                    <span>{{ index + 1 }}</span>
                   </CustomCheckbox>
-                </template>
-                <template v-else>
-                  <div class="d-flex align-center">
-                    <Icons
-                        style="margin-right: 10px; margin-top: 4px"
-                        :name="item.deleted_at === null ? 'valid' : 'inValid'"
-                    />
-                    <span>{{ index + 1 }}</span>
-                  </div>
-                </template>
               </td>
+                 
               <td>{{ item.doc_number }}</td>
-              <td>{{ showDate(item.date) }}</td>
+              <td>{{ getDateTimeInShow(item.date) }}</td>
               <td>{{ item.sender_storage_id.name }}</td>
               <td>{{ item.recipient_storage_id.name }}</td>
               <td>{{ item.organization_id.name }}</td>
@@ -315,7 +359,6 @@ watch(search, debounce((newValue) => {
           </template>
         </v-data-table-server>
       </v-card>
-
       <v-card>
         <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup.esc="closeFilterModal">
           <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="450"
@@ -325,22 +368,30 @@ watch(search, debounce((newValue) => {
             </div>
             <v-form class="d-flex w-100" @submit.prevent="">
               <v-row class="w-100">
-                <v-col class="d-flex flex-column w-100">
-                  <div class="d-flex ga-2 w-100">
-                  <custom-text-field label="Дата" type="date" min-width="508"  v-model="filterForm.date"/>
+                <v-col class="d-flex flex-column w-100 ga-4">
+                  <div class="d-flex flex-column ga-2 w-100">
+                    <custom-text-field label="От" type="date" min-width="508"  v-model="filterForm.startDate"/>
+                    <custom-text-field label="По" type="date" min-width="508"  v-model="filterForm.endDate"/>
+                    </div>
+                    <div class="d-flex ga-2">                
+                      <custom-autocomplete min-width="250" label="Статус" :items="statusOptions" v-model="filterForm.active"/>
+                      <custom-autocomplete min-width="250" label="Удалён" :items="deletionStatuses" v-model="filterForm.deleted"/>               
                   </div>
                   <div class="d-flex ga-2">
-                    <custom-autocomplete label="Склад-отправитель" :items="organizations"  v-model="filterForm.organization_id"/>
-                  <custom-autocomplete label="Склад-получатель" :items="storages" v-model="filterForm.storage_id"/>               
-                 </div>
-                 
+                    <custom-autocomplete min-width="250" label="Огранизация" :items="organizations"  v-model="filterForm.organization_id"/>
+                    <custom-autocomplete min-width="250" label="Склад-отправитель" :items="storages" v-model="filterForm.storage_id"/>               
+                  </div>
+                  <custom-autocomplete min-width="508" label="Склад-получатель" :items="storages" v-model="filterForm.storage_id"/>               
+                  <div class="d-flex justify-end ga-2">
+                    <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
+                    <v-btn :color="BASE_COLOR" class="btn"  @click="getMoveData">применить</v-btn>
+                  </div>
                 </v-col>
               </v-row>
             </v-form>
           </v-card>
         </v-dialog>
       </v-card>
-    </v-col>
   </div>
 
 
@@ -349,6 +400,7 @@ watch(search, debounce((newValue) => {
 <style scoped>
 .filterElement {
   position: relative;
+  margin-bottom: 10px;  
 }
 .countFilter {
   position: absolute;

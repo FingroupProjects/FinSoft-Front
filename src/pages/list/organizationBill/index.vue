@@ -8,10 +8,15 @@ import currencyApi from "../../../api/list/currency.js";
 import organizationApi from "../../../api/list/organizations.js";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showDate from "../../../composables/date/showDate.js";
+import Button from "../../../components/button/button.vue";
 import validate from "./validate.js";
 import {createAccess, removeAccess, updateAccess} from "../../../composables/access/access.js";
-import {FIELD_COLOR, FIELD_OF_SEARCH , BASE_COLOR} from "../../../composables/constant/colors.js";
+import {FIELD_COLOR, FIELD_OF_SEARCH , BASE_COLOR, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
+import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
+import {useFilterCanvasVisible} from "../../../store/canvasVisible.js";
+import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
+import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
 import {
   addMessage,
   editMessage,
@@ -40,7 +45,7 @@ const organizationAdd = ref(null);
 const currencies = ref([]);
 
 const currencyAdd = ref(null);
-const organizations = ref(null);
+const organizations = ref([]);
 
 const isExistsOrganizationBill = ref(false);
 const markedID = ref([]);
@@ -56,6 +61,9 @@ const currenciesCopy = ref([])
 const organizationCopy = ref([])
 const showModal = ref(false);
 
+const validateNumber = () => {
+  bill_number.value = bill_number.value.replace(/\D/g, ''); 
+};
 
 const count = ref(0);
 const filterForm = ref({
@@ -70,6 +78,7 @@ const filterForm = ref({
 const toggleModal = () => {
   showModal.value = !showModal.value;
 };
+const deletionStatuses = ['нет', 'да'];
 
 
 const headers = ref([
@@ -79,13 +88,7 @@ const headers = ref([
   {title: "Валюта", key: "currency.name"},
 ]);
 
-const isOrganizationFieldDisabled = computed(() => {
-  return !createAccess('organizations') && !updateAccess('organizations');
-});
 
-const isCurrencyFieldDisabled = computed(() => {
-  return !createAccess('currencies') && !updateAccess('currencies');
-});
 
 function countFilter() {
 
@@ -189,6 +192,7 @@ const getOrganizationBillData = async ({page, itemsPerPage, sortBy, search}) => 
   } catch (e) {
   }
 };
+
 
 const addOrganizationBill = async ({page, itemsPerPage, sortBy}) => {
   const body = {
@@ -336,6 +340,26 @@ const openDialog = (item) => {
     organizationBillInDialogTitle.value = item.name;
   }
 };
+const getExcel = async () => {
+  if(organizationBill.value === null) {
+    return showToast('Выберите поставщика', 'warning')
+  }
+  try {
+    const { data } = await organizationBill.excel(organizationBill.value);
+    const url = window.URL.createObjectURL(
+      new Blob([data], { type: "application/vnd.ms-excel" })
+    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "Отчет.xls");
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 
 const cleanForm = () => {
   nameRef.value = null;
@@ -366,20 +390,21 @@ const addBasedOnOrganizationBill = () => {
 
 };
 
-const compute = ({page, itemsPerPage, sortBy, search}) => {
-  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
-
-  if (markedItem.value.deleted_at) {
-    return restore({page, itemsPerPage, sortBy});
+const compute =  ( params ={}) => {
+  const {page, itemsPerPage, sortBy, search} = params
+  if (markedItem.value.deleted_at !== null) {
+    return restore({page, itemsPerPage, sortBy})
   } else {
-    return remove({page, itemsPerPage, sortBy, search});
+    return remove({page, itemsPerPage, sortBy, search})
   }
-};
+}
+
 
 const closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
   filterModal.value = false;
   filterForm.value = {}
   await getOrganizationBillData({page, itemsPerPage, sortBy, search});
+  useFilterCanvasVisible().closeFilterCanvas()
 };
 
 const lineMarking = (item) => {
@@ -400,7 +425,6 @@ const lineMarking = (item) => {
       }
     }
   }
-
   const index = markedID.value.indexOf(item.id);
 
   if (index !== -1) {
@@ -441,42 +465,47 @@ onMounted(() => {
 
 <template>
   <div>
-    <v-col>
       <div class="d-flex justify-space-between text-uppercase">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Банковские счета организации</span>
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Банковские счета организации</span>
+
         </div>
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <Icons v-if="createAccess('organizationBill')" @click="openDialog(0)" name="add" title="Создать"/>
-              <Icons v-if="createAccess('organizationBill')" @click="addBasedOnOrganizationBill" title="Скопировать" name="copy"/>
-              <Icons v-if="removeAccess('organizationBill')" @click="compute" title="Удалить" name="delete"/>
-            </div>
+        <div class="d-flex w-100">
+          <div class="d-flex ga-2 mt-1 me-3 py-2">
+            <Button v-if="createAccess('organizationBill')" @click="openDialog(0)" name="create" />
+            <Button v-if="createAccess('organizationBill')" @click="addBasedOnOrganizationBill" name="copy" />
+            <Button v-if="removeAccess('organizationBill')" @click="compute" name="delete"/>
+            <Button name="excel" @click="getExcel()" />
+          </div>
+        </div>
 
-            <div class="w-100">
-              <v-text-field
-                  v-model="search"
-                  :base-color="FIELD_OF_SEARCH"
-                  prepend-inner-icon="search"
-                  density="compact"
-                  label="Поиск..."
-                  variant="outlined"
-                  :color="BASE_COLOR"
-                  rounded="lg"
-                  clear-icon="close"
-                  hide-details
-                  single-line
-                  clearable
-                  flat
-              ></v-text-field>
-            </div>
+            <div class="custom_search">
+          <v-text-field
+            style="width: 190px; margin-top: 10px;"
+            v-model="search"
+            prepend-inner-icon="search"
+            density="compact"
+            label="Поиск..."
+            variant="outlined"
+            :color="BASE_COLOR"
+            rounded="lg"
+            :base-color="FIELD_OF_SEARCH"
+            clear-icon="close"
+            hide-details
+            single-line
+            :append-inner-icon="search ? 'close' : ''"
+            @click:append-inner="search = ''"
+            flat
+          />
+        </div>
           </div>
           <div class="filterElement">
             <Icons
                 name="filter"
                 title="фильтр"
-                @click="filterModal = true"
+                @click="useFilterCanvasVisible().toggleFilterCanvas()"
                 class="mt-1"
             />
 
@@ -524,7 +553,6 @@ onMounted(() => {
                 >
                   <CustomCheckbox
                       v-model="markedID"
-                      @click="lineMarking(item)"
                       :checked="markedID.includes(item.id)"
                       @change="handleCheckboxClick(item)"
                   >
@@ -633,11 +661,13 @@ onMounted(() => {
                     <v-text-field
                         v-model="bill_number"
                         :rules="[rules.required]"
+                        maxlength="20"
                         variant="outlined"
                         :base-color="FIELD_COLOR"
                         label="Номер счёта"
                         density="compact"
                         rounded="md"
+                        @input="validateNumber"
                         :color="BASE_COLOR"
                         :append-inner-icon="bill_number ? 'close' : ''"
                         @click:append-inner="bill_number = null"
@@ -646,7 +676,6 @@ onMounted(() => {
                     <v-autocomplete
                         style="max-width: 40%; min-width: 40%"
                         v-model="currencyAdd"
-                        :disabled="isCurrencyFieldDisabled"
                         no-data-text="Валюта не найдена"
                         :color="BASE_COLOR"
                         :items="currencies"
@@ -667,7 +696,6 @@ onMounted(() => {
                       v-model="organizationAdd"
                       :items="organizations"
                       item-title="name"
-                      :disabled="isOrganizationFieldDisabled"
                       :base-color="FIELD_COLOR"
                       item-value="id"
                       :rules="[rules.required]"
@@ -694,118 +722,38 @@ onMounted(() => {
         </v-dialog>
       </v-card>
       <v-card>
-        <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup.esc="closeFilterModal">
-          <v-card
-          :style="`border: 2px solid ${BASE_COLOR}`"
-              min-width="600"
-              class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
-              rounded="xl"
-          >
-            <div class="d-flex justify-space-between align-center mb-2">
-              <span>Фильтр</span>
-              <div class="d-flex align-center justify-space-between">
-                <div class="d-flex ga-3 align-center mt-2 me-4">
-                </div>
-              </div>
-            </div>
-            <v-form class="d-flex w-100">
-              <v-row class="w-100">
-                <v-col class="d-flex flex-column w-100">
-                  <div class="d-flex justify-space-between ga-6 mb-3">
-                    <v-text-field
-                        v-model="filterForm.name"
-                        :color="BASE_COLOR"
-                        :base-color="FIELD_COLOR"
-                        rounded="md"
-                        variant="outlined"
-                        class="w-auto text-sm-body-1"
-                        density="compact"
-                        placeholder="Наименование"
-                        label="Наименование"
-                        autofocus
-                        clear-icon="close"
-                        clearable
-                        hide-details
-                    />
-                  </div>
-                  <div class="d-flex ga-2 mb-3">
-                    <v-text-field
-                        variant="outlined"
-                        label="Дата создания"
-                        type="date"
-                        :base-color="FIELD_COLOR"
-                        style="max-width: 30%"
-                        v-model="filterForm.date"
-                        density="compact"
-                        rounded="md"
-                        :color="BASE_COLOR"
-                        :append-inner-icon="filterForm.date ? 'close' : ''"
-                        @click:append-inner="filterForm.date = null"
-                        hide-details
-                    />
-                    <v-text-field
-                        v-model="filterForm.bill_number"
-                        variant="outlined"
-                        label="Номер счёта"
-                        density="compact"
-                        rounded="md"
-                        :base-color="FIELD_COLOR"
-                        :color="BASE_COLOR"
-                        :append-inner-icon="filterForm.bill_number ? 'close' : ''"
-                        @click:append-inner="filterForm.bill_number = null"
-                        hide-details
-                    />
-                    <v-autocomplete
-                        style="max-width: 40%; min-width: 40%"
-                        v-model="filterForm.currency_id"
-                        :items="currencies"
-                        item-title="name"
-                        :base-color="FIELD_COLOR" 
-                        item-value="id"
-                        label="Валюта"
-                        variant="outlined"
-                        :color="BASE_COLOR"
-                        density="compact"
-                        hide-details
-                    />
-                  </div>
-                  <v-autocomplete
-                      v-model="filterForm.organization_id"
-                      :items="organizations"
-                      item-title="name"
-                      :base-color="FIELD_COLOR"
-                      item-value="id"
-                      label="Организация"
-                      :color="BASE_COLOR"
-                      variant="outlined"
-                      density="compact"
-                  />
-                  <v-textarea
-                      variant="outlined"
-                      label="Комментарий"
-                      :base-color="FIELD_COLOR"
-                      v-model="filterForm.comment"
-                      density="compact"
-                      rounded="md"
-                      :color="BASE_COLOR"
-                      hide-details
-                      :append-inner-icon="filterForm.comment ? 'close' : ''"
-                      @click:append-inner="filterForm.comment = null"
-                  />
-                  <div class="d-flex justify-end ga-2 mt-2">
-                  <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-                  <v-btn :color="BASE_COLOR" class="btn"  @click="getOrganizationBillData">применить</v-btn>
-                </div>
-                </v-col>
-              </v-row>
-            </v-form>
-          </v-card>
-        </v-dialog>
         <div v-if="showModal">
           <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" @closeWithSaving="closingWithSaving()"/>
         </div>
       </v-card>
-    </v-col>
+      <filter-canvas >
+        <div class="d-flex flex-column ga-4 w-100">
+          <custom-filter-text-field min-width="106" v-model="filterForm.name" label="Наименование"/>
+          <custom-filter-text-field min-width="106" v-model="filterForm.date" label="Дата" type="date"/>
+        </div> 
+        <div class="d-flex flex-column ga-4 w-100">
+          <custom-filter-text-field min-width="106" v-model="filterForm.bill_number" label="Номер счёта"/>
+          <custom-filter-autocomplete min-width="106" v-model="filterForm.currency_id" :items="currencies"  label="Валюта"/>
+        </div>  
+        <div class="d-flex flex-column ga-4 w-100">
+          <custom-filter-autocomplete min-width="106"  v-model="filterForm.organization_id" :items="organizations" label="Организация"/>
+          <custom-filter-text-field min-width="106" v-model="filterForm.comment" label="Комментарий"/>
+          <custom-filter-autocomplete min-width="106"  label="Помечен на удаления" :items="deletionStatuses" v-model="filterForm.deleted" />
+        </div>    
+        <div class="d-flex justify-end ">
+          <div class="d-flex ga-2" style="margin-right: -6%;">
+            <v-btn color="red" class="btn" @click="closeFilterModal"
+            >сбросить</v-btn
+            >
+            <v-btn
+                :color="BASE_COLOR"
+                class="btn"
+                @click="() => {getOrganizationBillData({}); useFilterCanvasVisible().closeFilterCanvas()}"
+            >применить</v-btn
+            >
+          </div>
+        </div>
+      </filter-canvas>
   </div>
 </template>
 

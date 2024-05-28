@@ -1,35 +1,42 @@
 <script setup>
 import {computed, defineEmits, defineProps, onMounted, reactive, ref, watch} from "vue";
-import Icons from "../../../composables/Icons/Icons.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../../composables/toast/index.js";
 import validate from "./validate.js";
-import showDate from "../../../composables/date/showDate.js";
 import {useRoute, useRouter} from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
+import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import currencyApi from "../../../api/list/currency.js";
 import providerOrderApi from "../../../api/documents/providerOrder.js";
 import goodApi from "../../../api/list/goods.js";
-import { editMessage } from "../../../composables/constant/buttons.js";
-import {BASE_COLOR} from "../../../composables/constant/colors.js";
-import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
+import formatNumber from "../../../composables/format/formatNumber.js";
+import {editMessage, selectOneItemMessage} from "../../../composables/constant/buttons.js";
+import {FIELD_GOODS} from "../../../composables/constant/colors.js";
+import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
 import "../../../assets/css/procurement.css";
+import Button from "../../../components/button/button.vue";
+import ButtonGoods from "../../../components/button/buttonGoods.vue";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
+import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
+import goToHistory from "../../../composables/movementByPage/goToHistory.js";
+import goToPrint from "../../../composables/movementByPage/goToPrint.js";
 
-
+const useOrganization = ref(useHasOneOrganization())
 const router = useRouter()
 const route = useRoute()
 
 const countRef = ref(0)
+const hoveredRowId = ref(null);
 const emits = defineEmits(['changed'])
 const props = defineProps(['isUpdateOrCreateDocument'])
 const confirmDocument = useConfirmDocumentStore()
 const tempForm = ref({})
+const doc_name = ref('Заказ Поставщику')
 
 const form = reactive({
   doc_number: null,
@@ -130,6 +137,14 @@ const getGoods = async () => {
 }
 
 const decreaseCountOfGoods = () => {
+  if (markedID.value.length === 0) {
+    return showToast(selectOneItemMessage, "warning");
+  }
+  if (markedID.value.length === goods.value.length) {
+    goods.value = [];
+    return goods.value.push([{ id: 1, good_id: null, amount: "1", price: null}])
+  }
+  goo
   goods.value = goods.value.filter((item) => !markedID.value.includes(item.id))
 }
 
@@ -168,10 +183,14 @@ const validateItem = (item) => {
 }
 
 const updateProviderOrder = async () => {
-  if (validate(form.date, form.organization, form.counterparty, form.cpAgreement, form.currency) !== true) return
+  if (validate(form.date, form.counterparty, form.cpAgreement, form.currency) !== true) return
 
   const missingData = goods.value.some(validateItem)
   if (missingData) return
+
+  if (useOrganization.value.getIsHasOneOrganization) {
+    form.organization = useOrganization.value.getOrganization
+  }
 
  try {
    const body = {
@@ -236,12 +255,7 @@ const checkDataChanges = () => {
   return formDataChanged || isArraysEqual
 };
 
-const getHistory = () => {
-  router.push({
-    name: "documentHistory",
-    params: route.params.id,
-  });
-};
+
 
 watch([goods.value], (newValue) => {
   console.log(newValue)
@@ -259,35 +273,28 @@ watch(form, () => {
   }
 })
 
-watch(() => form.counterparty, async (data) => {
-  form.cpAgreement = null
-
-  const id = typeof data === 'object' ? data.id : data
-
-  try {
-    const res = await cpAgreementApi.getById(id)
-    form.currency = {
-      id: res.data.result.currency_id.id,
-      name: res.data.result.currency_id.name
+watch(
+    () => form.counterparty,
+    async (id) => {
+      form.cpAgreement = null;
+      await getCpAgreements(id);
     }
+);
 
-    setTimeout(() => {
-      tempForm.value.currency = {
-        id: res.data.result.currency_id.id,
-        name: res.data.result.currency_id.name
+watch(
+    () => form.cpAgreement,
+    (newValue) => {
+      if (newValue !== null) {
+        const cpAgreement = cpAgreements.value.find((el) =>
+            (el.id === typeof newValue) === "object" ? newValue.id : newValue
+        );
+        form.currency = cpAgreement.currency_id;
       }
-    }, 500)
-
-    const array = Object.prototype.toString.call(res.data.result) === '[object Array]'
-    const obj = Object.prototype.toString.call(res.data.result) === '[object Object]'
-
-    cpAgreements.value = array ? res.data.result : obj ? [res.data.result] : []
-
-  } catch (e) {
-    cpAgreements.value = []
-  }
-})
-
+    }
+);
+const closeWindow = () => {
+  window.close()
+}
 watch(confirmDocument, () => {
   if (confirmDocument.isUpdateOrCreateDocument) {
     updateProviderOrder()
@@ -307,22 +314,38 @@ onMounted( () => {
   ])
 })
 
-
-
+const validatePrice = (price) => {
+  if (price === 0 || price === '0' || Number(price) === 0) {
+    return false;
+  }
+  return true;
+};
+const handlePriceInput = (item) => {
+  if (!validatePrice(item.price)) {
+    item.price = null;  
+  }
+};
 </script>
 <template>
   <div class="document">
     <v-col>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Заказ поставщику (просмотр)</span>
+          <span>{{ doc_name }} (просмотр)</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3">
-              <span style="color: #08072E" class="mt-1 ms-2 cursor-pointer" @click="getHistory()">История</span>
-              <Icons title="Добавить" @click="updateProviderOrder" name="add"/>
-              <Icons title="Удалить" @click="" name="delete"/>
+              <Button
+                  name="history"
+                  @click="goToHistory(router, route)"
+              />
+              <Button
+                  name="print"
+                  @click="goToPrint(router, route, doc_name)"
+              />
+              <Button name="save" @click="updateProviderOrder" />
+              <Button name="close" @click="closeWindow" />
             </div>
           </div>
         </v-card>
@@ -330,25 +353,23 @@ onMounted( () => {
     </v-col>
     <v-divider/>
     <v-divider/>
-    <div style="background: #fff;">
-      <v-col class="d-flex flex-column ga-2 pb-0">
+    <div style="height: calc(99vh - 116px); background: #fff">
+      <v-col class="d-flex flex-column ga-2 pb-0"> 
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field readonly label="Номер" v-model="form.doc_number"/>
           <custom-text-field label="Дата" type="datetime-local" class="date" v-model="form.date"/>
-          <custom-autocomplete label="Организация" :items="organizations"  v-model="form.organization"/>
+          <custom-autocomplete v-if="!useOrganization.getIsHasOneOrganization" label="Организация" :items="organizations"  v-model="form.organization"/>
           <custom-autocomplete label="Клиент" :items="counterparties" v-model="form.counterparty"/>
           <custom-autocomplete label="Договор" :items="cpAgreements" v-model="form.cpAgreement"/>
         </div>
       </v-col>
       <v-col>
-        <div :style="`border: 1px solid ${BASE_COLOR}`" class="rounded">
-          <div class="d-flex pa-1 ga-1">
-            <Icons name="add" title="Добавить поле" @click="increaseCountOfGoods"/>
-            <Icons name="delete" @click="decreaseCountOfGoods"/>
+        <div class="rounded">
+          <div class="d-flex flex-column w-100 goods">       
           </div>
           <div class="d-flex flex-column w-100">
             <v-data-table
-                style="height: 50vh"
+                style="height: calc(100vh - 250px)"
                 items-per-page-text="Элементов на странице:"
                 loading-text="Загрузка"
                 no-data-text="Нет данных"
@@ -366,27 +387,61 @@ onMounted( () => {
                 fixed-header
             >
               <template v-slot:item="{ item, index }">
-                <tr :key="index">
+                <tr :key="index"
+                    @mouseenter="hoveredRowId = item.id"
+                    @mouseleave="hoveredRowId = null"
+                    >
                   <td>
                     <CustomCheckbox
                       v-model="markedID"
                       @change="lineMarking(item)"
                       :checked="markedID.includes(item.id)"
                     >
-                      <span>{{ index + 1}}</span>
+                      <span class="fz-12">{{ index + 1}}</span>
                     </CustomCheckbox>
                   </td>
                   <td style="width: 40%;">
-                    <custom-autocomplete v-model="item.good_id" :items="listGoods" min-width="150" max-width="100%"/>
+                    <custom-autocomplete 
+                    v-model="item.good_id" 
+                    :base-color="
+                        hoveredRowId === item.id ? FIELD_GOODS : '#fff'
+                      "
+                    :items="listGoods" 
+                    min-width="150" 
+                    max-width="100%"/>
                   </td>
                   <td>
-                    <custom-text-field v-model="item.amount" v-mask="'########'" min-width="50" />
+                    <custom-text-field 
+                    v-model="item.amount" 
+                    v-mask="'########'" 
+                    :base-color="
+                        hoveredRowId === item.id ? FIELD_GOODS : '#fff'
+                      "
+                    min-width="50" />
                   </td>
                   <td>
-                    <custom-text-field v-model="item.price" v-mask="'##########'" min-width="80"/>
+                    <custom-text-field 
+                    v-model="item.price" 
+                    @input="validateNumberInput(item.price), handlePriceInput(item)"
+                        :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                    v-mask="'##########'"
+                     min-width="80"/>
                   </td>
                   <td>
-                    <custom-text-field readonly :value="item.amount * item.price"  min-width="100"/>
+                    <custom-text-field 
+                    readonly 
+                    :base-color="
+                        hoveredRowId === item.id ? FIELD_GOODS : '#fff'
+                      "
+                        :value="formatNumber(item.amount * item.price)" 
+                    min-width="100"/>
+                  </td>
+                </tr>
+                <tr v-if="index === goods.length - 1">
+                  <td></td>
+                  <td style="width: 150%" class="d-flex ga-2" colspan="10">
+                    <ButtonGoods name="add" @click="increaseCountOfGoods" />
+                    <ButtonGoods v-if="goods.length !== 1" name="delete" @click="decreaseCountOfGoods" />
                   </td>
                 </tr>
               </template>
@@ -395,12 +450,32 @@ onMounted( () => {
         </div>
         <div class="d-flex justify-space-between w-100 mt-2 bottomField">
           <div class="d-flex ga-10">
-            <custom-text-field readonly :value="author" min-width="140" max-width="110"/>
-            <custom-text-field label="Комментарий" v-model="form.comment" min-width="310"/>
+            <custom-text-field 
+            readonly 
+            :value="author" 
+            label="Автор"
+            min-width="110" 
+            />
+            <custom-text-field 
+            label="Комментарий" 
+            v-model="form.comment"
+             min-width="310"
+             />
           </div>
           <div class="d-flex ga-6">
-            <custom-text-field readonly  :value="'Сумма без скидки: ' + totalPrice" min-width="180" max-width="110"/>
-            <custom-autocomplete v-model="form.currency" label="Валюта" :items="currencies" min-width="110" max-width="110" />
+            <custom-text-field 
+            readonly  
+            :value="'Сумма без скидки: ' + totalPrice" 
+            min-width="180" 
+            max-width="110"
+            />
+            <custom-autocomplete 
+            readonly
+            v-model="form.currency" 
+            label="Валюта" :items="currencies" 
+            min-width="190"
+            maxWidth="190px" 
+            />
           </div>
         </div>
       </v-col>

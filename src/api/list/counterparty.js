@@ -23,4 +23,9 @@ export default {
   massRestore(data) {
     return api.post(`/counterparty/massRestore/`, data);
   },
+  excel(filterData = {}) {
+    return api.get('/counterparty/data/export', { params: filterData }, {
+      responseType: 'blob'
+    })
+  }
 };

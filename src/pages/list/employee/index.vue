@@ -19,7 +19,12 @@ import {
 } from "../../../composables/constant/buttons.js"
 import {FIELD_COLOR, FIELD_OF_SEARCH, BASE_COLOR} from "../../../composables/constant/colors.js"
 import employee from "../../../api/list/employee.js"
+import Button from "../../../components/button/button.vue";
 import employeeGroup from "../../../api/list/employeeGroup.js"
+import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
+import {useFilterCanvasVisible} from "../../../store/canvasVisible.js";
+import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
+import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
 import debounce from "lodash.debounce";
 
 const router = useRouter()
@@ -75,6 +80,7 @@ const headersGroup = ref([
 const headers = ref([
   {title: 'Наименование', key: 'name'},
 ])
+const deletionStatuses = ['нет', 'да'];
 
 const rules = {
   required: v => !!v,
@@ -347,7 +353,7 @@ const addBasedOnEmployee = () => {
   if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
   if (markedID.value.length > 1) return showToast(selectOneItemMessage, 'warning')
   dialog.value = true
-
+  console.log(employees.value)
   employees.value.forEach(item => {
     if (markedID.value[0] === item.id) {
       nameRef.value = item.name
@@ -363,7 +369,8 @@ const addBasedOnEmployee = () => {
   isExistsEmployee.value = false
 }
 
-const compute = ({page, itemsPerPage, sortBy, search}) => {
+const compute = (params = {}) => {
+  const {page, itemsPerPage, sortBy, search} = params; 
   if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
   if (markedItem.value.deleted_at) {
     return massRestore({page, itemsPerPage, sortBy})
@@ -408,7 +415,10 @@ const lineMarkingGroup = group_id => {
 const getEmployee = async ({page, itemsPerPage, sortBy, search}) => {
 
   filterDialog.value = false
-  const filterData = filterForm.value
+  const filterData = {
+    ...filterForm.value,
+    deleted: filterForm.value.deleted === 'да' ? 1 : 0,
+  };
   count.value = 0
   countFilter()
 
@@ -431,7 +441,7 @@ const  closeFilterModal = async () => {
   filterDialog.value = false
   filterForm.value = {}
   await getEmployee({})
-  
+  useFilterCanvasVisible().closeFilterCanvas()
 }
 
 
@@ -480,6 +490,26 @@ const closingWithSaving = async () => {
       showConfirmDialog.value = false;
       cleanForm();
     }
+  }
+};
+
+const getExcel = async () => {
+  if(employeeGroup.value === null) {
+    return showToast('Выберите поставщика', 'warning')
+  }
+  try {
+    const { data } = await employeeGroup.excel(employeeGroup.value);
+    const url = window.URL.createObjectURL(
+      new Blob([data], { type: "application/vnd.ms-excel" })
+    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "Отчет.xls");
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (e) {
+    console.error(e);
   }
 };
 
@@ -542,59 +572,52 @@ watch(search, debounce((newValue) => {
 
 <template>
   <div>
-    <v-col>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
           <span>Сотрудники</span>
         </div>
         <v-card variant="text" min-width="430" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <button
-                style="
-                  background-color: #6bd68a;
-                  border-radius: 8px;
-                  white-space: nowrap;
-                  height: 32px;
-                  padding: 0px 4px;
-                  font-size: 12px;
-                  color: white;
-                  text-transform: uppercase;
-                "
-                v-if="createAccess('employee')"
-                @click="isCreateGroup = true"
-              >
-                <span class="px-2 pb-0">создать группу</span>
-              </button>
-              <Icons v-if="createAccess('employee')" @click="openDialog(0)" name="add"/>
-              <Icons v-if="createAccess('employee')" @click="addBasedOnEmployee" name="copy"/>
-              <Icons v-if="removeAccess('employee')" @click="compute" name="delete"/>
-            </div>
-
-            <div class="w-100">
-              <v-text-field
-                  v-model="search"
-                  prepend-inner-icon="search"
-                  density="compact"
-                  label="Поиск..."
-                  variant="outlined"
-                  :color="BASE_COLOR"
-                  :base-color="FIELD_OF_SEARCH"
-                  rounded="lg"
-                  clear-icon="close"
-                  hide-details
-                  single-line
-                  clearable
-                  flat
-              ></v-text-field>
-
-            </div>
+            <div class="d-flex w-100">
+              <div class="d-flex ga-2 mt-1 me-3 py-2">
+            <Button
+            name="group"               
+              v-if="createAccess('employee')"
+              @click="isCreateGroup = true"
+            >
+              <span class="px-2 pb-0">создать группу</span>
+            </Button>
+            <Button v-if="createAccess('employee')" @click="openDialog(0)" name="create"  />
+            <Button v-if="createAccess('employee')" @click="addBasedOnEmployee" name="copy"  />
+            <Button v-if="removeAccess('employee')" @click="compute" name="delete" />
+            <Button name="excel" @click="getExcel()" />
+          </div>
+        </div>
+        <div class="custom_search">
+          <v-text-field
+            style="width: 190px; margin-top: 10px;"
+            v-model="search"
+            prepend-inner-icon="search"
+            density="compact"
+            label="Поиск..."
+            variant="outlined"
+            :color="BASE_COLOR"
+            rounded="lg"
+            :base-color="FIELD_OF_SEARCH"
+            clear-icon="close"
+            hide-details
+            single-line
+            :append-inner-icon="search ? 'close' : ''"
+            @click:append-inner="search = ''"
+            flat
+          />
+        </div>
           </div>
           <div class="filterElement">
             <Icons
               name="filter"
               title="фильтр"
-              @click="filterDialog = true"
+              @click="useFilterCanvasVisible().toggleFilterCanvas()"
               class="mt-1"
             />
 
@@ -630,7 +653,7 @@ watch(search, debounce((newValue) => {
             </template>
             <template v-slot:item="{ item, index }">
               <tr :class="{'bg-grey-lighten-2': item.id === groupIdRef }" @mouseenter="hoveredRowIndex = index + 100000"
-                  @mouseleave="hoveredRowIndex = null" @click="lineMarkingGroup(item.id)" @dblclick="openGroupDialog(item)">
+                  @mouseleave="hoveredRowIndex = null" @dblclick="openGroupDialog(item)" @click="lineMarkingGroup(item.id)">
                 <td>
                   
                   <div class="d-flex">
@@ -839,101 +862,34 @@ watch(search, debounce((newValue) => {
         <div v-if="showModal">
         <ConfirmModal :showModal="true" @close="showModal = !showModal" @closeClear="closeDialogWithoutSaving()" @closeWithSaving="closingWithSaving()" />
         </div>
-
-        <v-dialog persistent v-model="filterDialog" class="mt-2 pa-2" @keyup.esc="closeFilterModal">
-        <v-card
-        :style="`border: 2px solid ${BASE_COLOR}`"
-          min-width="650"
-          class="d-flex pa-5 pt-2 justify-center flex-column mx-auto my-0"
-          rounded="xl"
-        >
-          <div class="d-flex justify-space-between align-center mb-2">
-            <span>Фильтр</span>
-          </div>
-          <v-form class="d-flex w-100">
-            <v-row class="w-100">
-              <v-col class="d-flex flex-column w-100">
-                <div class="d-flex justify-space-between ga-6 mb-3">
-                  <v-text-field
-                    v-model="filterForm.name"
-                    :color="BASE_COLOR"
-                    :base-color="FIELD_COLOR"
-                    rounded="md"
-                    variant="outlined"
-                    class="w-auto text-sm-body-1"
-                    density="compact"
-                    placeholder="Наименование"
-                    autofocus
-                    label="Наименование"
-                    clear-icon="close"
-                    clearable
-                    hide-details
-                  />
-                </div>
-                
-                <div class="d-flex ga-4 mb-3">
-                  <v-text-field
-                    v-model="filterForm.phone"
-                    :rules="[rules.required, rules.phone]"
-                    :color="BASE_COLOR"
-                    :base-color="FIELD_COLOR"
-                    variant="outlined"
-                    class="w-auto text-sm-body-1"
-                    density="compact"
-                    type="tel"
-                    placeholder="+992119111881"
-                    label="Номер телефона"
-                    v-mask="'+############'"
-                    clear-icon="close"
-                    :append-inner-icon="filterForm.phone ? 'close' : ''"
-                    @click:append-inner="filterForm.phone = null"
-                    hide-details
-                  />
-                  <v-text-field
-                    v-model="filterForm.email"
-                    :rules="[rules.required, rules.email]"
-                    :color="BASE_COLOR"
-                    :base-color="FIELD_COLOR"
-                    variant="outlined"
-                    class="w-auto text-sm-body-1"
-                    density="compact"
-                    placeholder="ivan@gmail.com"
-                    type="email"
-                    label="Почта"
-                    clear-icon="close"
-                    :append-inner-icon="filterForm.email ? 'close' : ''"
-                    @click:append-inner="filterForm.email = null"
-                    hide-details
-                  />
-                </div>
-                <v-text-field
-                  variant="outlined"
-                  :base-color="FIELD_COLOR"
-                  label="Адрес"
-                  v-model="filterForm.address"
-                  density="compact"
-                  rounded="md"
-                  :color="BASE_COLOR"
-                  hide-details
-                  :append-inner-icon="
-                    filterForm.address !== null ? 'close' : ''
-                  "
-                  @click:append-inner="filterForm.address = null"
-                />
-                <div class="d-flex justify-end ga-2 mt-2">
-                  <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-                  <v-btn :color="BASE_COLOR" class="btn"  @click="getEmployee">применить</v-btn>
-                </div>
-              </v-col>
-            </v-row>
-          </v-form>
-        </v-card>
-      </v-dialog>
-
-
-
       </v-card>
-    </v-col>
+    <filter-canvas>
+      <div class="d-flex flex-column ga-4 w-100">
+        <custom-filter-text-field min-width="106" label="ФИО" v-model="filterForm.name"/>
+        <custom-filter-text-field min-width="106" label="Номер телефона" v-model="filterForm.phone"/>
+      </div>
+      <div class="d-flex flex-column ga-2">
+        <custom-filter-text-field min-width="106" label="Электронная почта" v-model="filterForm.email"/>
+        <custom-filter-text-field min-width="106" label="Адрес" v-model="filterForm.address"/>
+      </div>
+      <div class="d-flex flex-column ga-2">
+        <custom-filter-text-field min-width="106" label="Адрес" v-model="filterForm.address"/>
+        <custom-filter-autocomplete min-width="106" label="Помечен на удаления" :items="deletionStatuses" v-model="filterForm.deleted"/>
+      </div>
+      <div class="d-flex justify-end ">
+        <div class="d-flex ga-2" style="margin-right: -6%;">
+          <v-btn color="red" class="btn" @click="closeFilterModal"
+          >сбросить</v-btn
+          >
+          <v-btn
+              :color="BASE_COLOR"
+              class="btn"
+              @click="() => {getEmployee(); useFilterCanvasVisible().closeFilterCanvas()}"
+          >применить</v-btn
+          >
+        </div>
+      </div>
+    </filter-canvas>
   </div>
 
 

@@ -1,5 +1,4 @@
-export default function validateNumberInput(event, item) {
-  let inputValue = event.target.value;
-  inputValue = inputValue.replace(/[^0-9.]/g, "");
-  item = inputValue;
+export default function validateNumberInput(data) {
+ if (!data) return data || ""
+ return data.toString().replace(/[^0-9.]/g, "");
 }

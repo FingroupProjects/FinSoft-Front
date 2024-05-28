@@ -4,22 +4,26 @@ import {useRouter} from "vue-router";
 import showToast from '../../../composables/toast'
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import position from '../../../api/list/position.js'
+import Button from "../../../components/button/button.vue";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
-import {createAccess, updateAccess, removeAccess} from "../../../composables/access/access.js";
-import {FIELD_COLOR, FIELD_OF_SEARCH ,BASE_COLOR} from "../../../composables/constant/colors.js";
+import {createAccess, removeAccess, updateAccess} from "../../../composables/access/access.js";
+import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
 import {
   addMessage,
   editMessage,
+  ErrorSelectMessage,
   removeMessage,
-  warningMessage,
-  selectOneItemMessage, ErrorSelectMessage
+  restoreMessage,
+  selectOneItemMessage
 } from "../../../composables/constant/buttons.js";
 import Icons from "../../../composables/Icons/Icons.vue";
-import binarySearch from "../../../composables/binarySearch/binarySearch.js";
 import validate from "./validate.js";
-
-import {restoreMessage} from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
+import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
+import {useFilterCanvasVisible} from "../../../store/canvasVisible.js";
+import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
+import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
+import {markedForDeletion} from "../../../composables/constant/items.js";
 
 const router = useRouter()
 
@@ -106,8 +110,7 @@ const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
   filterModal.value = false
   cleanFilterForm()
   await getPositionData({page, itemsPerPage, sortBy, search})
-
-
+  useFilterCanvasVisible().closeFilterCanvas()
 }
 
 const addPosition = async ({ page, itemsPerPage, sortBy }) => {
@@ -229,7 +232,8 @@ const addBasedOnPosition = () => {
 }
 
 
-const compute = ({ page, itemsPerPage, sortBy, search }) => {
+const compute = (params = {}) => {
+  const { page, itemsPerPage, sortBy, search } = params
   if(markedItem.value.deleted_at) {
     return massRestore({ page, itemsPerPage, sortBy })
   }
@@ -344,42 +348,45 @@ watch(search, debounce((newValue) => {
 
 <template>
   <div>
-    <v-col>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
           <span>Должность</span>
         </div>
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Сохранить" v-if="createAccess('position')" @click="openDialog(0)" name="add" />
-              <Icons title="Скопировать" v-if="createAccess('position')" @click="addBasedOnPosition" name="copy" />
-              <Icons title="Удалить" v-if="removeAccess('position')" @click="compute" name="delete" />
-            </div>
+            <div class="d-flex w-100">
+          <div class="d-flex ga-2 mt-1 me-3 py-2">
+            <Button v-if="createAccess('organizationBill')" @click="openDialog(0)" name="create" />
+            <Button v-if="createAccess('organizationBill')" @click="addBasedOnPosition" name="copy" />
+            <Button v-if="removeAccess('organizationBill')" @click="compute" name="delete" />
+          </div>
+        </div>
 
-            <div class="w-100">
-              <v-text-field
-                  v-model="search"
-                  prepend-inner-icon="search"
-                  density="compact"
-                  label="Поиск..."
-                  variant="outlined"
-                  :color="BASE_COLOR"
-                  rounded="lg"
-                  clear-icon="close"
-                  :base-color="FIELD_OF_SEARCH"
-                  hide-details
-                  single-line
-                  clearable
-                  flat
-              ></v-text-field>
-            </div>
+        <div class="custom_search">
+          <v-text-field
+            style="width: 190px; margin-top: 10px;"
+            v-model="search"
+            prepend-inner-icon="search"
+            density="compact"
+            label="Поиск..."
+            variant="outlined"
+            :color="BASE_COLOR"
+            rounded="lg"
+            :base-color="FIELD_OF_SEARCH"
+            clear-icon="close"
+            hide-details
+            single-line
+            :append-inner-icon="search ? 'close' : ''"
+            @click:append-inner="search = ''"
+            flat
+          />
+        </div>
           </div>
           <div class="filterElement">
             <Icons
               name="filter"
               title="фильтр"
-              @click="filterModal = true"
+              @click="useFilterCanvasVisible().toggleFilterCanvas()"
               class="mt-1"
             />
 
@@ -425,7 +432,6 @@ watch(search, debounce((newValue) => {
                   <CustomCheckbox
                       v-model="markedID"
                       :checked="markedID.includes(item.id)"
-                      @click="lineMarking(item)"
                       @change="handleCheckboxClick(item)"
                   >
                     <span>{{ item.id }}</span>
@@ -494,45 +500,30 @@ watch(search, debounce((newValue) => {
         </v-dialog>
       </v-card>
 
-      <v-card>
-        <v-dialog class="mt-2 pa-2"  v-model="filterModal" @keyup.esc="closeFilterModal">
-          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="400" min-height="150" class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
-            <div class="d-flex justify-space-between align-center mb-2">
-              <span>Фильтр</span>
-              
-            </div>
-            <v-form class="d-flex w-100" @submit.prevent="addPosition">
-              <v-row class="w-100">
-                <v-col class="d-flex flex-column w-100">
-                  <v-text-field
-                      v-model="filterForm.name"
-                      :color="BASE_COLOR"
-                      rounded="lg"
-                      variant="outlined"
-                      :base-color="FIELD_COLOR"
-                      class="w-auto text-sm-body-1"
-                      density="compact"
-                      autofocus
-                      placeholder="Фильтр"
-                      label="Наименование"
-                      clear-icon="close"
-                      clearable
-                  />
-                  <div class="d-flex justify-end ga-2">
-                  <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-                  <v-btn :color="BASE_COLOR" class="btn"  @click="getPositionData">применить</v-btn>
-                </div>
-                </v-col>
-              </v-row>
-            </v-form>
-          </v-card>
-        </v-dialog>
-
-      </v-card>
       <div v-if="showModal">
         <ConfirmModal :showModal="true" @close="toggleModal" @closeClear="closeDialogWithoutSaving" @closeWithSaving="closingWithSaving()"/>
       </div>
-    </v-col>  
+    <filter-canvas >
+        <div class="d-flex flex-column ga-4 w-100">
+          <custom-filter-text-field min-width="106" v-model="filterForm.name" label="Наименование"/>
+          <custom-filter-autocomplete min-width="106"  label="Помечен на удаление"
+            v-model="filterForm.deleted"
+            :items="markedForDeletion"/>
+        </div>      
+        <div class="d-flex justify-end ">
+          <div class="d-flex ga-2" style="margin-right: -6%;">
+            <v-btn color="red" class="btn" @click="closeFilterModal"
+            >сбросить</v-btn
+            >
+            <v-btn
+                :color="BASE_COLOR"
+                class="btn"
+                @click="() => {getPositionData({}); useFilterCanvasVisible().closeFilterCanvas()}"
+            >применить</v-btn
+            >
+          </div>
+        </div>
+      </filter-canvas>
   </div>
 
 

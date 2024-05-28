@@ -1,11 +1,14 @@
 <script setup>
 import { useRoute } from "vue-router";
-import {ref, watch, onMounted} from "vue";
+import { ref, watch, onMounted } from "vue";
 import Header from "./components/header/Header.vue";
 import showToast from "./composables/toast/index.js";
 import AdminPanel from "./pages/admin-panel/index.vue";
 import Sidebar from "./components/sidebar/Sidebar.vue";
+// import { initializeApp } from "firebase/app";
+// import { getMessaging, getToken, onMessage } from "firebase/messaging";
 import warningModal from "./components/paymentWarning/warningModal.vue";
+import { useModalCreateBased } from "./store/modalCreateBased.js";
 
 const rale = ref(true);
 const procurementOfGoods = ref(false);
@@ -14,8 +17,9 @@ const route = useRoute();
 const isLayout = ref(true);
 const lists = ref([]);
 const admins = ref([]);
-const isChangedDocument = ref(false)
-const isUpdateOrCreateDocument = ref(false)
+const isChangedDocument = ref(false);
+const isUpdateOrCreateDocument = ref(false);
+const modalCreateBased = useModalCreateBased();
 
 const toggleSidebar = () => {
   rale.value = !rale.value;
@@ -33,19 +37,45 @@ watch(route, (newVal) => {
 
 window.addEventListener("load", () => {
   window.addEventListener("online", () => {
-    showToast("Подключение восстановлена!", "green", 3500)
-  })
+    showToast("Подключение восстановлена!", "green", 3500);
+  });
 
   window.addEventListener("offline", () => {
-    showToast("Отсутствует интернет соединение!", "red", 600000)
-  })
-})
+    showToast("Отсутствует интернет соединение!", "red", 600000);
+  });
+});
 
-const changed = data => {
-  // console.log(data)
-  return isChangedDocument.value = data
-}
+const changed = (data) => {
+  return (isChangedDocument.value = data);
+};
 
+// const firebaseConfig = {
+//   apiKey: "AIzaSyB0s5dLzQZhwq6PlCO7aJHEx__UqW-9nzg",
+//   authDomain: "finsoft-ba979.firebaseapp.com",
+//   projectId: "finsoft-ba979",
+//   storageBucket: "finsoft-ba979.appspot.com",
+//   messagingSenderId: "754506329372",
+//   appId: "1:754506329372:web:cecf11931afc35ff959ed9",
+//   measurementId: "G-WWY76F9JBN"
+// };
+
+// const app = initializeApp(firebaseConfig);
+
+// const messaging = getMessaging();
+
+// onMessage(messaging, (payload) => {
+//   console.log('Message received. ', payload);
+// });
+
+// getToken(messaging, { vapidKey: 'BPaOc1rsWFtJVBTnrlmiLBiBHlVjvoYOERryG2lj7UB75xynmfP5oZhL4sWhJhb1Vgm2dh-iRvqhD2f3UYukuFU' }).then((currentToken) => {
+//   if (currentToken) {
+//     console.log(currentToken)
+//   } else {
+//     console.log('No registration token available. Request permission to generate one.');
+//   }
+// }).catch((err) => {
+//   console.log('An error occurred while retrieving token. ', err);
+// });
 </script>
 
 <template>
@@ -70,14 +100,23 @@ const changed = data => {
           class="panel"
           @changedDocument="isChangedDocument = false"
           :isChangedDocument="isChangedDocument"
-          :class="{ active: admin }"
+          :class="{ active_panel: admin }"
           :admins="admins"
           :lists="lists"
           :admin="admin"
           @toggle="admin = !admin"
         />
         <warningModal />
-        <router-view class="w-100 block" @changed="changed"/>
+        <router-view class="w-100 block" @changed="changed" />
+        <div
+          v-if="modalCreateBased.isModalCreateBased"
+          @click="modalCreateBased.isModal()"
+          class="blackout_page"
+        ></div>
+        <div
+          v-if="modalCreateBased.isDarkenThePage"
+          class="blackout_page"
+        ></div>
       </div>
     </div>
   </v-app>
@@ -126,7 +165,7 @@ const changed = data => {
   z-index: 1;
 }
 
-.panel.active {
+.panel.active_panel {
   left: 0;
   width: 360px;
   display: block;

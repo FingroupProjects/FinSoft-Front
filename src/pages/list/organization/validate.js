@@ -9,7 +9,6 @@ export default function validate(
   directorRef,
   accountantRef,
   addressRef,
-  descriptionRef
 ) {
   if (!nameRef.value) {
     return showToast("Поле наименования не может быть пустым", "warning")
@@ -28,9 +27,6 @@ export default function validate(
   }
   if (!addressRef.value) {
     return showToast("Поле адрес не может быть пустым", "warning")
-  }
-  if (!descriptionRef.value) {
-    return showToast("Поле описания не может быть пустым", "warning")
   }
 
   return true

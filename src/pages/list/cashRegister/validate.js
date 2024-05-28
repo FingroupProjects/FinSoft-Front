@@ -13,11 +13,11 @@ export default function validate(
       if (!currencyAdd.value) {
         return showToast("Поле Валюта не может быть пустым", "warning")
       }
-      if (!employeeAdd.value) {
-        return showToast("Поле Сотрудник не может быть пустым", "warning")
-      }
       if (!organizationAdd.value) {
         return showToast("Поле Организация не может быть пустым", "warning")
-       }
+      }
+      if (!employeeAdd.value) {
+        return showToast("Поле Ответственное лицо не может быть пустым", "warning")
+      }
   return true
 }

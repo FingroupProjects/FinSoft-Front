@@ -22,6 +22,7 @@ import organizationApi from "@/api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import priceTypeApi from "@/api/list/priceType.js";
 import validate from "./validate.js";
+import englishSymbols from "../../../composables/format/onlyEnglishSymbols.js";
 import {
   FIELD_COLOR,
   BASE_COLOR,
@@ -208,7 +209,7 @@ const getDated = () => {
   agreementDialog.value = true;
   const page = 1;
   const Items = 100;
-  form.value.counterparty_id = editID.value;
+  form.value.counterparty_id = props.item.id;
   getOrganization(page, Items);
   getPriceType({ page, Items });
   getCounterparties({ page, Items });
@@ -249,13 +250,13 @@ const cpAgreementGetById = async (item) => {
     // const { data } = await counterpartyAgreement.getById(id);
     form.value = {
       ...item,
-      date: item.date,
+      date: showDate(item.date),
       currency_id: item.currency_id.id,
       organization_id: item.organization_id.id,
       counterparty_id: item.counterparty_id.id,
       price_type_id: item.price_type_id.id,
     };
-    counterpartyAgreements.value = form.value
+    counterpartyAgreements.value = form.value;
   } catch (e) {
     console.error(e);
   }
@@ -336,7 +337,6 @@ const getId = async () => {
 };
 
 const CreateCounterparty = async () => {
-  isValid.value = true;
   if (validate(name, phone, address, email, roles) !== true) return;
 
   try {
@@ -350,7 +350,9 @@ const CreateCounterparty = async () => {
     await counterpartyApi.create(body);
     showToast("Успешно добавлена", "green");
     emits("toggleIsOpen");
-    clearForm();
+    setTimeout(() => {
+      clearForm();
+    }, 500);
   } catch (error) {
     console.error(error);
     if (error.response.data.errors.email) {
@@ -358,12 +360,11 @@ const CreateCounterparty = async () => {
     } else if (error.response.data.errors.phone) {
       showToast("Такой номер телефона уже существует", "warning");
     }
-  } finally {
-    isValid.value = false;
   }
 };
 
 const getDocuments = async ({ page, itemsPerPage, sortBy, search }) => {
+  if (props.createOnBase) return (loading.value = false);
   if (props.isEdit === false) {
     loading.value = false;
     result.value = [];
@@ -530,9 +531,7 @@ const closeDialogWithoutSaving = () => {
 };
 
 const isDataChangedAgreement = () => {
-  const item = counterpartyAgreements.value
-  console.error(item);
-  console.error(form.value);
+  const item = counterpartyAgreements.value;
   const isChanged =
     form.value.name !== item.name ||
     form.value.currency_id !== item.currency_id ||
@@ -602,7 +601,6 @@ const checkAndCloseAgreement = () => {
 const closeDialogWithoutSavingAgreement = () => {
   agreementDialog.value = false;
   showModalAgreement.value = false;
-  clearForm();
 };
 
 const createCpAgreement = async () => {
@@ -647,7 +645,7 @@ const updateCpAgreement = async () => {
       payment_id: 2,
     };
 
-    await counterpartyAgreement.update(editID.value.id, body);
+    await counterpartyAgreement.update(editID.value, body);
     showToast("Успешно изменено", "green");
     agreementDialog.value = false;
     editAgreementDialog.value = false;
@@ -715,7 +713,10 @@ const currencyProps = (item) => {
                 name="delete"
               ></Icons>
               <Icons
-                v-if="createAccess('counterparty') && isEdit"
+                v-if="
+                  createAccess('counterparty') ||
+                  (isEdit && updateAccess('counterparty'))
+                "
                 title="Сохранить"
                 @click="
                   isEdit && !createOnBase
@@ -747,17 +748,16 @@ const currencyProps = (item) => {
                 <v-text-field
                   v-model="name"
                   max-length="25"
-                  :rules="isValid ? [rules.required] : []"
+                  :rules="[rules.required]"
                   :color="BASE_COLOR"
                   :base-color="FIELD_COLOR"
-                  rounded="md"
+                  rounded="lg"
                   variant="outlined"
                   class="w-auto text-sm-body-1"
                   density="compact"
                   placeholder="Контрагент"
                   label="Наименование"
                   clear-icon="close"
-                  autofocus
                   clearable
                   hide-details
                 />
@@ -776,7 +776,7 @@ const currencyProps = (item) => {
                   v-if="isEdit"
                   style="
                     border: 1.5px solid #cbc8c8;
-                    border-radius: 4px;
+                    border-radius: 8px;
                     padding: 2px 12px;
                   "
                 >
@@ -798,12 +798,12 @@ const currencyProps = (item) => {
                 <v-text-field
                   variant="outlined"
                   :base-color="FIELD_COLOR"
-                  :rules="isValid ? [rules.required, rules.phone] : []"
+                  :rules="[rules.required, rules.phone]"
                   label="Тел номер"
                   v-model.trim="phone"
                   density="compact"
                   v-mask="'+992#########'"
-                  rounded="md"
+                  rounded="lg"
                   :color="BASE_COLOR"
                   clear-icon="close"
                   hide-details
@@ -813,11 +813,12 @@ const currencyProps = (item) => {
                 <v-text-field
                   variant="outlined"
                   :base-color="FIELD_COLOR"
-                  :rules="isValid ? [rules.required, rules.email] : []"
+                  @input="englishSymbols"
+                  :rules="[rules.required, rules.email]"
                   label="Почта"
                   v-model="email"
                   density="compact"
-                  rounded="md"
+                  rounded="lg"
                   :color="BASE_COLOR"
                   clear-icon="close"
                   hide-details
@@ -833,7 +834,7 @@ const currencyProps = (item) => {
                 v-model="address"
                 density="compact"
                 clear-icon="close"
-                rounded="md"
+                rounded="lg"
                 :color="BASE_COLOR"
                 hide-details
                 clearable
@@ -844,7 +845,7 @@ const currencyProps = (item) => {
         </v-form>
         <v-card class="table mt-3" :style="`border: 2px solid ${BASE_COLOR}`">
           <div
-            class="d-flex w-100 rounded-t-md mb-1 align-center"
+            class="d-flex w-100 rounded-t-lg mb-1 align-center"
             :style="`border-bottom: 2px solid ${BASE_COLOR}`"
           >
             <div
@@ -913,7 +914,6 @@ const currencyProps = (item) => {
                     <CustomCheckbox
                       v-model="markedID"
                       :checked="markedID.includes(item.id)"
-                      @click="lineMarking(item)"
                       @change="lineMarking(item)"
                     >
                       <span>{{ item.id }}</span>
@@ -953,7 +953,9 @@ const currencyProps = (item) => {
           <div class="d-flex align-center justify-space-between">
             <div class="d-flex ga-3 align-center mt-2 me-4">
               <Icons
-                v-if="createAccess('counterpartyAgreement') && !editAgreementDialog"
+                v-if="
+                  createAccess('counterpartyAgreement') && !editAgreementDialog
+                "
                 @click="
                   editAgreementDialog
                     ? updateCpAgreement()
@@ -986,10 +988,10 @@ const currencyProps = (item) => {
               <div class="d-flex justify-space-between ga-6">
                 <v-text-field
                   v-model="form.name"
-                  :rules="[rules.required]"
+                  :rules="isValid ? [rules.required] : []"
                   :base-color="FIELD_COLOR"
                   :color="BASE_COLOR"
-                  rounded="md"
+                  rounded="lg"
                   variant="outlined"
                   class="w-auto text-sm-body-1"
                   density="compact"
@@ -1009,9 +1011,9 @@ const currencyProps = (item) => {
                   v-if="isDocumentEdit"
                   style="
                     border: 1.5px solid #cbc8c8;
-                    border-radius: 4px;
+                    border-radius: 8px;
                     padding: 6px 12px;
-                    width: 110px;
+                    width: 120px;
                     height: 40px;
                   "
                 >
@@ -1019,26 +1021,29 @@ const currencyProps = (item) => {
                     {{ date }}
                   </span>
                 </div>
-                <!-- <v-text-field
+                <v-text-field
+                  v-else
                   v-model="form.date"
                   :rules="[rules.required]"
                   :base-color="FIELD_COLOR"
                   :color="BASE_COLOR"
-                  rounded="md"
+                  rounded="lg"
                   variant="outlined"
-                  class="w-auto text-sm-body-1"
+                  style="width: 160px"
+                  class="text-sm-body-1"
                   density="compact"
                   placeholder="Дата создания"
                   label="Дата создания"
                   lear-icon="close"
                   type="date"
                   hide-details
-                /> -->
+                />
                 <v-autocomplete
                   :color="BASE_COLOR"
                   class="w-75"
                   variant="outlined"
                   label="Валюта"
+                  rounded="lg"
                   v-model="form.currency_id"
                   :disabled="isCurrencyFieldDisabled"
                   :base-color="FIELD_COLOR"
@@ -1054,6 +1059,7 @@ const currencyProps = (item) => {
               <v-autocomplete
                 :color="BASE_COLOR"
                 variant="outlined"
+                rounded="lg"
                 label="Организация"
                 v-model="form.organization_id"
                 :disabled="isOrganizationFieldDisabled"
@@ -1068,10 +1074,12 @@ const currencyProps = (item) => {
               />
               <div class="d-flex ga-4 my-3">
                 <v-autocomplete
+                  :disabled="true"
                   :color="BASE_COLOR"
                   class="w-50"
                   variant="outlined"
                   label="Контрагент"
+                  rounded="lg"
                   v-model="form.counterparty_id"
                   :base-color="FIELD_COLOR"
                   :items="counterparties"
@@ -1084,6 +1092,7 @@ const currencyProps = (item) => {
                 />
                 <v-autocomplete
                   :color="BASE_COLOR"
+                  rounded="lg"
                   :item-props="price_typeProps"
                   v-model="form.price_type_id"
                   :disabled="isPriseTypesFieldDisabled"
@@ -1106,7 +1115,7 @@ const currencyProps = (item) => {
                 :rules="isValid ? [rules.required] : []"
                 label="Контактное лицо"
                 density="compact"
-                rounded="md"
+                rounded="lg"
                 clear-icon="close"
                 clearable
                 :color="BASE_COLOR"
@@ -1116,6 +1125,7 @@ const currencyProps = (item) => {
                 <v-textarea
                   v-model="form.comment"
                   variant="outlined"
+                  rounded="lg"
                   :base-color="FIELD_COLOR"
                   :color="BASE_COLOR"
                   label="Комментарий"

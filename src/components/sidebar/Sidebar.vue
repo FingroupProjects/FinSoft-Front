@@ -41,7 +41,6 @@ const list = ref({
         { id: 1, title: "Единица измерения", link: "/list/unit" },
         { id: 2, title: "Банковские счета", link: "/list/organizationBill" },
         { id: 3, title: "График работы", link: "/list/schedule" },
-        { id: 4, title: "Номенклатура", link: "/list/nomenclature" },
         { id: 5, title: "Пользователи", link: "/list/user" },
         { id: 7, title: "Контрагенты", link: "/list/counterparty" },
         { id: 8, title: "Организации", link: "/list/organization" },
@@ -51,6 +50,7 @@ const list = ref({
         { id: 12, title: "Валюты", link: "/list/currency" },
         { id: 13, title: "Склады", link: "/list/storage" },
         { id: 14, title: "Кассы", link: "/list/cashRegister" },
+        { id: 4, title: "Товар", link: "/list/nomenclature" },
       ],
     },
   ],
@@ -63,8 +63,8 @@ const procurementOfGoods = ref({
       title: "Отчеты",
       link: "/return",
       child: [
-        { id: 1, title: "Взаимодействие с поставщиками", link: "" },
-        { id: 2, title: "Акт сверки с поставщиками", link: "" },
+        { id: 1, title: "Взаимодействие с поставщиками", link: "/counterpartySettlement" },
+        { id: 2, title: "Акт сверки с поставщиками", link: "/reconciliationReport" },
         { id: 3, title: "Отчет покупки поставщиков", link: "" },
       ],
     },
@@ -116,7 +116,7 @@ const storage = ref({
       title: "Отчеты",
       link: "/",
       child: [
-        { id: 1, title: "Движение склада", link: "" },
+        { id: 1, title: "Движение склада", link: "/remainderOfGoods" },
         { id: 2, title: "Остаток товаров", link: "" },
       ],
     },
@@ -256,7 +256,7 @@ const push = (item) => {
             :class="item.id === activeItemId ? 'activeBg' : ''"
           >
             <v-list-item-title>
-              <span :class="item.id === activeItemId ? 'active' : 'title'">{{
+              <span :class="item.id === activeItemId ? 'active_sidebar' : 'title'">{{
                 item.title
               }}</span></v-list-item-title
             >
@@ -296,7 +296,7 @@ const push = (item) => {
   background: #111165;
 }
 
-.active {
+.active_sidebar {
   color: rgb(214, 209, 209);
   font-family: "Inter", sans-serif;
   font-weight: 400;

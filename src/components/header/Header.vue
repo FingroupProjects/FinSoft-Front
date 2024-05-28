@@ -28,7 +28,7 @@ const listProfile = async (item) => {
     if (res.status === 200) {
       deleteUser();
       deleteToken();
-      router.push("/login");
+      router.push("/mainpage");
     }
   }
 };
@@ -61,13 +61,13 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <v-app-bar :elevation="2" color="#F2FAFF" height="45">
+  <v-app-bar style="z-index: 98 !important;" :elevation="2" color="#F2FAFF" height="45">
     <template v-slot:prepend>
       <Icons class="ml-2" name="menu" @click="$emit('rale')"></Icons>
     </template>
 
     <v-app-bar-title>
-      <span  @click="$router.push('/')" class="title cursor-pointer">SOHIBKOR / {{ organizationName }}</span>
+      <span  @click="$router.push('/planning')" class="title cursor-pointer">SOHIBKOR / {{ organizationName }}</span>
     </v-app-bar-title>
 
     <template v-slot:append>

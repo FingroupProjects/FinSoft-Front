@@ -7,8 +7,9 @@ export default {
   update(id, data) {
     return api.post(`/good/${id}`, data);
   },
-  get( { page = 1, itemsPerPage = 10, sortBy }, search = "", good_storage_id, good_organization_id,) {
+  get( { page = 1, itemsPerPage = 10, sortBy }, search = "", good_storage_id, good_organization_id, for_sale = 0,) {
     const params = buildParams( page, itemsPerPage, sortBy, search, );
+    params.for_sale = Number(for_sale)
     params.good_storage_id = good_storage_id
     params.good_organization_id = good_organization_id
     return api.get("/good", { params });

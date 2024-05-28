@@ -15,8 +15,15 @@ import {
 } from "../../../composables/constant/buttons.js";
 import {createAccess, removeAccess, updateAccess} from "../../../composables/access/access.js";
 import Icons from "../../../composables/Icons/Icons.vue";
+import Button from "../../../components/button/button.vue";
 import {restoreMessage} from "../../../composables/constant/buttons.js";
+import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
+import {useFilterCanvasVisible} from "../../../store/canvasVisible.js";
+import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
+import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
 import debounce from "lodash.debounce";
+import showDate from "../../../composables/date/showDate.js";
+import {markedForDeletion} from "../../../composables/constant/items.js";
 
 const router = useRouter()
 
@@ -53,6 +60,7 @@ const headers = ref([
 
 const filterForm = ref({
   name: null,
+  deleted: null
 })
 
 
@@ -63,6 +71,7 @@ const rules = {
   date: v => (v && /^\d{2}-\d{2}-\d{4}$/.test(v)) || 'Формат даты должен быть DD-MM-YYYY',
 }
 
+const deletionStatuses = ['нет', 'да'];
 
 function countFilter() {
 
@@ -75,22 +84,24 @@ function countFilter() {
   return count;
 }
 
+
 const getUnitData = async ({page, itemsPerPage, sortBy, search}) => {
   count.value = 0;
-  countFilter()
-  const filterData = filterForm.value
-  filterModal.value = false
-
-
-  loading.value = true
+  countFilter();
+ 
+  loading.value = true;
   try {
-    const {data} = await unit.get({page, itemsPerPage, sortBy}, search, filterData)
-    paginations.value = data.result.pagination
-    units.value = data.result.data
-    loading.value = false
+    const {data: {result}} = await unit.get({page, itemsPerPage, sortBy}, search, filterForm.value);
+    units.value = result.data
+    paginations.value = result.data.map((item) => ({
+        ...item,
+        date: showDate(item.date),
+      }));
+      loading.value = false;
   } catch (e) {
+    console.error(e);
   }
-}
+};
 
 const cleanFilterForm = () => {
   filterForm.value = {}
@@ -101,8 +112,7 @@ const closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
   filterModal.value = false
   cleanFilterForm()
   await getUnitData({page, itemsPerPage, sortBy, search})
-
-
+  useFilterCanvasVisible().closeFilterCanvas()
 }
 
 const addUnit = async () => {
@@ -224,15 +234,34 @@ const addBasedOnUnit = () => {
   isExistsUnit.value = false
 }
 
-
-const compute = ({page, itemsPerPage, sortBy, search}) => {
-  if (markedItem.value.deleted_at) {
+const compute =  ( params ={}) => {
+  const {page, itemsPerPage, sortBy, search} = params
+  if (markedItem.value.deleted_at !== null) {
     return massRestore({page, itemsPerPage, sortBy})
   } else {
     return massDel({page, itemsPerPage, sortBy, search})
   }
 }
 
+const getExcel = async () => {
+  if(unit.value === null) {
+    return showToast('Выберите поставщика', 'warning')
+  }
+  try {
+    const { data } = await unit.excel(unit.value);
+    const url = window.URL.createObjectURL(
+      new Blob([data], { type: "application/vnd.ms-excel" })
+    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "Отчет.xls");
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (e) {
+    console.error(e);
+  }
+};
 const lineMarking = item => {
   if (markedID.value.length > 0) {
     const firstMarkedItem = units.value.find(el => el.id === markedID.value[0])
@@ -295,6 +324,7 @@ const closingWithSaving = async () => {
 };
 
 
+
 const closeDialogWithoutSaving = () => {
   dialog.value = false;
   showModal.value = false
@@ -342,42 +372,45 @@ onMounted(() => {
 
 <template>
   <div>
-    <v-col>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
           <span>Единица измерения</span>
         </div>
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex justify-end w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <Icons v-if="createAccess('unit')" title="Сохранить" @click="openDialog(0)" name="add"/>
-              <Icons v-if="createAccess('unit')" title="Скопировать" @click="addBasedOnUnit" name="copy"/>
-              <Icons v-if="removeAccess('unit')" title="Удалить" @click="compute" name="delete"/>
-            </div>
-
-            <div class="d-flex justify-end w-100" style="max-width: 200px">
-              <v-text-field
-                  v-model="search"
-                  prepend-inner-icon="search"
-                  density="compact"
-                  label="Поиск..."
-                  variant="outlined"
-                  :color="BASE_COLOR"
-                  rounded="lg"
-                  clear-icon="close"
-                  :base-color="FIELD_OF_SEARCH"
-                  hide-details
-                  single-line
-                  clearable
-                  flat
-              ></v-text-field>
-            </div>
+            <div class="d-flex w-100">
+          <div class="d-flex ga-2 mt-1 me-3 py-2">
+            <Button v-if="createAccess('unit')" @click="openDialog(0)" name="create" />
+            <Button v-if="createAccess('unit')" @click="addBasedOnUnit" name="copy"  />
+            <Button v-if="removeAccess('unit')" @click="compute" name="delete" />
+            <Button name="excel" @click="getExcel()" />
+          </div>
+        </div>
+        <div class="custom_search">
+          <v-text-field
+            style="width: 190px; margin-top: 10px;"
+            v-model="search"
+            prepend-inner-icon="search"
+            density="compact"
+            label="Поиск..."
+            variant="outlined"
+            :color="BASE_COLOR"
+            rounded="lg"
+            :base-color="FIELD_OF_SEARCH"
+            clear-icon="close"
+            hide-details
+            single-line
+            :append-inner-icon="search ? 'close' : ''"
+            @click:append-inner="search = ''"
+            flat
+          />
+        </div>
           </div>
           <div class="filterElement">
             <Icons
                 name="filter"
                 title="фильтр"
-                @click="filterModal = true"
+                @click="useFilterCanvasVisible().toggleFilterCanvas()"
                 class="mt-1"
             />
 
@@ -388,7 +421,7 @@ onMounted(() => {
 
       <v-card class="mt-2 table">
         <v-data-table-server
-            style="height: 78vh"
+        style="height: 78vh"
             items-per-page-text="Элементов на странице:"
             loading-text="Загрузка"
             no-data-text="Нет данных"
@@ -398,16 +431,16 @@ onMounted(() => {
             :items-length="paginations.total || 0"
             :items="units"
             :item-value="headers.title"
+            :search="debounceSearch"
             @update:options="getUnitData"
+            page-text="{0}-{1} от {2}"
             show-select
             v-model="markedID"
-            page-text='{0}-{1} от {2}'
             :items-per-page-options="[
-                {value: 25, title: '25'},
-                {value: 50, title: '50'},
-                {value: 100, title: '100'},
-            ]"
-            :search="debounceSearch"
+            { value: 25, title: '25' },
+            { value: 50, title: '50' },
+            { value: 100, title: '100' },
+          ]"
             fixed-header
             hover
         >
@@ -415,15 +448,16 @@ onMounted(() => {
             <tr
                 @mouseenter="hoveredRowIndex = index"
                 @mouseleave="hoveredRowIndex = null"
-                :class="{'bg-grey-lighten-2': markedID.includes(item.id) }"
                 @dblclick="openDialog(item)"
+                :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
-              <td>
-                <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
+            <td>
+                <template
+                    v-if="hoveredRowIndex === index || markedID.includes(item.id)"
+                >
                   <CustomCheckbox
                       v-model="markedID"
                       :checked="markedID.includes(item.id)"
-                      @click="lineMarking(item)"
                       @change="handleCheckboxClick(item)"
                   >
                     <span>{{ item.id }}</span>
@@ -492,46 +526,30 @@ onMounted(() => {
           </v-card>
         </v-dialog>
       </v-card>
-
-      <v-card>
-        <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup.esc="closeFilterModal">
-          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="400" min-height="150"
-                  class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
-            <div class="d-flex justify-space-between align-center mb-2">
-              <span>Фильтр</span>
-            </div>
-            <v-form class="d-flex w-100" @submit.prevent="addUnit">
-              <v-row class="w-100">
-                <v-col class="d-flex flex-column w-100">
-                  <v-text-field
-                      v-model="filterForm.name"
-                      :color="BASE_COLOR"
-                      rounded="lg"
-                      variant="outlined"
-                      :base-color="FIELD_COLOR"
-                      class="w-auto text-sm-body-1"
-                      density="compact"
-                      placeholder="Фильтр"
-                      label="Наименование"
-                      clear-icon="close"
-                      autofocus
-                      clearable
-                  />
-                  <div class="d-flex justify-end ga-2">
-                  <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-                  <v-btn :color="BASE_COLOR" class="btn"  @click="getUnitData">применить</v-btn>
-                </div>
-                </v-col>
-              </v-row>
-            </v-form>
-          </v-card>
-        </v-dialog>
-
-      </v-card>
       <div v-if="showModal">
         <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()"  @closeWithSaving="closingWithSaving()"/>
       </div>
-    </v-col>
+      <filter-canvas >
+        <div class="d-flex flex-column ga-4 w-100">
+          <custom-filter-text-field min-width="106" v-model="filterForm.name" label="Наименование"/>
+          <custom-filter-autocomplete min-width="106"  label="Помечен на удаление"
+            v-model="filterForm.deleted"
+            :items="markedForDeletion"/>
+        </div>      
+        <div class="d-flex justify-end ">
+          <div class="d-flex ga-2" style="margin-right: -6%;">
+            <v-btn color="red" class="btn" @click="closeFilterModal"
+            >сбросить</v-btn
+            >
+            <v-btn
+                :color="BASE_COLOR"
+                class="btn"
+                @click="() => {getUnitData({}); useFilterCanvasVisible().closeFilterCanvas()}"
+            >применить</v-btn
+            >
+          </div>
+        </div>
+      </filter-canvas>
   </div>
 
 

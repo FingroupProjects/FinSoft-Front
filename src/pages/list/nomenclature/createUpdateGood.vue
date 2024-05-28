@@ -452,7 +452,7 @@ onMounted(async () => {
                     item-value="id"
                     :items="storages"
                     :color="BASE_COLOR"
-                    hide-zdetails
+                    hide-details
                     :base-color="FIELD_COLOR"
                   />
                   <v-autocomplete

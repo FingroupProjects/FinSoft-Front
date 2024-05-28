@@ -1,20 +1,11 @@
 <script setup>
-import {
-  computed,
-  defineEmits,
-  defineProps,
-  onMounted,
-  reactive,
-  ref,
-  watch,
-} from "vue";
-import Icons from "../../../composables/Icons/Icons.vue";
+import {computed, defineEmits, defineProps, onMounted, reactive, ref, watch,} from "vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../../composables/toast/index.js";
 import validate from "./validate.js";
-import { useRoute, useRouter } from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import storageApi from "../../../api/list/storage.js";
@@ -22,18 +13,25 @@ import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import currencyApi from "../../../api/list/currency.js";
 import procurementApi from "../../../api/documents/procurement.js";
 import goodApi from "../../../api/list/goods.js";
-import { editMessage } from "../../../composables/constant/buttons.js";
+import {approveDocument, editMessage, selectOneItemMessage} from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
-import { BASE_COLOR } from "../../../composables/constant/colors.js";
-import showDate from "../../../composables/date/showDate.js";
-import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
+import {FIELD_GOODS, TITLE_COLOR} from "../../../composables/constant/colors.js";
+import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
+import Button from "../../../components/button/button.vue";
+import ButtonGoods from "../../../components/button/buttonGoods.vue";
+import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
+import formatNumber from "../../../composables/format/formatNumber.js";
+import goToHistory from "../../../composables/movementByPage/goToHistory.js";
+import goToPrint from "../../../composables/movementByPage/goToPrint.js";
+import saleApi from "../../../api/documents/sale.js";
+import getStatus from "../../../composables/displayed/getStatus.js";
 
 const router = useRouter();
 const route = useRoute();
 const count = ref(0);
-const emits = defineEmits(["changed"]);
+const emits = defineEmits(["changed", "click"]);
 const props = defineProps(["isUpdateOrCreateDocument"]);
 const confirmDocument = useConfirmDocumentStore();
 
@@ -50,11 +48,14 @@ const form = reactive({
   salePercent: null,
   comment: null,
   currency: null,
+  active: null,
+  deleted_at: null,
 });
 
 const author = ref(null);
 const markedID = ref([]);
 const goods = ref([]);
+const doc_name = ref('Покупка')
 
 const organizations = ref([]);
 const counterparties = ref([]);
@@ -64,6 +65,7 @@ const currencies = ref([]);
 const listGoods = ref([]);
 const prevForm = ref({});
 const prevGoods = ref([]);
+const hoveredRowId = ref(null);
 
 const headers = ref([
   { title: "Товары", key: "goods", sortable: false },
@@ -72,12 +74,37 @@ const headers = ref([
   { title: "Сумма", key: "currency.name", sortable: false },
 ]);
 
+
+
+const approve = async () => {
+  try {
+    await saleApi.approve({ ids: [route.params.id] });
+    showToast(approveDocument);
+    await getProcurementDetails();
+    markedID.value = [];
+  } catch (e) {
+    console.error(e);
+    showToast('Ошибка', 'red');
+  }
+}
+
+const unApprove = async () => {
+  try {
+    await saleApi.unApprove({ ids: [route.params.id] });
+    showToast(approveDocument);
+    await getProcurementDetails();
+    markedID.value = [];
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 const getProcurementDetails = async () => {
   try {
     const { data } = await procurementApi.getById(route.params.id);
+    console.log(data)
     form.doc_number = data.result.doc_number;
     form.date = getDateTimeInShow(data.result.date, "-", true);
-    console.log(form.date)
     form.organization = {
       id: data.result.organization.id,
       name: data.result.organization.name,
@@ -86,22 +113,20 @@ const getProcurementDetails = async () => {
       id: data.result.counterparty.id,
       name: data.result.counterparty.name,
     };
-    setTimeout(() => {
-      form.cpAgreement = {
-        id: data.result.counterpartyAgreement.id,
-        name: data.result.counterpartyAgreement.name,
-      };
-    }, 100);
+    console.log(form.counterparty, 'form.counterparty')
+    form.cpAgreement = {
+      id: data.result.counterpartyAgreement.id,
+      name: data.result.counterpartyAgreement.name,
+    };
+    console.log(form.cpAgreement, 'form.cpAgreement')
     form.storage = {
       id: data.result.storage.id,
       name: data.result.storage.name,
     };
-    form.saleInteger =
-      data.result.saleInteger !== 0 ? data.result.saleInteger : null;
-    form.salePercent =
-      data.result.salePercent !== 0 ? data.result.salePercent : null;
     form.comment = data.result.comment;
     form.currency = data.result.currency;
+    form.active = data.result.active;
+    form.deleted_at = data.result.deleted_at;
     goods.value = data.result.goods.map((item) => ({
       id: item.id,
       good_id: item.good.id,
@@ -112,6 +137,7 @@ const getProcurementDetails = async () => {
     prevGoods.value = [...goods.value];
     tempForm.value = Object.assign({}, form);
   } catch (e) {
+    console.error(e)
   }
 };
 
@@ -143,7 +169,7 @@ const getCpAgreements = async (id) => {
 };
 
 const getStorages = async () => {
-  const { data } = await storageApi.get({
+  const { data } = await storageApi.get({ 
     page: 1,
     itemsPerPage: 100000,
     sortBy: "name",
@@ -170,6 +196,13 @@ const getGoods = async () => {
 };
 
 const decreaseCountOfGoods = () => {
+  if (markedID.value.length === 0) {
+    return showToast(selectOneItemMessage, "warning");
+  }
+  if (markedID.value.length === goods.value.length) {
+    goods.value = [];
+    return goods.value.push([{ id: 1, good_id: null, amount: "1", price: null}])
+  }
   goods.value = goods.value.filter((item) => !markedID.value.includes(item.id));
 };
 
@@ -268,41 +301,18 @@ const updateProcurement = async () => {
   }
 };
 
-const getHistory = () => {
-  router.push({
-    name: "documentHistory",
-    params: route.params.id,
-  });
-};
-
 const totalPrice = computed(() => {
   let sum = 0;
   goods.value.forEach((item) => {
     sum += item.price * item.amount;
   });
-  return sum;
+  return formatNumber(sum);
 });
 
 const totalCount = computed(() =>
   goods.value.reduce((acc, item) => acc + Number(item.amount || 0), 0)
 );
 
-const totalPriceWithSale = computed(() => {
-  let sum = 0;
-  if (form.salePercent !== null) {
-    sum = totalPrice.value - (totalPrice.value * form.salePercent) / 100;
-  } else {
-    goods.value.forEach((item) => {
-      sum += item.price * item.amount;
-    });
-    sum -= form.saleInteger;
-  }
-
-  return sum;
-});
-
-const isSaleIntegerDisabled = computed(() => !!form.salePercent);
-const isSalePercentDisabled = computed(() => !!form.saleInteger);
 
 const arraysEqual = (arr1, arr2) => {
   if (arr1.length !== arr2.length) {
@@ -326,14 +336,6 @@ const checkDataChanges = () => {
   return formDataChanged || isArraysEqual;
 };
 
-watch(
-  [goods.value],
-  (newValue) => {
-    console.log(newValue);
-  },
-  { deep: true }
-);
-
 watch(form, () => {
   if (count.value === 0) {
     checkDataChanges();
@@ -346,54 +348,25 @@ watch(form, () => {
   }
 });
 
-// watch(
-//   () => form.counterparty,
-//   async (data) => {
-//     form.cpAgreement = null;
-//     const id = typeof data === "object" ? data.id : data;
-//     try {
-//       const res = await cpAgreementApi.getCounterpartyById(id);
-//       console.log(res);
-//       form.currency = {
-//         id: res.data.result.currency_id.id,
-//         name: res.data.result.currency_id.name,
-//       };
-//       const array =
-//         Object.prototype.toString.call(res.data.result) === "[object Array]";
-//       const obj =
-//         Object.prototype.toString.call(res.data.result) === "[object Object]";
-
-//       cpAgreements.value = array
-//         ? res.data.result.data
-//         : obj
-//         ? res.data.result.data
-//         : [];
-//     } catch (e) {
-//       cpAgreements.value = [];
-//     }
-//   }
-// );
-
 watch(
   () => form.counterparty,
   async (id) => {
     if (id === null) return;
     form.cpAgreement = null;
     form.currency = null;
-    getCpAgreements(typeof id === "object" ? id.id : id);
+    await getCpAgreements(typeof id === "object" ? id.id : id);
   }
 );
 
 watch(
   () => form.cpAgreement,
   (newValue) => {
-    if (newValue === null) return;
-    setTimeout(() => {
-      const cp = cpAgreements.value.find((el) =>
+    if (newValue !== null) {
+      const cpAgreement = cpAgreements.value.find((el) =>
         (el.id === typeof newValue) === "object" ? newValue.id : newValue
       );
-      form.currency = cp.currency_id;
-    }, 500);
+      form.currency = cpAgreement.currency_id;
+    }
   }
 );
 
@@ -409,7 +382,8 @@ const closeWindow = () => {
 
 onMounted(() => {
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
-  getProcurementDetails();
+  getProcurementDetails()
+
   Promise.all([
     getOrganizations(),
     getCounterparties(),
@@ -421,36 +395,39 @@ onMounted(() => {
 </script>
 <template>
   <div class="document">
-    <div class="d-flex justify-space-between text-uppercase pa-1">
+    <div class="d-flex justify-space-between">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
-        <span>Покупка (просмотр)</span>
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }"
+          >{{ doc_name }} (просмотр) - {{ getStatus(form.active, form.deleted_at) }}</span>
       </div>
-      <v-card variant="text" class="d-flex align-center ga-2">
-        <div class="d-flex w-100">
-          <div class="d-flex ga-2 mt-1 me-3">
-            <span style="color: #08072E" class="mt-1 ms-2 cursor-pointer" @click="getHistory()">История</span>
-            <Icons @click="$router.push({name: 'documentPrint', params:{id: route.params.id}})" name="print" />
-            <Icons title="Добавить" @click="updateProcurement" name="save" />
-            <Icons
-              style="margin-top: 2px"
-              @click="closeWindow"
-              title="Закрыть"
-              name="close"
-            />
-          </div>
+      <v-card variant="text" style="display: flex; align-items: center">
+        <div class="d-flex w-100 justify-end my-3 pr-4">
+          <div class="d-flex items-center ga-2 mt-1 me-3">
+              <Button
+                  name="history"
+                  @click="goToHistory(router, route)"
+              />
+              <Button name="approve" @click="approve" />
+              <Button name="cancel" @click="unApprove"/>
+              <Button
+                  name="print"
+                  @click="goToPrint(router, route, doc_name)"
+              />
+              <Button name="save" @click="updateProcurement" />
+              <Button name="close" @click="closeWindow" />
+            </div>
         </div>
       </v-card>
     </div>
-
     <v-divider />
     <v-divider />
-    <div style="background: #fff">
+    <div style="height: calc(100vh - 125px); background: #fff">
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
-          <custom-text-field readonly :value="form.doc_number" />
+          <custom-text-field disabled label="Номер" v-model="form.doc_number" />
           <custom-text-field
-            label="Дата"
             class="date"
+            label="Дата"
             type="datetime-local"
             v-model="form.date"
           />
@@ -465,6 +442,7 @@ onMounted(() => {
             v-model="form.counterparty"
           />
           <custom-autocomplete
+            :disabled="!form.counterparty"
             label="Договор"
             :items="cpAgreements"
             v-model="form.cpAgreement"
@@ -474,33 +452,13 @@ onMounted(() => {
             :items="storages"
             v-model="form.storage"
           />
-          <custom-text-field
-            label="Руч. скидка (сумма)"
-            v-mask="'###'"
-            v-model="form.saleInteger"
-            :disabled="isSaleIntegerDisabled"
-          />
-          <custom-text-field
-            label="Руч. скидка (процент)"
-            v-mask="'###'"
-            v-model="form.salePercent"
-            :disabled="isSalePercentDisabled"
-          />
         </div>
       </v-col>
       <v-col>
-        <div :style="`border: 1px solid ${BASE_COLOR}`" class="rounded">
-          <div class="d-flex pa-1 ga-1">
-            <Icons
-              name="add"
-              title="Добавить поле"
-              @click="increaseCountOfGoods"
-            />
-            <Icons name="delete" @click="decreaseCountOfGoods" />
-          </div>
+        <div class="rounded">
           <div class="d-flex flex-column w-100">
             <v-data-table
-              style="height: 50vh"
+              style="height: calc(100vh - 305px)"
               items-per-page-text="Элементов на странице:"
               loading-text="Загрузка"
               no-data-text="Нет данных"
@@ -518,86 +476,107 @@ onMounted(() => {
               fixed-header
             >
               <template v-slot:item="{ item, index }">
-                <tr :key="index">
+                <tr
+                  :key="index"
+                  @mouseenter="hoveredRowId = item.id"
+                  @mouseleave="hoveredRowId = null"
+                >
                   <td>
                     <CustomCheckbox
                       v-model="markedID"
                       @change="lineMarking(item)"
                       :checked="markedID.includes(item.id)"
                     >
-                      <span>{{ index + 1 }}</span>
+                      <span class="fz-12">{{ index + 1 }}</span>
                     </CustomCheckbox>
                   </td>
                   <td style="width: 40%">
                     <custom-autocomplete
                       v-model="item.good_id"
                       :items="listGoods"
-                      :id="item.good_id"
+                      :base-color="
+                        hoveredRowId === item.id ? FIELD_GOODS : '#fff'
+                      "
                       min-width="150"
-                      max-width="100%"                      
+                      max-width="100%"
                     />
                   </td>
                   <td>
                     <custom-text-field
                       v-model="item.amount"
+                      :base-color="
+                        hoveredRowId === item.id ? FIELD_GOODS : '#fff'
+                      "
                       v-mask="'########'"
                       min-width="50"
                     />
                   </td>
                   <td>
                     <custom-text-field
-                      v-model="item.price"
-                      v-mask="'##########'"
-                      min-width="80"
+                        v-model="item.price"
+                        @input="validateNumberInput(item.price)"
+                        :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                        min-width="80"
                     />
                   </td>
                   <td>
                     <custom-text-field
                       readonly
-                      :value="item.amount * item.price"
+                      v-model="item.summa"
+                      :base-color="
+                        hoveredRowId === item.id ? FIELD_GOODS : '#fff'
+                      "
+                      :value="formatNumber(item.amount * item.price)"
                       min-width="100"
                     />
+                  </td>
+                </tr>
+                <tr v-if="index === goods.length - 1">
+                  <td></td>
+                  <td style="width: 150%" class="d-flex ga-2" colspan="10">
+                    <ButtonGoods name="add" @click="increaseCountOfGoods" />
+                    <ButtonGoods v-if="goods.length !== 1" name="delete" @click="decreaseCountOfGoods" />
                   </td>
                 </tr>
               </template>
             </v-data-table>
           </div>
         </div>
-        <div
-          class="d-flex flex-wrap ga-4 justify-space-between w-100 mt-2 bottomField"
-        >
+        <div class="d-flex flex-wrap ga-4 justify-space-between w-100 mt-2 bottomField">
           <div class="d-flex ga-10">
-            <custom-text-field readonly :value="author" min-width="110" />
             <custom-text-field
-              label="Комментарий"
-              v-model="form.comment"
-              min-width="310"
+                readonly
+                v-model="author"
+                label="Автор"
+                min-width="110"
+            />
+            <custom-text-field
+                label="Комментарий"
+                v-model="form.comment"
+                min-width="310"
             />
           </div>
           <div class="d-flex ga-6">
             <custom-text-field
-              readonly
-              :value="'Количество: ' + totalCount"
-              min-width="130"
+                readonly
+                label="Количество"
+                v-model="totalCount"
+                min-width="130"
             />
             <custom-text-field
-              readonly
-              :value="'Сумма со скидкой: ' + totalPriceWithSale"
-              min-width="190"
-            />
-            <custom-text-field
-              readonly
-              :value="'Сумма без скидки: ' + totalPrice"
-              min-width="190"
-              max-width="110"
+                readonly
+                label="Общая сумма:"
+                v-model="totalPrice"
+                min-width="180"
+                max-width="110"
             />
             <custom-autocomplete
-              readonly
-              v-model="form.currency"
-              label="Валюта"
-              :items="currencies"
-              min-width="190"
-              maxWidth="190px"
+                readonly
+                v-model="form.currency"
+                label="Валюта"
+                :items="currencies"
+                min-width="190"
+                maxWidth="190px"
             />
           </div>
         </div>

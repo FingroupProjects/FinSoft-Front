@@ -16,6 +16,7 @@ const authentication = async () => {
   const body = {
     login: loginRef.value,
     password: passwordRef.value,
+    device: "Mobile"
   }
 
   try {
@@ -24,7 +25,7 @@ const authentication = async () => {
     if (res.status === 200) {
       setToken(res.data.token)
       setUser(res.data.user)
-      router.push('/')
+      router.push('/mainpage')
       setTimeout(() => {
         location.reload()
       }, 1000)

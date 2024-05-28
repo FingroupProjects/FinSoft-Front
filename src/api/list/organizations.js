@@ -23,5 +23,10 @@ export default {
   filter(body) 
   {
     return api.get(`/organization/filter`, body)
+  },
+  excel(id) {
+    return api.get(`/organization/excel/export/`, {
+      responseType: 'blob'
+    })
   }
 }

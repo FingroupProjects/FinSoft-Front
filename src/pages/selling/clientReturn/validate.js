@@ -7,7 +7,6 @@ const rules = {
 }
 export default function validate(
   date,
-  organization,
   counterparty,
   cpAgreement,
   storage,
@@ -17,9 +16,7 @@ export default function validate(
   if (!date) {
     return showToast("Поле Дата не может быть пустым", "warning")
   }
-  if (!organization) {
-    return showToast("Поле Организации не может быть пустым", "warning")
-  }
+
   if (!counterparty) {
     return showToast("Поле Поставщик не может быть пустым", "warning")
   }

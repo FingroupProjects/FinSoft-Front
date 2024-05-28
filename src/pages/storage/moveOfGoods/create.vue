@@ -8,24 +8,32 @@ import showToast from "../../../composables/toast/index.js";
 import currentDate from "../../../composables/date/currentDate.js";
 import validate from "./validate.js";
 
-import { useRouter } from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
 import storageApi from "../../../api/list/storage.js";
 import moveApi from "../../../api/documents/move.js";
 import goodApi from "../../../api/list/goods.js";
 import { addMessage } from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
-import {BASE_COLOR} from "../../../composables/constant/colors.js";
+import {BASE_COLOR, TITLE_COLOR} from "../../../composables/constant/colors.js";
+import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
+import currentDateWithTime from "../../../composables/date/currentDateWithTime.js";
+import Button from "../../../components/button/button.vue";
+import formatDateTime from "../../../composables/date/formatDateTime.js";
+import getDataBased from "../../../composables/otherQueries/getDataBased.js";
 
-
+const useOrganization = ref(useHasOneOrganization())
 const router = useRouter()
+const route = useRoute()
 
 const form = reactive({
   date: null,
   organization: null,
   storage: null,
   sender_storage: null,
+  sender_storages: [],
   recipient_storage: null,
+  recipient_storages: [],
   comment: null,
   currency: null,
 })
@@ -42,7 +50,8 @@ const goods = ref([{
 
 const organizations = ref([])
 const storages = ref([])
-const currencies = ref([])
+const sender_storages = ref([])
+const recipient_storages = ref([])
 const listGoods = ref([])
 
 const headers = ref([
@@ -58,6 +67,14 @@ const getOrganizations = async () => {
 const getStorages = async () => {
   const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   storages.value = data.result.data
+}
+const getSenderStorage = async () => {
+  const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  sender_storages.value = data.result.data
+}
+const getRecipientStorage = async () => {
+  const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
+  recipient_storages.value = data.result.data
 }
 
 const getGoods = async () => {
@@ -100,13 +117,17 @@ const validateItem = (item) => {
 };
 
 const addNewMove = async () => {
-  if (validate(form.date, form.organization, form.sender_storage, form.recipient_storage) !== true) return
+  if (validate(form.date, form.sender_storage, form.recipient_storage) !== true) return
 
   const missingData = goods.value.some(validateItem)
   if (missingData) return
 
+  if (useOrganization.value.getIsHasOneOrganization) {
+    form.organization = useOrganization.value.getOrganization
+  }
+
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id: typeof form.organization === 'object' ? form.organization.id : form.organization,
     sender_storage_id: form.sender_storage,
     recipient_storage_id: form.recipient_storage,
@@ -130,10 +151,11 @@ const addNewMove = async () => {
 
 
 onMounted(() => {
-  form.date = currentDate()
+  form.date = currentDateWithTime()
   form.organization = JSON.parse(localStorage.getItem('user')).organization || null
   author.value = JSON.parse(localStorage.getItem('user')).name || null
 
+  getDataBased(route.query.id, form, goods)
   getOrganizations()
   getStorages()
   getGoods()
@@ -144,28 +166,29 @@ onMounted(() => {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Перемещение товаров</span>
+          <span :style="`color: ${TITLE_COLOR}`">Перемещение товаров (создание)</span> 
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="addNewMove" name="add"/>
-              <Icons title="Скопировать" @click="" name="copy"/>
-              <Icons title="Удалить" @click="" name="delete"/>
+            <div class="d-flex ga-2 mt-1 me-3">              
+              <Button @click="addNewMove" name="save1" />
+              <Button
+                  @click="router.push('/moveOfGoods')"
+                  name="close"
+              />
             </div>
           </div>
-
         </v-card>
       </div>
     </v-col>
     <v-divider/>
     <v-divider/>
-    <div style="background: #fff;">
+    <div style="height: calc(99vh - 116px); background: #fff">
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field disabled value="Номер" v-model="form.number"/>
-          <custom-text-field label="Дата" type="date" class="date" v-model="form.date"/>
-          <custom-autocomplete label="Организация" :items="organizations"  v-model="form.organization"/>
+          <custom-text-field label="Дата" type="datetime-local" class="date" v-model="form.date"/>
+          <custom-autocomplete v-if="!useOrganization.getIsHasOneOrganization" label="Организация" :items="organizations"  v-model="form.organization"/>
           <custom-autocomplete label="Склад-отп" :items="storages" v-model="form.sender_storage"/>
           <custom-autocomplete label="Склад-пол" :items="storages" v-model="form.recipient_storage"/>
         </div>
@@ -178,7 +201,7 @@ onMounted(() => {
           </div>
           <div class="d-flex flex-column w-100 goods">
             <v-data-table
-                style="height: 78vh"
+                style="height: calc(100vh - 305px)"
                 items-per-page-text="Элементов на странице:"
                 loading-text="Загрузка"
                 no-data-text="Нет данных"

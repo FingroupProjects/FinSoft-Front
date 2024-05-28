@@ -1,8 +1,17 @@
 const routes = [
   {
     path: "/",
-    name: "dashboard",
+    name: "mainpage",
+    component: () => import("../pages/mainpage/index.vue"),
+    meta: {
+      hideSideBarAndHeader: true,
+    }
+  },
+  {
+    path: '/dashboard',
+    name: 'dashboard',
     component: () => import("../pages/homepage/index.vue"),
+  
   },
   {
     path: "/procurementOfGoods",
@@ -66,7 +75,21 @@ const routes = [
     name: "clientOrderCreate",
     component: () => import("../pages/selling/clientOrder/create.vue"),
   },
-
+  {
+    path: "/remainderOfGoods",
+    name: "remainderOfGoods",
+    component: () => import("../pages/reports/goods/remainderOfGoods.vue")
+  },
+  {
+    path: "/counterpartySettlement",
+    name: "counterpartySettlement",
+    component: () => import("../pages/reports/provider/counterpartySettlement.vue")
+  },
+  {
+    path: '/reconciliationReport',
+    name: 'reconciliationReport',
+    component: () => import("../pages/reports/providerReconciliation/reconciliationReport.vue")
+  },
   {
     path: "/clientReturn",
     name: "clientReturn",
@@ -363,7 +386,7 @@ const routes = [
     component: () => import("../pages/documentHistory/index.vue"),
   },
   {
-    path: "/documentPrint/:id",
+    path: "/documentPrint/:id/:title",
     name: "documentPrint",
     component: () => import("../pages/documentPrint/index.vue"),
     meta: {
@@ -384,6 +407,7 @@ const routes = [
     component: () => import("../pages/homepage/index.vue"),
   },
 ];
+
 
 routes.forEach((route) => {
   route.meta ??= {};

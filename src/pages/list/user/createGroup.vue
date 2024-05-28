@@ -31,7 +31,7 @@ const createGroup = async () => {
     }
     emit("toggleDialog");
   } catch (e) {
-    console.log(e)
+    console.error(e)
   } finally {
     isValid.value = false;
   }
@@ -70,19 +70,28 @@ const restore = async () => {
 }
 
 const destroy  = async () => {
-  const response = await userGroup.delete(props.item.id);
+  try {
+    const response = await userGroup.delete(props.item.id);
     if (response.status === 200) {
       showToast(removeMessage);
     }
+
+  } catch (e) {
+    console.error(e)
+    if (e.response.status === 400) {
+      showToast(e.response.data.message, 'warning')
+    }
+  } finally {
     emit("toggleDialog");
+  }
 }
 
 const compute = async () => {
-  if(props.item.deleted_at !== null) {
-      restore()
+  if (props.item.deleted_at !== null) {
+    await restore()
   }
   else {
-    destroy()
+    await destroy()
   }
 }
 
@@ -91,7 +100,6 @@ onMounted(() => {
     name.value = props.item.name
   }
 })
-
 
 </script>
 <template>
@@ -108,8 +116,8 @@ onMounted(() => {
             <span>{{ props.isEdit ? "Изменить" : "Создать" }} группу</span>
             <div class="d-flex align-center justify-space-between">
               <div class="d-flex ga-3 align-center mt-2 me-4">
-              <Icons v-if="props.isEdit"  @click="compute" name="delete"/>
-            </div>
+                <Icons v-if="props.isEdit"  @click="compute" name="delete"/>
+              </div>
               <div class="d-flex ga-3 align-center mt-2 me-4">
                 <Icons @click="props.isEdit ? update() : createGroup()" name="save" />
               </div>

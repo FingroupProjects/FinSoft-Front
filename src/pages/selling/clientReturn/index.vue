@@ -4,11 +4,11 @@ import {useRouter} from "vue-router";
 import showToast from '../../../composables/toast/index.js'
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
+import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import {
   ErrorSelectMessage,
   removeMessage,
-  restoreMessage,
+  restoreMessage, selectOneItemMessage,
   warningMessage
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
@@ -22,9 +22,17 @@ import counterpartyApi from "../../../api/list/counterparty.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import storageApi from "../../../api/list/storage.js";
 import currencyApi from "../../../api/list/currency.js";
+import deleteRestoreApi from "../../../api/documents/deleteRestore.js";
+import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
+import Button from "../../../components/button/button.vue";
+import CreateBase from "../../../components/modal/CreateBase.vue";
+import {useModalCreateBased} from "../../../store/modalCreateBased.js";
+import {useFilterCanvasVisible} from "../../../store/canvasVisible.js";
+import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
+
 
 const router = useRouter()
-
+const modalCreateBased = useModalCreateBased()
 const loading = ref(true)
 const filterModal = ref(false)
 const hoveredRowIndex = ref(null)
@@ -46,6 +54,12 @@ const counterpartyAgreements = ref([])
 
 
 const filterForm = ref({
+  startDate: null,
+  endDate: null,
+  startDate: null,
+  endDate: null,
+  active: null,
+  deleted: null,
   name: null,
   description: null,
   currency_id: null
@@ -65,11 +79,19 @@ const rules = {
   required: v => !!v,
 }
 
+const statusOptions = ['проведён', 'не проведён'];
+  const deletionStatuses = ['не удален', 'удален'];
+ 
+
 
 const getClientReturnData = async ({page, itemsPerPage, sortBy, search}) => {
   count.value = 0;
   countFilter()
-  const filterData = filterForm.value
+  const filterData = {
+      ...filterForm.value,
+      active: filterForm.value.active === 'проведён' ? 1 : 0,
+      deleted: filterForm.value.deleted === 'удален' ? 1 : 0 ,
+    };
   filterModal.value = false
   loading.value = true
   try {
@@ -80,6 +102,32 @@ const getClientReturnData = async ({page, itemsPerPage, sortBy, search}) => {
   } catch (e) {
   }
 }
+
+const headerButtons = ref([
+  {
+    name: "create",
+    function: () => router.push({ name: "clientReturnCreate" }),
+  },
+  {
+    name: "createBasedOn",
+    function: () => {
+      if (markedID.value.length !== 1) {
+        return showToast(selectOneItemMessage, 'warning')
+      }
+
+      modalCreateBased.isModal()
+    },
+  },
+  {
+    name: "copy",
+  },
+  {
+    name: "delete",
+    function: () => {
+      massDel({});
+    },
+  },
+]); 
 
 function countFilter() {
   for (const key in filterForm.value) {
@@ -92,24 +140,20 @@ function countFilter() {
 
 const massDel = async () => {
   try {
-    const {status} = await clientReturnApi.massDeletion({ids: markedID.value})
+    const {status} = await deleteRestoreApi.delete({ids: markedID.value})
     if (status === 200) {
       showToast(removeMessage, 'red')
       await getClientReturnData({})
       markedID.value = []
     }
-
   } catch (e) {
 
   }
 }
 
-
 const massRestore = async () => {
-
   try {
-    const {status} = await clientReturnApi.massRestore({ids: markedID.value})
-
+    const {status} = await deleteRestoreApi.restore({ids: markedID.value})
     if (status === 200) {
       showToast(restoreMessage)
       await getClientReturnData({})
@@ -222,51 +266,57 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>
-    <v-col>
-      <div class="d-flex justify-space-between text-uppercase ">
+  <div class="pa-4">
+      <div class="d-flex justify-space-between calcWidth">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Возврат от клиента</span>
+          <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Возврат от клиента</span>
         </div>
-        <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
-          <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="$router.push('/clientReturn/create')" name="add"/>
-              <Icons title="Скопировать" @click="" name="copy"/>
-              <Icons title="Удалить" @click="compute" name="delete"/>
-            </div>
-
-            <div class="w-100">
-              <v-text-field
-                  v-model="search"
-                  prepend-inner-icon="search"
-                  density="compact"
-                  label="Поиск..."
-                  variant="outlined"
-                  :color="BASE_COLOR"
-                  rounded="lg"
-                  :base-color="FIELD_OF_SEARCH"
-                  clear-icon="close"
-                  hide-details
-                  single-line
-                  :append-inner-icon="search ? 'close' : ''"
-                  @click:append-inner="search = ''"
-                  flat
-              ></v-text-field>
+        <div class="d-flex justify-end ga-2">
+          <div class="d-flex w-100 justify-end mb-3">
+            <div class="d-flex ga-2 position-relative">
+              <Button
+                v-for="(button, idx) in headerButtons"
+                :name="button.name"
+                :key="idx"
+                @click="button.function"
+              />
+              <create-base :marked-i-d="markedID[0]" />
             </div>
           </div>
-          <div class="filterElement">
-            <Icons
-                name="filter"
-                title="фильтр"
-                @click="filterModal = true"
-                class="mt-1"
+          <div class="custom_search">
+            <v-text-field
+              style="width: 190px"
+              v-model="search"
+              prepend-inner-icon="search"
+              density="compact"
+              label="Поиск..."
+              variant="outlined"
+              :color="BASE_COLOR"
+              rounded="lg"
+              :base-color="FIELD_OF_SEARCH"
+              clear-icon="close"
+              hide-details
+              single-line
+              :append-inner-icon="search ? 'close' : ''"
+              @click:append-inner="search = ''"
+              flat
             />
-            <span v-if="count !== 0" class="countFilter">{{ count }}</span>
           </div>
-        </v-card>
+
+          <div class="mt-1 filterElement">
+            <Icons
+              name="filter"
+              title="Фильтр"
+              @click="useFilterCanvasVisible().toggleFilterCanvas()"
+              class="mt-1"
+            />
+            <span v-if="count !== 0" class="countFilter">{{
+              count
+            }}</span>
+          </div>
+        </div>
       </div>
-      <v-card class="mt-2 table">
+      <v-card class="table calcWidth">
         <v-data-table-server
             style="height: 78vh"
             items-per-page-text="Элементов на странице:"
@@ -297,29 +347,19 @@ onMounted(() => {
                 @mouseleave="hoveredRowIndex = null"
                 @dblclick="show(item)"
                 :class="{'bg-grey-lighten-2': markedID.includes(item.id) }"
+                style="font-size: 12px"
             >
               <td>
-                <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
                   <CustomCheckbox
                       v-model="markedID"
                       :checked="markedID.includes(item.id)"
                       @change="lineMarking(item)"
                   >
-                    <span>{{ index + 1 }}</span>
                   </CustomCheckbox>
-                </template>
-                <template v-else>
-                  <div class="d-flex align-center">
-                    <Icons
-                        style="margin-right: 10px; margin-top: 4px"
-                        :name="item.deleted_at === null ? 'valid' : 'inValid'"
-                    />
-                    <span>{{ index + 1 }}</span>
-                  </div>
-                </template>
+                 
               </td>
               <td>{{ item.doc_number }}</td>
-              <td>{{ showDate(item.date) }}</td>
+              <td>{{ getDateTimeInShow(item.date) }}</td>
               <td>{{ item.counterparty.name }}</td>
               <td>{{ item.organization.name }}</td>
               <td>{{ item.storage.name }}</td>
@@ -330,42 +370,34 @@ onMounted(() => {
         </v-data-table-server>
       </v-card>
 
-      <v-card>
-        <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup.esc="closeFilterModal">
-          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="450"
-                  class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
-            <div class="d-flex justify-space-between align-center mb-2">
-              <span>Фильтр</span>
-            </div>
-            <v-form class="d-flex w-100" @submit.prevent="">
-              <v-row class="w-100">
-                <v-col class="d-flex flex-column w-100 ga-4">
-                  <div class="d-flex ga-2 w-100 ">
-                    <custom-text-field label="Дата" type="date" min-width="508"  v-model="filterForm.date"/>
-                  </div>
-                  <div class="d-flex ga-2">
-                    <custom-autocomplete label="Организация" :items="organizations"  v-model="filterForm.organization_id"/>
-                    <custom-autocomplete label="Клиент" :items="counterparties" v-model="filterForm.counterparty_id"/>
-                  </div>
-                  <div class="d-flex ga-2">
-                    <custom-autocomplete label="Склад" :items="storages" v-model="filterForm.storage_id"/>
-                    <custom-autocomplete label="Валюта" :items="currencies" v-model="filterForm.currency_id"/>
-                  </div>
-                  <div class="d-flex ga-2">
-                    <custom-autocomplete label="Автор" :items="authors" v-model="filterForm.author_id"/>
-                    <custom-autocomplete label="Договор" :items="counterpartyAgreements" v-model="filterForm.counterparty_agreement_id"/>
-                  </div>
-                  <div class="d-flex justify-end ga-2">
-                    <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-                    <v-btn :color="BASE_COLOR" class="btn"  @click="getClientReturnData">применить</v-btn>
-                  </div>
-                </v-col>
-              </v-row>
-            </v-form>
-          </v-card>
-        </v-dialog>
-      </v-card>
-    </v-col>
+      <filter-canvas>
+        <div class="d-flex flex-column ga-2 w-100 ">
+          <custom-text-field label="Дата от" type="date" min-width="508"  v-model="filterForm.startDate"/>
+          <custom-text-field label="Дата до" type="date" min-width="508"  v-model="filterForm.endDate"/>
+        </div>
+        <div class="d-flex ga-2">
+          <custom-autocomplete label="Статус" :items="statusOptions" v-model="filterForm.active"/>
+          <custom-autocomplete label="Удалён" :items="deletionStatuses" v-model="filterForm.deleted"/>
+        </div>
+        <div class="d-flex ga-2">
+          <custom-autocomplete label="Организация" :items="organizations"  v-model="filterForm.organization_id"/>
+          <custom-autocomplete label="Клиент" :items="counterparties" v-model="filterForm.counterparty_id"/>
+        </div>
+        <div class="d-flex ga-2">
+          <custom-autocomplete label="Склад" :items="storages" v-model="filterForm.storage_id"/>
+          <custom-autocomplete label="Валюта" :items="currencies" v-model="filterForm.currency_id"/>
+        </div>
+        <div class="d-flex ga-2">
+          <custom-autocomplete label="Автор" :items="authors" v-model="filterForm.author_id"/>
+          <custom-autocomplete label="Договор" :items="counterpartyAgreements" v-model="filterForm.counterparty_agreement_id"/>
+        </div>
+        <div class="d-flex justify-end ga-2">
+          <div class="d-flex ga-2" style="margin-right: -6%;">
+            <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
+            <v-btn :color="BASE_COLOR" class="btn"  @click="() => {getClientReturnData(); useFilterCanvasVisible().closeFilterCanvas()}">применить</v-btn>
+          </div>
+        </div>
+      </filter-canvas>
   </div>
 
 

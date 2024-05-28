@@ -296,8 +296,8 @@ defineProps({
     </svg>
     <svg
       v-if="name === 'filter'"
-      width="22"
-      height="22"
+      width="32"
+      height="32"
       viewBox="0 0 14 13"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -326,6 +326,16 @@ defineProps({
         stroke-linejoin="round"
       />
     </svg>
+    <!-- <button v-if="name === 'save'"
+     class="btn"
+     style="font-size: 12px;
+     padding: 4px 10px;
+     background: #0b093c;
+     color: #fff;
+     border-radius: 4px;
+     border: 1px solid #060526">
+      Сохранить
+    </button> -->
     <svg
       v-if="name === 'close'"
       width="18"
@@ -339,6 +349,10 @@ defineProps({
         fill="#F24E1E"
       />
     </svg>
+    <!-- <button v-if="name === 'close'" class="btn"
+     style="">
+      Закрыть
+    </button> -->
     <svg
       v-if="name === 'checked'"
       width="14"
@@ -494,4 +508,17 @@ defineProps({
   </span>
 </template>
 
-<style scoped></style>
+<style scoped>
+.btn {
+  font-size: 12px;
+  padding: 4px 10px;
+  background: #ffffff;
+  border-radius: 4px;
+  border: 1px #CCCCCC solid
+}
+
+.btn:hover {
+  opacity: 0.8;
+}
+
+</style>

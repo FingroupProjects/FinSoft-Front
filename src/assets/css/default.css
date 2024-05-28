@@ -1,3 +1,8 @@
+
+* {
+    font-family: "Inter", sans-serif;
+}
+
 .custom_input {
   font-size: 14px;
   width: 100%;
@@ -13,6 +18,10 @@ body{
 
 .custom_input::placeholder {
   color: #757575;
+}
+
+.calcWidth {
+  width:  calc(100vw - 90px);
 }
 
 .table {
@@ -32,6 +41,7 @@ body{
 .filterElement {
   position: relative;
 }
+
 .countFilter {
   position: absolute;
   top: -5px;
@@ -47,16 +57,8 @@ body{
   color: white;
 }
 
-.text_label {
-  font-size: 14px;
-}
-
 .text_label:active {
   font-size: 10px !important;
-}
-
-label {
-  font-size: 14px !important;
 }
 
 .v-select__menu-icon {
@@ -89,4 +91,77 @@ label {
 
 .date .v-field__input {
   display: block !important
+}
+
+.v-data-table-header__content {
+  font-weight: 600 !important;
+  color: #524ED8;
+}
+
+.v-selection-control--density-default {
+  --v-selection-control-size: 40px;
+  color: #524ed8;
+}
+
+.custom_search .v-field.v-field--prepended {
+  --v-field-padding-start: 6px;
+  height: 49.6px !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 14px !important;
+}
+
+.v-list-item-title {
+  z-index: 999999999 !important;
+  font-size: 18px !important;
+}
+
+.v-list-item--density-default.v-list-item--one-line {
+  min-height: 34px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.fz-12 {
+  font-size: 12px !important;
+}
+
+.v-table > .v-table__wrapper > table > tbody > tr > td, .v-table > .v-table__wrapper > table > tbody > tr > th, td, .v-table > .v-table__wrapper > table > thead > tr > th, .v-table > .v-table__wrapper > table > tfoot > tr > td, .v-table > .v-table__wrapper > table > tfoot > tr > th {
+  padding: 15px;
+  font-size: 16px;
+}
+
+.blackout_page {
+  position: absolute;
+  z-index: 99;
+  background-color: rgba(0, 0, 0, 0.3);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.modal_create_based {
+  position: absolute;
+  z-index: 99999;
+}
+
+.switcher {
+  background-color: #d9dce2;
+  padding: 8px 16px;
+  display: flex;
+  gap: 10px;
+  width: 290px;
+  border-radius: 12px;
+}
+
+.button {
+  padding: 8px 10px;
+  transition: all 400ms ease-in-out;
+}
+.active {
+  background-color: #4f4cd1;
+  border-radius: 12px;
+  color: white;
 }

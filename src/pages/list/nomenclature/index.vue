@@ -8,7 +8,13 @@ import groupApi from "../../../api/list/goodGroup";
 import { useRoute, useRouter } from "vue-router";
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
-import { FIELD_COLOR, BASE_COLOR } from "../../../composables/constant/colors.js";
+import {
+  FIELD_COLOR,
+  BASE_COLOR,
+  TITLE_COLOR,
+  FIELD_OF_SEARCH,
+} from "../../../composables/constant/colors.js";
+import Button from "../../../components/button/button.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import {
   ErrorSelectMessage,
@@ -52,6 +58,39 @@ const headers = ref([{ title: "Товар", key: "name" }]);
 const Groupheaders = ref([
   { title: "№", key: "id" },
   { title: "Наименование", key: "name" },
+]);
+
+const headerButtons = ref([
+  {
+    name: "group",
+    function: () => {
+      isCreateGroup.value = true;
+    },
+  },
+  {
+    name: "create",
+    function: () => {
+      goToCreate();
+    },
+  },
+  {
+    name: "copy",
+    function: async () => {
+      createOnBase();
+    },
+  },
+  {
+    name: "delete",
+    function: () => {
+      compute({ page, itemsPerPage, sortBy, search });
+    },
+  },
+  {
+    name: "excel",
+    function: () => {
+      getExcel();
+    },
+  },
 ]);
 
 const filterForm = ref({
@@ -267,116 +306,220 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
 </script>
 
 <template>
-  <div>
-    <v-col>
-      <div class="d-flex justify-space-between text-uppercase">
-        <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Номенклатура</span>
-        </div>
-        <v-card variant="text" min-width="488" class="d-flex align-center ga-2">
-          <div class="d-flex w-100">
-            <div class="d-flex align-center ga-2 me-3">
-              <button
-                style="
-                  background-color: #6bd68a;
-                  border-radius: 8px;
-                  white-space: nowrap;
-                  height: 32px;
-                  padding: 0px 4px;
-                  font-size: 12px;
-                  color: white;
-                  text-transform: uppercase;
-                "
-                @click="isCreateGroup = true"
-              >
-                <span class="px-2 pb-0">создать группу</span>
-              </button>
-              <Icons
-                v-if="createAccess('nomenclature')"
-                @click="goToCreate()"
-                name="add"
-                title="Создать"
-              />
-              <Icons
-                v-if="createAccess('nomenclature')"
-                @click="createOnBase()"
-                name="copy"
-                title="Скопировать"
-              />
-              <Icons
-                v-if="removeAccess('nomenclature')"
-                @click="compute({ page, itemsPerPage, sortBy, search })"
-                name="delete"
-                title="Удалить"
-              />
-            </div>
-            <div class="w-100">
-              <v-text-field
-                v-model="search"
-                prepend-inner-icon="search"
-                base-:color="BASE_COLOR"
-                density="compact"
-                label="Поиск..."
-                variant="outlined"
-                :color="BASE_COLOR"
-                rounded="lg"
-                clear-icon="close"
-                hide-details
-                single-line
-                clearable
-                flat
-              ></v-text-field>
-            </div>
-          </div>
-          <div class="filterElement">
-            <Icons
-              name="filter"
-              title="фильтр"
-              @click="isFilter = true"
-              class="mt-1"
-            />
-
-            <span v-if="count !== 0" class="countFilter">{{ count }}</span>
-          </div>
-        </v-card>
+  <div class="pa-4">
+    <div class="d-flex justify-space-between calcWidth">
+      <div class="d-flex align-center ga-2 pe-2 ms-4">
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }"> Товар </span>
       </div>
-      <div class="d-flex ga-4">
-        <v-card class="table mt-2 w-50">
-          <v-data-table-server
-            style="height: 78vh"
-            fixed-header
-            :items="groups"
-            :headers="Groupheaders"
-            :loading="loadingGroup"
-            items-per-page-text="Элементов на странице:"
-            loading-text="Загрузка"
-            no-data-text="Нет данных"
-            :search="search"
-            @update:options="getGroups"
-            v-model:items-per-page="Grouppagination.per_page"
-            :items-length="Grouppagination.total || 0"
-            :item-value="headers.title"
-            hover
-            fixed-footer
-            page-text="{0}-{1} от {2}"
-            :items-per-page-options="[
-              { value: 25, title: '25' },
-              { value: 50, title: '50' },
-              { value: 100, title: '100' },
-            ]"
-          >
-            <template v-slot:loadingGroup>
-              <v-skeleton-loader type="table-row@9"></v-skeleton-loader>
-            </template>
-            <template v-slot:item="{ item, index }">
-              <tr
-                @mouseenter="hoveredRowIndex = index + 100000"
-                @mouseleave="hoveredRowIndex = null"
-                @dblclick="editGroup(item)"
-                @click="lineMarkingGroup(item.id)"
-                :class="{ 'bg-grey-lighten-2': item.id === groupIdRef }"
-              >
-                <td>
+      <div class="d-flex justify-between ga-2">
+        <div class="d-flex justify-end mb-3">
+          <div class="d-flex ga-2 position-relative">
+            <Button
+              v-for="(button, idx) in headerButtons"
+              :name="button.name"
+              :key="idx"
+              @click="button.function"
+            />
+          </div>
+        </div>
+        <div class="custom_search">
+          <v-text-field
+            style="width: 190px"
+            v-model="search"
+            prepend-inner-icon="search"
+            density="compact"
+            label="Поиск..."
+            variant="outlined"
+            :color="BASE_COLOR"
+            rounded="lg"
+            :base-color="FIELD_OF_SEARCH"
+            clear-icon="close"
+            hide-details
+            single-line
+            :append-inner-icon="search ? 'close' : ''"
+            @click:append-inner="search = ''"
+            flat
+          />
+        </div>
+
+        <div class="mt-1 filterElement">
+          <Icons
+            name="filter"
+            title="Фильтр"
+            @click="useFilterCanvasVisible().toggleFilterCanvas()"
+            class="mt-1"
+          />
+          <span v-if="count !== 0" class="countFilter">{{ count }}</span>
+        </div>
+      </div>
+      <!-- <v-card variant="text" min-width="488" class="d-flex align-center ga-2">
+        <div class="d-flex w-100">
+          <div class="d-flex align-center ga-2 me-3">
+            <button
+              style="
+                background-color: #6bd68a;
+                border-radius: 8px;
+                white-space: nowrap;
+                height: 32px;
+                padding: 0px 4px;
+                font-size: 12px;
+                color: white;
+                text-transform: uppercase;
+              "
+              @click="isCreateGroup = true"
+            >
+              <span class="px-2 pb-0">создать группу</span>
+            </button>
+            <Icons
+              v-if="createAccess('nomenclature')"
+              @click="goToCreate()"
+              name="add"
+              title="Создать"
+            />
+            <Icons
+              v-if="createAccess('nomenclature')"
+              @click="createOnBase()"
+              name="copy"
+              title="Скопировать"
+            />
+            <Icons
+              v-if="removeAccess('nomenclature')"
+              @click="compute({ page, itemsPerPage, sortBy, search })"
+              name="delete"
+              title="Удалить"
+            />
+          </div>
+          <div class="w-100">
+            <v-text-field
+              v-model="search"
+              prepend-inner-icon="search"
+              base-:color="BASE_COLOR"
+              density="compact"
+              label="Поиск..."
+              variant="outlined"
+              :color="BASE_COLOR"
+              rounded="lg"
+              clear-icon="close"
+              hide-details
+              single-line
+              clearable
+              flat
+            ></v-text-field>
+          </div>
+        </div>
+        <div class="filterElement">
+          <Icons
+            name="filter"
+            title="фильтр"
+            @click="isFilter = true"
+            class="mt-1"
+          />
+
+          <span v-if="count !== 0" class="countFilter">{{ count }}</span>
+        </div>
+      </v-card> -->
+    </div>
+    <div class="d-flex ga-4">
+      <v-card class="table w-50">
+        <v-data-table-server
+          style="height: calc(100vh - 150px)"
+          fixed-header
+          :items="groups"
+          :headers="Groupheaders"
+          :loading="loadingGroup"
+          items-per-page-text="Элементов на странице:"
+          loading-text="Загрузка"
+          no-data-text="Нет данных"
+          :search="search"
+          @update:options="getGroups"
+          v-model:items-per-page="Grouppagination.per_page"
+          :items-length="Grouppagination.total || 0"
+          :item-value="headers.title"
+          hover
+          fixed-footer
+          page-text="{0}-{1} от {2}"
+          :items-per-page-options="[
+            { value: 25, title: '25' },
+            { value: 50, title: '50' },
+            { value: 100, title: '100' },
+          ]"
+        >
+          <template v-slot:loadingGroup>
+            <v-skeleton-loader type="table-row@9"></v-skeleton-loader>
+          </template>
+          <template v-slot:item="{ item, index }">
+            <tr
+              @mouseenter="hoveredRowIndex = index + 100000"
+              @mouseleave="hoveredRowIndex = null"
+              @dblclick="editGroup(item)"
+              @click="lineMarkingGroup(item.id)"
+              :class="{ 'bg-grey-lighten-2': item.id === groupIdRef }"
+            >
+              <td>
+                <span class="d-flex align-center">
+                  <Icons
+                    style="margin-right: 10px; margin-top: 4px"
+                    :name="item.deleted_at === null ? 'valid' : 'inValid'"
+                  />
+                  <span>{{ item.id }}</span>
+                </span>
+              </td>
+              <td>
+                <span>{{ item.name }}</span>
+              </td>
+            </tr>
+          </template>
+        </v-data-table-server>
+      </v-card>
+      <v-card class="table w-100">
+        <v-data-table-server
+          style="height: calc(100vh - 150px)"
+          fixed-header
+          :items="goods"
+          :headers="headers"
+          :loading="loading"
+          items-per-page-text="Элементов на странице:"
+          loading-text="Загрузка"
+          no-data-text="Нет данных"
+          :search="search"
+          @update:options="getGoods"
+          v-model:items-per-page="pagination.per_page"
+          :items-length="pagination.total || 0"
+          :item-value="headers.title"
+          show-select
+          v-model="markedID"
+          hover
+          fixed-footer
+          page-text="{0}-{1} от {2}"
+          :items-per-page-options="[
+            { value: 25, title: '25' },
+            { value: 50, title: '50' },
+            { value: 100, title: '100' },
+          ]"
+        >
+          <template v-slot:loading>
+            <v-skeleton-loader type="table-row@9"></v-skeleton-loader>
+          </template>
+          <template v-slot:item="{ item, index }">
+            <tr
+              @mouseenter="hoveredRowIndex = index"
+              @mouseleave="hoveredRowIndex = null"
+              @dblclick="editItem(item.id)"
+              :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
+            >
+              <td>
+                <template
+                  v-if="hoveredRowIndex === index || markedID.includes(item.id)"
+                >
+                  <CustomCheckbox
+                    :checked="markedID.includes(item.id)"
+                    @change="lineMarking(item)"
+                  >
+                    <span>{{ item.id }}</span>
+                  </CustomCheckbox>
+                </template>
+
+                <template v-else>
                   <span class="d-flex align-center">
                     <Icons
                       style="margin-right: 10px; margin-top: 4px"
@@ -384,101 +527,33 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
                     />
                     <span>{{ item.id }}</span>
                   </span>
-                </td>
-                <td>
-                  <span>{{ item.name }}</span>
-                </td>
-              </tr>
-            </template>
-          </v-data-table-server>
-        </v-card>
-        <v-card class="table mt-2 w-100">
-          <v-data-table-server
-            style="height: 78vh"
-            fixed-header
-            :items="goods"
-            :headers="headers"
-            :loading="loading"
-            items-per-page-text="Элементов на странице:"
-            loading-text="Загрузка"
-            no-data-text="Нет данных"
-            :search="search"
-            @update:options="getGoods"
-            v-model:items-per-page="pagination.per_page"
-            :items-length="pagination.total || 0"
-            :item-value="headers.title"
-            show-select
-            v-model="markedID"
-            hover
-            fixed-footer
-            page-text="{0}-{1} от {2}"
-            :items-per-page-options="[
-              { value: 25, title: '25' },
-              { value: 50, title: '50' },
-              { value: 100, title: '100' },
-            ]"
-          >
-            <template v-slot:loading>
-              <v-skeleton-loader type="table-row@9"></v-skeleton-loader>
-            </template>
-            <template v-slot:item="{ item, index }">
-              <tr
-                @mouseenter="hoveredRowIndex = index"
-                @mouseleave="hoveredRowIndex = null"
-                @dblclick="editItem(item.id)"
-                :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
-              >
-                <td>
-                  <template
-                    v-if="
-                      hoveredRowIndex === index || markedID.includes(item.id)
-                    "
-                  >
-                    <CustomCheckbox
-                      @click="lineMarking(item)"
-                      :checked="markedID.includes(item.id)"
-                      @change="lineMarking(item)"
-                    >
-                      <span>{{ item.id }}</span>
-                    </CustomCheckbox>
-                  </template>
-
-                  <template v-else>
-                    <span class="d-flex align-center">
-                      <Icons
-                        style="margin-right: 10px; margin-top: 4px"
-                        :name="item.deleted_at === null ? 'valid' : 'inValid'"
-                      />
-                      <span>{{ item.id }}</span>
-                    </span>
-                  </template>
-                </td>
-                <td>
-                  <span>{{ item.name }}</span>
-                </td>
-              </tr>
-            </template>
-          </v-data-table-server>
-        </v-card>
-      </div>
-      <div v-if="isCreateGroup">
-        <keep-alive>
-          <createGroup
-            @toggleDialog="
-              isCreateGroup = false;
-              isEditGroup = false;
-              isFilter = false;
-              filterForm = {};
-            "
-            @filter="filterGroup"
-            :isEditGroup="isEditGroup"
-            :filterForm="filterForm"
-            :groupData="groupData"
-            :isFilter="isFilter"
-          />
-        </keep-alive>
-      </div>
-    </v-col>
+                </template>
+              </td>
+              <td>
+                <span>{{ item.name }}</span>
+              </td>
+            </tr>
+          </template>
+        </v-data-table-server>
+      </v-card>
+    </div>
+    <div v-if="isCreateGroup">
+      <keep-alive>
+        <createGroup
+          @toggleDialog="
+            isCreateGroup = false;
+            isEditGroup = false;
+            isFilter = false;
+            filterForm = {};
+          "
+          @filter="filterGroup"
+          :isEditGroup="isEditGroup"
+          :filterForm="filterForm"
+          :groupData="groupData"
+          :isFilter="isFilter"
+        />
+      </keep-alive>
+    </div>
   </div>
 </template>
 

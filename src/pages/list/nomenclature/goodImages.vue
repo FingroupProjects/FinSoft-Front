@@ -5,7 +5,7 @@ import goodsApi from "../../../api/list/goods";
 import showToast from "../../../composables/toast";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import { FIELD_COLOR } from "../../../composables/constant/colors.js";
+import { FIELD_COLOR, BASE_COLOR } from "../../../composables/constant/colors.js";
 import {
   ErrorSelectMessage,
   removeMessage,
@@ -130,15 +130,15 @@ const createImage = async () => {
     const formData = new FormData();
     formData.append("image", imageRef.value);
     formData.append("good_id", route.params.id);
-    formData.append("is_main", a.value ? 1 : 0);
-
+    formData.append("is_main", a.value === true ? 1 : 0);
+    console.log(a.value,'000');
     const { data } = await goodsApi.createImage(formData);
     isCreate.value = false;
     a.value = false;
     showToast(addMessage, "green");
     await getImages({});
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -153,7 +153,7 @@ const getImages = async ({ page, itemsPerPage }) => {
     pagination.value = data.result.pagination;
     loading.value = false;
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -162,7 +162,6 @@ const delImg = async () => {
     if (markedItem.value) {
       imageId.value = markedItem.value.id;
     }
-    console.log(imageId.value);
     const { data } = await goodsApi.deleteImage(imageId.value);
     showToast(removeMessage, "red");
     markedID.value = [];
@@ -170,7 +169,7 @@ const delImg = async () => {
     preview.value = false;
     await getImages({ page: 1, itemsPerPage: 25 });
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -334,7 +333,7 @@ onMounted(async () => {
                 </div>
               </div>
               <div v-if="!preview" class="mt-2">
-                <CustomCheckbox :checked="a" v-model="a"
+                <CustomCheckbox :checked="a" @change="a = !a"
                   >Главная
                 </CustomCheckbox>
               </div>

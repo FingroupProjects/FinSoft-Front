@@ -15,10 +15,17 @@ import moveApi from "../../../api/documents/move.js";
 import goodApi from "../../../api/list/goods.js";
 import { editMessage } from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
+import {BASE_COLOR , TITLE_COLOR} from "../../../composables/constant/colors.js";
+import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
+import formatDateTime from "../../../composables/date/formatDateTime.js";
+import Button from "../../../components/button/button.vue";
+import goToHistory from "../../../composables/movementByPage/goToHistory.js";
+import goToPrint from "../../../composables/movementByPage/goToPrint.js";
 import showDate from "../../../composables/date/showDate.js";
-import {BASE_COLOR} from "../../../composables/constant/colors.js";
 
+const useOrganization = ref(useHasOneOrganization()) 
 const router = useRouter()
+const doc_name = ref('Перемещение товаров')
 const route = useRoute()
 
 const form = reactive({
@@ -31,7 +38,7 @@ const form = reactive({
   sender_storage: null,
   sender_storages: [],
   recipient_storage: null,
-  recipient_storage: [],
+  recipient_storages: [],
   comment: null,
 })
 
@@ -99,18 +106,13 @@ const getRecipientStorage = async () => {
   const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   storages.value = data.result.data
 }
-
-
-
 const getGoods = async () => {
   const { data } = await goodApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   listGoods.value = data.result.data
 }
-
 const decreaseCountOfGoods = () => {
   goods.value = goods.value.filter((item) => !markedID.value.includes(item.id))
 }
-
 const lineMarking = (item) => {
   const index = markedID.value.indexOf(item.id);
   if (index !== -1) {
@@ -121,7 +123,6 @@ const lineMarking = (item) => {
     }
   }
 }
-
 const increaseCountOfGoods = () => {
   const missingData = goods.value.some(validateItem)
   if (missingData) return
@@ -142,13 +143,17 @@ const validateItem = (item) => {
 }
 
 const updateMove = async () => {
-  if (validate(form.date, form.organization, form.sender_storage, form.recipient_storage ) !== true) return
+  if (validate(form.date,form.sender_storage, form.recipient_storage ) !== true) return
 
   const missingData = goods.value.some(validateItem)
   if (missingData) return
+ 
+  if (useOrganization.value.getIsHasOneOrganization) {
+    form.organization = useOrganization.value.getOrganization
+  }
 
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id: typeof form.organization === 'object' ? form.organization.id : form.organization,
     sender_storage_id: typeof form.sender_storage === 'object' ? form.sender_storage.id : form.sender_storage,
     recipient_storage_id: typeof form.recipient_storage === 'object' ? form.recipient_storage.id : form.recipient_storage,
@@ -192,12 +197,14 @@ const totalPriceWithSale = computed(() => {
 
   return sum
 })
-
+const closeWindow = () => {
+  window.close()
+}
 
 onMounted( () => {
   author.value = JSON.parse(localStorage.getItem('user')).name || null
 
-  Promise.all([
+   Promise.all([
       getOrganizations(),
       getStorages(),
       getGoods(),
@@ -206,58 +213,27 @@ onMounted( () => {
 
 })
 
-
-watch(() => form.counterparty, async (data) => {
-  form.cpAgreement = null
-
-  const id = typeof data === 'object' ? data.id : data
-
-  try {
-    const res = await cpAgreementApi.getById(id)
-    form.currency = {
-      id: res.data.result.currency_id.id,
-      name: res.data.result.currency_id.name
-    }
-
-    const array = Object.prototype.toString.call(res.data.result) === '[object Array]'
-    const obj = Object.prototype.toString.call(res.data.result) === '[object Object]'
-
-    cpAgreements.value = array ? res.data.result : obj ? [res.data.result] : []
-
-  } catch (e) {
-    cpAgreements.value = []
-  }
-})
-
-const isSaleIntegerDisabled = computed(() => !!form.salePercent);
-const isSalePercentDisabled = computed(() => !!form.saleInteger);
-
-watch(() => form.saleInteger, (newValue) => {
-  if (!newValue) {
-    form.salePercent = ''
-  }
-})
-
-watch(() => form.salePercent, (newValue) => {
-  if (!newValue) {
-    form.saleInteger = ''
-  }
-})
-
 </script>
 <template>
   <div class="document">
     <v-col>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Перемещение товаров (просмотр)</span>
+          <span>{{ doc_name }} (просмотр)</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="updateMove" name="add"/>
-              <Icons title="Скопировать" @click="" name="copy"/>
-              <Icons title="Удалить" @click="" name="delete"/>
+            <div class="d-flex items-center ga-2 mt-1 me-3">
+              <Button
+                  name="history"
+                  @click="goToHistory(router, route)"
+              />
+              <Button
+                  name="print"
+                  @click="goToPrint(router, route, doc_name)"
+              />
+              <Button name="save" @click="updateMove" />
+              <Button name="close" @click="closeWindow" />
             </div>
           </div>
         </v-card>
@@ -265,12 +241,12 @@ watch(() => form.salePercent, (newValue) => {
     </v-col>
     <v-divider/>
     <v-divider/>
-    <div style="background: #fff;">
+    <div style="height: calc(99vh - 116px); background: #fff">
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field  :value="form.doc_number"/>
-          <custom-text-field label="Дата" type="date" v-model="form.date"/>
-          <custom-autocomplete label="Организация" :items="organizations"  v-model="form.organization"/>
+          <custom-text-field label="Дата" type="datetime-local" class="date" v-model="form.date"/>
+          <custom-autocomplete  v-if="!useOrganization.getIsHasOneOrganization" label="Организация" :items="organizations"  v-model="form.organization"/>
           <custom-autocomplete label="Склад-отп" :items="storages" v-model="form.sender_storage"/>
           <custom-autocomplete label="Склад-пол" :items="storages" v-model="form.recipient_storage"/>
         </div>
@@ -283,7 +259,7 @@ watch(() => form.salePercent, (newValue) => {
           </div>
           <div class="d-flex flex-column w-100 goods">
             <v-data-table
-                style="height: 78vh"
+                style="height: calc(100vh - 300px)"
                 items-per-page-text="Элементов на странице:"
                 loading-text="Загрузка"
                 no-data-text="Нет данных"

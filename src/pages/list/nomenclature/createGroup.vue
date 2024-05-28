@@ -215,7 +215,6 @@ const rules = {
                   placeholder="Наименование"
                   label="Наименование"
                   clear-icon="close"
-                  autofocus
                   clearable
                   hide-details
                 />
