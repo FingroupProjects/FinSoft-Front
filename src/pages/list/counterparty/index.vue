@@ -303,7 +303,7 @@ const getCurrencies = async () => {
 
 const getExcel = async () => {
   try {
-    const { data } = await counterpartyApi.excel();
+    const { data } = await counterpartyApi.excel(filterForm.value);
     const url = window.URL.createObjectURL(
       new Blob([data], { type: "application/vnd.ms-excel" })
     );
