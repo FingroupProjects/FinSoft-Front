@@ -472,23 +472,25 @@ const addBasedOnUser = () => {
   dialog.value = true
   console.log(users.value)
   console.log(markedID.value[0])
-  users.value.forEach(item => {
-    if (markedID.value[0] === item.id) {
-      console.log(item, 'item')
-      fioRef.value = item.name
-      loginRef.value = item.login
-      phoneRef.value = item.phone
-      statusRef.value = item.status
-      emailRef.value = item.email
+  groups.value.forEach(el => {
+   el.users.forEach(item => {
+     if (markedID.value[0] === item.id) {
+       console.log(item, 'item')
+       fioRef.value = item.name
+       loginRef.value = item.login
+       phoneRef.value = item.phone
+       statusRef.value = item.status
+       emailRef.value = item.email
 
-      group.value = {
-        ...item.group
-      }
+       group.value = {
+         ...item.group
+       }
 
-      organization.value = {
-        ...item.organization
-      }
-    }
+       organization.value = {
+         ...item.organization
+       }
+     }
+   })
   })
 
 }
@@ -535,6 +537,7 @@ const closeFilterDialog = () => {
 
 const toggleGroup = async () => {
   isCreateGroup.value = false
+  markedID.value = []
   await getGroups()
 }
 
@@ -741,6 +744,7 @@ onMounted(async () => {
               <div class="d-flex align-center ga-2">
                 <CustomCheckbox
                     v-model="markedID"
+                    :checked="markedID.includes(user.id)"
                     @change="lineMarking(user)"
                 >
                 </CustomCheckbox>
