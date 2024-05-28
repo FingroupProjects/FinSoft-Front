@@ -335,7 +335,7 @@ const removeCurrency = async ({page, itemsPerPage, sortBy}) => {
       dialog.value = false
       markedID.value = []
     }
-  } catch (e) {
+  } catch (e) { 
     console.error(e)
   }
 }
