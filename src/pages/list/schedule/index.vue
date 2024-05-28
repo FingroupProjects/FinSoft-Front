@@ -197,10 +197,10 @@ const cleanForm = () => {
   nameRef.value = null;
 };
 
-const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
+const  closeFilterModal = async () => {
   filterModal.value = false
   filterForm.value = {}
-  await getScheduleData({page, itemsPerPage, sortBy, search})
+  await getScheduleData()
 }
 
 const addSchedule = async () => {
@@ -266,12 +266,12 @@ const update = async ({page, itemsPerPage, sortBy, search}) => {
 }
 
 
-const removeSchedule = async ({page, itemsPerPage, sortBy}) => {
+const removeSchedule = async () => {
   try {
     const {status} = await schedule.remove({ids: markedID.value})
     if (status === 200) {
       showToast(removeMessage, 'red')
-      await getScheduleData({page, itemsPerPage, sortBy})
+      await getScheduleData()
       dialog.value = false
       markedID.value = []
     }
@@ -280,12 +280,12 @@ const removeSchedule = async ({page, itemsPerPage, sortBy}) => {
   }
 }
 
-const restoreSchedule = async ({page, itemsPerPage, sortBy}) => {
+const restoreSchedule = async () => {
   try {
     const {status} = await schedule.restore({ids: markedID.value})
     if (status === 200) {
       showToast(restoreMessage)
-      await getScheduleData({page, itemsPerPage, sortBy})
+      await getScheduleData()
       markedID.value = []
     }
   } catch (e) {
@@ -357,11 +357,11 @@ const handleCheckboxClick = (item) => {
   lineMarking(item)
 }
 
-const compute = ({page, itemsPerPage, sortBy, search}) => {
+const compute = () => {
   if (markedItem.value.deleted_at !== null) {
-    return restoreSchedule({page, itemsPerPage, sortBy})
+    return restoreSchedule()
   } else {
-    return removeSchedule({page, itemsPerPage, sortBy, search})
+    return removeSchedule()
   }
 }
 
@@ -436,7 +436,7 @@ onMounted(() => {
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex justify-end w-100">
             <div class="d-flex ga-2 me-3 mb-1 ">
-              <Button name="save1" v-if="createAccess('currency')" @click="openDialog(0)" />
+              <Button name="create" v-if="createAccess('currency')" @click="openDialog(0)" />
               <Button name="copy" v-if="createAccess('currency')" @click="" />
               <Button name="delete" v-if="removeAccess('currency')" @click="compute" />
             </div>
@@ -495,22 +495,19 @@ onMounted(() => {
             hover
         >
         <template v-slot:item="{ item, index }">
-              <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)"
+              <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null"
                   @dblclick="openDialog(item)"
                   :class="{'bg-grey-lighten-1': markedID.includes(item.id) }">
                 <td>
-                  <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
-                    <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)"
-                                    @change="handleCheckboxClick(item)">
-                      <span>{{ index + 1 }}</span>
-                    </CustomCheckbox>
-                  </template>
-                  <template v-else>
-                    <div class="d-flex align-center">
-                      <Icons style="margin-right: 10px; margin-top: 4px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
-                      <span>{{ index + 1 }}</span>
-                    </div>
-                  </template>
+                  <CustomCheckbox
+                      v-model="markedID"
+                      :checked="markedID.includes(item.id)"
+                      @change="handleCheckboxClick(item)"
+                      @click="lineMarking(item)"
+                  >
+                    <span>{{ index + 1 }}</span>
+                  </CustomCheckbox>
+
                 </td>
                 <td>{{ item.name }}</td>
               </tr>

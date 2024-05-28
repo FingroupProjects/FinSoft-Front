@@ -37,3 +37,14 @@ export const DOCUMENT_ITEMS = [
     id: 8,
   },
 ];
+
+export const markedForDeletion = [
+  {
+    name: 'Да',
+    id: 1
+  },
+  {
+    name: 'Нет',
+    id: 0
+  }
+]

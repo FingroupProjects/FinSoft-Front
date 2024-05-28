@@ -75,7 +75,7 @@ onMounted(() => {
           </span>
           <li
               @click="push(child)"
-              :class="child.link === $route.path ? 'active' : ''"
+              :class="child.link === $route.path ? 'active_list' : ''"
               class="d-flex align-center ga-4"
               v-for="child in list.child"
               :key="child.id"
@@ -165,7 +165,7 @@ onMounted(() => {
   width: 8px;
 }
 
-.active {
+.active_list {
   color: #08072e;
   font-weight: 600;
 }

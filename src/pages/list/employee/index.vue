@@ -353,7 +353,7 @@ const addBasedOnEmployee = () => {
   if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
   if (markedID.value.length > 1) return showToast(selectOneItemMessage, 'warning')
   dialog.value = true
-
+  console.log(employees.value)
   employees.value.forEach(item => {
     if (markedID.value[0] === item.id) {
       nameRef.value = item.name

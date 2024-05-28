@@ -4,11 +4,10 @@ export default {
   add(data) {
     return  api.post('/user', data)
   },
-    get({page = 1, itemsPerPage = 10, sortBy}, search = '', filterData) {
+  get({page = 1, itemsPerPage = 10, sortBy}, search = '', filterData) {
     const params = buildParams(page, itemsPerPage, sortBy, search, filterData);
     return api.get('/user', { params });
   },
-
   getAuthors() {
     return api.get('/document/document-author');
   },
@@ -30,4 +29,9 @@ export default {
   deleteImage(id) {
     return api.delete(`/user/delete-image/${id}`)
   },
+  excel() {
+    return api.get('/users/export', {
+      responseType: 'blob'
+    })
+  }
 }
