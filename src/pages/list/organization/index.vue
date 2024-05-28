@@ -23,8 +23,8 @@ import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
 import {useFilterCanvasVisible} from "../../../store/canvasVisible.js";
 import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
 import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
-import {createAccess, readAccess, removeAccess, updateAccess} from "../../../composables/access/access.js";
 import {markedForDeletion} from "../../../composables/constant/items.js";
+import {createAccess, readAccess, removeAccess, updateAccess} from "../../../composables/access/access.js";
  
 const showConfirmDialog = ref(false);
 const router = useRouter();

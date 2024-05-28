@@ -45,7 +45,7 @@ const organizationAdd = ref(null);
 const currencies = ref([]);
 
 const currencyAdd = ref(null);
-const organizations = ref(null);
+const organizations = ref([]);
 
 const isExistsOrganizationBill = ref(false);
 const markedID = ref([]);
@@ -733,10 +733,10 @@ onMounted(() => {
         </div> 
         <div class="d-flex flex-column ga-4 w-100">
           <custom-filter-text-field min-width="106" v-model="filterForm.bill_number" label="Номер счёта"/>
-          <custom-filter-autocomplete min-width="106" v-model="filterForm.currency_id" label="Валюта"/>
+          <custom-filter-autocomplete min-width="106" v-model="filterForm.currency_id" :items="currencies"  label="Валюта"/>
         </div>  
         <div class="d-flex flex-column ga-4 w-100">
-          <custom-filter-autocomplete min-width="106"  v-model="filterForm.organization_id" label="Организация"/>
+          <custom-filter-autocomplete min-width="106"  v-model="filterForm.organization_id" :items="organizations" label="Организация"/>
           <custom-filter-text-field min-width="106" v-model="filterForm.comment" label="Комментарий"/>
           <custom-filter-autocomplete min-width="106"  label="Помечен на удаления" :items="deletionStatuses" v-model="filterForm.deleted" />
         </div>    
