@@ -470,9 +470,11 @@ const addBasedOnUser = () => {
   if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
   if (markedID.value.length > 1) return showToast(selectOneItemMessage, 'warning')
   dialog.value = true
-  console.log(users.value)
-  console.log(markedID.value[0])
   groups.value.forEach(el => {
+    group.value = {
+      id: el.id,
+      name: el.name
+    }
    el.users.forEach(item => {
      if (markedID.value[0] === item.id) {
        console.log(item, 'item')
@@ -481,10 +483,6 @@ const addBasedOnUser = () => {
        phoneRef.value = item.phone
        statusRef.value = item.status
        emailRef.value = item.email
-
-       group.value = {
-         ...item.group
-       }
 
        organization.value = {
          ...item.organization
