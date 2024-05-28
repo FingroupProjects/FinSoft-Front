@@ -24,7 +24,8 @@ import {useFilterCanvasVisible} from "../../../store/canvasVisible.js";
 import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
 import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
 import {createAccess, readAccess, removeAccess, updateAccess} from "../../../composables/access/access.js";
-
+import {markedForDeletion} from "../../../composables/constant/items.js";
+ 
 const showConfirmDialog = ref(false);
 const router = useRouter();
 const addDialog = ref(false);
@@ -60,8 +61,6 @@ const isEmployeeFieldDisabled = computed(() => {
   return !createAccess('employee') && !updateAccess('employee');
 });
 
-const deletionStatuses = ['нет', 'да'];
-
 const filterForm = ref({
   name: null,
   inn: null,
@@ -83,27 +82,12 @@ const headers = ref([
   { title: "Наименование", key: "name" },
 ]);
 
-const getOrganizationData = async ({
-  page = 1, 
-  itemsPerPage = 10, 
-  sortBy = 'id', 
-  search = ''
-} = {}) => {
+const getOrganizationData = async ({page = 1, itemsPerPage = 10, sortBy = 'id', search = ''} = {}) => {
   count.value = 0;
   countFilter();
-
-  const filterData = {
-    ...filterForm.value,
-    deleted: filterForm.value.deleted === 'да' ? 1 : 0,
-  };
-  filterModal.value = false;
-
+  loading.value = true
   try {
-    const { data } = await organization.get(
-      { page, itemsPerPage, sortBy },
-      search,
-      filterData
-    );
+    const { data } = await organization.get({ page, itemsPerPage, sortBy },search, filterForm.value);
     organizations.value = data.result.data;
     paginations.value = data.result.pagination;
     loading.value = false;
@@ -299,15 +283,14 @@ const lineMarking = (item) => {
   markedItem.value = item;
 };
 
-const compute = (params = {}) => {
-  const {page, itemsPerPage, sortBy, search} = params;
-  
-  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
-
-  if (markedItem.value.deleted_at) {
-    return restore({page, itemsPerPage, sortBy, search});
+const compute =  ( params ={}) => {
+  const {page, itemsPerPage, sortBy, search} = params
+  if (markedItem.value.deleted_at !== null) {
+    return restore({page, itemsPerPage, sortBy})
+  } else {
+    return remove({page, itemsPerPage, sortBy, search})
   }
-};
+}
 
 const getExcel = async () => {
   if(organization.value === null) {
@@ -505,9 +488,9 @@ onMounted(async () => {
           <div class="d-flex w-100">
             <div class="d-flex w-100">
           <div class="d-flex ga-2 mt-1 me-3 py-2">
-            <Button v-if="createAccess('organizationBill')" @click="openDialog(0)" name="create" title="Создать" />
-            <Button v-if="createAccess('organizationBill')" @click="addBasedOnOrganization" name="copy" title="Скопировать" />
-            <Button v-if="removeAccess('organizationBill')" @click="compute" name="delete" title="Удалить"/>
+            <Button v-if="createAccess('organizationBill')" @click="openDialog(0)" name="create"  />
+            <Button v-if="createAccess('organizationBill')" @click="addBasedOnOrganization" name="copy" />
+            <Button v-if="removeAccess('organizationBill')" @click="compute" name="delete"/>
             <Button name="excel" @click="getExcel()" />
           </div>
         </div>
@@ -744,13 +727,13 @@ onMounted(async () => {
         <custom-filter-text-field min-width="106" label="ИНН" v-model="filterForm.inn"/>
       </div>
       <div class="d-flex flex-column ga-2">
-        <custom-filter-autocomplete min-width="106" label="Директор"  v-model="filterForm.director_id"/>
-        <custom-filter-autocomplete min-width="106" label="Гл. бухгалтер" v-model="filterForm.chief_accountant_id"/>
+        <custom-filter-autocomplete min-width="106" label="Директор" :items="employees" v-model="filterForm.director_id"/>
+        <custom-filter-autocomplete min-width="106" label="Гл. бухгалтер" :items="employees"  v-model="filterForm.chief_accountant_id"/>
       </div>
       <div class="d-flex flex-column ga-2">
         <custom-filter-text-field min-width="106" label="Адрес" v-model="filterForm.address"/>
         <custom-filter-text-field min-width="106" label="Описание" v-model="filterForm.description"/>
-        <custom-filter-autocomplete min-width="106" label="Помечен на удаления" :items="deletionStatuses" v-model="filterForm.deleted"/>
+        <custom-filter-autocomplete min-width="106" label="Помечен на удаление" v-model="filterForm.deleted" :items="markedForDeletion"/>
       </div>
 
       <div class="d-flex justify-end ">
@@ -761,7 +744,7 @@ onMounted(async () => {
           <v-btn
               :color="BASE_COLOR"
               class="btn"
-              @click="() => {getOrganizationData(); useFilterCanvasVisible().closeFilterCanvas()}"
+              @click="() => {getOrganizationData({}); useFilterCanvasVisible().closeFilterCanvas()}"
           >применить</v-btn
           >
         </div>

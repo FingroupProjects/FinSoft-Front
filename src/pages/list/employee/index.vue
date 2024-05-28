@@ -581,25 +581,15 @@ watch(search, debounce((newValue) => {
             <div class="d-flex w-100">
               <div class="d-flex ga-2 mt-1 me-3 py-2">
             <Button
-            name="group"
-              style="
-                background-color: #6bd68a;
-                border-radius: 8px;
-                white-space: nowrap;
-                height: 32px;
-                padding: 0px 4px;
-                font-size: 12px;
-                color: white;
-                text-transform: uppercase;
-              "
+            name="group"               
               v-if="createAccess('employee')"
               @click="isCreateGroup = true"
             >
               <span class="px-2 pb-0">создать группу</span>
             </Button>
-            <Button v-if="createAccess('employee')" @click="openDialog(0)" name="create" title="Создать" />
-            <Button v-if="createAccess('employee')" @click="addBasedOnEmployee" name="copy" title="Скопировать" />
-            <Button v-if="removeAccess('employee')" @click="compute" name="delete" title="Удалить"/>
+            <Button v-if="createAccess('employee')" @click="openDialog(0)" name="create"  />
+            <Button v-if="createAccess('employee')" @click="addBasedOnEmployee" name="copy"  />
+            <Button v-if="removeAccess('employee')" @click="compute" name="delete" />
             <Button name="excel" @click="getExcel()" />
           </div>
         </div>

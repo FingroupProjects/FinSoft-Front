@@ -30,6 +30,8 @@ import getExcel from "../../../composables/otherQueries/getExcel.js";
 import getListColor from "../../../composables/displayed/getListColor.js";
 import getListStatus from "../../../composables/displayed/getListStatus.js";
 import {markedForDeletion} from "../../../composables/constant/items.js";
+import userGroup from "../../../api/list/userGroup.js";
+import englishSymbols from "../../../composables/format/onlyEnglishSymbols.js";
 
 const showModal = ref(false);
 const showConfirmDialog = ref(false);
@@ -95,7 +97,7 @@ const filterForm = ref({
 
 const groupBy = ref([
   {
-    key: "group.name",
+    key: "name",
     order: "asc",
   },
 ])
@@ -115,32 +117,31 @@ const rules = {
   required: v => !!v,
   email: (v) => /.+@.+\..+/.test(v),
   phone: (v) => v.length === 13,
+  password: (v) => v.length >= 6,
 }
 
 const isOrganizationFieldDisabled = computed(() => {
   return !createAccess('organization') && !updateAccess('organization');
 });
 
-
-const getUsers = async ({page, itemsPerPage, sortBy, search} = {}) => {
+const getGroups = async ({page, itemsPerPage, sortBy, search} = {}) => {
   count.value = 0;
   countFilter()
   loading.value = true
   try {
-    const {data} = await user.get({page, itemsPerPage, sortBy}, search, filterForm.value)
+    const {data} = await userGroup.get({page, itemsPerPage, sortBy}, search, filterForm.value);
+    groups.value = data.result.data
     paginations.value = data.result.pagination
-    users.value = data.result.data
     groupIdRef.value = 0
   } catch (e) {
-
+    console.error(e)
   } finally {
     loading.value = false
   }
 }
 
-
 const isDataChanged = () => {
-  const item = users.value.find(elem => elem.id === idUser.value)
+  const item = groups.value
 
   return fioRef.value !== item.name ||
       emailRef.value !== item.email ||
@@ -204,7 +205,7 @@ const closingWithSaving = async () => {
     );
     showModal.value = false
     if (isValid === true) {
-      await addUser({page: 1, itemsPerPage: 10, sortBy: 'id', search: null});
+      await addUser();
       dialog.value = false;
       showModal.value = false;
       showConfirmDialog.value = false;
@@ -254,7 +255,7 @@ const selectAvatar = event => {
   fileReader.readAsDataURL(files[0])
 }
 
-const addUser = async ({page, itemsPerPage, sortBy}) => {
+const addUser = async () => {
   if (validate(fioRef, organization, loginRef, passwordRef, phoneRef, emailRef, group) !== true) return
 
   let organizationValue;
@@ -289,7 +290,7 @@ const addUser = async ({page, itemsPerPage, sortBy}) => {
     const res = await user.add(formData)
 
     if (res.status === 201) {
-      await getUsers({page, itemsPerPage, sortBy,})
+      await getGroups()
       showToast(addMessage)
       idUser.value = res.data.result.id
       dialog.value = false
@@ -312,6 +313,8 @@ const addUser = async ({page, itemsPerPage, sortBy}) => {
     if (e.response.data.errors.group_id) {
       showToast(e.response.data.errors.group_id[0], "warning")
     }
+  } finally {
+    markedID.value = []
   }
 }
 
@@ -350,11 +353,13 @@ const update = async ({page, itemsPerPage, sortBy}) => {
     cleanForm()
     if (response.status === 200) {
       dialog.value = null
-      await getUsers({page, itemsPerPage, sortBy})
+      await getGroups()
       showToast(editMessage)
     }
   } catch (e) {
-
+    console.error(e)
+  } finally {
+    markedID.value = []
   }
 }
 
@@ -363,12 +368,13 @@ const remove = async () => {
     const {status} = await user.remove({ids: markedID.value})
     if (status === 200) {
       showToast(removeMessage, 'red')
-      await getUsers()
-      markedID.value = []
+      await getGroups()
       dialog.value = false
     }
   } catch (e) {
-
+    console.error(e)
+  } finally {
+    markedID.value = []
   }
 }
 
@@ -378,25 +384,26 @@ const restore = async () => {
 
     if (status === 200) {
       showToast(restoreMessage)
-      await getUsers()
-      markedID.value = []
+      await getGroups()
       dialog.value = false
     }
   } catch (e) {
-
+    console.error(e)
+  } finally {
+    markedID.value = []
   }
 }
 
 
 const closeFilterModal = async ({
-                                  page,
-                                  itemsPerPage,
-                                  sortBy,
-                                  search,
-                                  filterData,
-                                } = {}) => {
+      page,
+      itemsPerPage,
+      sortBy,
+      search,
+      filterData,
+    } = {}) => {
   filterModal.value = false;
-  await getUsers({page, itemsPerPage, sortBy, search, filterData});
+  await getGroups({page, itemsPerPage, sortBy, search, filterData});
   fioFilter.value = null;
   organizationFilter.value = null;
   loginFilter.value = null;
@@ -456,7 +463,7 @@ const openDialog = item => {
 const openGroupDialog = (item) => {
   isEditGroup.value = true
   isCreateGroup.value = true
-  group.value = item.items[0].raw.group
+  group.value = item.items[0].raw
 }
 
 const addBasedOnUser = () => {
@@ -523,12 +530,12 @@ const lineMarking = item => {
 const closeFilterDialog = () => {
   showModalDialog.value = false
   filterForm.value = {}
-  getUsers()
+  getGroups()
 }
 
 const toggleGroup = async () => {
   isCreateGroup.value = false
-  await getUsers()
+  await getGroups()
 }
 
 const deleteImage = async () => {
@@ -598,6 +605,13 @@ watch(isCreateGroup, newVal => {
 
 onMounted(async () => {
   await getOrganization()
+
+  try {
+    const {data} = await userGroup.get()
+    console.log(data)
+  } catch (e) {
+    console.error(e)
+  }
 })
 
 </script>
@@ -674,9 +688,9 @@ onMounted(async () => {
           :loading="loading"
           :headers="selectedBlock === 'По группам' ? headersGroup : headers"
           :items-length="paginations.total || 0"
-          :items="users"
+          :items="groups"
           :group-by="selectedBlock === 'По группам' ? groupBy : []"
-          @update:options="getUsers"
+          @update:options="getGroups"
           :search="search"
           page-text='{0}-{1} от {2}'
           :items-per-page-options="[
@@ -701,13 +715,13 @@ onMounted(async () => {
             </td>
             <td style="width: 390px;">
               <v-chip
-                  v-if="item.items[0].raw.group.deleted_at"
+                  v-if="item.items[0].raw.deleted_at"
                   style="height: 50px; width: 200px;"
                   class="d-flex justify-center"
-                  :color="getListColor(item.items[0].raw.group.deleted_at)"
+                  :color="getListColor(item.items[0].raw.deleted_at)"
               >
               <span class="padding: 5px;">{{
-                  getListStatus(item.items[0].raw.group.deleted_at)
+                  getListStatus(item.items[0].raw.deleted_at)
                 }}</span>
               </v-chip>
             </td>
@@ -716,35 +730,40 @@ onMounted(async () => {
         </template>
         <template v-slot:item="{ item, index }">
           <tr
+            v-if="item.users.length !== 0"
+            v-for="user in item.users" :key="user.id"
             :class="{'bg-grey-lighten-2': item.id === groupIdRef }"
             @mouseenter="hoveredRowIndex = index + 100000"
             @mouseleave="hoveredRowIndex = null"
-            @dblclick="openDialog(item)"
+            @dblclick="openDialog(user)"
           >
             <td style="width: 350px;">
               <div class="d-flex align-center ga-2">
                 <CustomCheckbox
                     v-model="markedID"
-                    :checked="markedID.includes(item.id)"
-                    @change="lineMarking(item)"
+                    @change="lineMarking(user)"
                 >
                 </CustomCheckbox>
-                {{ item.id }}
+                {{ user?.id }}
               </div>
             </td>
             <td style="width: 390px;">
               <v-chip
                   style="height: 50px; width: 200px;"
                   class="d-flex justify-center"
-                  :color="getListColor(item.deleted_at)"
+                  :color="getListColor(user?.deleted_at)"
               >
               <span class="padding: 5px;">{{
-                  getListStatus(item.deleted_at)
+                  getListStatus(user?.deleted_at)
                 }}</span>
               </v-chip>
             </td>
-            <td>{{ item.name }}</td>
-
+            <td>{{ user?.name }}</td>
+          </tr>
+          <tr v-else-if="selectedBlock === 'По группам'">
+            <td></td>
+            <td>Нету данных!</td>
+            <td></td>
           </tr>
         </template>
       </v-data-table-server>
@@ -857,7 +876,7 @@ onMounted(async () => {
                     <div class="d-flex">
                       <v-text-field
                           v-model="passwordRef"
-                          :rules="[rules.required]"
+                          :rules="[rules.required, rules.password]"
                           :color="BASE_COLOR"
                           :base-color="FIELD_COLOR"
                           type="password"
@@ -867,6 +886,7 @@ onMounted(async () => {
                           placeholder="********"
                           label="Пароль"
                           rounded="lg"
+                          autocomplete="on"
                           :disabled="passwordRef === '#########'"
                           clear-icon="close"
                           :append-inner-icon="passwordRef ? 'close' : ''"
@@ -914,6 +934,7 @@ onMounted(async () => {
                   />
                   <v-text-field
                       v-model="emailRef"
+                      @input="englishSymbols"
                       :rules="[rules.required, rules.email]"
                       :color="BASE_COLOR"
                       :base-color="FIELD_COLOR"
@@ -973,14 +994,14 @@ onMounted(async () => {
       <div class="d-flex justify-end mt-2">
         <div class="d-flex ga-2" style="margin-right: -6%;">
           <v-btn color="red" class="btn"
-                 @click="() => {closeFilterDialog; useFilterCanvasVisible().closeFilterCanvas()}"
+                 @click="() => {closeFilterDialog(); useFilterCanvasVisible().closeFilterCanvas()}"
           >сбросить
           </v-btn
           >
           <v-btn
               :color="BASE_COLOR"
               class="btn"
-              @click="() => {getUsers(); useFilterCanvasVisible().closeFilterCanvas()}"
+              @click="() => {getGroups(); useFilterCanvasVisible().closeFilterCanvas()}"
           >применить
           </v-btn
           >
