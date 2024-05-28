@@ -70,19 +70,28 @@ const restore = async () => {
 }
 
 const destroy  = async () => {
-  const response = await userGroup.delete(props.item.id);
+  try {
+    const response = await userGroup.delete(props.item.id);
     if (response.status === 200) {
       showToast(removeMessage);
     }
+
+  } catch (e) {
+    console.error(e)
+    if (e.response.status === 400) {
+      showToast(e.response.data.message, 'warning')
+    }
+  } finally {
     emit("toggleDialog");
+  }
 }
 
 const compute = async () => {
   if (props.item.deleted_at !== null) {
-      restore()
+    await restore()
   }
   else {
-    destroy()
+    await destroy()
   }
 }
 

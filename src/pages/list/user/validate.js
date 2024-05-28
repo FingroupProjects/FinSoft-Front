@@ -1,9 +1,11 @@
 import showToast from "../../../composables/toast/index.js";
+import {ru} from "vuetify/locale";
 
 const rules = {
   required: v => !!v,
-  email: (v) => /.+@.+\..+/.test(v),
+  email: (v) => /^[^\u0400-\u04FF]+@[^@\u0400-\u04FF]+\.[^@\u0400-\u04FF]+$/.test(v),
   phone: (v) => v.length === 13,
+  password: (v) => v.length >= 6,
 }
 export default function validate(
   fioRef,
@@ -26,6 +28,9 @@ export default function validate(
   }
   if (!passwordRef.value) {
     return showToast("Поле Пароль не может быть пустым", "warning")
+  }
+  if (passwordRef.value && !rules.password(passwordRef.value)) {
+    return showToast("Поле Пароль должно содержать не менее 6 символов", "warning")
   }
   if (!group.value || group.value.length === 0) {
     return showToast("Поле Группа не может быть пустым", "warning")
