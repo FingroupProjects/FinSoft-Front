@@ -7,7 +7,7 @@ import position from '../../../api/list/position.js'
 import Button from "../../../components/button/button.vue";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import {createAccess, removeAccess, updateAccess} from "../../../composables/access/access.js";
-import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
+import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH,TITLE_COLOR} from "../../../composables/constant/colors.js";
 import {
   addMessage,
   editMessage,
@@ -24,6 +24,8 @@ import {useFilterCanvasVisible} from "../../../store/canvasVisible.js";
 import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
 import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
 import {markedForDeletion} from "../../../composables/constant/items.js";
+import getListColor from "../../../composables/displayed/getListColor.js";
+import getListStatus from "../../../composables/displayed/getListStatus";
 
 const router = useRouter()
 
@@ -55,7 +57,8 @@ const toggleModal = () => {
 };
 
 const headers = ref([
-  { title: 'Наименование', key: 'name'}
+  { title: 'Наименование', key: 'name'},
+  { title: "Статус", key: "deleted_at" },
 ])
 
 const filterForm = ref({
@@ -167,7 +170,7 @@ const massRestore = async ({ page, itemsPerPage, sortBy, search }) => {
     const { status } = await position.massRestore(body)
 
     if (status === 200) {
-      showToast(restoreMessage, 'red')
+      showToast(restoreMessage, 'green')
       await getPositionData({page, itemsPerPage, sortBy}, search)
       markedID.value = []
     }
@@ -302,6 +305,27 @@ const closingWithSaving = async () => {
     }
   }
 };
+
+const getExcel = async () => {
+  if(position.value === null) {
+    return showToast('Выберите поставщика', 'warning')
+  }
+  try {
+    const { data } = await position.excel(position.value);
+    const url = window.URL.createObjectURL(
+      new Blob([data], { type: "application/vnd.ms-excel" })
+    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "Отчет.xls");
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 const closeDialogWithoutSaving = () => {
   dialog.value = false;
   showModal.value = false
@@ -350,7 +374,7 @@ watch(search, debounce((newValue) => {
   <div>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Должность</span>
+          <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Должность</span>
         </div>
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
@@ -359,6 +383,7 @@ watch(search, debounce((newValue) => {
             <Button v-if="createAccess('organizationBill')" @click="openDialog(0)" name="create" />
             <Button v-if="createAccess('organizationBill')" @click="addBasedOnPosition" name="copy" />
             <Button v-if="removeAccess('organizationBill')" @click="compute" name="delete" />
+            <Button name="excel" @click="getExcel()" />
           </div>
         </div>
 
@@ -428,7 +453,6 @@ watch(search, debounce((newValue) => {
                 @dblclick="openDialog(item)"
             >
               <td>
-                <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
                   <CustomCheckbox
                       v-model="markedID"
                       :checked="markedID.includes(item.id)"
@@ -436,18 +460,21 @@ watch(search, debounce((newValue) => {
                   >
                     <span>{{ item.id }}</span>
                   </CustomCheckbox>
-                </template>
-                <template v-else>
-                  <div class="d-flex align-center">
-                    <Icons
-                        style="margin-right: 10px; margin-top: 4px"
-                        :name="item.deleted_at === null ? 'valid' : 'inValid'"
-                    />
-                    <span>{{ item.id }}</span>
-                  </div>
-                </template>
-              </td>
-              <td>{{ item.name }}</td>
+                </td>
+                <td>
+                <span>{{ item.name }}</span>
+                </td>
+                <td>
+              <v-chip
+                style="height: 50px !important; max-width: 200px"
+                class="d-flex justify-center"
+                :color="getListColor(item.deleted_at)"
+              >
+                <span class="padding: 5px;">{{
+                  getListStatus(item.deleted_at)
+                }}</span>
+              </v-chip>
+            </td>
             </tr>
           </template>
         </v-data-table-server>

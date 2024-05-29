@@ -17,7 +17,7 @@ export default function validate(
     return showToast("Поле инн не может быть пустым", "warning")
   }
   if (innRef.value && !rules.inn(innRef.value)) {
-    return showToast("Поле инн должен состоят из 9 цифр", "warning")
+    return showToast("Такой инн уже существует", "warning")
   }
   if (!directorRef.value) {
     return showToast("Поле директор не может быть пустым", "warning")

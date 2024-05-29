@@ -17,6 +17,7 @@ import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
 import {useFilterCanvasVisible} from "../../../store/canvasVisible.js";
 import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
 import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
+import {markedForDeletion} from "../../../composables/constant/items.js";
 import {
   addMessage,
   editMessage,
@@ -26,6 +27,8 @@ import {
   selectOneItemMessage,
   restoreMessage,
 } from "../../../composables/constant/buttons.js";
+import getListColor from "../../../composables/displayed/getListColor.js";
+import getListStatus from "../../../composables/displayed/getListStatus";
 import debounce from "lodash.debounce";
 
 const loading = ref(true);
@@ -78,11 +81,10 @@ const filterForm = ref({
 const toggleModal = () => {
   showModal.value = !showModal.value;
 };
-const deletionStatuses = ['нет', 'да'];
-
 
 const headers = ref([
   {title: "Наименование", key: "name"},
+  { title: "Статус", key: "deleted_at" },
   {title: "Баланс", key: "name", sortable: false},
   {title: "Организация", key: "organization.name"},
   {title: "Валюта", key: "currency.name"},
@@ -514,9 +516,9 @@ onMounted(() => {
         </v-card>
       </div>
 
-      <v-card class="mt-2 table">
+      <div class="table calcWidth">
         <v-data-table-server
-            style="height: 78vh"
+            style="height: calc(100vh - 150px)"
             items-per-page-text="Элементов на странице:"
             loading-text="Загрузка"
             no-data-text="Нет данных"
@@ -548,9 +550,6 @@ onMounted(() => {
                 :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
               <td>
-                <template
-                    v-if="hoveredRowIndex === index || markedID.includes(item.id)"
-                >
                   <CustomCheckbox
                       v-model="markedID"
                       :checked="markedID.includes(item.id)"
@@ -558,25 +557,28 @@ onMounted(() => {
                   >
                     <span>{{ item.id }}</span>
                   </CustomCheckbox>
-                </template>
-                <template v-else>
-                  <div class="d-flex align-center">
-                    <Icons
-                        style="margin-right: 10px; margin-top: 4px"
-                        :name="item.deleted_at === null ? 'valid' : 'inValid'"
-                    />
-                    <span>{{ item.id }}</span>
-                  </div>
-                </template>
-              </td>
-              <td>{{ item.name }}</td>
+                </td>
+                <td>
+                <span>{{ item.name }}</span>
+                </td>
+                <td>
+              <v-chip
+                style="height: 50px !important; max-width: 200px"
+                class="d-flex justify-center"
+                :color="getListColor(item.deleted_at)"
+              >
+                <span class="padding: 5px;">{{
+                  getListStatus(item.deleted_at)
+                }}</span>
+              </v-chip>
+            </td>
               <td>+2500</td>
               <td>{{ item.organization.name }}</td>
               <td>{{ item.currency.name }}</td>
             </tr>
           </template>
         </v-data-table-server>
-      </v-card>
+      </div>
 
       <!-- Modal -->
       <v-card>
@@ -738,7 +740,8 @@ onMounted(() => {
         <div class="d-flex flex-column ga-4 w-100">
           <custom-filter-autocomplete min-width="106"  v-model="filterForm.organization_id" :items="organizations" label="Организация"/>
           <custom-filter-text-field min-width="106" v-model="filterForm.comment" label="Комментарий"/>
-          <custom-filter-autocomplete min-width="106"  label="Помечен на удаления" :items="deletionStatuses" v-model="filterForm.deleted" />
+          <custom-filter-autocomplete min-width="106"  label="Помечен на удаления" v-model="filterForm.deleted"
+            :items="markedForDeletion" />
         </div>    
         <div class="d-flex justify-end ">
           <div class="d-flex ga-2" style="margin-right: -6%;">

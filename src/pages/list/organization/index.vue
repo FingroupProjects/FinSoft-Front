@@ -16,7 +16,7 @@ import Icons from "../../../composables/Icons/Icons.vue";
 import employee from "../../../api/list/employee";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import validate from "./validate.js";
-import {FIELD_COLOR, FIELD_OF_SEARCH, BASE_COLOR} from "../../../composables/constant/colors.js";
+import {FIELD_COLOR, FIELD_OF_SEARCH, BASE_COLOR, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import Button from "../../../components/button/button.vue";
 import debounce from "lodash.debounce";
 import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
@@ -24,6 +24,8 @@ import {useFilterCanvasVisible} from "../../../store/canvasVisible.js";
 import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
 import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
 import {markedForDeletion} from "../../../composables/constant/items.js";
+import getListColor from "../../../composables/displayed/getListColor.js";
+import getListStatus from "../../../composables/displayed/getListStatus";
 import {createAccess, readAccess, removeAccess, updateAccess} from "../../../composables/access/access.js";
  
 const showConfirmDialog = ref(false);
@@ -80,10 +82,12 @@ const rules = {
 
 const headers = ref([
   { title: "Наименование", key: "name" },
+  { title: "Статус", key: "deleted_at" },
 ]);
 
 const getOrganizationData = async ({page = 1, itemsPerPage = 10, sortBy = 'id', search = ''} = {}) => {
   count.value = 0;
+  console.log(324)
   countFilter();
   loading.value = true
   try {
@@ -144,8 +148,9 @@ const addOrganization = async () => {
 };
 
 const addBasedOnOrganization = () => {
-  if (markedID.value.length !== 1 && !isExistsOrganization.value)
-    return showToast(selectOneItemMessage, "warning")
+  if (markedID.value.length !== 1 && !isExistsOrganization.value) {
+    return showToast(selectOneItemMessage, "warning");
+  }
 
   addDialog.value = true;
 
@@ -165,8 +170,12 @@ const addBasedOnOrganization = () => {
       addressRef.value = item.address;
       descriptionRef.value = item.description;
     }
-  });
-};
+  })
+
+  isExistsOrganization.value = false
+}
+
+
 
 const update = async () => {
   console.log("u")
@@ -180,6 +189,8 @@ const update = async () => {
     ) !== true
   )
     return;
+
+    console.log(34)
 
   let director;
   if (typeof directorRef.value === "object") {
@@ -206,14 +217,19 @@ const update = async () => {
 
   try {
     const { status } = await organization.update(idOrganizations.value, body);
-    if (status === 200) {
-      await getOrganizationData({ page, itemsPerPage, sortBy, search });
-      showToast(editMessage);
+   
+    if (status == 200) {
+      console.log(status)
+       showToast(editMessage);
+       await getOrganizationData({});
+     
     }
-
+    
     cleanForm();
-    addDialog.value = false;
-  } catch (e) {}
+  } catch (e) {
+    console.log(e)
+  }
+  addDialog.value = false;
 };
 
 const openDialog = (item) => {
@@ -482,7 +498,7 @@ onMounted(async () => {
   <div>
       <div class="d-flex justify-space-between text-uppercase">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Организации</span>
+          <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Организации</span>
         </div>
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
@@ -563,26 +579,28 @@ onMounted(async () => {
               :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
               <td>
-                <template
-                  v-if="hoveredRowIndex === index || markedID.includes(item.id)"
-                >
                   <CustomCheckbox
                     v-model="markedID"
                     :checked="markedID.includes(item.id)"
                     @change="handleCheckboxClick(item)"
                   >
                     <span>{{ index + 1 }}</span>
-                  </CustomCheckbox>
-                </template>
-                <template v-else>
-                  <div class="d-flex align-center">
-                      <Icons style="margin-right: 10px; margin-top: 4px" 
-                      :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
-                      <span>{{ index + 1 }}</span>
-                    </div>
-                </template>
+                  </CustomCheckbox>    
               </td>
-              <td>{{ item.name }}</td>
+              <td>
+              <span>{{ item.name }}</span>
+            </td>
+            <td>
+              <v-chip
+              style="height: 50px !important; max-width: 200px"
+              class="d-flex justify-center"
+              :color="getListColor(item.deleted_at)"
+              >
+              <span class="padding: 5px;">{{
+                getListStatus(item.deleted_at)
+              }}</span>
+              </v-chip>
+            </td>
             </tr>
           </template>
         </v-data-table-server>

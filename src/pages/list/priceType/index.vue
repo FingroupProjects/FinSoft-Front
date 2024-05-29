@@ -7,7 +7,7 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import priceType from '../../../api/list/priceType.js';
 import currency from '../../../api/list/currency.js';
 import {createAccess, updateAccess, removeAccess} from "../../../composables/access/access.js";
-import {FIELD_COLOR, FIELD_OF_SEARCH ,BASE_COLOR} from "../../../composables/constant/colors.js";
+import {FIELD_COLOR, FIELD_OF_SEARCH ,BASE_COLOR, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import Button from "../../../components/button/button.vue";
 import validate from "./validate.js";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
@@ -27,6 +27,8 @@ import {
   restoreMessage
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
+import getListColor from "../../../composables/displayed/getListColor.js";
+import getListStatus from "../../../composables/displayed/getListStatus";
 import procurement from "../../../api/documents/procurement.js";
 
 const router = useRouter()
@@ -69,6 +71,7 @@ const filterForm = ref({
 
 const headers = ref([
   {title: 'Наименование', key: 'name'},
+  { title: "Статус", key: "deleted_at" },
   {title: 'Валюта', key: 'currency.name'}
 ])
 
@@ -233,10 +236,6 @@ const getCurrencies = async () => {
 
   }
 }
-
-
-
-
 const handleCheckboxClick = (item) => {
   lineMarking(item)
 }
@@ -256,7 +255,6 @@ const openDialog = (item) => {
     currencyAdd.value = item.currency.id
     priceTypeInDialogTitle.value = nameRef.value
   }
-
 }
 
 
@@ -276,7 +274,8 @@ const addBasedOnPriceType = () => {
   isExistsPriceType.value = false
 }
 
-const compute = ({ page, itemsPerPage, sortBy, search }) => {
+const compute = (params ={}) => {
+  const {page, itemsPerPage, sortBy, search} = params
   if(markedID.value.length === 0) return showToast(warningMessage, 'warning')
 
   if(markedItem.value.deleted_at) {
@@ -323,6 +322,26 @@ const  closeFilterModal = async ({page, itemsPerPage, sortBy, search, filterData
 const cleanFilterForm = () => {
   filterForm.value = {}
 }
+
+const getExcel = async () => {
+  if(priceType.value === null) {
+    return showToast('Выберите поставщика', 'warning')
+  }
+  try {
+    const { data } = await priceType.excel(priceType.value);
+    const url = window.URL.createObjectURL(
+      new Blob([data], { type: "application/vnd.ms-excel" })
+    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "Отчет.xls");
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (e) {
+    console.error(e);
+  }
+};
 
 const isDataChanged = () => {
   const item = priceTypes.value.find(elem => elem.id === idPriceType.value);
@@ -419,15 +438,16 @@ onMounted(async () => {
   <div>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Виды цен</span>
+          <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Виды цен</span>
         </div>
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex w-100">
           <div class="d-flex ga-2 mt-1 me-3 py-2">
-            <Button v-if="createAccess('pryceType')" @click="openDialog(0)" name="create" title="Создать" />
-            <Button v-if="createAccess('pryceType')" @click="addBasedOnPriceType" name="copy" title="Скопировать" />
-            <Button v-if="removeAccess('pryceType')" @click="compute" name="delete" title="Удалить"/>
+            <Button @click="openDialog(0)" name="create" />
+            <Button @click="addBasedOnPriceType" name="copy"/>
+            <Button @click="compute" name="delete"/>
+            <Button name="excel" @click="getExcel()" />
           </div>
         </div>
 
@@ -495,7 +515,6 @@ onMounted(async () => {
                 :class="{'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
               <td>
-                <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
                   <CustomCheckbox
                       v-model="markedID"
                       :checked="markedID.includes(item.id)"
@@ -503,18 +522,19 @@ onMounted(async () => {
                   >
                     <span>{{ item.id }}</span>
                   </CustomCheckbox>
-                </template>
-                <template v-else>
-                  <div class="d-flex align-center">
-                    <Icons
-                        style="margin-right: 10px; margin-top: 4px"
-                        :name="item.deleted_at === null ? 'valid' : 'inValid'"
-                    />
-                    <span>{{ item.id }}</span>
-                  </div>
-                </template>
-              </td>
-              <td>{{ item.name }}</td>
+                </td>
+                <td><span><td>{{ item.name }}</td></span></td>
+                <td>
+              <v-chip
+                style="height: 50px !important; max-width: 200px"
+                class="d-flex justify-center"
+                :color="getListColor(item.deleted_at)"
+              >
+                <span class="padding: 5px;">{{
+                  getListStatus(item.deleted_at)
+                }}</span>
+              </v-chip>
+            </td>
               <td>{{ item.currency.name }}</td>
             </tr>
           </template>
@@ -608,14 +628,12 @@ onMounted(async () => {
         <div class="d-flex justify-end ">
           <div class="d-flex ga-2" style="margin-right: -6%;">
             <v-btn color="red" class="btn" @click="closeFilterModal"
-            >сбросить</v-btn
-            >
+            >сбросить</v-btn>
             <v-btn
                 :color="BASE_COLOR"
                 class="btn"
                 @click="() => {getPriceTypeData({}); useFilterCanvasVisible().closeFilterCanvas()}"
-            >применить</v-btn
-            >
+            >применить</v-btn>
           </div>
         </div>
       </filter-canvas>

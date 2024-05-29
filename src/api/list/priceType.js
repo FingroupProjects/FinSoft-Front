@@ -23,4 +23,9 @@ export default {
   massRestore(data) {
     return api.post('/priceType/massRestore/', data);
   },
+  excel(id) {
+    return api.get(`/priceType/data/export`, {
+      responseType: 'blob'
+    })
+  }
 }

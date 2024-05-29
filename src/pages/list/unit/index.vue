@@ -6,7 +6,7 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import unit from '../../../api/list/units.js'
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import validate from "../unit/validate";
-import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH} from "../../../composables/constant/colors.js";
+import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import {
   addMessage,
   editMessage,
@@ -23,6 +23,8 @@ import CustomFilterTextField from "../../../components/formElements/CustomFilter
 import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
 import debounce from "lodash.debounce";
 import showDate from "../../../composables/date/showDate.js";
+import getListColor from "../../../composables/displayed/getListColor.js";
+import getListStatus from "../../../composables/displayed/getListStatus";
 import {markedForDeletion} from "../../../composables/constant/items.js";
 
 const router = useRouter()
@@ -55,7 +57,8 @@ const toggleModal = () => {
 };
 
 const headers = ref([
-  {title: 'Наименование', key: 'name'}
+  {title: 'Наименование', key: 'name'},
+  { title: "Статус", key: "deleted_at" },
 ])
 
 const filterForm = ref({
@@ -323,8 +326,6 @@ const closingWithSaving = async () => {
   }
 };
 
-
-
 const closeDialogWithoutSaving = () => {
   dialog.value = false;
   showModal.value = false
@@ -374,7 +375,7 @@ onMounted(() => {
   <div>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Единица измерения</span>
+          <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Единица измерения</span>
         </div>
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex justify-end w-100">
@@ -444,38 +445,38 @@ onMounted(() => {
             fixed-header
             hover
         >
-          <template v-slot:item="{ item, index }">
-            <tr
-                @mouseenter="hoveredRowIndex = index"
-                @mouseleave="hoveredRowIndex = null"
-                @dblclick="openDialog(item)"
-                :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
-            >
+        <template v-slot:item="{ item, index }">
+          <tr
+            @mouseenter="hoveredRowIndex = index"
+            @mouseleave="hoveredRowIndex = null"
+            @dblclick="openDialog(item)"
+            :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
+          >
             <td>
-                <template
-                    v-if="hoveredRowIndex === index || markedID.includes(item.id)"
-                >
-                  <CustomCheckbox
-                      v-model="markedID"
-                      :checked="markedID.includes(item.id)"
-                      @change="handleCheckboxClick(item)"
-                  >
-                    <span>{{ item.id }}</span>
-                  </CustomCheckbox>
-                </template>
-                <template v-else>
-                  <div class="d-flex align-center">
-                    <Icons
-                        style="margin-right: 10px; margin-top: 4px"
-                        :name="item.deleted_at === null ? 'valid' : 'inValid'"
-                    />
-                    <span>{{ item.id }}</span>
-                  </div>
-                </template>
-              </td>
-              <td>{{ item.name }}</td>
-            </tr>
-          </template>
+              <CustomCheckbox
+                v-model="markedID"
+                :checked="markedID.includes(item.id)"
+                @change="handleCheckboxClick(item)"
+              >
+                <span>{{ item.id }}</span>
+              </CustomCheckbox>
+            </td>
+            <td>
+              <span>{{ item.name }}</span>
+            </td>
+            <td>
+              <v-chip
+              style="height: 50px !important; max-width: 200px"
+              class="d-flex justify-center"
+              :color="getListColor(item.deleted_at)"
+              >
+              <span class="padding: 5px;">{{
+                getListStatus(item.deleted_at)
+              }}</span>
+              </v-chip>
+            </td>
+          </tr>
+        </template>
         </v-data-table-server>
       </v-card>
 
