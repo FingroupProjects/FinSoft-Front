@@ -16,8 +16,8 @@ export default function validate(
   if (!innRef.value) {
     return showToast("Поле инн не может быть пустым", "warning")
   }
-  if (innRef.value && !rules.inn(innRef.value)) {
-    return showToast("Такой инн уже существует", "warning")
+  if (!innRef.value && rules.inn(innRef.value)) {
+    return showToast("Длина инн должна быть 9", "warning")
   }
   if (!directorRef.value) {
     return showToast("Поле директор не может быть пустым", "warning")

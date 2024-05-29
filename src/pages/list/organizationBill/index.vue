@@ -646,7 +646,7 @@ onMounted(() => {
                   </div>
                   <div class="d-flex ga-2 mb-3">
                     <v-text-field
-                        style="max-width: 30%"
+                        style="max-width: 50%"
                         variant="outlined"
                         :rules="[rules.required]"
                         label="Дата создания"
@@ -660,23 +660,8 @@ onMounted(() => {
                         @click:append-inner="dateRef = null"
                         hide-details
                     />
-                    <v-text-field
-                        v-model="bill_number"
-                        :rules="[rules.required]"
-                        maxlength="20"
-                        variant="outlined"
-                        :base-color="FIELD_COLOR"
-                        label="Номер счёта"
-                        density="compact"
-                        rounded="md"
-                        @input="validateNumber"
-                        :color="BASE_COLOR"
-                        :append-inner-icon="bill_number ? 'close' : ''"
-                        @click:append-inner="bill_number = null"
-                        hide-details
-                    />
                     <v-autocomplete
-                        style="max-width: 40%; min-width: 40%"
+                        style="max-width: 50%; min-width: 50%"
                         v-model="currencyAdd"
                         no-data-text="Валюта не найдена"
                         :color="BASE_COLOR"
@@ -705,6 +690,22 @@ onMounted(() => {
                       variant="outlined"
                       density="compact"
                   />
+                  <v-text-field
+                        v-model="bill_number"
+                        :rules="[rules.required]"
+                        maxlength="20"
+                        variant="outlined"
+                        :base-color="FIELD_COLOR"
+                        label="Номер счёта"
+                        style="margin-bottom: 10px; margin-top: -10px"
+                        density="compact"
+                        rounded="md"
+                        @input="validateNumber"
+                        :color="BASE_COLOR"
+                        :append-inner-icon="bill_number ? 'close' : ''"
+                        @click:append-inner="bill_number = null"
+                        hide-details
+                    />
                   <v-textarea
                       variant="outlined"
                       :base-color="FIELD_COLOR"

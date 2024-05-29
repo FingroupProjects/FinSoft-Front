@@ -536,7 +536,7 @@ onMounted(() => {
           <custom-filter-autocomplete min-width="106"  label="Помечен на удаление"
             v-model="filterForm.deleted"
             :items="markedForDeletion"/>
-        </div>      
+        </div>
         <div class="d-flex justify-end ">
           <div class="d-flex ga-2" style="margin-right: -6%;">
             <v-btn color="red" class="btn" @click="closeFilterModal"
