@@ -41,7 +41,7 @@ window.addEventListener("load", () => {
   });
 
   window.addEventListener("offline", () => {
-    showToast("Отсутствует интернет соединение!", "red", 600000);
+    showToast("Плохое интернет соединение!", "red", 600000);
   });
 });
 

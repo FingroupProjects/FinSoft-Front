@@ -23,4 +23,9 @@ export default {
   deleteImage(id) {
     return api.delete(`/employee/delete-image/${id}`)
   },
+  excel() {
+    return api.get('/employees/excel/export', {
+      responseType: 'blob'
+    })
+  }
 }
