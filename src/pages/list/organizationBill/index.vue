@@ -17,6 +17,7 @@ import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
 import {useFilterCanvasVisible} from "../../../store/canvasVisible.js";
 import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
 import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
+import {markedForDeletion} from "../../../composables/constant/items.js";
 import {
   addMessage,
   editMessage,
@@ -80,8 +81,6 @@ const filterForm = ref({
 const toggleModal = () => {
   showModal.value = !showModal.value;
 };
-const deletionStatuses = ['нет', 'да'];
-
 
 const headers = ref([
   {title: "Наименование", key: "name"},
@@ -741,7 +740,8 @@ onMounted(() => {
         <div class="d-flex flex-column ga-4 w-100">
           <custom-filter-autocomplete min-width="106"  v-model="filterForm.organization_id" :items="organizations" label="Организация"/>
           <custom-filter-text-field min-width="106" v-model="filterForm.comment" label="Комментарий"/>
-          <custom-filter-autocomplete min-width="106"  label="Помечен на удаления" :items="deletionStatuses" v-model="filterForm.deleted" />
+          <custom-filter-autocomplete min-width="106"  label="Помечен на удаления" v-model="filterForm.deleted"
+            :items="markedForDeletion" />
         </div>    
         <div class="d-flex justify-end ">
           <div class="d-flex ga-2" style="margin-right: -6%;">

@@ -1,5 +1,4 @@
 import showToast from "../../../composables/toast/index.js";
-
 export default function validate(
   nameRef,
   digitalRef,

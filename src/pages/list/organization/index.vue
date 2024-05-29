@@ -87,6 +87,7 @@ const headers = ref([
 
 const getOrganizationData = async ({page = 1, itemsPerPage = 10, sortBy = 'id', search = ''} = {}) => {
   count.value = 0;
+  console.log(324)
   countFilter();
   loading.value = true
   try {
@@ -189,6 +190,8 @@ const update = async () => {
   )
     return;
 
+    console.log(34)
+
   let director;
   if (typeof directorRef.value === "object") {
     director = directorRef.value.id;
@@ -214,14 +217,19 @@ const update = async () => {
 
   try {
     const { status } = await organization.update(idOrganizations.value, body);
-    if (status === 200) {
-      await getOrganizationData({ page, itemsPerPage, sortBy, search });
-      showToast(editMessage);
+   
+    if (status == 200) {
+      console.log(status)
+       showToast(editMessage);
+       await getOrganizationData({});
+     
     }
-
+    
     cleanForm();
-    addDialog.value = false;
-  } catch (e) {}
+  } catch (e) {
+    console.log(e)
+  }
+  addDialog.value = false;
 };
 
 const openDialog = (item) => {
