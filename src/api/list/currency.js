@@ -37,4 +37,9 @@ export default {
   restoreRate(ids) {
     return api.post('/currencyRate/massRestore', ids)
   },
+  excel() {
+    return api.get(`/currency/export/excel`, {
+      responseType: 'blob'
+    })
+  }
 }
