@@ -4,6 +4,7 @@ import {useRouter} from "vue-router";
 import showToast from '../../../composables/toast'
 import currentDate from "../../../composables/date/currentDate.js";
 import currency from '../../../api/list/currency.js'
+import Button from "../../../components/button/button.vue";
 import {createAccess, updateAccess, removeAccess} from '../../../composables/access/access.js'
 import {
   addMessage,
@@ -15,8 +16,15 @@ import showDate from "../../../composables/date/showDate.js";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import validate from "./validate.js";
-import {FIELD_COLOR, FIELD_OF_SEARCH, BASE_COLOR} from "../../../composables/constant/colors.js";
+import {FIELD_COLOR, FIELD_OF_SEARCH, BASE_COLOR, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import {tr} from "vuetify/locale";
+import getListColor from "../../../composables/displayed/getListColor.js";
+import getListStatus from "../../../composables/displayed/getListStatus";
+import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
+import {useFilterCanvasVisible} from "../../../store/canvasVisible.js";
+import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
+import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
+import {markedForDeletion} from "../../../composables/constant/items.js";
 import debounce from "lodash.debounce";
 
 
@@ -67,7 +75,8 @@ const toggleRateModal = () => {
 const filterForm = ref({
   name: null,
   symbol_code: null,
-  digital_code: null
+  digital_code: null,
+  deleted: null
 })
 
 const rates = ref([])
@@ -77,6 +86,7 @@ const paginations = ref([]);
 
 const headers = ref([
   {title: 'Наименование', key: 'name'},
+  { title: "Статус", key: "deleted_at" },
   {title: 'Символьный код', key: 'symbol_code'},
   {title: 'Цифровой код', key: 'digital_code'},
   {title: 'Курс валюты', key: 'last_exchange_rate.value', sortable: false},
@@ -273,6 +283,7 @@ const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
   filterModal.value = false
   filterForm.value = {}
   await getCurrencyData({page, itemsPerPage, sortBy, search})
+  useFilterCanvasVisible().closeFilterCanvas()
 }
 
 
@@ -471,6 +482,26 @@ const addBasedOnCurrency = () => {
  
 }
 
+const getExcel = async () => {
+  if(currency.value === null) {
+    return showToast('Выберите поставщика', 'warning')
+  }
+  try {
+    const { data } = await currency.excel(currency.value);
+    const url = window.URL.createObjectURL(
+      new Blob([data], { type: "application/vnd.ms-excel" })
+    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "Отчет.xls");
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
     const firstMarkedItem = currencies.value.find(el => el.id === markedID.value[0]);
@@ -503,7 +534,8 @@ const handleCheckboxClick = (item) => {
   lineMarking(item)
 }
 
-const compute = ({page, itemsPerPage, sortBy, search}) => {
+const compute = (params ={}) => {
+  const {page, itemsPerPage, sortBy, search} = params
   if (markedItem.value.deleted_at !== null) {
     return restoreCurrency({page, itemsPerPage, sortBy})
   } else {
@@ -590,42 +622,43 @@ watch(search, debounce((newValue) => {
 
 <template>
   <div>
-    <v-col>
       <div class="d-flex justify-space-between text-uppercase ">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Валюты</span>
+          <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Валюты</span>
         </div>
         <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
-            <div class="d-flex ga-2 me-3">
-              <Icons title="Добавить" v-if="createAccess('currency')" @click="openDialog(0)" name="add"/>
-              <Icons title="Копировать" v-if="createAccess('currency')"  @click="addBasedOnCurrency" name="copy"/>
-              <Icons title="Удалить" v-if="removeAccess('currency')" @click="compute" name="delete"/>
-            </div>
-
-            <div class="w-100">
-              <v-text-field
-                  v-model="search"
-                  prepend-inner-icon="search"
-                  density="compact"
-                  label="Поиск..."
-                  variant="outlined"
-                  :color="BASE_COLOR"
-                  :base-color="FIELD_OF_SEARCH"
-                  rounded="lg"
-                  clear-icon="close"
-                  hide-details
-                  single-line
-                  clearable
-                  flat
-              ></v-text-field>
-            </div>
+          <div class="d-flex ga-2 mt-1 me-3 py-2">
+            <Button v-if="createAccess('currency')" @click="openDialog(0)" name="create" />
+            <Button v-if="createAccess('currency')" @click="addBasedOnCurrency" name="copy" />
+            <Button v-if="removeAccess('currency')" @click="compute" name="delete" />
+            <Button name="excel" @click="getExcel()" />
           </div>
+        </div>
+        <div class="custom_search">
+          <v-text-field
+            style="width: 190px; margin-top: 4px;"
+            v-model="search"
+            prepend-inner-icon="search"
+            density="compact"
+            label="Поиск..."
+            variant="outlined"
+            :color="BASE_COLOR"
+            rounded="lg"
+            :base-color="FIELD_OF_SEARCH"
+            clear-icon="close"
+            hide-details
+            single-line
+            :append-inner-icon="search ? 'close' : ''"
+            @click:append-inner="search = ''"
+            flat
+          />
+        </div>
           <div class="filterElement">
             <Icons
               name="filter"
               title="фильтр"
-              @click="filterModal = true"
+              @click="useFilterCanvasVisible().toggleFilterCanvas()"
               class="mt-1"
             />
             <span v-if="count !== 0" class="countFilter">{{ count }}</span>
@@ -659,24 +692,27 @@ watch(search, debounce((newValue) => {
             hover
         >
         <template v-slot:item="{ item, index }">
-              <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null" @click="lineMarking(item)"
+              <tr @mouseenter="hoveredRowIndex = index" @mouseleave="hoveredRowIndex = null"
                   @dblclick="openDialog(item)"
                   :class="{'bg-grey-lighten-2': markedID.includes(item.id) }">
                 <td>
-                  <template v-if="hoveredRowIndex === index || markedID.includes(item.id)">
                     <CustomCheckbox v-model="markedID" :checked="markedID.includes(item.id)"
                                     @change="handleCheckboxClick(item)">
                       <span>{{ index + 1 }}</span>
                     </CustomCheckbox>
-                  </template>
-                  <template v-else>
-                    <div class="d-flex align-center">
-                      <Icons style="margin-right: 10px; margin-top: 4px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
-                      <span>{{ index + 1 }}</span>
-                    </div>
-                  </template>
                 </td>
-                <td>{{ item.name }}</td>
+                <td><span>{{ item.name }}</span></td>
+                <td>
+              <v-chip
+                style="height: 50px !important; max-width: 200px"
+                class="d-flex justify-center"
+                :color="getListColor(item.deleted_at)"
+              >
+                <span class="padding: 5px;">{{
+                  getListStatus(item.deleted_at)
+                }}</span>
+              </v-chip>
+            </td>
                 <td>{{ item.symbol_code }}</td>
                 <td>{{ item.digital_code }}</td>
                 <td>{{ item.last_exchange_rate === null ? '' : item.last_exchange_rate.value }}</td>
@@ -872,86 +908,35 @@ watch(search, debounce((newValue) => {
         </v-dialog>
       </v-card>
 
-
-      <v-card>
-        <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup.esc="closeFilterModal">
-          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="600"
-                  class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
-            <div class="d-flex justify-space-between align-center mb-2">
-              <span>Фильтр</span> 
-            </div>
-            <v-form class="d-flex w-100">
-              <v-row class="w-100">
-                <v-col class="d-flex flex-column w-100">
-                  <div class="d-flex justify-space-between ga-6 mb-3">
-                    <v-text-field
-                        v-model="filterForm.name"
-                        :color="BASE_COLOR"
-                        rounded="md"
-                        variant="outlined"
-                        class="w-auto text-sm-body-1"
-                        density="compact"
-                        :base-color="FIELD_COLOR"
-                        placeholder="Наименование"
-                        label="Наименование"
-                        clear-icon="close"
-                        clearable
-                        hide-details
-                        autofocus
-                    />
-                  </div>
-                  <div class="d-flex justify-space-between ga-6 mb-3">
-                     <v-text-field
-                        v-model="filterForm.symbol_code"
-                        :color="BASE_COLOR"
-                        rounded="md"
-                        variant="outlined"
-                        class="w-auto text-sm-body-1"
-                        density="compact"
-                        :base-color="FIELD_COLOR"
-                        placeholder="Символьный код"
-                        label="Символьный код"
-                        clear-icon="close"
-                        clearable
-                        hide-details
-                    />
-                  </div>
-                  <div class="d-flex justify-space-between ga-6 mb-3">
-                     <v-text-field
-                        v-model="filterForm.digital_code"
-                        :color="BASE_COLOR"
-                        rounded="md"
-                        variant="outlined"
-                        class="w-auto text-sm-body-1"
-                        density="compact"
-                        :base-color="FIELD_COLOR"
-                        placeholder="Цифровой код"
-                        label="Цифровой код"
-                        clear-icon="close"
-                        clearable
-                        hide-details
-                    />
-                  </div>
-                  <div class="d-flex justify-end ga-2">
-                  <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-                  <v-btn :color="BASE_COLOR" class="btn"  @click="getCurrencyData">применить</v-btn>
-                </div>
-                  </v-col>
-              </v-row>
-            </v-form>
-          </v-card>
-        </v-dialog>
-      </v-card>
-    
-
       <div v-if="showModal">
         <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()"   @closeWithSaving="closingWithSaving()"/>
       </div>
       <div v-if="showRateModal">
         <ConfirmModal :showModal="true" @close="toggleRateModal()" @closeClear="closeRateDialogWithoutSaving()"  @closeWithSaving="closingRateWithSaving()"/>
       </div>
-
-    </v-col>
+      <filter-canvas >
+        <div class="d-flex flex-column ga-4 w-100">
+          <custom-filter-text-field min-width="106" v-model="filterForm.name" label="Наименование"/>
+          <custom-filter-text-field min-width="106" v-model="filterForm.symbol_code" label="Символьный код"/>
+        </div>  
+        <div class="d-flex flex-column ga-4 w-100">
+          <custom-filter-text-field min-width="106" v-model="filterForm.digital_code" label="Цифровой код"/>
+          <custom-filter-autocomplete min-width="106" label="Помечен на удаление" v-model="filterForm.deleted" :items="markedForDeletion"/>
+        </div>    
+        <div class="d-flex justify-end ">
+          <div class="d-flex ga-2" style="margin-right: -6%;">
+            <v-btn color="red" class="btn" @click="closeFilterModal"
+            >сбросить</v-btn
+            >
+            <v-btn
+                :color="BASE_COLOR"
+                class="btn"
+                @click="() => {getCurrencyData({}); getCurrencyRateData({}); useFilterCanvasVisible().closeFilterCanvas()}"
+            >применить</v-btn
+            >
+          </div>
+        </div>
+      </filter-canvas>
   </div>
 
 
