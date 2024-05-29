@@ -864,7 +864,7 @@ onMounted(async () => {
               <Button name="create" v-if="createAccess('storage')" @click="openDialog(0)" />
               <Button name="copy" v-if="createAccess('storage')" @click="addBasedOnStorage" />
               <Button name="delete" v-if="removeAccess('storage')" @click="compute" />
-              <Button name="excel" @click="getExcel(schedule)" />
+              <Button name="excel" @click="getExcel(storage)" />
             </div>
             <v-text-field
                 class="custom_search"
@@ -1000,7 +1000,7 @@ onMounted(async () => {
 
       <v-card>
         <v-dialog persistent class="mt-2 pa-2" v-model="dialog" @keyup.esc="isExistsStorage ? checkUpdate() : checkAndClose()">
-          <v-card :style="`border: 2px solid ${BASE_COLOR}`" max-width="600"
+          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="700" max-width="700"
                   class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
             <div class="d-flex justify-space-between align-center mb-2">
               <span>{{ isExistsStorage ? 'Склад: ' + storageInDialogTitle : 'Добавление' }}</span>
@@ -1109,8 +1109,14 @@ onMounted(async () => {
                       @click="employeeLineMarking(item)"
                       :class="{'bg-grey-lighten-2': markedEmployeeID.includes(item.id) }"
                       @dblclick="editDialogStorageData(item)">
-                    <td>
-                      {{ item.id }}
+                    <td class="d-flex justify-center align-center" style="height: 55px">
+                      <v-chip
+                          style="height: 30px; width: 60px;"
+                          class="d-flex justify-center"
+                          :color="getListColor(item?.deleted_at)"
+                      >
+                        <span class="padding: 5px;">{{ item.id }}</span>
+                      </v-chip>
                     </td>
                     <td>{{ item.employee.name }}</td>
                     <td>{{ item.from }}</td>
@@ -1130,7 +1136,7 @@ onMounted(async () => {
               <span class="pl-5">{{ isExistsStorageData ? 'Изменить' : 'Добавить' }} сотрудника</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons @click="removeStorageEmployee" name="delete"/>
+                  <Icons v-if="isExistsStorageData" @click="removeStorageEmployee" name="delete"/>
                   <Icons v-if="isExistsStorageData" @click="updateEmployee" name="save"/>
                   <Icons v-else @click="addStorageEmployee" name="save"/>
                 </div>
