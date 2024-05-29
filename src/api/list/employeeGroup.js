@@ -4,8 +4,8 @@ export default {
   add(data) {
     return  api.post('/group', data)
   },
-  get({page = 1, itemsPerPage = 10, sortBy}, search = '') {
-    const params = buildParams(page, itemsPerPage, sortBy, search);
+  get({page = 1, itemsPerPage = 10, sortBy} = {}, search = '', filterData) {
+    const params = buildParams(page, itemsPerPage, sortBy, search, filterData);
     return api.get(`/group/employees-group`, { params });
   },
   getEmployees({page = 1, itemsPerPage = 10, sortBy}, search, id, filterData) {
