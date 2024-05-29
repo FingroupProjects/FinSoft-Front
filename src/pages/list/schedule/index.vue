@@ -8,7 +8,9 @@ import {
   editMessage,
   ErrorSelectMessage,
   removeMessage,
-  restoreMessage, warningMessage,
+  restoreMessage,
+  selectOneItemMessage,
+  warningMessage,
 } from "../../../composables/constant/buttons.js";
 import Icons from "../../../composables/Icons/Icons.vue";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
@@ -22,6 +24,12 @@ import Button from "../../../components/button/button.vue";
 import FilterCanvas from "@/components/canvas/filterCanvas.vue";
 import {useFilterCanvasVisible} from "@/store/canvasVisible.js";
 import CustomFilterTextField from "@/components/formElements/CustomFilterTextField.vue";
+import {LABEL_MARKED_FOR_DELETION} from "../../../composables/constant/labels.js";
+import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
+import {markedForDeletion} from "../../../composables/constant/items.js";
+import getExcel from "../../../composables/otherQueries/getExcel.js";
+import getListColor from "../../../composables/displayed/getListColor.js";
+import getListStatus from "../../../composables/displayed/getListStatus.js";
 
 const router = useRouter()
 const loading = ref(false);
@@ -88,12 +96,9 @@ const toggleModal = () => {
   showModal.value = !showModal.value
 }
 
-
-
 const filterForm = ref({
   name: null,
-  symbol_code: null,
-  digital_code: null
+  deleted: null,
 })
 
 const months = ref([])
@@ -103,6 +108,7 @@ const paginations = ref([]);
 
 const headers = ref([
   {title: 'Наименование', key: 'name'},
+  {title: 'Статус', key: 'status', sortable: false},
 ])
 
 const headersMonths = ref([
@@ -124,8 +130,6 @@ const countFilter = () => {
     }
   }
 }
-
-
 
 const getScheduleData = async ({page, itemsPerPage, sortBy, search} = {}) => {
   filterModal.value = false
@@ -330,7 +334,29 @@ const openDialog = (item) => {
 
 const addBasedSchedule = () => {
   if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
+  if (markedID.value.length > 1) return showToast(selectOneItemMessage, 'warning')
+  dialog.value = true
+  const item = schedules.value.find(item => item.id === markedID.value[0])
 
+  nameRef.value = item.name
+  months.value.push(...item.workerSchedule.map(el => (
+      {
+        id: el.id,
+        month_id: el.month.id,
+        name: el.month.name,
+        hours: el.number_of_hours
+      }
+  )));
+  weeks.splice(0, weeks.length, ...item.weekHours.map(el => (
+      {
+        id: el.id,
+        week: el.week,
+        week_num: el.week,
+        hour: el.hours
+      }
+  )));
+
+  markedID.value = []
 }
 
 
@@ -444,6 +470,7 @@ watch(search, debounce(newValue => {
               <Button name="create" v-if="createAccess('currency')" @click="openDialog(0)" />
               <Button name="copy" v-if="createAccess('currency')" @click="addBasedSchedule" />
               <Button name="delete" v-if="removeAccess('currency')" @click="compute" />
+              <Button name="excel" @click="getExcel(schedule)" />
             </div>
             <v-text-field
                style="max-width: 190px !important; width: 190px"
@@ -505,7 +532,7 @@ watch(search, debounce(newValue => {
               @mouseleave="hoveredRowIndex = null"
               @dblclick="openDialog(item)"
             >
-              <td>
+              <td style="width: 150px;">
                 <div class="d-flex ga-2 align-center">
                   <CustomCheckbox
                       v-model="markedID"
@@ -514,10 +541,20 @@ watch(search, debounce(newValue => {
                   >
                   </CustomCheckbox>
                   <span>{{ item.id }}</span>
-
                 </div>
               </td>
-              <td>{{ item.name }}</td>
+              <td style="width: 250px;">{{ item.name }}</td>
+              <td>
+                <v-chip
+                    style="height: 50px; width: 200px;"
+                    class="d-flex justify-center"
+                    :color="getListColor(item.deleted_at)"
+                >
+              <span class="padding: 5px;">{{
+                  getListStatus(item.deleted_at)
+                }}</span>
+                </v-chip>
+              </td>
             </tr>
           </template>
         </v-data-table-server>
@@ -611,9 +648,14 @@ watch(search, debounce(newValue => {
         </v-dialog>
       </v-card>
 
-     <filter-canvas>
-       <div class="d-flex w-100">
-         <custom-filter-text-field min-width="106" label="Наименование" v-model="filterForm.name" />
+     <filter-canvas tabindex="-1">
+       <div class="d-flex w-100 ga-2">
+         <custom-filter-text-field  label="Наименование" v-model="filterForm.name" />
+         <custom-filter-autocomplete
+             :label="LABEL_MARKED_FOR_DELETION"
+             v-model="filterForm.deleted"
+             :items="markedForDeletion"
+         />
        </div>
        <div class="d-flex justify-end ga-2" style="margin-right: -6%;">
          <v-btn

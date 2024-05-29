@@ -127,22 +127,29 @@ watch(
   }
 );
 
+watch(
+  () => name.value,
+  (newValue) => {
+    console.log(newValue);
+  }
+);
+
 onMounted(() => {
   if (props.groupData) {
     name.value = props.groupData.name;
     is_good.value = props.groupData.is_good;
     is_service.value = props.groupData.is_service;
   }
-  if (
-    props.filterForm &&
-    props.filterForm.name !== null &&
-    props.filterForm.is_good !== null &&
-    props.filterForm.is_service !== null
-  ) {
-    name.value = props.filterForm.name;
-    is_good.value = props.filterForm.is_good;
-    is_service.value = props.filterForm.is_service;
-  }
+  // if (
+  //   props.filterForm &&
+  //   props.filterForm.name !== null &&
+  //   props.filterForm.is_good !== null &&
+  //   props.filterForm.is_service !== null
+  // ) {
+  //   name.value = props.filterForm.name;
+  //   is_good.value = props.filterForm.is_good;
+  //   is_service.value = props.filterForm.is_service;
+  // }
 });
 
 const rules = {
@@ -208,7 +215,7 @@ const rules = {
                   v-model="name"
                   :rules="isValid ? [rules.required] : []"
                   :color="BASE_COLOR"
-                  rounded="md"
+                  rounded="lg"
                   variant="outlined"
                   class="w-auto text-sm-body-1"
                   density="compact"

@@ -110,7 +110,7 @@ const headers = ref([
 
 const headersGroup = ref([
   {title: 'Статус', key: 'deleted_at'},
-  {title: 'ФИО', key: 'name', align: 'start'},
+  {title: '', key: 'name', sortable: false},
 ])
 
 const rules = {
@@ -285,7 +285,6 @@ const addUser = async () => {
     formData.append('image', imageRef.value);
   }
 
-
   try {
     const res = await user.add(formData)
 
@@ -318,7 +317,7 @@ const addUser = async () => {
   }
 }
 
-const update = async ({page, itemsPerPage, sortBy}) => {
+const update = async () => {
   if (validate(fioRef, organization, loginRef, passwordRef, phoneRef, emailRef, group) !== true) return
 
   let organizationValue
@@ -394,7 +393,6 @@ const restore = async () => {
     markedID.value = []
   }
 }
-
 
 const closeFilterModal = async ({
       page,
@@ -478,7 +476,6 @@ const addBasedOnUser = () => {
     }
    el.users.forEach(item => {
      if (markedID.value[0] === item.id) {
-       console.log(item, 'item')
        fioRef.value = item.name
        loginRef.value = item.login
        phoneRef.value = item.phone
@@ -623,13 +620,6 @@ watch(isCreateGroup, newVal => {
 
 onMounted(async () => {
   await getOrganization()
-
-  try {
-    const {data} = await userGroup.get()
-    console.log(data)
-  } catch (e) {
-    console.error(e)
-  }
 })
 
 </script>
@@ -640,7 +630,7 @@ onMounted(async () => {
       <div class="d-flex align-center ga-2 pe-2 ms-4">
         <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Пользователи</span>
       </div>
-      <v-card variant="text" min-width="420" class="d-flex align-center ga-2">
+      <div class="d-flex align-center ga-2">
         <div class="d-flex ga-4 mb-1">
           <div class="switcher">
             <button
@@ -658,7 +648,6 @@ onMounted(async () => {
               По элементам
             </button>
           </div>
-          <Button name="excel" @click="getExcel(user)"/>
         </div>
         <div class="d-flex w-100">
           <div class="d-flex ga-2 mb-1 me-3">
@@ -666,9 +655,11 @@ onMounted(async () => {
             <Button name="create" v-if="createAccess('user')" @click="openDialog(0)"/>
             <Button name="copy" v-if="createAccess('user')" @click="addBasedOnUser"/>
             <Button name="delete" v-if="removeAccess('user')" @click="compute"/>
+            <Button name="excel" @click="getExcel(user)"/>
           </div>
           <v-text-field
-              style="width: 190px"
+              class="custom_search"
+              style="width: 190px;"
               v-model="search"
               prepend-inner-icon="search"
               density="compact"
@@ -694,7 +685,7 @@ onMounted(async () => {
 
           <span v-if="count !== 0" class="countFilter">{{ count }}</span>
         </div>
-      </v-card>
+      </div>
     </div>
     <div class="mt-2 table calcWidth">
       <v-data-table-server
@@ -739,7 +730,6 @@ onMounted(async () => {
                 ></VBtn>
                 <span>{{ item.value }}</span>
               </div>
-
             </td>
             <td style="width: 390px;">
               <v-chip

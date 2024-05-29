@@ -1,21 +1,29 @@
 <script setup>
-import { ref, watch } from "vue";
-import goodsApi from "../../../api/list/goods";
-import unitsApi from "../../../api/list/units";
-import createGroup from "./createGroup.vue";
-import storageApi from "../../../api/list/storage";
-import groupApi from "../../../api/list/goodGroup";
-import { useRoute, useRouter } from "vue-router";
-import showToast from "../../../composables/toast";
+import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
+import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
+import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
+import getListStatus from "../../../composables/displayed/getListStatus.js";
+import getListColor from "../../../composables/displayed/getListColor.js";
+import { markedForDeletion } from "../../../composables/constant/items.js";
+import filterCanvas from "../../../components/canvas/filterCanvas.vue";
+import { useFilterCanvasVisible } from "../../../store/canvasVisible";
+import getExcel from "../../../composables/otherQueries/getExcel.js";
+import Button from "../../../components/button/button.vue";
 import Icons from "../../../composables/Icons/Icons.vue";
+import groupApi from "../../../api/list/goodGroup.js";
+import storageApi from "../../../api/list/storage.js";
+import showToast from "../../../composables/toast";
+import { useRoute, useRouter } from "vue-router";
+import unitApi from "../../../api/list/units.js";
+import goodsApi from "../../../api/list/goods";
+import createGroup from "./createGroup.vue";
+import { reactive, ref, watch } from "vue";
 import {
   FIELD_COLOR,
   BASE_COLOR,
   TITLE_COLOR,
   FIELD_OF_SEARCH,
 } from "../../../composables/constant/colors.js";
-import Button from "../../../components/button/button.vue";
-import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import {
   ErrorSelectMessage,
   removeMessage,
@@ -38,26 +46,40 @@ const hoveredRowIndex = ref(null);
 const loading = ref(true);
 const isFilter = ref(false);
 const isEditGroup = ref(false);
-const loadingGroup = ref(true);
 const isCreateGroup = ref(false);
 
 const search = ref("");
+const selectedBlock = ref("По группам");
 
 const count = ref(0);
 const groupIdRef = ref(0);
 
 const groupData = ref([]);
 const goods = ref([]);
+const units = ref([]);
 const groups = ref([]);
+const storages = ref([]);
 const markedID = ref([]);
 const markedItem = ref([]);
 const pagination = ref([]);
 const Grouppagination = ref([]);
 
-const headers = ref([{ title: "Товар", key: "name" }]);
-const Groupheaders = ref([
-  { title: "№", key: "id" },
-  { title: "Наименование", key: "name" },
+const headers = ref([
+  { title: "#", key: "id" },
+  { title: "Статус", key: "deleted_at" },
+  { title: "Товар", key: "name" },
+]);
+
+const headersGroup = ref([
+  { title: "Статус", key: "deleted_at" },
+  { title: "Товар", key: "name", align: "start" },
+]);
+
+const groupBy = ref([
+  {
+    key: "name",
+    order: "asc",
+  },
 ]);
 
 const headerButtons = ref([
@@ -82,35 +104,72 @@ const headerButtons = ref([
   {
     name: "delete",
     function: () => {
-      compute({ page, itemsPerPage, sortBy, search });
+      compute({ page: 1, itemsPerPage: 25 });
     },
   },
   {
     name: "excel",
     function: () => {
-      getExcel();
+      getExcel(groupApi);
     },
   },
 ]);
 
-const filterForm = ref({
+const filterForm = reactive({
   name: null,
-  vendor_code: null,
-  storage_id: null,
+  deleted: null,
   unit_id: null,
-  good_group_id: null,
+  storage_id: null,
   description: null,
+  vendor_code: null,
+  good_group_id: null,
 });
+
+const isGroupChecked = (item) => {
+  return item.items[0].raw.goods.every((item) =>
+    markedID.value.includes(item.id)
+  );
+};
+
+const toggleGroupSelection = (group) => {
+  const goods = group.items[0].raw.goods;
+  if (goods.length === 0) return;
+
+  markedItem.value = goods[0];
+
+  const allIds = goods.map((item) => item.id);
+  if (isGroupChecked(group)) {
+    markedID.value = markedID.value.filter((id) => !allIds.includes(id));
+  } else {
+    markedID.value = [...new Set([...markedID.value, ...allIds])];
+  }
+};
+
+const selectBlock = (name) => {
+  closeFilterModal();
+  selectedBlock.value = name;
+  loading.value = false;
+};
+
+const closeFilterModal = async ({
+  page,
+  itemsPerPage,
+  sortBy,
+  search,
+  filterData,
+} = {}) => {
+  await getGroups({ page, itemsPerPage, sortBy, search, filterData });
+  filterForm.name = null;
+  filterForm.vendor_code = null;
+  (filterForm.storage_id = null),
+    (filterForm.unit_id = null),
+    (filterForm.good_group_id = null),
+    (filterForm.description = null);
+};
 
 watch(isCreateGroup, (newVal) => {
   if (newVal === false) {
     getGroups({ page: 1, itemsPerPage: 25 });
-  }
-});
-
-watch(search, (newVal) => {
-  if (newVal) {
-    getAllGoods({ page: 1, itemsPerPage: 25 });
   }
 });
 
@@ -134,6 +193,32 @@ const createOnBase = () => {
   editItem(markedItem.value.id, 1);
 };
 
+const getUnits = async () => {
+  try {
+    const {
+      data: {
+        result: { data },
+      },
+    } = await unitApi.get({ page: 1, itemsPerPage: 10000 });
+    units.value = data;
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const getStorage = async () => {
+  try {
+    const {
+      data: {
+        result: { data },
+      },
+    } = await storageApi.get({ page: 1, itemsPerPage: 10000 });
+    storages.value = data;
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 const editItem = (id, createOnBaseParam) => {
   router.push({
     name: "createUpdateGood",
@@ -142,10 +227,10 @@ const editItem = (id, createOnBaseParam) => {
   });
 };
 
-const editGroup = (group) => {
+const editGroup = (item) => {
   isEditGroup.value = true;
   isCreateGroup.value = true;
-  groupData.value = group;
+  groupData.value = item.items[0].raw;
 };
 
 function countFilter() {
@@ -161,7 +246,7 @@ const filterGroup = async (filterData) => {
   try {
     filterForm.value = filterData;
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -200,28 +285,21 @@ const lineMarking = (item) => {
   markedItem.value = item;
 };
 
-const lineMarkingGroup = (group_id) => {
-  markedID.value = [];
-  groupIdRef.value = group_id;
-  getGoods({});
-};
-
 const getGroups = async ({ page, itemsPerPage, sortBy, search }) => {
   try {
+    loading.value = true;
     count.value = 0;
     countFilter();
-    const filterData = filterForm.value;
-    loadingGroup.value = true;
     const { data } = await groupApi.get(
       { page, itemsPerPage, sortBy },
       search,
-      filterData
+      filterForm
     );
     groups.value = data.result.data;
     Grouppagination.value = data.result.pagination;
-    loadingGroup.value = false;
+    loading.value = false;
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -241,30 +319,11 @@ const getGoods = async ({ page, itemsPerPage, sortBy, search }) => {
     pagination.value = data.result.pagination;
     loading.value = false;
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
-const getAllGoods = async ({ page, itemsPerPage, sortBy, search }) => {
-  count.value = 0;
-  countFilter();
-  try {
-    loading.value = true;
-    const { data } = await goodsApi.get(
-      { page, itemsPerPage, sortBy },
-      search,
-      filterForm.value
-    );
-    goods.value = data.result.data;
-    console.log(data);
-    pagination.value = data.result.pagination;
-    loading.value = false;
-  } catch (e) {
-    console.log(e);
-  }
-};
-
-const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
+const remove = async ({ page, itemsPerPage, sortBy, search }) => {
   const body = {
     ids: markedID.value,
   };
@@ -273,14 +332,14 @@ const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
     if (status === 200) {
       showToast(removeMessage, "red");
       markedID.value = [];
-      await getGoods({ page, itemsPerPage, sortBy }, search);
+      await getGroups({ page, itemsPerPage, sortBy }, search);
     }
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
-const massRestore = async ({ page, itemsPerPage, sortBy }) => {
+const restore = async ({ page, itemsPerPage, sortBy }) => {
   try {
     const body = {
       ids: markedID.value,
@@ -289,19 +348,26 @@ const massRestore = async ({ page, itemsPerPage, sortBy }) => {
     if (status === 200) {
       showToast(restoreMessage, "green");
       markedID.value = [];
-      await getGoods({ page, itemsPerPage, sortBy });
+      await getGroups({ page, itemsPerPage, sortBy });
     }
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
-const compute = ({ page, itemsPerPage, sortBy, search }) => {
-  if (markedItem.value.deleted_at) {
-    return massRestore({ page, itemsPerPage, sortBy });
+const compute = () => {
+  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
+
+  if (markedItem.value?.deleted_at) {
+    return restore({});
   } else {
-    return massDel({ page, itemsPerPage, sortBy, search });
+    return remove({});
   }
+};
+
+const getFilterItems = () => {
+  getUnits();
+  getStorage();
 };
 </script>
 
@@ -312,6 +378,22 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
         <span :style="{ color: TITLE_COLOR, fontSize: '22px' }"> Товар </span>
       </div>
       <div class="d-flex justify-between ga-2">
+        <div class="switcher">
+          <button
+            @click="selectBlock('По группам')"
+            :class="{ active: selectedBlock === 'По группам' }"
+            class="button"
+          >
+            По группам
+          </button>
+          <button
+            @click="selectBlock('По элементам')"
+            :class="{ active: selectedBlock === 'По элементам' }"
+            class="button"
+          >
+            По элементам
+          </button>
+        </div>
         <div class="d-flex justify-end mb-3">
           <div class="d-flex ga-2 position-relative">
             <Button
@@ -324,7 +406,7 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
         </div>
         <div class="custom_search">
           <v-text-field
-            style="width: 190px"
+            style="width: 190px; max-height: 45px !important"
             v-model="search"
             prepend-inner-icon="search"
             density="compact"
@@ -346,196 +428,119 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
           <Icons
             name="filter"
             title="Фильтр"
-            @click="useFilterCanvasVisible().toggleFilterCanvas()"
+            @click="
+              useFilterCanvasVisible().toggleFilterCanvas();
+              getFilterItems();
+            "
             class="mt-1"
           />
           <span v-if="count !== 0" class="countFilter">{{ count }}</span>
         </div>
       </div>
-      <!-- <v-card variant="text" min-width="488" class="d-flex align-center ga-2">
-        <div class="d-flex w-100">
-          <div class="d-flex align-center ga-2 me-3">
-            <button
-              style="
-                background-color: #6bd68a;
-                border-radius: 8px;
-                white-space: nowrap;
-                height: 32px;
-                padding: 0px 4px;
-                font-size: 12px;
-                color: white;
-                text-transform: uppercase;
-              "
-              @click="isCreateGroup = true"
-            >
-              <span class="px-2 pb-0">создать группу</span>
-            </button>
-            <Icons
-              v-if="createAccess('nomenclature')"
-              @click="goToCreate()"
-              name="add"
-              title="Создать"
-            />
-            <Icons
-              v-if="createAccess('nomenclature')"
-              @click="createOnBase()"
-              name="copy"
-              title="Скопировать"
-            />
-            <Icons
-              v-if="removeAccess('nomenclature')"
-              @click="compute({ page, itemsPerPage, sortBy, search })"
-              name="delete"
-              title="Удалить"
-            />
-          </div>
-          <div class="w-100">
-            <v-text-field
-              v-model="search"
-              prepend-inner-icon="search"
-              base-:color="BASE_COLOR"
-              density="compact"
-              label="Поиск..."
-              variant="outlined"
-              :color="BASE_COLOR"
-              rounded="lg"
-              clear-icon="close"
-              hide-details
-              single-line
-              clearable
-              flat
-            ></v-text-field>
-          </div>
-        </div>
-        <div class="filterElement">
-          <Icons
-            name="filter"
-            title="фильтр"
-            @click="isFilter = true"
-            class="mt-1"
-          />
-
-          <span v-if="count !== 0" class="countFilter">{{ count }}</span>
-        </div>
-      </v-card> -->
     </div>
-    <div class="d-flex ga-4">
-      <v-card class="table w-50">
-        <v-data-table-server
-          style="height: calc(100vh - 150px)"
-          fixed-header
-          :items="groups"
-          :headers="Groupheaders"
-          :loading="loadingGroup"
-          items-per-page-text="Элементов на странице:"
-          loading-text="Загрузка"
-          no-data-text="Нет данных"
-          :search="search"
-          @update:options="getGroups"
-          v-model:items-per-page="Grouppagination.per_page"
-          :items-length="Grouppagination.total || 0"
-          :item-value="headers.title"
-          hover
-          fixed-footer
-          page-text="{0}-{1} от {2}"
-          :items-per-page-options="[
-            { value: 25, title: '25' },
-            { value: 50, title: '50' },
-            { value: 100, title: '100' },
-          ]"
-        >
-          <template v-slot:loadingGroup>
-            <v-skeleton-loader type="table-row@9"></v-skeleton-loader>
-          </template>
-          <template v-slot:item="{ item, index }">
-            <tr
-              @mouseenter="hoveredRowIndex = index + 100000"
-              @mouseleave="hoveredRowIndex = null"
-              @dblclick="editGroup(item)"
-              @click="lineMarkingGroup(item.id)"
-              :class="{ 'bg-grey-lighten-2': item.id === groupIdRef }"
-            >
-              <td>
-                <span class="d-flex align-center">
-                  <Icons
-                    style="margin-right: 10px; margin-top: 4px"
-                    :name="item.deleted_at === null ? 'valid' : 'inValid'"
-                  />
-                  <span>{{ item.id }}</span>
-                </span>
-              </td>
-              <td>
-                <span>{{ item.name }}</span>
-              </td>
-            </tr>
-          </template>
-        </v-data-table-server>
-      </v-card>
-      <v-card class="table w-100">
-        <v-data-table-server
-          style="height: calc(100vh - 150px)"
-          fixed-header
-          :items="goods"
-          :headers="headers"
-          :loading="loading"
-          items-per-page-text="Элементов на странице:"
-          loading-text="Загрузка"
-          no-data-text="Нет данных"
-          :search="search"
-          @update:options="getGoods"
-          v-model:items-per-page="pagination.per_page"
-          :items-length="pagination.total || 0"
-          :item-value="headers.title"
-          show-select
-          v-model="markedID"
-          hover
-          fixed-footer
-          page-text="{0}-{1} от {2}"
-          :items-per-page-options="[
-            { value: 25, title: '25' },
-            { value: 50, title: '50' },
-            { value: 100, title: '100' },
-          ]"
-        >
-          <template v-slot:loading>
-            <v-skeleton-loader type="table-row@9"></v-skeleton-loader>
-          </template>
-          <template v-slot:item="{ item, index }">
-            <tr
-              @mouseenter="hoveredRowIndex = index"
-              @mouseleave="hoveredRowIndex = null"
-              @dblclick="editItem(item.id)"
-              :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
-            >
-              <td>
-                <template
-                  v-if="hoveredRowIndex === index || markedID.includes(item.id)"
-                >
-                  <CustomCheckbox
-                    :checked="markedID.includes(item.id)"
-                    @change="lineMarking(item)"
-                  >
-                    <span>{{ item.id }}</span>
-                  </CustomCheckbox>
-                </template>
 
-                <template v-else>
-                  <span class="d-flex align-center">
-                    <Icons
-                      style="margin-right: 10px; margin-top: 4px"
-                      :name="item.deleted_at === null ? 'valid' : 'inValid'"
-                    />
-                    <span>{{ item.id }}</span>
-                  </span>
-                </template>
-              </td>
-              <td>
-                <span>{{ item.name }}</span>
-              </td>
-            </tr>
-          </template>
-        </v-data-table-server>
-      </v-card>
+    <div class="table calcWidth">
+      <v-data-table-server
+        style="height: calc(100vh - 150px)"
+        items-per-page-text="Элементов на странице:"
+        loading-text="Загрузка"
+        no-data-text="Нет данных"
+        v-model:items-per-page="Grouppagination.per_page"
+        :loading="loading"
+        :headers="selectedBlock === 'По группам' ? headersGroup : headers"
+        :items-length="Grouppagination.total || 0"
+        :items="groups"
+        :group-by="selectedBlock === 'По группам' ? groupBy : []"
+        @update:options="getGroups"
+        :search="search"
+        page-text="{0}-{1} от {2}"
+        :items-per-page-options="[
+          { value: 25, title: '25' },
+          { value: 50, title: '50' },
+          { value: 100, title: '100' },
+        ]"
+        fixed-header
+        hover
+      >
+        <template v-slot:group-header="{ item, toggleGroup, isGroupOpen }">
+          <tr
+            style="background-color: rgba(122, 127, 176, 0.193)"
+            @dblclick="editGroup(item)"
+          >
+            <td style="width: 350px">
+              <div class="d-flex align-center">
+                <CustomCheckbox
+                  v-if="isGroupOpen(item)"
+                  v-model="markedID"
+                  :checked="isGroupChecked(item)"
+                  @change="toggleGroupSelection(item)"
+                >
+                </CustomCheckbox>
+                <VBtn
+                  :icon="isGroupOpen(item) ? '$expand' : '$next'"
+                  size="small"
+                  variant="text"
+                  @click="toggleGroup(item)"
+                ></VBtn>
+                <span>{{ item.value }}</span>
+              </div>
+            </td>
+            <td style="width: 390px">
+              <v-chip
+                v-if="item.items[0].raw.deleted_at"
+                style="height: 50px; width: 200px"
+                class="d-flex justify-center"
+                :color="getListColor(item.items[0].raw.deleted_at)"
+              >
+                <span class="padding: 5px;">{{
+                  getListStatus(item.items[0].raw.deleted_at)
+                }}</span>
+              </v-chip>
+            </td>
+            <td></td>
+          </tr>
+        </template>
+        <template v-slot:item="{ item, index }">
+          <tr
+            v-if="item.goods.length !== 0"
+            v-for="good in item.goods"
+            :key="good.id"
+            :class="{ 'bg-grey-lighten-2': item.id === groupIdRef }"
+            @mouseenter="hoveredRowIndex = index + 100000"
+            @mouseleave="hoveredRowIndex = null"
+            @dblclick="editItem(good.id)"
+          >
+            <td style="width: 350px">
+              <div class="d-flex align-center ga-2">
+                <CustomCheckbox
+                  v-model="markedID"
+                  :checked="markedID.includes(good.id)"
+                  @change="lineMarking(good)"
+                >
+                </CustomCheckbox>
+                {{ good?.id }}
+              </div>
+            </td>
+            <td style="width: 390px">
+              <v-chip
+                style="height: 50px; width: 200px"
+                class="d-flex justify-center"
+                :color="getListColor(good?.deleted_at)"
+              >
+                <span class="padding: 5px;">{{
+                  getListStatus(good?.deleted_at)
+                }}</span>
+              </v-chip>
+            </td>
+            <td>{{ good?.name }}</td>
+          </tr>
+          <tr v-else-if="selectedBlock === 'По группам'">
+            <td></td>
+            <td>Нету данных!</td>
+            <td></td>
+          </tr>
+        </template>
+      </v-data-table-server>
     </div>
     <div v-if="isCreateGroup">
       <keep-alive>
@@ -554,6 +559,69 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
         />
       </keep-alive>
     </div>
+
+    <filterCanvas>
+      <div>
+        <div class="d-flex ga-2">
+          <custom-filter-text-field
+            v-model="filterForm.name"
+            placeholder="Товар"
+            label="Наименование"
+          />
+          <custom-filter-text-field
+            v-model="filterForm.vendor_code"
+            placeholder="Артикуль"
+            label="Артикуль"
+          />
+        </div>
+        <div class="d-flex ga-2 my-2">
+          <custom-filter-autocomplete
+            v-model="filterForm.storage_id"
+            placeholder="Склад"
+            :items="storages"
+            label="Склад"
+          />
+          <custom-filter-autocomplete
+            placeholder="Помечен на удаление"
+            v-model="filterForm.deleted"
+            label="Помечен на удаление"
+            :items="markedForDeletion"
+          />
+        </div>
+        <div class="d-flex ga-2 my-2">
+          <custom-filter-autocomplete
+            placeholder="Единица измерения"
+            v-model="filterForm.unit_id"
+            label="Единица измерения"
+            :items="units"
+          />
+          <custom-filter-autocomplete
+            placeholder="Группа товара"
+            v-model="filterForm.good_group_id"
+            label="Группа товара"
+            :items="groups"
+          />
+        </div>
+        <div class="d-flex justify-end">
+          <div class="d-flex ga-2" style="margin-right: -6%">
+            <v-btn color="red" class="btn" @click="closeFilterModal"
+              >сбросить</v-btn
+            >
+            <v-btn
+              :color="BASE_COLOR"
+              class="btn"
+              @click="
+                () => {
+                  getGroups({});
+                  useFilterCanvasVisible().closeFilterCanvas();
+                }
+              "
+              >применить</v-btn
+            >
+          </div>
+        </div>
+      </div>
+    </filterCanvas>
   </div>
 </template>
 
