@@ -30,4 +30,9 @@ export default {
   massRestore(data) {
     return api.post(`/good-group/massRestore/`, data);
   },
+  excel(filterData = {}) {
+    return api.get('/goods/excel/export', {
+      responseType: 'blob'
+    })
+  }
 };

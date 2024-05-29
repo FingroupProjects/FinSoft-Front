@@ -1,4 +1,6 @@
 <script setup>
+import getListStatus from "../../../composables/displayed/getListStatus.js";
+import getListColor from "../../../composables/displayed/getListColor.js";
 import { onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Icons from "../../../composables/Icons/Icons.vue";
@@ -26,7 +28,7 @@ import {
 
 const router = useRouter();
 const route = useRoute();
-const props = defineProps(["isCreated", "id", "isEdit"]);
+const props = defineProps(["isCreated", "id", "isEdit", "createOnBase"]);
 
 const pagination = ref([]);
 const barcodes = ref([]);
@@ -44,7 +46,10 @@ const barcodeId = ref(null);
 
 const barcode = ref("");
 
-const headers = ref([{ title: "Наименование", key: "barcode" }]);
+const headers = ref([
+  { title: "Наименование", key: "barcode" },
+  { title: "Статус", key: "deleted_at" },
+]);
 
 const rules = {
   required: (v) => !!v,
@@ -143,7 +148,7 @@ const updateBarcode = async () => {
   }
 };
 const getBarcodes = async ({ page, itemsPerPage, sortBy, search }) => {
-  if (props.id == 0) {
+  if (props.id == 0 || props.createOnBase) {
     loading.value = false;
     return;
   }
@@ -301,30 +306,26 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
               :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
               <td>
-                <template
-                  v-if="hoveredRowIndex === index || markedID.includes(item.id)"
+                <CustomCheckbox
+                  :checked="markedID.includes(item.id)"
+                  @change="lineMarking(item)"
                 >
-                  <CustomCheckbox
-                    :checked="markedID.includes(item.id)"
-                    @click="lineMarking(item)"
-                    @change="lineMarking(item)"
-                  >
-                    <span>{{ item.id }}</span>
-                  </CustomCheckbox>
-                </template>
-
-                <template v-else>
-                  <span class="d-flex align-center">
-                    <Icons
-                      style="margin-right: 10px; margin-top: 4px"
-                      :name="item.deleted_at === null ? 'valid' : 'inValid'"
-                    />
-                    <span>{{ item.id }}</span>
-                  </span>
-                </template>
+                  <span>{{ item.id }}</span>
+                </CustomCheckbox>
               </td>
               <td>
                 <span>{{ item.barcode }}</span>
+              </td>
+              <td>
+                <v-chip
+                  style="height: 50px; width: 200px"
+                  class="d-flex justify-center"
+                  :color="getListColor(item.deleted_at)"
+                >
+                  <span class="padding: 5px;">
+                    {{ getListStatus(item.deleted_at) }}
+                    </span>
+                </v-chip>
               </td>
             </tr>
           </template>
@@ -370,13 +371,13 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
                 v-model="barcode"
                 :rules="isValid ? [rules.required] : []"
                 :color="BASE_COLOR"
-                rounded="md"
+                rounded="lg"
                 variant="outlined"
                 class="w-auto text-sm-body-1"
                 density="compact"
                 placeholder="42562453452"
                 v-mask="'############'"
-                label="Наименование"
+                label="Шрих-код"
                 clear-icon="close"
                 clearable
                 :base-color="FIELD_COLOR"

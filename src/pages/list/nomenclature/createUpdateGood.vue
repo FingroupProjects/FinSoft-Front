@@ -11,7 +11,10 @@ import { useRoute, useRouter } from "vue-router";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import { addMessage, editMessage } from "../../../composables/constant/buttons";
 import validate from "./validate";
-import { FIELD_COLOR, BASE_COLOR } from "../../../composables/constant/colors.js";
+import {
+  FIELD_COLOR,
+  BASE_COLOR,
+} from "../../../composables/constant/colors.js";
 import {
   createAccess,
   readAccess,
@@ -278,6 +281,8 @@ const createGood = async () => {
     id.value = data.result.id;
     showToast(addMessage);
     isCreated.value = true;
+    isCreateOnBase.value = false;
+    router.push({ name: "createUpdateGood", params: { id: id.value } });
   } catch (e) {
     console.error(e);
     if (e.response.data.errors.vendor_code) {
@@ -301,6 +306,7 @@ const check = async () => {
   }
   if (query.createOnBase == "1") {
     isCreateOnBase.value = true;
+
     id.value = routeParams.id;
   } else {
     isEditGood();
@@ -319,62 +325,63 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="modal" @keyup.esc="$router.go(-1)">
-    <v-col>
-      <div class="d-flex justify-space-between align-center mb-2 ms-4">
-        <div>
-          <div
-            style="cursor: pointer"
-            @click="
-              isEdit && !isCreateOnBase
-                ? checkUpdate()
-                : $router.push('/list/nomenclature')
-            "
-            class="pa-1 bg-green rounded-circle d-inline-block mr-4 text-uppercase"
-          >
-            <v-icon icon="keyboard_backspace" size="x-small" />
-          </div>
-          <span>{{
-            isEdit && !isCreateOnBase ? `Товар: ${good_name}` : "Добавление"
-          }}</span>
+  <div class="pa-4" @keyup.esc="$router.go(-1)">
+    <div class="d-flex justify-space-between align-center mb-2 ms-4">
+      <div>
+        <div
+          style="cursor: pointer"
+          @click="
+            isEdit && !isCreateOnBase
+              ? checkUpdate()
+              : $router.push('/list/nomenclature')
+          "
+          class="pa-1 bg-green rounded-circle d-inline-block mr-4 text-uppercase"
+        >
+          <v-icon icon="keyboard_backspace" size="x-small" />
         </div>
-        <div class="d-flex align-center justify-space-between">
-          <div class="d-flex ga-3 align-center mt-2 me-4">
-            <span
-              class="mt-1 ms-2 text-blue-darken-4 cursor-pointer"
-              style="text-decoration: underline"
-              @click="goToImages()"
-              >ФОТО</span
-            >
-            <Icons
-              v-if="
-                isEdit && !isCreateOnBase
-                  ? updateAccess('nomenclature')
-                  : createAccess('nomenclature')
-              "
-              @click="isEdit && !isCreateOnBase ? updateGood() : createGood()"
-              name="save"
-              title="Сохранить"
-            />
-          </div>
+        <span>{{
+          isEdit && !isCreateOnBase ? `Товар: ${good_name}` : "Добавление"
+        }}</span>
+      </div>
+      <div class="d-flex align-center justify-space-between">
+        <div class="d-flex ga-3 align-center mt-2 me-4">
+          <span
+            class="mt-1 ms-2 text-blue-darken-4 cursor-pointer"
+            style="text-decoration: underline"
+            @click="goToImages()"
+            >ФОТО</span
+          >
+          <Icons
+            v-if="
+              isEdit && !isCreateOnBase
+                ? updateAccess('nomenclature')
+                : createAccess('nomenclature')
+            "
+            @click="isEdit && !isCreateOnBase ? updateGood() : createGood()"
+            name="save"
+            title="Сохранить"
+          />
         </div>
       </div>
-      <v-card
-        min-width="650"
-        class="d-flex pa-5 justify-center flex-column mx-auto my-0"
-        rounded="xl"
+    </div>
+    <v-card
+      min-width="650"
+      class="d-flex pa-5 justify-center flex-column mx-auto my-0"
+      rounded="xl"
+    >
+      <v-form
+        :disabled="!updateAccess('nomenclature') && isEdit"
+        class="d-flex w-100"
       >
-        <v-form
-          :disabled="!updateAccess('nomenclature') && isEdit"
-          class="d-flex w-100"
-        >
-          <v-row class="w-100">
-            <v-col class="d-flex flex-column w-100 ga-3">
+        <v-row class="w-100">
+          <v-col class="d-flex flex-column w-100 ga-3">
+            <div class="d-flex ga-4">
               <v-text-field
                 v-model="name"
+                style="max-width: 49.4%; min-width: 49.4%"
                 :rules="isValid ? [rules.required] : []"
                 :color="BASE_COLOR"
-                rounded="md"
+                rounded="lg"
                 variant="outlined"
                 class="w-auto text-sm-body-1"
                 density="compact"
@@ -388,118 +395,139 @@ onMounted(async () => {
                 :base-color="FIELD_COLOR"
               />
               <v-text-field
+                style="max-width: 49.4%; min-width: 49.4%"
                 v-model="vendor_code"
                 :rules="isValid ? [rules.required] : []"
                 :color="BASE_COLOR"
-                rounded="md"
+                rounded="lg"
                 variant="outlined"
                 class="w-auto text-sm-body-1"
                 density="compact"
                 maxlength="8"
                 placeholder="Артикуль"
+                v-mask="'########'"
                 label="Артикуль"
                 clear-icon="close"
                 clearable
                 hide-details
                 :base-color="FIELD_COLOR"
               />
-              <div
-                :class="add_images.length > 1 ? 'mb-3' : ''"
-                class="d-flex justify-space-between ga-3"
-              >
-                <div style="width: 40%; height: 180px">
-                  <div>
-                    <img
-                      @click="
-                        updateAccess('nomenclature') && isEdit || createAccess('nomenclature') && !isEdit
-                          ? goToImages()
-                          : ''
-                      "
-                      v-if="main_image"
-                      :src="main_image"
-                      class="image"
-                      alt="Main Image"
-                      style="
-                        width: 100%;
-                        height: 160px;
-                        border-radius: 4px;
-                        border: 1px solid #274D87;
-                        cursor: pointer;
-                      "
-                    />
-                    <div
-                      v-if="!notImg && add_images.length > 1"
-                      class="d-flex justify-space-between w-100"
-                    >
-                      <div style="cursor: pointer" @click="previousImage()">
-                        <Icons name="left"></Icons>
-                      </div>
-                      <div style="cursor: pointer" @click="nextImage()">
-                        <Icons name="right"></Icons>
-                      </div>
+            </div>
+            <div class="d-flex ga-4">
+              <v-autocomplete
+                style="max-width: 49.4%; min-width: 49.4%"
+                :rules="isValid ? [rules.required] : []"
+                placeholder="Место расположения"
+                label="Место расположения"
+                :item-props="itemsProps"
+                v-model="storage_id"
+                variant="outlined"
+                item-title="name"
+                item-value="id"
+                rounded="lg"
+                :items="storages"
+                :color="BASE_COLOR"
+                hide-details
+                :base-color="FIELD_COLOR"
+              />
+              <v-autocomplete
+                style="max-width: 49.4%; min-width: 49.4%"
+                :rules="isValid ? [rules.required] : []"
+                placeholder="Ед измерения"
+                :item-props="itemsProps"
+                label="Ед измерения"
+                v-model="unit_id"
+                rounded="lg"
+                variant="outlined"
+                item-title="name"
+                item-value="id"
+                :items="units"
+                :color="BASE_COLOR"
+                hide-details
+                :base-color="FIELD_COLOR"
+              />
+            </div>
+            <div
+              :class="add_images.length > 1 ? 'mb-3' : ''"
+              class="d-flex justify-space-between ga-3"
+            >
+              <div style="min-width: 240px; max-height: 186px">
+                <div>
+                  <img
+                    @click="
+                      (updateAccess('nomenclature') && isEdit) ||
+                      (createAccess('nomenclature') && !isEdit)
+                        ? goToImages()
+                        : ''
+                    "
+                    v-if="main_image"
+                    :src="main_image"
+                    class="image"
+                    alt="Main Image"
+                    style="
+                      width: 100%;
+                      height: 100%;
+                      border-radius: 4px;
+                      border: 1px solid #274d87;
+                      cursor: pointer;
+                      object-fit: contain;
+                    "
+                  />
+                  <div
+                    v-if="!notImg && add_images.length > 1"
+                    class="d-flex justify-space-between w-100"
+                  >
+                    <div style="cursor: pointer" @click="previousImage()">
+                      <Icons name="left"></Icons>
+                    </div>
+                    <div style="cursor: pointer" @click="nextImage()">
+                      <Icons name="right"></Icons>
                     </div>
                   </div>
                 </div>
-                <div class="d-flex flex-column ga-3 w-75">
-                  <v-autocomplete
-                    :rules="isValid ? [rules.required] : []"
-                    placeholder="Место расположения"
-                    label="Место расположения"
-                    :item-props="itemsProps"
-                    v-model="storage_id"
-                    variant="outlined"
-                    item-title="name"
-                    item-value="id"
-                    :items="storages"
-                    :color="BASE_COLOR"
-                    hide-details
-                    :base-color="FIELD_COLOR"
-                  />
-                  <v-autocomplete
-                    :rules="isValid ? [rules.required] : []"
-                    placeholder="Ед измерения"
-                    :item-props="itemsProps"
-                    label="Ед измерения"
-                    v-model="unit_id"
-                    variant="outlined"
-                    item-title="name"
-                    item-value="id"
-                    :items="units"
-                    :color="BASE_COLOR"
-                    hide-details
-                    :base-color="FIELD_COLOR"
-                  />
-                  <v-autocomplete
-                    :rules="isValid ? [rules.required] : []"
-                    placeholder="Группа номенклатуры"
-                    label="Группа номенклатуры"
-                    :item-props="itemsProps"
-                    v-model="good_group_id"
-                    variant="outlined"
-                    item-title="name"
-                    item-value="id"
-                    :items="groups"
-                    :color="BASE_COLOR"
-                    hide-details
-                    :base-color="FIELD_COLOR"
-                  />
-                </div>
               </div>
-              <v-textarea
-                v-model="description"
-                variant="outlined"
-                label="Описание"
-                :color="BASE_COLOR"
-                :base-color="FIELD_COLOR"
+              <div class="d-flex flex-column ga-3" style="width: 100%">
+                <v-autocomplete
+                  :rules="isValid ? [rules.required] : []"
+                  placeholder="Группа номенклатуры"
+                  label="Группа номенклатуры"
+                  :item-props="itemsProps"
+                  v-model="good_group_id"
+                  variant="outlined"
+                  item-title="name"
+                  item-value="id"
+                  :items="groups"
+                  :color="BASE_COLOR"
+                  hide-details
+                  :base-color="FIELD_COLOR"
+                />
+                <v-textarea
+                  v-model="description"
+                  variant="outlined"
+                  label="Описание"
+                  :color="BASE_COLOR"
+                  :base-color="FIELD_COLOR"
+                  hide-details
+                  rows="4"
+                />
+              </div>
+            </div>
+
+            <div
+              :style="`border: 2px solid ${BASE_COLOR}`"
+              style="border-radius: 8px"
+            >
+              <barcode
+                :isCreated="isCreated"
+                :id="id"
+                :isEdit="isEdit"
+                :createOnBase="isCreateOnBase"
               />
-              <div :style="`border: 2px solid ${BASE_COLOR}`" style="border-radius: 8px">
-                <barcode :isCreated="isCreated" :id="id" :isEdit="isEdit"/>
-              </div>
-            </v-col>
-          </v-row>
-        </v-form>
-      </v-card>
-    </v-col>
+            </div>
+          </v-col>
+        </v-row>
+      </v-form>
+    </v-card>
     <div v-if="showModal">
       <ConfirmModal
         :showModal="true"
@@ -511,9 +539,6 @@ onMounted(async () => {
   </div>
 </template>
 <style scoped>
-.modal {
-  padding: 20px 0px;
-}
 .photo_el:hover {
   color: green;
   cursor: pointer;
