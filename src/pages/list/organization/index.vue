@@ -179,15 +179,7 @@ const addBasedOnOrganization = () => {
 
 const update = async () => {
   console.log("u")
-  if (
-    validate(
-      nameRef,
-      innRef,
-      directorRef,
-      accountantRef,
-      addressRef,
-    ) !== true
-  )
+  if (validate( nameRef, innRef, directorRef, accountantRef, addressRef, ) !== true)
     return;
 
     console.log(34)
@@ -205,7 +197,6 @@ const update = async () => {
   } else {
     accountant = accountantRef.value;
   }
-
   const body = {
     name: nameRef.value,
     INN: innRef.value,
@@ -214,17 +205,15 @@ const update = async () => {
     address: addressRef.value,
     description: descriptionRef.value,
   };
-
+  console.log(body)
   try {
     const { status } = await organization.update(idOrganizations.value, body);
-   
     if (status == 200) {
       console.log(status)
        showToast(editMessage);
        await getOrganizationData({});
      
     }
-    
     cleanForm();
   } catch (e) {
     console.log(e)
