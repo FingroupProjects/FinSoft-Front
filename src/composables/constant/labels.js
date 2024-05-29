@@ -1,0 +1,1 @@
+export const LABEL_MARKED_FOR_DELETION = 'Помечен на удаление'

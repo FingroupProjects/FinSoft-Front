@@ -26,5 +26,10 @@ export default {
   },
   calculateHours(body) {
     return api.post('/calculateHours', body, { headers: { permission: true } })
+  },
+  excel() {
+    return api.get('/schedule/excel/export', {
+      responseType: 'blob'
+    })
   }
 }

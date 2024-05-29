@@ -32,6 +32,9 @@ const createGroup = async () => {
     emit("toggleDialog");
   } catch (e) {
     console.error(e)
+    if (e.response.data.message === "The name has already been taken.") {
+      showToast("Группа с таким наименованием уже существует", "warning")
+    }
   } finally {
     isValid.value = false;
   }
@@ -56,6 +59,10 @@ const update = async () => {
     emit("toggleDialog");
   } catch (e) {
     console.log(e)
+    if (e.response.data.message === "The name has already been taken.") {
+      showToast("Группа с таким наименованием уже существует", "warning")
+    }
+
   } finally {
     isValid.value = false;
   }
@@ -81,6 +88,7 @@ const destroy  = async () => {
     if (e.response.status === 400) {
       showToast(e.response.data.message, 'warning')
     }
+
   } finally {
     emit("toggleDialog");
   }
@@ -134,6 +142,7 @@ onMounted(() => {
                   :rules="isValid ? [rules.required] : []"
                   :color="BASE_COLOR"
                   :base-color="FIELD_COLOR"
+                  rounded="lg"
                   variant="outlined"
                   class="w-auto text-sm-body-1"
                   density="compact"
