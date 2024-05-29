@@ -255,7 +255,6 @@ const openDialog = (item) => {
     currencyAdd.value = item.currency.id
     priceTypeInDialogTitle.value = nameRef.value
   }
-
 }
 
 

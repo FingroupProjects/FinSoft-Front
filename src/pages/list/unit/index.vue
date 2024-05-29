@@ -449,7 +449,7 @@ onMounted(() => {
           <tr
             @mouseenter="hoveredRowIndex = index"
             @mouseleave="hoveredRowIndex = null"
-            @dblclick="editItem(item)"
+            @dblclick="openDialog(item)"
             :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
           >
             <td>

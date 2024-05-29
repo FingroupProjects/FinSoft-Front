@@ -170,7 +170,7 @@ const massRestore = async ({ page, itemsPerPage, sortBy, search }) => {
     const { status } = await position.massRestore(body)
 
     if (status === 200) {
-      showToast(restoreMessage, 'red')
+      showToast(restoreMessage, 'green')
       await getPositionData({page, itemsPerPage, sortBy}, search)
       markedID.value = []
     }

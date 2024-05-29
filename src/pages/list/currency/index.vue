@@ -581,9 +581,20 @@ const computeRate = ({page, itemsPerPage, sortBy}) => {
 }
 
 const validateCurrency = () => {
-  const value = valueRef.value.toString();
-  valueRef.value = value.replace(/(?!^\.)([^\d.])/g, '');
-}
+  let value = valueRef.value.toString();
+
+  value = value.replace(/(?!^\.)([^\d.])/g, '');
+
+  if (value.startsWith('0') && value.length > 1 && value[1] !== '.') {
+    value = value.substring(1);
+  }
+
+  if (value === '0') {
+    value = '';
+  }
+
+  valueRef.value = value;
+};
 
 onMounted(async () => {
   dateRef.value = currentDate()
@@ -618,6 +629,17 @@ watch(search, debounce((newValue) => {
   debounceSearch.value = newValue
 }, 500))
 
+const validatePrice = (price) => {
+  if (price === 0 || price === '0' || Number(price) === 0) {
+    return false;
+  }
+  return true;
+};
+const handlePriceInput = (item) => {
+  if (!validatePrice(item.price)) {
+    item.price = null;  
+  }
+};
 </script>
 
 <template>
@@ -836,7 +858,7 @@ watch(search, debounce((newValue) => {
                         </CustomCheckbox>
                       </template>
                       <template v-else>
-                        <div>
+                        <div class="d-flex">
                           <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
                           <span>{{ index + 1 }}</span>
                         </div>
@@ -859,7 +881,7 @@ watch(search, debounce((newValue) => {
               <span class="pl-5">{{ isExistsCurrencyRate ? 'Изменить' : 'Добавить' }} курс</span>
               <div class="d-flex align-center justify-space-between">
                 <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons title="Удалить "  v-show="isExistsCurrencyRate" @click="computeRate" name="delete"/>
+                  <Icons title="Удалить" v-if="isExistsCurrencyRate"  @click="computeRate" name="delete"/>
                   
                   <Icons title="Сохранить"  v-if="isExistsCurrencyRate" @click="updateRate" name="save"/>
                   <Icons  title="Сохранить" v-else @click="addRate" name="save"/>
