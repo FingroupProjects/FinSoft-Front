@@ -345,12 +345,15 @@ onMounted(async () => {
       </div>
       <div class="d-flex align-center justify-space-between">
         <div class="d-flex ga-3 align-center mt-2 me-4">
-          <span
-            class="mt-1 ms-2 text-blue-darken-4 cursor-pointer"
-            style="text-decoration: underline"
+          <Button
+            v-if="
+              isEdit && !isCreateOnBase
+                ? updateAccess('nomenclature')
+                : createAccess('nomenclature')
+            "
             @click="goToImages()"
-            >ФОТО</span
-          >
+            name="img"
+          />
           <Button
             v-if="
               isEdit && !isCreateOnBase
