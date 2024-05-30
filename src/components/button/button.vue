@@ -194,6 +194,12 @@ const headerButtons = ref([
     bgColor: "#ecdbde",
     textColor: "#CD0101",
   },
+  {
+    title: "Фото",
+    key: "img",
+    bgColor: "#524ED8",
+    textColor: "#fff",
+  },
 ])
 
 const filteredButtons = computed(() => {
