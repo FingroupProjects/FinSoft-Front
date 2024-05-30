@@ -141,7 +141,7 @@ onMounted( () => {
 <template>
   <div class="pa-4 mb-0">
     <div class="d-flex align-center">
-      <div class="switcher">
+      <div style="min-height: 60px !important;" class="switcher">
         <button
             @click="seletectBlock('История')"
             :class="selectedBlock === 'История' ? 'active' : ''"
@@ -172,7 +172,7 @@ onMounted( () => {
         >
           Взаимодействие с поставщиками
         </button>
-        <Button @click="closeWindow" name="close"/>
+        <Button style="max-height: 40px !important;" @click="closeWindow" name="close"/>
       </div>
       <!-- <div class="mb-1 ms-2"> -->
       <!-- </div> -->
@@ -214,7 +214,7 @@ onMounted( () => {
       <h2 class="my-4">Баланс</h2>
       <v-card class="table">
         <v-data-table-server
-          style="height: 70vh"
+          style="height: cacl(100vh - 150px)"
           :loading="loading"
           loading-text="Загрузка"
           items-per-page-text="Элементов на странице:"

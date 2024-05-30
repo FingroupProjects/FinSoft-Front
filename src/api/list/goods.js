@@ -35,4 +35,7 @@ export default {
   deleteImage(id) {
     return api.delete(`/image/${id}`);
   },
+  getGoodBySearch(good) {
+    return api.get(`good/`, { params: {search: good} })
+  }
 };
