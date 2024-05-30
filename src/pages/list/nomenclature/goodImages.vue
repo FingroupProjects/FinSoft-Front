@@ -1,19 +1,13 @@
 <script setup>
-import { onMounted, ref, watch } from "vue";
+import { ErrorSelectMessage, removeMessage, addMessage, } from "../../../composables/constant/buttons.js";
+import { BASE_COLOR, TITLE_COLOR } from "../../../composables/constant/colors.js";
+import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
+import Button from "../../../components/button/button.vue";
+import Icons from "../../../composables/Icons/Icons.vue";
+import showToast from "../../../composables/toast";
 import { useRoute, useRouter } from "vue-router";
 import goodsApi from "../../../api/list/goods";
-import showToast from "../../../composables/toast";
-import Icons from "../../../composables/Icons/Icons.vue";
-import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import { FIELD_COLOR, BASE_COLOR } from "../../../composables/constant/colors.js";
-import {
-  ErrorSelectMessage,
-  removeMessage,
-  restoreMessage,
-  addMessage,
-  selectOneItemMessage,
-  warningMessage,
-} from "../../../composables/constant/buttons.js";
+import { onMounted, ref, watch } from "vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -131,7 +125,6 @@ const createImage = async () => {
     formData.append("image", imageRef.value);
     formData.append("good_id", route.params.id);
     formData.append("is_main", a.value === true ? 1 : 0);
-    console.log(a.value,'000');
     const { data } = await goodsApi.createImage(formData);
     isCreate.value = false;
     a.value = false;
@@ -181,30 +174,24 @@ onMounted(async () => {
 <template>
   <div>
     <v-col>
-      <div class="d-flex justify-space-between text-uppercase">
+      <div class="d-flex justify-space-between">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <div
-            style="cursor: pointer"
-            @click="goToBack()"
-            class="pa-1 bg-green rounded-circle d-inline-block"
-          >
-            <v-icon icon="keyboard_backspace" size="x-small" />
-          </div>
-          <span>Добавление фото</span>
+          <span :style="{ color: TITLE_COLOR, fontSize: '22px' }"> Добавление фото </span>
         </div>
         <v-card variant="text" min-width="300" class="d-flex align-center ga-2">
-          <div class="d-flex w-100 justify-end">
+          <div class="d-flex w-100 justify-end mb-2">
             <div class="d-flex align-end ga-2 me-3">
-              <Icons @click="openModal()" name="add" title="Создать" />
-              <Icons @click="delImg()" name="delete" title="Удалить" />
+              <Button @click="openModal()" name="create"/>
+              <Button @click="delImg()" name="delete"/>
+              <Button @click="goToBack()" name="close"/>
             </div>
           </div>
         </v-card>
       </div>
 
-      <v-card class="table mt-2">
+      <v-card class="table">
         <v-data-table-server
-          style="height: 78vh"
+          style="height: calc(100vh - 140px)"
           fixed-header
           :items="images"
           :headers="headers"

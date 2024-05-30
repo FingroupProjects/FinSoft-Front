@@ -335,6 +335,7 @@ onMounted(() => {
   getCounterparties();
   getStorages();
 });
+
 </script>
 <template>
   <div class="document">
@@ -431,6 +432,7 @@ onMounted(() => {
                         :items="listGoods"
                         :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                         min-width="150"
+                        @input="qwerty"
                         max-width="100%"
                         :isAmount="true"
                     />
