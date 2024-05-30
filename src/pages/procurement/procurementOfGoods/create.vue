@@ -348,6 +348,10 @@ const handlePriceInput = (item) => {
   }
 };
 
+const qwerty = (event) => {
+  console.log(event.data);
+}
+
 </script>
 <template>
   <div class="document">
@@ -444,6 +448,7 @@ const handlePriceInput = (item) => {
                         :items="listGoods"
                         :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                         min-width="150"
+                        @input="qwerty"
                         max-width="100%"
                         :isAmount="true"
                     />

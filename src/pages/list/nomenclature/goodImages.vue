@@ -1,20 +1,13 @@
 <script setup>
+import { ErrorSelectMessage, removeMessage, addMessage, } from "../../../composables/constant/buttons.js";
+import { BASE_COLOR, TITLE_COLOR } from "../../../composables/constant/colors.js";
+import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import Button from "../../../components/button/button.vue";
-import { onMounted, ref, watch } from "vue";
+import Icons from "../../../composables/Icons/Icons.vue";
+import showToast from "../../../composables/toast";
 import { useRoute, useRouter } from "vue-router";
 import goodsApi from "../../../api/list/goods";
-import showToast from "../../../composables/toast";
-import Icons from "../../../composables/Icons/Icons.vue";
-import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import { FIELD_COLOR, BASE_COLOR, TITLE_COLOR } from "../../../composables/constant/colors.js";
-import {
-  ErrorSelectMessage,
-  removeMessage,
-  restoreMessage,
-  addMessage,
-  selectOneItemMessage,
-  warningMessage,
-} from "../../../composables/constant/buttons.js";
+import { onMounted, ref, watch } from "vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -132,7 +125,6 @@ const createImage = async () => {
     formData.append("image", imageRef.value);
     formData.append("good_id", route.params.id);
     formData.append("is_main", a.value === true ? 1 : 0);
-    console.log(a.value,'000');
     const { data } = await goodsApi.createImage(formData);
     isCreate.value = false;
     a.value = false;
@@ -192,8 +184,6 @@ onMounted(async () => {
               <Button @click="openModal()" name="create"/>
               <Button @click="delImg()" name="delete"/>
               <Button @click="goToBack()" name="close"/>
-              <!-- <Icons @click="openModal()" name="add" title="Создать" />
-              <Icons @click="delImg()" name="delete" title="Удалить" /> -->
             </div>
           </div>
         </v-card>

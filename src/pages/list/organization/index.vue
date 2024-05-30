@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch, onMounted, computed } from "vue";
-import { useRouter } from 'vue-router';
+import { useRouter } from "vue-router";
 import organization from "../../../api/list/organizations";
 import {
   addMessage,
@@ -11,23 +11,34 @@ import {
   ErrorSelectMessage,
 } from "../../../composables/constant/buttons.js";
 import showToast from "../../../composables/toast";
+import getExcel from "../../../composables/otherQueries/getExcel.js";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import Icons from "../../../composables/Icons/Icons.vue";
 import employee from "../../../api/list/employee";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import validate from "./validate.js";
-import {FIELD_COLOR, FIELD_OF_SEARCH, BASE_COLOR, TITLE_COLOR} from "../../../composables/constant/colors.js";
+import {
+  FIELD_COLOR,
+  FIELD_OF_SEARCH,
+  BASE_COLOR,
+  TITLE_COLOR,
+} from "../../../composables/constant/colors.js";
 import Button from "../../../components/button/button.vue";
 import debounce from "lodash.debounce";
 import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
-import {useFilterCanvasVisible} from "../../../store/canvasVisible.js";
+import { useFilterCanvasVisible } from "../../../store/canvasVisible.js";
 import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
 import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
-import {markedForDeletion} from "../../../composables/constant/items.js";
+import { markedForDeletion } from "../../../composables/constant/items.js";
 import getListColor from "../../../composables/displayed/getListColor.js";
 import getListStatus from "../../../composables/displayed/getListStatus";
-import {createAccess, readAccess, removeAccess, updateAccess} from "../../../composables/access/access.js";
- 
+import {
+  createAccess,
+  readAccess,
+  removeAccess,
+  updateAccess,
+} from "../../../composables/access/access.js";
+
 const showConfirmDialog = ref(false);
 const router = useRouter();
 const addDialog = ref(false);
@@ -58,9 +69,8 @@ const toggleModal = () => {
   showModal.value = !showModal.value;
 };
 
-
 const isEmployeeFieldDisabled = computed(() => {
-  return !createAccess('employee') && !updateAccess('employee');
+  return !createAccess("employee") && !updateAccess("employee");
 });
 
 const filterForm = ref({
@@ -70,14 +80,14 @@ const filterForm = ref({
   director_id: null,
   address: null,
   description: null,
-  deleted: null
+  deleted: null,
 });
 
-const count = ref(0)
+const count = ref(0);
 
 const rules = {
   required: (value) => !!value,
-  inn: (value) => value.length === 9
+  inn: (value) => value.length === 9,
 };
 
 const headers = ref([
@@ -85,13 +95,16 @@ const headers = ref([
   { title: "Статус", key: "deleted_at" },
 ]);
 
-const getOrganizationData = async ({page = 1, itemsPerPage = 10, sortBy = 'id', search = ''} = {}) => {
+const getOrganizationData = async ({ page = 1, itemsPerPage = 10, sortBy = "id", search = "" } = {}) => {
   count.value = 0;
-  console.log(324)
   countFilter();
-  loading.value = true
+  loading.value = true;
   try {
-    const { data } = await organization.get({ page, itemsPerPage, sortBy },search, filterForm.value);
+    const { data } = await organization.get(
+      { page, itemsPerPage, sortBy },
+      search,
+      filterForm.value
+    );
     organizations.value = data.result.data;
     paginations.value = data.result.pagination;
     loading.value = false;
@@ -101,15 +114,8 @@ const getOrganizationData = async ({page = 1, itemsPerPage = 10, sortBy = 'id', 
 };
 
 const addOrganization = async () => {
-  console.log("c")
   if (
-    validate(
-      nameRef,
-      innRef,
-      directorRef,
-      accountantRef,
-      addressRef,
-    ) !== true
+    validate(nameRef, innRef, directorRef, accountantRef, addressRef) !== true
   )
     return;
 
@@ -141,7 +147,7 @@ const addOrganization = async () => {
     if (res.status === 201) {
       await getOrganizationData({});
       showToast(addMessage);
-      cleanForm()
+      cleanForm();
     }
     addDialog.value = false;
   } catch (error) {}
@@ -170,19 +176,16 @@ const addBasedOnOrganization = () => {
       addressRef.value = item.address;
       descriptionRef.value = item.description;
     }
-  })
+  });
 
-  isExistsOrganization.value = false
-}
-
-
+  isExistsOrganization.value = false;
+};
 
 const update = async () => {
-  console.log("u")
-  if (validate( nameRef, innRef, directorRef, accountantRef, addressRef, ) !== true)
+  if (
+    validate(nameRef, innRef, directorRef, accountantRef, addressRef) !== true
+  )
     return;
-
-    console.log(34)
 
   let director;
   if (typeof directorRef.value === "object") {
@@ -205,18 +208,15 @@ const update = async () => {
     address: addressRef.value,
     description: descriptionRef.value,
   };
-  console.log(body)
   try {
     const { status } = await organization.update(idOrganizations.value, body);
     if (status == 200) {
-      console.log(status)
-       showToast(editMessage);
-       await getOrganizationData({});
-     
+      showToast(editMessage);
+      await getOrganizationData({});
     }
     cleanForm();
   } catch (e) {
-    console.log(e)
+    console.error(e);
   }
   addDialog.value = false;
 };
@@ -224,27 +224,26 @@ const update = async () => {
 const openDialog = (item) => {
   addDialog.value = true;
   if (item === 0) {
-    idOrganizations.value = 0
-    isExistsOrganization.value = false
+    idOrganizations.value = 0;
+    isExistsOrganization.value = false;
   } else {
-    idOrganizations.value = item.id
-    isExistsOrganization.value = true
-    nameRef.value = item.name
-    innRef.value = item.INN
-    markedID.value.push(item.id)
+    idOrganizations.value = item.id;
+    isExistsOrganization.value = true;
+    nameRef.value = item.name;
+    innRef.value = item.INN;
+    markedID.value.push(item.id);
     directorRef.value = {
       id: item.director.id,
       name: item.director.name,
-    }
+    };
     accountantRef.value = {
       id: item.chief_accountant.id,
       name: item.chief_accountant.name,
-    }
-    addressRef.value = item.address
-    descriptionRef.value = item.description
-    organizationInDialogTitle.value = nameRef.value
+    };
+    addressRef.value = item.address;
+    descriptionRef.value = item.description;
+    organizationInDialogTitle.value = nameRef.value;
   }
-
 };
 
 const getEmployees = async ({ page, itemsPerPage, sortBy, search }) => {
@@ -255,7 +254,7 @@ const getEmployees = async ({ page, itemsPerPage, sortBy, search }) => {
       name: item.name,
     }));
   } catch (e) {
-    console.error(e)
+    console.error(e);
   }
 };
 
@@ -288,41 +287,21 @@ const lineMarking = (item) => {
   markedItem.value = item;
 };
 
-const compute =  ( params ={}) => {
-  const {page, itemsPerPage, sortBy, search} = params
+const compute = (params = {}) => {
+  const { page, itemsPerPage, sortBy, search } = params;
   if (markedItem.value.deleted_at !== null) {
-    return restore({page, itemsPerPage, sortBy})
+    return restore();
   } else {
-    return remove({page, itemsPerPage, sortBy, search})
-  }
-}
-
-const getExcel = async () => {
-  if(organization.value === null) {
-    return showToast('Выберите поставщика', 'warning')
-  }
-  try {
-    const { data } = await organization.excel(organization.value);
-    const url = window.URL.createObjectURL(
-      new Blob([data], { type: "application/vnd.ms-excel" })
-    );
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "Отчет.xls");
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  } catch (e) {
-    console.error(e);
+    return remove();
   }
 };
 
-const restore = async ({ page, itemsPerPage, sortBy }) => {
+const restore = async () => {
   try {
     const { status } = await organization.restore({ ids: markedID.value });
     if (status === 200) {
       showToast(restoreMessage, "green");
-      await getOrganizationData({ page, itemsPerPage, sortBy });
+      await getOrganizationData();
       markedID.value = [];
     }
   } catch (e) {}
@@ -341,38 +320,39 @@ const cleanForm = () => {
   descriptionRef.value = null;
 };
 
-
-const remove = async ({page, itemsPerPage, sortBy}) => {
+const remove = async () => {
   try {
-    const {status} = await organization.remove({ids: markedID.value})
+    const { status } = await organization.remove({ ids: markedID.value });
     if (status === 200) {
-      showToast(removeMessage, 'red')
-      await getOrganizationData({page, itemsPerPage, sortBy})
-      markedID.value = []
+      showToast(removeMessage, "red");
+      await getOrganizationData();
+      markedID.value = [];
     }
   } catch (e) {
-    console.log(e)
+    console.error(e);
   }
-}
-const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
-  filterModal.value = false
-  filterForm.value = {}
-  await getOrganizationData({page, itemsPerPage, sortBy, search})
-  useFilterCanvasVisible().closeFilterCanvas()
-}
+};
 
+const closeFilterModal = async () => {
+  filterModal.value = false;
+  filterForm.value = {};
+  await getOrganizationData();
+  useFilterCanvasVisible().closeFilterCanvas();
+};
 
 const isDataChanged = () => {
-  const item = organizations.value.find(elem => elem.id === idOrganizations.value);
+  const item = organizations.value.find(
+    (elem) => elem.id === idOrganizations.value
+  );
 
-    return nameRef.value !== item.name ||
+  return (
+    nameRef.value !== item.name ||
     innRef.value !== item.INN ||
     directorRef.value.id !== item.director.id ||
     accountantRef.value.id !== item.chief_accountant.id ||
     addressRef.value !== item.address ||
-    descriptionRef.value !== item.description;
-
-
+    descriptionRef.value !== item.description
+  );
 };
 
 const checkAndClose = () => {
@@ -393,15 +373,15 @@ const checkAndClose = () => {
 
 const closeDialogWithoutSaving = () => {
   addDialog.value = false;
-  showModal.value = false
+  showModal.value = false;
   showConfirmDialog.value = false;
   cleanForm();
 };
 
 const closingWithSaving = async () => {
   if (isExistsOrganization.value) {
-    await update({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
-    showModal.value = false
+    await update({ page: 1, itemsPerPage: 10, sortBy: "id", search: null });
+    showModal.value = false;
   } else {
     const isValid = validate(
       nameRef,
@@ -410,10 +390,15 @@ const closingWithSaving = async () => {
       accountantRef,
       addressRef,
       descriptionRef
-      );
-      showModal.value = false
+    );
+    showModal.value = false;
     if (isValid === true) {
-      await addOrganization({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      await addOrganization({
+        page: 1,
+        itemsPerPage: 10,
+        sortBy: "id",
+        search: null,
+      });
       addDialog.value = false;
       showModal.value = false;
       showConfirmDialog.value = false;
@@ -422,32 +407,30 @@ const closingWithSaving = async () => {
   }
 };
 const checkUpdate = () => {
-  if (!updateAccess('organization')) return addDialog.value = false;
+  if (!updateAccess("organization")) return (addDialog.value = false);
 
   if (isDataChanged()) {
     showModal.value = true;
   } else {
     addDialog.value = false;
   }
-
 };
 
 function countFilter() {
-   
-   for (const key in filterForm.value) {
-       if (filterForm.value[key] !== null) {
-           count.value++;
-       }
-   }
-   
-   return count;
+  for (const key in filterForm.value) {
+    if (filterForm.value[key] !== null) {
+      count.value++;
+    }
+  }
+
+  return count;
 }
 
 const destroy = async () => {
   markedID.value.push(idOrganizations.value);
-  compute({ page: 1, itemsPerPage: 10, sortBy: 'id' })
-  addDialog.value = false
-}
+  compute({ page: 1, itemsPerPage: 10, sortBy: "id" });
+  addDialog.value = false;
+};
 
 watch(addDialog, (newVal) => {
   if (!newVal) {
@@ -473,36 +456,50 @@ watch(addDialog, (newVal) => {
   }
 });
 
-watch(search, debounce((newValue) => {
-  debounceSearch.value = newValue
-}, 500))
+watch(
+  search,
+  debounce((newValue) => {
+    debounceSearch.value = newValue;
+  }, 500)
+);
 
 onMounted(async () => {
   await getEmployees({ page: 1, itemsPerPage: 10000 });
-})
+});
 </script>
 
 <template>
-  
-  <div>
-      <div class="d-flex justify-space-between text-uppercase">
-        <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Организации</span>
-        </div>
-        <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
-          <div class="d-flex w-100">
-            <div class="d-flex w-100">
-          <div class="d-flex ga-2 mt-1 me-3 py-2">
-            <Button v-if="createAccess('organizationBill')" @click="openDialog(0)" name="create"  />
-            <Button v-if="createAccess('organizationBill')" @click="addBasedOnOrganization" name="copy" />
-            <Button v-if="removeAccess('organizationBill')" @click="compute" name="delete"/>
-            <Button name="excel" @click="getExcel()" />
+  <div class="pa-4">
+    <div class="d-flex justify-space-between calcWidth">
+      <div class="d-flex align-center ga-2 pe-2 ms-4">
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">
+          Организации
+        </span>
+      </div>
+      <div class="d-flex justify-between ga-2">
+        <div class="d-flex justify-end mb-3">
+          <div class="d-flex ga-2">
+            <Button
+              v-if="createAccess('organizationBill')"
+              @click="openDialog(0)"
+              name="create"
+            />
+            <Button
+              v-if="createAccess('organizationBill')"
+              @click="addBasedOnOrganization"
+              name="copy"
+            />
+            <Button
+              v-if="removeAccess('organizationBill')"
+              @click="compute"
+              name="delete"
+            />
+            <Button name="excel" @click="getExcel(organization)" />
           </div>
         </div>
-      
         <div class="custom_search">
           <v-text-field
-            style="width: 190px; margin-top: 10px;"
+            style="width: 190px"
             v-model="search"
             prepend-inner-icon="search"
             density="compact"
@@ -519,87 +516,85 @@ onMounted(async () => {
             flat
           />
         </div>
-          </div>
-          
-          <div class="filterElement">
-            <Icons
-              name="filter"
-              title="фильтр"
-              @click="useFilterCanvasVisible().toggleFilterCanvas()"
-              class="mt-1"
-            />
-
-            <span v-if="count !== 0" class="countFilter">{{ count }}</span>
-          </div>
-
-        </v-card>
+        <div class="filterElement mt-2">
+          <Icons
+            name="filter"
+            title="фильтр"
+            @click="useFilterCanvasVisible().toggleFilterCanvas()"
+          />
+          <span v-if="count !== 0" class="countFilter">{{ count }}</span>
+        </div>
       </div>
+    </div>
 
-      <v-card class="mt-4 table">
-        <v-data-table-server
-          style="height: 78vh"
-          items-per-page-text="Элементов на странице:"
-          loading-text="Загрузка"
-          no-data-text="Нет данных"
-          v-model:items-per-page="paginations.per_page"
-          :loading="loading"
-          :headers="headers"
-          :items-length="paginations.total || 0"
-          :items="organizations"
-          :item-value="headers.title"
-          @update:options="getOrganizationData"
-          :search="debounceSearch"
-          show-select
-          v-model="markedID"
-          page-text="{0}-{1} от {2}"
-          :items-per-page-options="[
-            { value: 25, title: '25' },
-            { value: 50, title: '50' },
-            { value: 100, title: '100' },
-          ]"
-          fixed-header
-          hover
-        >
-          <template v-slot:item="{ item, index }">
-            <tr
-              @mouseenter="hoveredRowIndex = index"
-              @mouseleave="hoveredRowIndex = null"
-              @dblclick="openDialog(item)"
-              :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
-            >
-              <td>
-                  <CustomCheckbox
-                    v-model="markedID"
-                    :checked="markedID.includes(item.id)"
-                    @change="handleCheckboxClick(item)"
-                  >
-                    <span>{{ index + 1 }}</span>
-                  </CustomCheckbox>    
-              </td>
-              <td>
+    <div class="table calcWidth">
+      <v-data-table-server
+        style="height: calc(100vh - 150px)"
+        items-per-page-text="Элементов на странице:"
+        loading-text="Загрузка"
+        no-data-text="Нет данных"
+        v-model:items-per-page="paginations.per_page"
+        :loading="loading"
+        :headers="headers"
+        :items-length="paginations.total || 0"
+        :items="organizations"
+        :item-value="headers.title"
+        @update:options="getOrganizationData"
+        :search="debounceSearch"
+        show-select
+        v-model="markedID"
+        page-text="{0}-{1} от {2}"
+        :items-per-page-options="[
+          { value: 25, title: '25' },
+          { value: 50, title: '50' },
+          { value: 100, title: '100' },
+        ]"
+        fixed-header
+        hover
+      >
+        <template v-slot:item="{ item, index }">
+          <tr
+            @mouseenter="hoveredRowIndex = index"
+            @mouseleave="hoveredRowIndex = null"
+            @dblclick="openDialog(item)"
+            :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
+          >
+            <td>
+              <CustomCheckbox
+                v-model="markedID"
+                :checked="markedID.includes(item.id)"
+                @change="handleCheckboxClick(item)"
+              >
+                <span>{{ index + 1 }}</span>
+              </CustomCheckbox>
+            </td>
+            <td>
               <span>{{ item.name }}</span>
             </td>
             <td>
               <v-chip
-              style="height: 50px !important; max-width: 200px"
-              class="d-flex justify-center"
-              :color="getListColor(item.deleted_at)"
+                style="height: 50px !important; max-width: 200px"
+                class="d-flex justify-center"
+                :color="getListColor(item.deleted_at)"
               >
-              <span class="padding: 5px;">{{
-                getListStatus(item.deleted_at)
-              }}</span>
+                <span class="padding: 5px;">{{
+                  getListStatus(item.deleted_at)
+                }}</span>
               </v-chip>
             </td>
-            </tr>
-          </template>
-        </v-data-table-server>
-      </v-card>
-
-    
+          </tr>
+        </template>
+      </v-data-table-server>
+    </div>
 
     <!-- modal -->
     <v-card>
-      <v-dialog persistent class="mt-2 pa-2" v-model="addDialog" @keyup.esc="isExistsOrganization ? checkUpdate() : checkAndClose()">
+      <v-dialog
+        persistent
+        class="mt-2 pa-2"
+        v-model="addDialog"
+        @keyup.esc="isExistsOrganization ? checkUpdate() : checkAndClose()"
+      >
         <v-card
           :style="`border: 2px solid ${BASE_COLOR}`"
           min-width="500"
@@ -614,9 +609,21 @@ onMounted(async () => {
             }}</span>
             <div class="d-flex align-center justify-space-between">
               <div class="d-flex ga-3 align-center mt-2 me-4">
-                <Icons v-if="removeAccess('organization') && isExistsOrganization"  @click="destroy" name="delete"/>
-                <Icons v-if="createAccess('organization') && !isExistsOrganization" @click="addOrganization()" name="save"/>
-                <Icons v-if="updateAccess('organization') && isExistsOrganization" @click="update()" name="save"/>
+                <Icons
+                  v-if="removeAccess('organization') && isExistsOrganization"
+                  @click="destroy"
+                  name="delete"
+                />
+                <Icons
+                  v-if="createAccess('organization') && !isExistsOrganization"
+                  @click="addOrganization()"
+                  name="save"
+                />
+                <Icons
+                  v-if="updateAccess('organization') && isExistsOrganization"
+                  @click="update()"
+                  name="save"
+                />
               </div>
               <v-btn
                 @click="isExistsOrganization ? checkUpdate() : checkAndClose()"
@@ -628,7 +635,11 @@ onMounted(async () => {
               </v-btn>
             </div>
           </div>
-          <v-form class="d-flex w-100" :disabled="!updateAccess('organization') && isExistsOrganization" @submit.prevent="addOrganization">
+          <v-form
+            class="d-flex w-100"
+            :disabled="!updateAccess('organization') && isExistsOrganization"
+            @submit.prevent="addOrganization"
+          >
             <v-row class="w-100">
               <v-col class="d-flex flex-column w-100">
                 <v-text-field
@@ -642,7 +653,6 @@ onMounted(async () => {
                   density="compact"
                   placeholder="Организация"
                   label="Наименования"
-                  autofocus
                   clear-icon="close"
                   clearable
                 />
@@ -662,8 +672,8 @@ onMounted(async () => {
                   clearable
                 />
                 <v-autocomplete
-                :color="BASE_COLOR"
-                no-data-text="Нет данных"
+                  :color="BASE_COLOR"
+                  no-data-text="Нет данных"
                   v-model="directorRef"
                   :rules="[rules.required]"
                   :disabled="isEmployeeFieldDisabled"
@@ -692,7 +702,7 @@ onMounted(async () => {
                 <v-text-field
                   v-model="addressRef"
                   :rules="[rules.required]"
-                  :color="BASE_COLOR" 
+                  :color="BASE_COLOR"
                   :base-color="FIELD_COLOR"
                   rounded="lg"
                   variant="outlined"
@@ -723,37 +733,72 @@ onMounted(async () => {
         </v-card>
       </v-dialog>
 
-      
-        <div v-if="showModal">
-        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()" @closeWithSaving="closingWithSaving()" />
+      <div v-if="showModal">
+        <ConfirmModal
+          :showModal="true"
+          @close="toggleModal()"
+          @closeClear="closeDialogWithoutSaving()"
+          @closeWithSaving="closingWithSaving()"
+        />
       </div>
-      </v-card>
-        <filter-canvas>
-      <div class="d-flex flex-column ga-4 w-100">
-        <custom-filter-text-field min-width="106" label="Наименования" v-model="filterForm.name"/>
-        <custom-filter-text-field min-width="106" label="ИНН" v-model="filterForm.inn"/>
-      </div>
-      <div class="d-flex flex-column ga-2">
-        <custom-filter-autocomplete min-width="106" label="Директор" :items="employees" v-model="filterForm.director_id"/>
-        <custom-filter-autocomplete min-width="106" label="Гл. бухгалтер" :items="employees"  v-model="filterForm.chief_accountant_id"/>
-      </div>
-      <div class="d-flex flex-column ga-2">
-        <custom-filter-text-field min-width="106" label="Адрес" v-model="filterForm.address"/>
-        <custom-filter-text-field min-width="106" label="Описание" v-model="filterForm.description"/>
-        <custom-filter-autocomplete min-width="106" label="Помечен на удаление" v-model="filterForm.deleted" :items="markedForDeletion"/>
-      </div>
+    </v-card>
 
-      <div class="d-flex justify-end ">
-        <div class="d-flex ga-2" style="margin-right: -6%;">
-          <v-btn color="red" class="btn" @click="closeFilterModal"
-          >сбросить</v-btn
-          >
-          <v-btn
+    <filter-canvas>
+      <div>
+        <div class="d-flex ga-2">
+          <custom-filter-text-field
+            label="Наименования"
+            v-model="filterForm.name"
+          />
+          <custom-filter-text-field label="ИНН" v-model="filterForm.inn" />
+        </div>
+        <div class="d-flex ga-2 my-2">
+          <custom-filter-autocomplete
+            label="Директор"
+            :items="employees"
+            v-model="filterForm.director_id"
+          />
+          <custom-filter-autocomplete
+            label="Гл. бухгалтер"
+            :items="employees"
+            v-model="filterForm.chief_accountant_id"
+          />
+        </div>
+        <div class="d-flex ga-2 my-2">
+          <custom-filter-text-field
+            label="Адрес"
+            v-model="filterForm.address"
+          />
+          <custom-filter-text-field
+            label="Описание"
+            v-model="filterForm.description"
+          />
+        </div>
+        <div class="my-2">
+          <custom-filter-autocomplete
+            min-width="106"
+            label="Помечен на удаление"
+            v-model="filterForm.deleted"
+            :items="markedForDeletion"
+          />
+        </div>
+        <div class="d-flex justify-end">
+          <div class="d-flex ga-2" style="margin-right: -6%">
+            <v-btn color="red" class="btn" @click="closeFilterModal"
+              >сбросить</v-btn
+            >
+            <v-btn
               :color="BASE_COLOR"
               class="btn"
-              @click="() => {getOrganizationData({}); useFilterCanvasVisible().closeFilterCanvas()}"
-          >применить</v-btn
-          >
+              @click="
+                () => {
+                  getOrganizationData({});
+                  useFilterCanvasVisible().closeFilterCanvas();
+                }
+              "
+              >применить</v-btn
+            >
+          </div>
         </div>
       </div>
     </filter-canvas>
@@ -778,4 +823,4 @@ onMounted(async () => {
   font-size: 10px;
   color: white;
 }
-</style> 
+</style>
