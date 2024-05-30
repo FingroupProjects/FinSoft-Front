@@ -29,8 +29,8 @@ const form = reactive({
 const headers = ref([
   { id: 1, title: "№", key: "doc_number" },
   { id: 2, title: "Наименование товара", key: "name" },
-  { id: 3, title: "Количество", key: "count" },
   { id: 4, title: "Цена", key: "price" },
+  { id: 3, title: "Количество", key: "count" },
   { id: 5, title: "Сумма", key: "sum" },
 ]);
 
@@ -102,6 +102,7 @@ onMounted(async () => {
   await getProcurementDetails();
   window.addEventListener("afterprint", handleAfterPrint);
   windowPrint();
+  window.close()
 });
 </script>
 
@@ -146,15 +147,15 @@ onMounted(async () => {
             <tr v-for="(good, index) in goods" :key="good.id">
               <td>{{ index + 1 }}</td>
               <td>{{ good.good.name }}</td>
-              <td>{{ good.amount }}</td>
               <td>{{ good.price }}</td>
+              <td>{{ good.amount }}</td>
               <td>{{ good.amount * good.price }}</td>
             </tr>
             <tr>
               <td></td>
+              <td></td>
               <td class="text-right">Итого</td>
               <td>{{ totalCount }}</td>
-              <td>{{ totalPrice }}</td>
               <td>{{ totalSum }}</td>
             </tr>
           </tbody>

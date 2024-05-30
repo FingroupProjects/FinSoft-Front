@@ -47,7 +47,7 @@ defineProps({
         v-bind="props"
         :subtitle="'Кол-во: ' + item.raw.amount"
         :title="item.raw.name"
-      ></v-list-item>
+      />
     </template>
   </v-autocomplete>
 </template>
