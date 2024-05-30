@@ -7,14 +7,14 @@ import position from '../../../api/list/position.js'
 import Button from "../../../components/button/button.vue";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import {createAccess, removeAccess, updateAccess} from "../../../composables/access/access.js";
-import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH,TITLE_COLOR} from "../../../composables/constant/colors.js";
+import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import {
   addMessage,
   editMessage,
   ErrorSelectMessage,
   removeMessage,
   restoreMessage,
-  selectOneItemMessage
+  selectOneItemMessage, warningMessage
 } from "../../../composables/constant/buttons.js";
 import Icons from "../../../composables/Icons/Icons.vue";
 import validate from "./validate.js";
@@ -26,6 +26,7 @@ import CustomFilterAutocomplete from "../../../components/formElements/CustomFil
 import {markedForDeletion} from "../../../composables/constant/items.js";
 import getListColor from "../../../composables/displayed/getListColor.js";
 import getListStatus from "../../../composables/displayed/getListStatus";
+import getExcel from "../../../composables/otherQueries/getExcel.js";
 
 const router = useRouter()
 
@@ -57,12 +58,12 @@ const toggleModal = () => {
 };
 
 const headers = ref([
-  { title: 'Наименование', key: 'name'},
-  { title: "Статус", key: "deleted_at" },
+  {title: 'Наименование', key: 'name'},
+  {title: "Статус", key: "deleted_at"},
 ])
 
 const filterForm = ref({
-    name: null,
+  name: null,
 })
 
 
@@ -75,121 +76,119 @@ const rules = {
 
 
 function countFilter() {
-   
-   for (const key in filterForm.value) {
-       if (filterForm.value[key] !== null) {
-           count.value++;
-       }
-   }
-   
-   return count;
+
+  for (const key in filterForm.value) {
+    if (filterForm.value[key] !== null) {
+      count.value++;
+    }
+  }
+
+  return count;
 }
 
-const getPositionData = async ({ page, itemsPerPage, sortBy, search }) => {
+const getPositionData = async ({page, itemsPerPage, sortBy, search} = {}) => {
   count.value = 0;
   countFilter()
-  const filterData = filterForm.value
-  filterModal.value = false
-  
-  
+  filterForm.value
 
   loading.value = true
   try {
-    const { data } = await position.get({page, itemsPerPage, sortBy}, search, filterData)
-    console.log(data.result)
+    const {data} = await position.get({page, itemsPerPage, sortBy}, search, filterForm.value)
     paginations.value = data.result.pagination
     positions.value = data.result.data
-    loading.value = false
   } catch (e) {
+    console.error(e)
+  } finally {
+    loading.value = false
+
   }
 }
 
-const cleanFilterForm =  () => {
+const cleanFilterForm = () => {
   filterForm.value = {}
 }
 
 
-const  closeFilterModal = async ({page, itemsPerPage, sortBy, search}) => {
+const closeFilterModal = async () => {
   filterModal.value = false
   cleanFilterForm()
-  await getPositionData({page, itemsPerPage, sortBy, search})
+  await getPositionData()
   useFilterCanvasVisible().closeFilterCanvas()
 }
 
-const addPosition = async ({ page, itemsPerPage, sortBy }) => {
-  if (validate(nameRef) !== true) return 
-try{
-  const body = {
-    name: nameRef.value
-  }
+const addPosition = async () => {
+  if (validate(nameRef) !== true) return
 
-  const res = await position.add(body)
-  if (res.status === 201) {
-    await getPositionData({ page, itemsPerPage, sortBy })
-    showToast(addMessage)
-    valueRef.value = null
-    idPosition.value = res.data.result.id
-    dialog.value = false
-    markedID.value = []
-    markedItem.value = []
+  try {
+    const body = {
+      name: nameRef.value
+    }
+
+    const res = await position.add(body)
+    if (res.status === 201) {
+      await getPositionData()
+      showToast(addMessage)
+      valueRef.value = null
+      idPosition.value = res.data.result.id
+      dialog.value = false
+      markedID.value = []
+      markedItem.value = []
+    }
+  } catch (error) {
+    console.log(error);
   }
 }
-catch (error) {
-  console.log(error);
- }
-}
 
 
-const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
+const massDel = async () => {
   const body = {
     ids: markedID.value
   }
-  console.log(body)
-  try{
-    const { status } = await position.massDeletion(body)
+  try {
+    const {status} = await position.massDeletion(body)
 
     if (status === 200) {
 
       showToast(removeMessage, 'red')
-      await getPositionData({page, itemsPerPage, sortBy}, search)
+      await getPositionData()
       markedID.value = []
     }
 
-  }catch(e){
+  } catch (e) {
     console.log(e)
   }
 }
 
 
-const massRestore = async ({ page, itemsPerPage, sortBy, search }) => {
+const massRestore = async () => {
   const body = {
     ids: markedID.value
   }
 
-  try{
-    const { status } = await position.massRestore(body)
+  try {
+    const {status} = await position.massRestore(body)
 
     if (status === 200) {
       showToast(restoreMessage, 'green')
-      await getPositionData({page, itemsPerPage, sortBy}, search)
+      await getPositionData()
       markedID.value = []
     }
-  }catch(e){
+  } catch (e) {
     console.log(e)
   }
 }
 
 
-const update = async ({page, itemsPerPage, sortBy}) => {
-  if (validate(nameRef) !== true) return 
+const update = async () => {
+  if (validate(nameRef) !== true) return
   const body = {
     name: nameRef.value
   }
 
   try {
-    const { status } = await position.update(idPosition.value, body)
+    const {status} = await position.update(idPosition.value, body)
     if (status === 200) {
-      await getPositionData({page, itemsPerPage, sortBy})
+      await getPositionData()
       showToast(editMessage)
 
       dialog.value = false
@@ -235,13 +234,13 @@ const addBasedOnPosition = () => {
 }
 
 
-const compute = (params = {}) => {
-  const { page, itemsPerPage, sortBy, search } = params
-  if(markedItem.value.deleted_at) {
-    return massRestore({ page, itemsPerPage, sortBy })
-  }
-  else{
-    return massDel({ page, itemsPerPage, sortBy, search })
+const compute = () => {
+  if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
+
+  if (markedItem.value.deleted_at) {
+    return massRestore()
+  } else {
+    return massDel()
   }
 }
 
@@ -290,39 +289,19 @@ const checkAndClose = () => {
 
 const closingWithSaving = async () => {
   if (isExistsPosition.value) {
-    await update({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+    await update({page: 1, itemsPerPage: 10, sortBy: 'id', search: null});
     showModal.value = false
   } else {
     const isValid = validate(
-      nameRef,
-      );
-      showModal.value = false
+        nameRef,
+    );
+    showModal.value = false
     if (isValid === true) {
-      await addPosition({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      await addPosition({page: 1, itemsPerPage: 10, sortBy: 'id', search: null});
       dialog.value = false;
       showModal.value = false;
       showConfirmDialog.value = false;
     }
-  }
-};
-
-const getExcel = async () => {
-  if(position.value === null) {
-    return showToast('Выберите поставщика', 'warning')
-  }
-  try {
-    const { data } = await position.excel(position.value);
-    const url = window.URL.createObjectURL(
-      new Blob([data], { type: "application/vnd.ms-excel" })
-    );
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "Отчет.xls");
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  } catch (e) {
-    console.error(e);
   }
 };
 
@@ -335,7 +314,7 @@ const closeDialogWithoutSaving = () => {
 
 const destroy = async () => {
   markedID.value.push(idPosition.value);
-  compute({ page: 1, itemsPerPage: 10, sortBy: 'id' })
+  compute({page: 1, itemsPerPage: 10, sortBy: 'id'})
   dialog.value = false
 }
 
@@ -353,7 +332,6 @@ watch(markedID, (newVal) => {
 });
 
 
-
 watch(dialog, newVal => {
   if (!newVal) {
     nameRef.value = null
@@ -367,190 +345,202 @@ watch(search, debounce((newValue) => {
 }, 500))
 
 
-
 </script>
 
 <template>
-  <div>
-      <div class="d-flex justify-space-between text-uppercase ">
-        <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Должность</span>
-        </div>
-        <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
+  <div class="pa-2">
+    <div class="d-flex justify-space-between calcWidth ">
+      <div class="d-flex align-center ga-2 pe-2 ms-4">
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Должность</span>
+      </div>
+      <div class="d-flex align-center ga-2">
+        <div class="d-flex w-100">
           <div class="d-flex w-100">
-            <div class="d-flex w-100">
-          <div class="d-flex ga-2 mt-1 me-3 py-2">
-            <Button v-if="createAccess('organizationBill')" @click="openDialog(0)" name="create" />
-            <Button v-if="createAccess('organizationBill')" @click="addBasedOnPosition" name="copy" />
-            <Button v-if="removeAccess('organizationBill')" @click="compute" name="delete" />
-            <Button name="excel" @click="getExcel()" />
+            <div class="d-flex ga-2 mt-1 me-3 py-2">
+              <Button v-if="createAccess('position')" @click="openDialog(0)" name="create"/>
+              <Button v-if="createAccess('position')" @click="addBasedOnPosition" name="copy"/>
+              <Button v-if="removeAccess('position')" @click="compute" name="delete"/>
+              <Button name="excel" @click="getExcel(position)"/>
+            </div>
           </div>
-        </div>
 
-        <div class="custom_search">
-          <v-text-field
-            style="width: 190px; margin-top: 10px;"
-            v-model="search"
-            prepend-inner-icon="search"
-            density="compact"
-            label="Поиск..."
-            variant="outlined"
-            :color="BASE_COLOR"
-            rounded="lg"
-            :base-color="FIELD_OF_SEARCH"
-            clear-icon="close"
-            hide-details
-            single-line
-            :append-inner-icon="search ? 'close' : ''"
-            @click:append-inner="search = ''"
-            flat
-          />
-        </div>
+          <div class="custom_search">
+            <v-text-field
+                style="width: 190px; margin-top: 10px;"
+                v-model="search"
+                prepend-inner-icon="search"
+                density="compact"
+                label="Поиск..."
+                variant="outlined"
+                :color="BASE_COLOR"
+                rounded="lg"
+                :base-color="FIELD_OF_SEARCH"
+                clear-icon="close"
+                hide-details
+                single-line
+                :append-inner-icon="search ? 'close' : ''"
+                @click:append-inner="search = ''"
+                flat
+            />
           </div>
-          <div class="filterElement">
-            <Icons
+        </div>
+        <div class="filterElement">
+          <Icons
               name="filter"
               title="фильтр"
               @click="useFilterCanvasVisible().toggleFilterCanvas()"
               class="mt-1"
-            />
-
-            <span v-if="count !== 0" class="countFilter">{{ count }}</span>
-          </div>
-        </v-card>
+          />
+          <span v-if="count !== 0" class="countFilter">{{ count }}</span>
+        </div>
       </div>
+    </div>
 
-      <v-card class="mt-2 table">
-        <v-data-table-server
-            style="height: 78vh"
-            items-per-page-text="Элементов на странице:"
-            loading-text="Загрузка"
-            no-data-text="Нет данных"
-            v-model:items-per-page="paginations.per_page"
-            :loading="loading"
-            :headers="headers"
-            :items-length="paginations.total || 0"
-            :items="positions"
-            :item-value="headers.title"
-            @update:options="getPositionData"
-            show-select
-            v-model="markedID"
-            page-text =  '{0}-{1} от {2}'
-            :items-per-page-options="[
+    <v-card class="mt-2 table">
+      <v-data-table-server
+          style="height: calc(100vh - 150px)"
+          items-per-page-text="Элементов на странице:"
+          loading-text="Загрузка"
+          no-data-text="Нет данных"
+          v-model:items-per-page="paginations.per_page"
+          :loading="loading"
+          :headers="headers"
+          :items-length="paginations.total || 0"
+          :items="positions"
+          :item-value="headers.title"
+          @update:options="getPositionData"
+          show-select
+          v-model="markedID"
+          page-text='{0}-{1} от {2}'
+          :items-per-page-options="[
                 {value: 25, title: '25'},
                 {value: 50, title: '50'},
                 {value: 100, title: '100'},
             ]"
-            :search="debounceSearch"
-            fixed-header
-            hover
-        >
-          <template v-slot:item="{ item, index }">
-            <tr
-                @mouseenter="hoveredRowIndex = index"
-                @mouseleave="hoveredRowIndex = null"
-                :class="{'bg-grey-lighten-2': markedID.includes(item.id) }"
-                @dblclick="openDialog(item)"
-            >
-              <td>
-                  <CustomCheckbox
-                      v-model="markedID"
-                      :checked="markedID.includes(item.id)"
-                      @change="handleCheckboxClick(item)"
-                  >
-                    <span>{{ item.id }}</span>
-                  </CustomCheckbox>
-                </td>
-                <td>
-                <span>{{ item.name }}</span>
-                </td>
-                <td>
+          :search="debounceSearch"
+          fixed-header
+          hover
+      >
+        <template v-slot:item="{ item, index }">
+          <tr
+              @mouseenter="hoveredRowIndex = index"
+              @mouseleave="hoveredRowIndex = null"
+              :class="{'bg-grey-lighten-2': markedID.includes(item.id) }"
+              @dblclick="openDialog(item)"
+          >
+            <td style="width: 150px;">
+              <CustomCheckbox
+                  v-model="markedID"
+                  :checked="markedID.includes(item.id)"
+                  @change="handleCheckboxClick(item)"
+              >
+                <span>{{ item.id }}</span>
+              </CustomCheckbox>
+            </td>
+            <td style="width: 150px">
+              <span>{{ item.name }}</span>
+            </td>
+            <td>
               <v-chip
-                style="height: 50px !important; max-width: 200px"
-                class="d-flex justify-center"
-                :color="getListColor(item.deleted_at)"
+                  style="height: 50px !important; max-width: 200px"
+                  class="d-flex justify-center"
+                  :color="getListColor(item.deleted_at)"
               >
                 <span class="padding: 5px;">{{
-                  getListStatus(item.deleted_at)
-                }}</span>
+                    getListStatus(item.deleted_at)
+                  }}</span>
               </v-chip>
             </td>
-            </tr>
-          </template>
-        </v-data-table-server>
-      </v-card>
+          </tr>
+        </template>
+      </v-data-table-server>
+    </v-card>
 
-      <!-- Modal -->
-      <v-card>
-        <v-dialog persistent class="mt-2 pa-2"  v-model="dialog" @keyup.esc="isExistsPosition ? checkUpdate() : checkAndClose()">
-          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="400" min-height="150" class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
-            <div class="d-flex justify-space-between align-center mb-2">
-              <span>{{ isExistsPosition ? positionInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
-              <div class="d-flex align-center justify-space-between">
-                <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons title="Удалить"  v-if="removeAccess('position') && isExistsPosition"  @click="destroy" name="delete"/>
-                  <Icons title="Сохранить" v-if="createAccess('position') && !isExistsPosition" @click="addPosition" name="save"/>
-                  <Icons title="Сохранить" v-if="updateAccess('position') && isExistsPosition" @click="update" name="save"/>
-                </div>
-                <v-btn
-                @click="isExistsPosition ? checkUpdate() : checkAndClose()"
-                variant="text"
-                :size="32"
-                class="pt-2 pl-1"
-              >
-                <Icons name="close" title="Закрыть" />
-              </v-btn>
+    <!-- Modal -->
+    <v-card>
+      <v-dialog persistent class="mt-2 pa-2" v-model="dialog"
+                @keyup.esc="isExistsPosition ? checkUpdate() : checkAndClose()">
+        <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="400" min-height="150"
+                class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
+          <div class="d-flex justify-space-between align-center mb-2">
+            <span>{{ isExistsPosition ? positionInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
+            <div class="d-flex align-center justify-space-between">
+              <div class="d-flex ga-3 align-center mt-2 me-4">
+                <Icons title="Удалить" v-if="removeAccess('position') && isExistsPosition" @click="destroy"
+                       name="delete"/>
+                <Icons title="Сохранить" v-if="createAccess('position') && !isExistsPosition" @click="addPosition"
+                       name="save"/>
+                <Icons title="Сохранить" v-if="updateAccess('position') && isExistsPosition" @click="update"
+                       name="save"/>
               </div>
+              <v-btn
+                  @click="isExistsPosition ? checkUpdate() : checkAndClose()"
+                  variant="text"
+                  :size="32"
+                  class="pt-2 pl-1"
+              >
+                <Icons name="close" title="Закрыть"/>
+              </v-btn>
             </div>
-            <v-form class="d-flex w-100" :disabled="!updateAccess('position') && isExistsPosition" @submit.prevent="addPosition">
-              <v-row class="w-100">
-                <v-col class="d-flex flex-column w-100">
-                  <v-text-field
-                      v-model="nameRef"
-                      :rules="[rules.required]"
-                      :color="BASE_COLOR"
-                      rounded="lg"
-                      variant="outlined"
-                      :base-color="FIELD_COLOR"
-                      class="w-auto text-sm-body-1"
-                      density="compact"
-                      autofocus
-                      placeholder="Бухгалтер"
-                      label="Наименование"
-                      clear-icon="close"
-                      clearable
-                  />
-                </v-col>
-              </v-row>
-            </v-form>
-          </v-card>
-        </v-dialog>
-      </v-card>
-
-      <div v-if="showModal">
-        <ConfirmModal :showModal="true" @close="toggleModal" @closeClear="closeDialogWithoutSaving" @closeWithSaving="closingWithSaving()"/>
-      </div>
-    <filter-canvas >
-        <div class="d-flex flex-column ga-4 w-100">
-          <custom-filter-text-field min-width="106" v-model="filterForm.name" label="Наименование"/>
-          <custom-filter-autocomplete min-width="106"  label="Помечен на удаление"
-            v-model="filterForm.deleted"
-            :items="markedForDeletion"/>
-        </div>      
-        <div class="d-flex justify-end ">
-          <div class="d-flex ga-2" style="margin-right: -6%;">
-            <v-btn color="red" class="btn" @click="closeFilterModal"
-            >сбросить</v-btn
-            >
-            <v-btn
-                :color="BASE_COLOR"
-                class="btn"
-                @click="() => {getPositionData({}); useFilterCanvasVisible().closeFilterCanvas()}"
-            >применить</v-btn
-            >
           </div>
+          <v-form class="d-flex w-100" :disabled="!updateAccess('position') && isExistsPosition"
+                  @submit.prevent="addPosition">
+            <v-row class="w-100">
+              <v-col class="d-flex flex-column w-100">
+                <v-text-field
+                    v-model="nameRef"
+                    :rules="[rules.required]"
+                    :color="BASE_COLOR"
+                    rounded="lg"
+                    variant="outlined"
+                    :base-color="FIELD_COLOR"
+                    class="w-auto text-sm-body-1"
+                    density="compact"
+                    autofocus
+                    placeholder="Бухгалтер"
+                    label="Наименование"
+                    clear-icon="close"
+                    clearable
+                />
+              </v-col>
+            </v-row>
+          </v-form>
+        </v-card>
+      </v-dialog>
+    </v-card>
+
+    <div v-if="showModal">
+      <ConfirmModal :showModal="true" @close="toggleModal" @closeClear="closeDialogWithoutSaving"
+                    @closeWithSaving="closingWithSaving()"/>
+    </div>
+    <filter-canvas>
+      <div class="d-flex ga-2 w-100">
+        <custom-filter-text-field
+          v-model="filterForm.name"
+          label="Наименование"
+        />
+        <custom-filter-autocomplete
+          label="Помечен на удаление"
+          v-model="filterForm.deleted"
+          :items="markedForDeletion"
+        />
+      </div>
+      <div class="d-flex justify-end ">
+        <div class="d-flex ga-2" style="margin-right: -6%;">
+          <v-btn color="red" class="btn" @click="closeFilterModal"
+          >сбросить
+          </v-btn
+          >
+          <v-btn
+              :color="BASE_COLOR"
+              class="btn"
+              @click="() => {getPositionData({}); useFilterCanvasVisible().closeFilterCanvas()}"
+          >применить
+          </v-btn
+          >
         </div>
-      </filter-canvas>
+      </div>
+    </filter-canvas>
   </div>
 
 
@@ -560,6 +550,7 @@ watch(search, debounce((newValue) => {
 .filterElement {
   position: relative;
 }
+
 .countFilter {
   position: absolute;
   top: -5px;

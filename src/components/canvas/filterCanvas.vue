@@ -13,7 +13,7 @@ const canvasVisible = useFilterCanvasVisible()
       <div class="offcanvas-body" >
         <v-form tabindex="-1" style="position: absolute" class="d-flex w-100">
           <v-row class="w-100">
-            <v-col style="max-width: calc(100% - 65px)" class="d-flex flex-column w-100 ga-4">
+            <v-col style="max-width: calc(100% - 65px)" class="d-flex flex-column w-100 ga-2">
               <slot></slot>
             </v-col>
           </v-row>
