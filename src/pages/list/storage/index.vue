@@ -174,7 +174,7 @@ function countFilter() {
 
 const getStorageEmployeeData = async ({page, itemsPerPage, sortBy, search} = {}) => {
 
-  if (idStorage.value === 0) {
+  if (idStorage.value === 0 && idStorage.value !== undefined || idStorage.value === null) {
     loadingStorageData.value = false
     return
   }
@@ -233,10 +233,6 @@ const addStorage = async () => {
       storageInDialogTitle.value = res.data.result.name
 
       organization.value = res.data.result.organization.id
-
-      markedID.value = []
-      markedItem.value = []
-
     }
   } catch (error) {
 
@@ -253,7 +249,7 @@ const addStorage = async () => {
   }
 }
 
-const update = async ({page, itemsPerPage, sortBy}) => {
+const update = async () => {
   if (validate(nameRef, organization, group) !== true) return
 
   let groupValue;
@@ -283,7 +279,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
       organization.value = null
       dialog.value = null
       cleanForm()
-      await getGroups({page, itemsPerPage, sortBy})
+      await getGroups()
       markedID.value = []
       showToast(editMessage)
       cleanForm()
@@ -315,7 +311,7 @@ const addGroup = async () => {
   }
 }
 
-const addStorageEmployee = async ({page, itemsPerPage, sortBy}) => {
+const addStorageEmployee = async () => {
 
   const body = {
     employee_id: employeeAdd.value,
@@ -327,7 +323,7 @@ const addStorageEmployee = async ({page, itemsPerPage, sortBy}) => {
     const res = await storage.addStorageEmployee(idStorage.value, body)
 
     if (res.status === 201) {
-      await getStorageEmployeeData({page, itemsPerPage, sortBy})
+      await getStorageEmployeeData()
       showToast(addMessage)
       employeeAdd.value = null;
       startDateRef.value = null;
@@ -392,13 +388,13 @@ const massRestore = async () => {
 }
 
 
-const massDelEmployee = async ({page, itemsPerPage, sortBy, search}) => {
+const massDelEmployee = async () => {
   try {
     const {status} = await storage.massDeletionEmployee({ids: markedEmployeeID.value})
 
     if (status === 200) {
       showToast(removeMessage, 'red')
-      await getStorageEmployeeData({page, itemsPerPage, sortBy}, search)
+      await getStorageEmployeeData()
       markedEmployeeID.value = []
       dataDialog.value = false
     }
@@ -409,14 +405,14 @@ const massDelEmployee = async ({page, itemsPerPage, sortBy, search}) => {
 }
 
 
-const massRestoreEmployee = async ({page, itemsPerPage, sortBy}) => {
+const massRestoreEmployee = async () => {
 
   try {
     const {status} = await storage.massRestoreEmployee({ids: markedEmployeeID.value})
 
     if (status === 200) {
       showToast(restoreMessage, 'red')
-      await getStorageEmployeeData({page, itemsPerPage, sortBy})
+      await getStorageEmployeeData()
       markedEmployeeID.value = []
       dataDialog.value = false
     }
@@ -509,7 +505,7 @@ const deleteGroup = async () => {
 const restoreGroup = async () => {
   const response = await storageGroup.restore(group.value.id);
     if (response.status === 200) {
-      await getGroups({})
+      await getGroups()
       showToast(restoreMessage);
     }
 }
@@ -525,7 +521,6 @@ const computeGroup = async () => {
 
 const openDialog = (item) => {
   dialog.value = true
-  console.log(item)
 
   const groupValue = groups.value.find(item => item.id === groupIdRef.value)
 
@@ -567,31 +562,24 @@ const addBasedOnStorage = () => {
   dialog.value = true
   isExistsStorage.value = false
 
-  const groupValue = groups.value.find(item => item.id === markedID.value[0])
-  console.log(groupValue)
-  // storages.value.forEach(item => {
-  //   if (markedID.value[0] === item.id) {
-  //     idStorage.value = item.id
-  //     nameRef.value = item.name
-  //
-  //     if (item.group) {
-  //       group.value = {
-  //         id: item.group.id,
-  //         name: item.group.name
-  //       }
-  //     } else {
-  //       group.value = {
-  //         id: groupValue.id,
-  //         name: groupValue.name
-  //       }
-  //     }
-  //
-  //     organization.value = {
-  //       id: item.organization.id,
-  //       name: item.organization.name
-  //     }
-  //   }
-  // })
+  groups.value.forEach(item => {
+    group.value = {
+      id: item.id,
+      name: item.name
+    }
+    item.storages.forEach(elem => {
+      if (markedID.value[0] === elem.id) {
+
+        idStorage.value = elem.id
+        nameRef.value = elem.name
+
+        organization.value = {
+          id: elem.organization.id,
+          name: elem.organization.name
+        }
+      }
+    })
+  })
 }
 
 const compute = () => {
@@ -606,14 +594,14 @@ const compute = () => {
 }
 
 
-const removeStorageEmployee = ({page, itemsPerPage, sortBy, search}) => {
+const removeStorageEmployee = () => {
 
   if (markedEmployeeID.value.length === 0) return showToast(warningMessage, 'warning')
 
   if (markedItem.value.deleted_at) {
-    return massRestoreEmployee({page, itemsPerPage, sortBy})
+    return massRestoreEmployee()
   } else {
-    return massDelEmployee({page, itemsPerPage, sortBy, search})
+    return massDelEmployee()
   }
 }
 
@@ -717,7 +705,7 @@ const cleanForm = () => {
 
 const closingWithSaving = async () => {
   if (isExistsStorage.value) {
-    await update({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+    await update();
     showModal.value = false
   } else {
     const isValid = validate(
@@ -727,7 +715,7 @@ const closingWithSaving = async () => {
       );
       showModal.value = false
     if (isValid === true) {
-      await addStorage({ page: 1, itemsPerPage: 10, sortBy: 'id', search: null });
+      await addStorage();
       dialog.value = false;
       showModal.value = false;
       showConfirmDialog.value = false;
@@ -817,6 +805,18 @@ watch(dialog, newVal => {
     endDateRef.value = null;
   } else {
     markedID.value = [markedID.value[markedID.value.length - 1]];
+  }
+})
+
+watch(dataDialog, newVal => {
+  if (!newVal) {
+    employeeAdd.value = []
+    startDateRef.value = null
+    endDateRef.value = null
+
+    isExistsStorageData.value = false
+  } else {
+    markedEmployeeID.value = [markedEmployeeID.value[markedEmployeeID.value.length - 1]];
   }
 })
 
