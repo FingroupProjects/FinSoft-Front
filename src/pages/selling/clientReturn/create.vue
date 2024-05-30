@@ -284,18 +284,6 @@ onMounted(() => {
   getStorages()
   getGoods()
 })
-const validatePrice = (price) => {
-  if (price === 0 || price === '0' || Number(price) === 0) {
-    return false;
-  }
-  return true;
-};
-const handlePriceInput = (item) => {
-  if (!validatePrice(item.price)) {
-    item.price = null;  
-  }
-};
-
 </script>
 <template>
   <div class="document">
@@ -407,7 +395,6 @@ const handlePriceInput = (item) => {
                     v-mask="'##########'" 
                     min-width="80" 
                     max-width="150"
-                    @input="handlePriceInput(item)"
                     />
                   </td>
                   <td>

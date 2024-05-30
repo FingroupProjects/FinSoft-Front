@@ -25,6 +25,7 @@ import {FIELD_GOODS, TITLE_COLOR} from "../../../composables/constant/colors.js"
 import Button from "../../../components/button/button.vue";
 import {useModalCreateBased} from "../../../store/modalCreateBased.js";
 import getDataBased from "../../../composables/otherQueries/getDataBased.js";
+import formatInputPrice from "../../../composables/mask/formatInputPrice.js";
 
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter()
@@ -257,17 +258,7 @@ onMounted(() => {
   getStorages()
   getGoods()
 })
-const validatePrice = (price) => {
-  if (price === 0 || price === '0' || Number(price) === 0) {
-    return false;
-  }
-  return true;
-};
-const handlePriceInput = (item) => {
-  if (!validatePrice(item.price)) {
-    item.price = null;  
-  }
-};
+
 </script>
 <template>
   <div class="document">
@@ -357,8 +348,8 @@ const handlePriceInput = (item) => {
                         v-model="item.price"
                         :value="validateNumberInput(item.price)"
                         :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                        @input="formatInputPrice(item.price, $event)"
                         min-width="80"
-                        @input="handlePriceInput(item)"
                     />
                   </td>
                   <td>
