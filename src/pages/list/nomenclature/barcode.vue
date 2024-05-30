@@ -7,6 +7,7 @@ import Icons from "../../../composables/Icons/Icons.vue";
 import barcodeApi from "../../../api/list/barcode";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../../composables/toast";
+import Button from "../../../components/button/button.vue";
 import {
   ErrorSelectMessage,
   removeMessage,
@@ -18,6 +19,7 @@ import {
 import {
   FIELD_COLOR,
   BASE_COLOR,
+  TITLE_COLOR
 } from "../../../composables/constant/colors.js";
 import {
   createAccess,
@@ -246,19 +248,19 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
     <v-col>
       <div class="d-flex justify-space-between text-uppercase ga-10">
         <div class="d-flex align-center ga-2 pe-2 w-75 text-sm-body-1">
-          <span>Штрих - код</span>
+          <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Штрих - код</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
-          <div class="d-flex ga-2 mt-2 me-3">
-            <Icons
+          <div v-if="!props.createOnBase" class="d-flex ga-2 my-2 me-3">
+            <Button
               v-if="
                 (updateAccess('nomenclature') && props.isEdit) ||
                 (createAccess('nomenclature') && !props.isEdit)
               "
               @click="openInModal()"
-              name="add"
+              name="create"
             />
-            <Icons
+            <Button
               v-if="
                 (updateAccess('nomenclature') && props.isEdit) ||
                 (createAccess('nomenclature') && !props.isEdit)
