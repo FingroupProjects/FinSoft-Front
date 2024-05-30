@@ -627,27 +627,13 @@ watch(
     debounceSearch.value = newValue;
   }, 500)
 );
-
-const validatePrice = (price) => {
-  if (price === 0 || price === "0" || Number(price) === 0) {
-    return false;
-  }
-  return true;
-};
-const handlePriceInput = (item) => {
-  if (!validatePrice(item.price)) {
-    item.price = null;
-  }
-};
 </script>
 
 <template>
   <div class="pa-4">
     <div class="d-flex justify-space-between calcWidth">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
-        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">
-          Валюты
-        </span>
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }"> Валюты </span>
       </div>
       <div class="d-flex justify-between ga-2">
         <div class="d-flex justify-end mb-3">
@@ -672,7 +658,7 @@ const handlePriceInput = (item) => {
         </div>
         <div class="custom_search">
           <v-text-field
-            style="width: 190px;"
+            style="width: 190px"
             v-model="search"
             prepend-inner-icon="search"
             density="compact"
@@ -831,7 +817,7 @@ const handlePriceInput = (item) => {
                   v-model="nameRef"
                   :rules="[rules.required]"
                   :color="BASE_COLOR"
-                  rounded="md"
+                  rounded="lg"
                   :base-color="FIELD_COLOR"
                   variant="outlined"
                   class="w-auto text-sm-body-1"
@@ -846,7 +832,7 @@ const handlePriceInput = (item) => {
                   v-model="symbolRef"
                   :rules="[rules.required]"
                   :color="BASE_COLOR"
-                  rounded="md"
+                  rounded="lg"
                   :base-color="FIELD_COLOR"
                   variant="outlined"
                   density="compact"
@@ -860,7 +846,7 @@ const handlePriceInput = (item) => {
                   v-model="digitalRef"
                   :rules="[rules.required]"
                   :color="BASE_COLOR"
-                  rounded="md"
+                  rounded="lg"
                   density="compact"
                   variant="outlined"
                   :base-color="FIELD_COLOR"
@@ -888,43 +874,8 @@ const handlePriceInput = (item) => {
                 <Icons title="Добавить" @click="addDialogRate" name="add" />
               </div>
             </div>
-            <v-form class="d-flex w-100 pa-5">
-              <v-row class="w-100">
-                <v-col class="d-flex flex-column justify-between w-100 ">
-                  <v-text-field
-                      v-model="dateRef"
-                      :rules="[rules.required]"
-                      type="date"
-                      label="Дата"
-                      rounded="md"
-                      :color="BASE_COLOR"
-                      :base-color="FIELD_COLOR"
-                      variant="outlined"
-                      density="compact"
-                      clear-icon="close"
-                      autofocus
-                  />
-                  <v-text-field
-                      v-model="valueRef"
-                      @input="formatInputPrice(valueRef, $event)"
-                      :value="validateNumberInput(valueRef)"
-                      :rules="[rules.required]"
-                      placeholder="1.0000"
-                      label="Курс"
-                      rounded="md"
-                      :base-color="FIELD_COLOR"
-                      :color="BASE_COLOR"
-                      variant="outlined"
-                      density="compact"
-                      clear-icon="close"
-                      hide-spin-buttons
-                      clearable
-                  />
-                </v-col>
-              </v-row>
-            </v-form>
             <v-data-table-server
-              style="height: 38vh"
+              style="height: 250px"
               items-per-page-text="Элементов на странице:"
               loading-text="Загрузка"
               no-data-text="Нет данных"
@@ -1045,7 +996,8 @@ const handlePriceInput = (item) => {
                   :rules="[rules.required]"
                   type="date"
                   label="Дата"
-                  rounded="md"
+                  rounded="lg"
+                  class="date"
                   :color="BASE_COLOR"
                   :base-color="FIELD_COLOR"
                   variant="outlined"
@@ -1059,7 +1011,7 @@ const handlePriceInput = (item) => {
                   :rules="[rules.required]"
                   placeholder="1.0000"
                   label="Курс"
-                  rounded="md"
+                  rounded="lg"
                   :base-color="FIELD_COLOR"
                   :color="BASE_COLOR"
                   variant="outlined"
@@ -1092,48 +1044,46 @@ const handlePriceInput = (item) => {
       />
     </div>
     <filter-canvas>
-      <div class="d-flex flex-column ga-4 w-100">
-        <custom-filter-text-field
-          min-width="106"
-          v-model="filterForm.name"
-          label="Наименование"
-        />
-        <custom-filter-text-field
-          min-width="106"
-          v-model="filterForm.symbol_code"
-          label="Символьный код"
-        />
-      </div>
-      <div class="d-flex flex-column ga-4 w-100">
-        <custom-filter-text-field
-          min-width="106"
-          v-model="filterForm.digital_code"
-          label="Цифровой код"
-        />
-        <custom-filter-autocomplete
-          min-width="106"
-          label="Помечен на удаление"
-          v-model="filterForm.deleted"
-          :items="markedForDeletion"
-        />
-      </div>
-      <div class="d-flex justify-end">
-        <div class="d-flex ga-2" style="margin-right: -6%">
-          <v-btn color="red" class="btn" @click="closeFilterModal"
-            >сбросить</v-btn
-          >
-          <v-btn
-            :color="BASE_COLOR"
-            class="btn"
-            @click="
-              () => {
-                getCurrencyData({});
-                getCurrencyRateData({});
-                useFilterCanvasVisible().closeFilterCanvas();
-              }
-            "
-            >применить</v-btn
-          >
+      <div>
+        <div class="d-flex ga-2">
+          <custom-filter-text-field
+            v-model="filterForm.name"
+            label="Наименование"
+          />
+          <custom-filter-text-field
+            v-model="filterForm.symbol_code"
+            label="Символьный код"
+          />
+        </div>
+        <div class="d-flex ga-2 my-2">
+          <custom-filter-text-field
+            v-model="filterForm.digital_code"
+            label="Цифровой код"
+          />
+          <custom-filter-autocomplete
+            label="Помечен на удаление"
+            v-model="filterForm.deleted"
+            :items="markedForDeletion"
+          />
+        </div>
+        <div class="d-flex justify-end">
+          <div class="d-flex ga-2" style="margin-right: -6%">
+            <v-btn color="red" class="btn" @click="closeFilterModal"
+              >сбросить</v-btn
+            >
+            <v-btn
+              :color="BASE_COLOR"
+              class="btn"
+              @click="
+                () => {
+                  getCurrencyData({});
+                  getCurrencyRateData({});
+                  useFilterCanvasVisible().closeFilterCanvas();
+                }
+              "
+              >применить</v-btn
+            >
+          </div>
         </div>
       </div>
     </filter-canvas>
