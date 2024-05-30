@@ -60,7 +60,6 @@ const groupIdRef = ref(0)
 
 const fioRef = ref(null)
 const addressRef = ref(null)
-const statusRef = ref(true)
 const loginRef = ref(null)
 const passwordRef = ref(null)
 const phoneRef = ref(null)
@@ -301,7 +300,7 @@ const addEmployee = async () => {
   }
 }
 
-const update = async ({page, itemsPerPage, sortBy}) => {
+const update = async () => {
   if (validate(fioRef, phoneRef, emailRef, addressRef, group) !== true) return
 
   let groupValue;
@@ -370,15 +369,10 @@ const restore = async () => {
 }
 
 
-const closeFilterModal = async ({
-                                  page,
-                                  itemsPerPage,
-                                  sortBy,
-                                  search,
-                                  filterData,
-                                } = {}) => {
+const closeFilterModal = async () => {
+
   filterModal.value = false;
-  await getGroups({page, itemsPerPage, sortBy, search, filterData});
+  await getGroups();
   fioFilter.value = null;
   organizationFilter.value = null;
   loginFilter.value = null;
@@ -717,35 +711,35 @@ onMounted(async () => {
         <template v-slot:item="{ item, index }">
           <tr
               v-if="item.employees.length !== 0"
-              v-for="user in item.employees" :key="user.id"
+              v-for="employee in item.employees" :key="employee.id"
               :class="{'bg-grey-lighten-2': item.id === groupIdRef }"
               @mouseenter="hoveredRowIndex = index + 100000"
               @mouseleave="hoveredRowIndex = null"
-              @dblclick="openDialog(user)"
+              @dblclick="openDialog(employee)"
           >
             <td style="width: 350px;">
               <div class="d-flex align-center ga-2">
                 <CustomCheckbox
                     v-model="markedID"
-                    :checked="markedID.includes(user.id)"
-                    @change="lineMarking(user)"
+                    :checked="markedID.includes(employee.id)"
+                    @change="lineMarking(employee)"
                 >
                 </CustomCheckbox>
-                {{ user?.id }}
+                {{ employee?.id }}
               </div>
             </td>
             <td style="width: 390px;">
               <v-chip
                   style="height: 50px; width: 200px;"
                   class="d-flex justify-center"
-                  :color="getListColor(user?.deleted_at)"
+                  :color="getListColor(employee?.deleted_at)"
               >
               <span class="padding: 5px;">{{
-                  getListStatus(user?.deleted_at)
+                  getListStatus(employee?.deleted_at)
                 }}</span>
               </v-chip>
             </td>
-            <td>{{ user?.name }}</td>
+            <td>{{ employee?.name }}</td>
           </tr>
           <tr v-else-if="selectedBlock === 'По группам'">
             <td></td>
