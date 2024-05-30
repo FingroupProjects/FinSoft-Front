@@ -41,7 +41,7 @@ export default {
     return api.delete(`/storage/${id}`)
   },
   excel() {
-    return api.get('/storage/export/excel', {
+    return api.get('/storage/excel/export', {
       responseType: 'blob'
     })
   }

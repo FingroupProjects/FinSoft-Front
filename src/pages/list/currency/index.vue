@@ -26,6 +26,8 @@ import CustomFilterTextField from "../../../components/formElements/CustomFilter
 import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
 import {markedForDeletion} from "../../../composables/constant/items.js";
 import debounce from "lodash.debounce";
+import formatInputPrice from "../../../composables/mask/formatInputPrice.js";
+import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
 
 
 const router = useRouter()
@@ -910,7 +912,8 @@ const handlePriceInput = (item) => {
                   />
                   <v-text-field
                       v-model="valueRef"
-                      @input="validateCurrency"
+                      @input="formatInputPrice(valueRef, $event)"
+                      :value="validateNumberInput(valueRef)"
                       :rules="[rules.required]"
                       placeholder="1.0000"
                       label="Курс"
