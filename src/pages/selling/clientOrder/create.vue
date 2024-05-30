@@ -93,7 +93,7 @@ const getCpAgreements = async (id) => {
   cpAgreements.value = data.result.data;
   if (cpAgreements.value.length === 1) {
     form.cpAgreement = cpAgreements.value[0];
-  } 
+  }
 }
 
 const getGoods = async () => {
@@ -259,17 +259,7 @@ onMounted(() => {
   getStatuses()
   getGoods()
 })
-const validatePrice = (price) => {
-  if (price === 0 || price === '0' || Number(price) === 0) {
-    return false;
-  }
-  return true;
-};
-const handlePriceInput = (item) => {
-  if (!validatePrice(item.price)) {
-    item.price = null;  
-  }
-};
+
 </script>
 <template>
   <div class="document">
@@ -338,52 +328,51 @@ const handlePriceInput = (item) => {
                     </CustomCheckbox>
                   </td>
                   <td style="width: 40%">
-                    <custom-autocomplete 
-                    v-model="item.good_id" 
-                    :items="listGoods" 
+                    <custom-autocomplete
+                    v-model="item.good_id"
+                    :items="listGoods"
                     :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                    min-width="150" 
+                    min-width="150"
                     max-width="100%"
                     :isAmount="true"
                     />
                   </td>
                   <td>
-                    <custom-text-field 
-                    v-model="item.amount" 
-                    v-mask="'########'" 
+                    <custom-text-field
+                    v-model="item.amount"
+                    v-mask="'########'"
                     :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                    min-width="50" 
-                    
-                    />
-                  </td>
-                  <td>
-                    <custom-text-field 
-                    v-model="item.auto_sale_percent" 
-                    :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                    v-mask="'##########'" 
-                    min-width="80" 
+                    min-width="50"
+
                     />
                   </td>
                   <td>
                     <custom-text-field
-                     v-model="item.auto_sale_sum" 
+                    v-model="item.auto_sale_percent"
                     :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                     v-mask="'##########'" 
-                     min-width="80" 
-                     />
-                  </td>
-                  <td>
-                    <custom-text-field 
-                    v-model="item.price"
-                    :value="validateNumberInput(item.price)"
-                    :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'" 
-                    v-mask="'##########'" 
-                    min-width="80" 
-                    @input="handlePriceInput(item)"
+                    v-mask="'##########'"
+                    min-width="80"
                     />
                   </td>
                   <td>
-                    <custom-text-field 
+                    <custom-text-field
+                     v-model="item.auto_sale_sum"
+                    :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                     v-mask="'##########'"
+                     min-width="80"
+                     />
+                  </td>
+                  <td>
+                    <custom-text-field
+                    v-model="item.price"
+                    :value="validateNumberInput(item.price)"
+                    :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                    v-mask="'##########'"
+                    min-width="80"
+                    />
+                  </td>
+                  <td>
+                    <custom-text-field
                       readonly
                       :value="formatNumber(item.amount * item.price)"
                       :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
@@ -404,31 +393,31 @@ const handlePriceInput = (item) => {
         </div>
         <div class="d-flex justify-space-between w-100 mt-2 bottomField0">
           <div class="d-flex ga-10">
-            <custom-text-field 
-            readonly 
-            v-model="author"  
+            <custom-text-field
+            readonly
+            v-model="author"
             label="Автор"
             min-width="110"
             />
-            <custom-text-field 
-            label="Комментарий" 
-            v-model="form.comment" 
+            <custom-text-field
+            label="Комментарий"
+            v-model="form.comment"
             min-width="310"
             />
           </div>
           <div class="d-flex ga-6">
-            <custom-text-field 
-            readonly  
-            :value="'Общая сумма: ' + totalPrice" 
-            min-width="180" 
+            <custom-text-field
+            readonly
+            :value="'Общая сумма: ' + totalPrice"
+            min-width="180"
             max-width="110"
             />
-            <custom-autocomplete 
-            readonly 
-            v-model="form.currency" 
-            label="Валюта" 
+            <custom-autocomplete
+            readonly
+            v-model="form.currency"
+            label="Валюта"
             :items="currencies"
-            min-width="110" 
+            min-width="110"
             maxWidth="190px"
             />
           </div>

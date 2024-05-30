@@ -38,6 +38,8 @@ import CustomFilterTextField from "../../../components/formElements/CustomFilter
 import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
 import { markedForDeletion } from "../../../composables/constant/items.js";
 import debounce from "lodash.debounce";
+import formatInputPrice from "../../../composables/mask/formatInputPrice.js";
+import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
 
 const router = useRouter();
 
@@ -886,6 +888,41 @@ const handlePriceInput = (item) => {
                 <Icons title="Добавить" @click="addDialogRate" name="add" />
               </div>
             </div>
+            <v-form class="d-flex w-100 pa-5">
+              <v-row class="w-100">
+                <v-col class="d-flex flex-column justify-between w-100 ">
+                  <v-text-field
+                      v-model="dateRef"
+                      :rules="[rules.required]"
+                      type="date"
+                      label="Дата"
+                      rounded="md"
+                      :color="BASE_COLOR"
+                      :base-color="FIELD_COLOR"
+                      variant="outlined"
+                      density="compact"
+                      clear-icon="close"
+                      autofocus
+                  />
+                  <v-text-field
+                      v-model="valueRef"
+                      @input="formatInputPrice(valueRef, $event)"
+                      :value="validateNumberInput(valueRef)"
+                      :rules="[rules.required]"
+                      placeholder="1.0000"
+                      label="Курс"
+                      rounded="md"
+                      :base-color="FIELD_COLOR"
+                      :color="BASE_COLOR"
+                      variant="outlined"
+                      density="compact"
+                      clear-icon="close"
+                      hide-spin-buttons
+                      clearable
+                  />
+                </v-col>
+              </v-row>
+            </v-form>
             <v-data-table-server
               style="height: 38vh"
               items-per-page-text="Элементов на странице:"
