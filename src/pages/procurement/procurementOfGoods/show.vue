@@ -1,32 +1,31 @@
 <script setup>
-import {computed, defineEmits, defineProps, onMounted, reactive, ref, watch,} from "vue";
-import CustomTextField from "../../../components/formElements/CustomTextField.vue";
+import { approveDocument, editMessage, selectOneItemMessage } from "../../../composables/constant/buttons.js";
+import { computed, defineEmits, defineProps, onMounted, reactive, ref, watch } from "vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
+import CustomTextField from "../../../components/formElements/CustomTextField.vue";
+import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
+import { FIELD_GOODS, TITLE_COLOR } from "../../../composables/constant/colors.js";
+import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
+import goToHistory from "../../../composables/movementByPage/goToHistory.js";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import showToast from "../../../composables/toast/index.js";
-import validate from "./validate.js";
-import {useRoute, useRouter} from "vue-router";
+import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
+import goToPrint from "../../../composables/movementByPage/goToPrint.js";
+import formatDateTime from "../../../composables/date/formatDateTime.js";
+import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
+import formatNumber from "../../../composables/format/formatNumber.js";
+import ButtonGoods from "../../../components/button/buttonGoods.vue";
+import getStatus from "../../../composables/displayed/getStatus.js";
+import procurementApi from "../../../api/documents/procurement.js";
 import organizationApi from "../../../api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
-import storageApi from "../../../api/list/storage.js";
-import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
-import currencyApi from "../../../api/list/currency.js";
-import procurementApi from "../../../api/documents/procurement.js";
-import goodApi from "../../../api/list/goods.js";
-import {approveDocument, editMessage, selectOneItemMessage} from "../../../composables/constant/buttons.js";
-import "../../../assets/css/procurement.css";
-import {FIELD_GOODS, TITLE_COLOR} from "../../../composables/constant/colors.js";
-import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
-import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
-import formatDateTime from "../../../composables/date/formatDateTime.js";
+import showToast from "../../../composables/toast/index.js";
 import Button from "../../../components/button/button.vue";
-import ButtonGoods from "../../../components/button/buttonGoods.vue";
-import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
-import formatNumber from "../../../composables/format/formatNumber.js";
-import goToHistory from "../../../composables/movementByPage/goToHistory.js";
-import goToPrint from "../../../composables/movementByPage/goToPrint.js";
-import saleApi from "../../../api/documents/sale.js";
-import getStatus from "../../../composables/displayed/getStatus.js";
+import currencyApi from "../../../api/list/currency.js";
+import storageApi from "../../../api/list/storage.js";
+import { useRoute, useRouter } from "vue-router";
+import goodApi from "../../../api/list/goods.js";
+import "../../../assets/css/procurement.css";
+import validate from "./validate.js";
 
 const router = useRouter();
 const route = useRoute();
@@ -78,7 +77,7 @@ const headers = ref([
 
 const approve = async () => {
   try {
-    await saleApi.approve({ ids: [route.params.id] });
+    await procurementApi.approve({ ids: [route.params.id] });
     showToast(approveDocument);
     await getProcurementDetails();
     markedID.value = [];
@@ -90,7 +89,7 @@ const approve = async () => {
 
 const unApprove = async () => {
   try {
-    await saleApi.unApprove({ ids: [route.params.id] });
+    await procurementApi.unApprove({ ids: [route.params.id] });
     showToast(approveDocument);
     await getProcurementDetails();
     markedID.value = [];
@@ -102,7 +101,6 @@ const unApprove = async () => {
 const getProcurementDetails = async () => {
   try {
     const { data } = await procurementApi.getById(route.params.id);
-    console.log(data)
     form.doc_number = data.result.doc_number;
     form.date = getDateTimeInShow(data.result.date, "-", true);
     form.organization = {
@@ -113,12 +111,12 @@ const getProcurementDetails = async () => {
       id: data.result.counterparty.id,
       name: data.result.counterparty.name,
     };
-    console.log(form.counterparty, 'form.counterparty')
-    form.cpAgreement = {
-      id: data.result.counterpartyAgreement.id,
-      name: data.result.counterpartyAgreement.name,
-    };
-    console.log(form.cpAgreement, 'form.cpAgreement')
+    setTimeout(() => {
+      form.cpAgreement = {
+        id: data.result.counterpartyAgreement.id,
+        name: data.result.counterpartyAgreement.name,
+      };
+    }, 700);
     form.storage = {
       id: data.result.storage.id,
       name: data.result.storage.name,
@@ -127,6 +125,7 @@ const getProcurementDetails = async () => {
     form.currency = data.result.currency;
     form.active = data.result.active;
     form.deleted_at = data.result.deleted_at;
+    console.log(form);
     goods.value = data.result.goods.map((item) => ({
       id: item.id,
       good_id: item.good.id,
@@ -349,17 +348,17 @@ watch(form, () => {
 
 watch(
   () => form.counterparty,
-  async (id) => {
-    if (id === null) return;
+  async (newValue) => {
+    if (newValue === null) return;
     form.cpAgreement = null;
     form.currency = null;
-    await getCpAgreements(typeof id === "object" ? id.id : id);
+    await getCpAgreements(typeof newValue === "object" ? newValue.id : newValue);
   }
 );
 
 watch(
   () => form.cpAgreement,
-  (newValue) => {
+  (newValue, oldValue) => {
     if (newValue !== null) {
       const cpAgreement = cpAgreements.value.find((el) =>
         (el.id === typeof newValue) === "object" ? newValue.id : newValue
@@ -392,16 +391,19 @@ onMounted(() => {
   ]);
 });
 
- const search = (event) => {
+const search = (event, idx) => {
   const { target: { value } } = event;
+  select.value = idx
   getGood(value);
 }
+
+const select = ref(null)
+const selectGoods = ref([])
 
 const getGood = async (good) => {
   try {
     const { data: { result : { data } } } = await goodApi.getGoodBySearch(good)
-    listGoods.value = data
-    console.log(listGoods.value);
+    selectGoods.value = data
   }catch(e) {
     console.error(e);
   }
@@ -507,11 +509,13 @@ const getGood = async (good) => {
                   <td style="width: 40%">
                     <custom-autocomplete
                       v-model="item.good_id"
-                      :items="listGoods"
+                      :items="select === index ? selectGoods : listGoods"
                       :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                       min-width="150"
                       max-width="100%"
                       :isAmount="true"
+                      @input="search($event, index)"
+                      @blur="getGoods"
                     />
                   </td>
                   <td>

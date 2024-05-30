@@ -51,5 +51,3 @@ defineProps({
     </template>
   </v-autocomplete>
 </template>
-
-<style scoped></style>
