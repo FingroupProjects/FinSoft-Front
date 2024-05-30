@@ -18,6 +18,7 @@ import {
   warningMessage
 } from "../../../composables/constant/buttons.js";
 import organizationApi from "../../../api/list/organizations.js";
+import positionApi from '../../../api/list/position.js'
 import employee from "../../../api/list/employee.js";
 import validate from "./validate.js";
 import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH, TITLE_COLOR} from "../../../composables/constant/colors.js";
@@ -62,6 +63,7 @@ const fioRef = ref(null)
 const addressRef = ref(null)
 const statusRef = ref(true)
 const loginRef = ref(null)
+const positionRef = ref(null)
 const passwordRef = ref(null)
 const phoneRef = ref(null)
 const emailRef = ref(null)
@@ -81,6 +83,7 @@ const showModalDialog = ref(null)
 
 const employees = ref([])
 const organizations = ref([])
+const positions = ref([])
 const groups = ref([])
 const paginations = ref([])
 const count = ref(0)
@@ -90,7 +93,7 @@ const filterForm = ref({
   name: null,
   email: null,
   phone: null,
-  login: null,
+  address: null,
   organization_id: null,
   deleted: null
 })
@@ -130,6 +133,7 @@ const getGroups = async ({page, itemsPerPage, sortBy, search} = {}) => {
     groups.value = data.result.data
     paginations.value = data.result.pagination
     groupIdRef.value = 0
+    console.log(data);
   } catch (e) {
     console.error(e)
   } finally {
@@ -228,6 +232,20 @@ const getOrganization = async () => {
   }
 }
 
+const getPosition = async () => {
+  try {
+    const { data } = await positionApi.get({ page: 1, itemsPerPage: 100000 })
+    positions.value = data.result.data.map(item => ({
+      id: item.id,
+      name: item.name
+    }))
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+
+
 const onPickFile = () => {
   fileInput.value.click()
 }
@@ -262,8 +280,9 @@ const addEmployee = async () => {
   formData.append('phone', phoneRef.value);
   formData.append('email', emailRef.value);
   formData.append('address', addressRef.value);
+  formData.appen('position', positionRef.value)
   formData.append('group_id', groupValue);
-
+  
   if (imageRef.value !== null) {
     formData.append('image', imageRef.value);
   }
@@ -315,6 +334,7 @@ const update = async ({page, itemsPerPage, sortBy}) => {
   formData.append('name', fioRef.value)
   formData.append('phone', phoneRef.value)
   formData.append('email', emailRef.value)
+  formData.appen('position', positionRef.value)
   formData.append('group_id', groupValue)
   formData.append('address', groupValue)
 
@@ -585,6 +605,10 @@ watch(isCreateGroup, newVal => {
   }
 })
 
+onMounted(async () => {
+  await getPosition()
+})
+ 
 onMounted(async () => {
   await getOrganization()
 })
@@ -867,8 +891,23 @@ onMounted(async () => {
                         clear-icon="close"
                         clearable
                     />
+                    <v-autocomplete
+                      v-model="positionRef"
+                      :rules="[rules.required]"
+                      :color="BASE_COLOR"
+                      :base-color="FIELD_COLOR"
+                      variant="outlined"
+                      class="w-auto text-sm-body-1"
+                      density="compact"
+                      placeholder="Должность"
+                      label="Должность"
+                      :items="positions"
+                      item-text="name"
+                      item-value="id"
+                      clear-icon="close"
+                      clearable
+                    />
                   </div>
-
                 </div>
                 <v-autocomplete
                     no-data-text="Нет данных"
@@ -903,7 +942,7 @@ onMounted(async () => {
     <filter-canvas>
       <div class="d-flex ga-2">
         <custom-filter-text-field label="Название" v-model="filterForm.name"/>
-        <custom-filter-text-field label="Логин" v-model="filterForm.login"/>
+        <custom-filter-text-field label="Адрес" v-model="filterForm.address"/>
       </div>
       <div class="d-flex ga-2">
         <custom-filter-text-field label="Почта" v-model="filterForm.email"/>

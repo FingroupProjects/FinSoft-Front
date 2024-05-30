@@ -647,7 +647,7 @@ onMounted(() => {
                   <div class="d-flex ga-2 mb-3">
                     <v-text-field
                         style="max-width: 50%"
-                        variant="outlined"
+                        variant="outlined"b 
                         :rules="[rules.required]"
                         label="Дата создания"
                         type="date"
