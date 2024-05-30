@@ -24,6 +24,7 @@ import "../../../assets/css/procurement.css";
 import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
 import {useHasOneOrganization} from "../../../store/hasOneOrganization.js";
 import getDataBased from "../../../composables/otherQueries/getDataBased.js";
+import formatInputPrice from "../../../composables/mask/formatInputPrice.js";
 
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter();
@@ -335,19 +336,6 @@ onMounted(() => {
   getStorages();
 });
 
-
-const validatePrice = (price) => {
-  if (price === 0 || price === '0' || Number(price) === 0) {
-    return false;
-  }
-  return true;
-};
-const handlePriceInput = (item) => {
-  if (!validatePrice(item.price)) {
-    item.price = null;  
-  }
-};
-
 </script>
 <template>
   <div class="document">
@@ -444,6 +432,7 @@ const handlePriceInput = (item) => {
                         :items="listGoods"
                         :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                         min-width="150"
+                        @input="qwerty"
                         max-width="100%"
                         :isAmount="true"
                     />
@@ -462,7 +451,7 @@ const handlePriceInput = (item) => {
                         :value="validateNumberInput(item.price)"
                         :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                         min-width="80"
-                        @input="handlePriceInput(item)"
+                        @input="formatInputPrice(item.price, $event)"
                     />
                   </td>
                   <td>

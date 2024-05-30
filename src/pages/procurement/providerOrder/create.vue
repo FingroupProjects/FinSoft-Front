@@ -24,6 +24,7 @@ import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
 import Button from "../../../components/button/button.vue";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";
 import getDataBased from "../../../composables/otherQueries/getDataBased.js";
+import formatInputPrice from "../../../composables/mask/formatInputPrice.js";
 
 const hoveredRowId = ref(null);
 const useOrganization = ref(useHasOneOrganization())
@@ -257,17 +258,6 @@ onMounted(() => {
   getCounterparties()
   getGoods()
 })
-const validatePrice = (price) => {
-  if (price === 0 || price === '0' || Number(price) === 0) {
-    return false;
-  }
-  return true;
-};
-const handlePriceInput = (item) => {
-  if (!validatePrice(item.price)) {
-    item.price = null;  
-  }
-};
 
 </script>
 <template>
@@ -355,8 +345,7 @@ const handlePriceInput = (item) => {
                     v-model="item.price" 
                     :value="validateNumberInput(item.price)"
                     :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                    v-mask="'##########'" 
-                    @input="handlePriceInput(item)"
+                    @input="formatInputPrice(item.price, $event)"
                     min-width="80"/>
                   </td>
                   <td>

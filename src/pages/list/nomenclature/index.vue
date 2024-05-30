@@ -1,5 +1,8 @@
 <script setup>
+import { ErrorSelectMessage, removeMessage, restoreMessage, selectOneItemMessage, warningMessage, } from "../../../composables/constant/buttons.js";
+import { createAccess, readAccess, removeAccess, updateAccess, } from "../../../composables/access/access.js";
 import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
+import { BASE_COLOR, TITLE_COLOR, FIELD_OF_SEARCH, } from "../../../composables/constant/colors.js";
 import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import getListStatus from "../../../composables/displayed/getListStatus.js";
@@ -13,32 +16,12 @@ import Icons from "../../../composables/Icons/Icons.vue";
 import groupApi from "../../../api/list/goodGroup.js";
 import storageApi from "../../../api/list/storage.js";
 import showToast from "../../../composables/toast";
-import { useRoute, useRouter } from "vue-router";
 import unitApi from "../../../api/list/units.js";
 import goodsApi from "../../../api/list/goods";
 import createGroup from "./createGroup.vue";
 import { reactive, ref, watch } from "vue";
-import {
-  FIELD_COLOR,
-  BASE_COLOR,
-  TITLE_COLOR,
-  FIELD_OF_SEARCH,
-} from "../../../composables/constant/colors.js";
-import {
-  ErrorSelectMessage,
-  removeMessage,
-  restoreMessage,
-  selectOneItemMessage,
-  warningMessage,
-} from "../../../composables/constant/buttons.js";
-import {
-  createAccess,
-  readAccess,
-  removeAccess,
-  updateAccess,
-} from "../../../composables/access/access.js";
+import { useRouter } from "vue-router";
 
-const route = useRoute();
 const router = useRouter();
 
 const hoveredRowIndex = ref(null);
@@ -151,20 +134,14 @@ const selectBlock = (name) => {
   loading.value = false;
 };
 
-const closeFilterModal = async ({
-  page,
-  itemsPerPage,
-  sortBy,
-  search,
-  filterData,
-} = {}) => {
+const closeFilterModal = async ({ page, itemsPerPage, sortBy, search, filterData } = {}) => {
   await getGroups({ page, itemsPerPage, sortBy, search, filterData });
   filterForm.name = null;
   filterForm.vendor_code = null;
   (filterForm.storage_id = null),
-    (filterForm.unit_id = null),
-    (filterForm.good_group_id = null),
-    (filterForm.description = null);
+  (filterForm.unit_id = null),
+  (filterForm.good_group_id = null),
+  (filterForm.description = null);
 };
 
 watch(isCreateGroup, (newVal) => {
@@ -176,9 +153,7 @@ watch(isCreateGroup, (newVal) => {
 const goToCreate = () => {
   router.push({
     name: "createUpdateGood",
-    params: {
-      id: 0,
-    },
+    params: { id: 0 },
   });
 };
 
@@ -195,11 +170,7 @@ const createOnBase = () => {
 
 const getUnits = async () => {
   try {
-    const {
-      data: {
-        result: { data },
-      },
-    } = await unitApi.get({ page: 1, itemsPerPage: 10000 });
+    const { data: { result: { data } } } = await unitApi.get({ page: 1, itemsPerPage: 10000 });
     units.value = data;
   } catch (e) {
     console.error(e);
@@ -208,11 +179,7 @@ const getUnits = async () => {
 
 const getStorage = async () => {
   try {
-    const {
-      data: {
-        result: { data },
-      },
-    } = await storageApi.get({ page: 1, itemsPerPage: 10000 });
+    const { data: { result: { data } } } = await storageApi.get({ page: 1, itemsPerPage: 10000 });
     storages.value = data;
   } catch (e) {
     console.error(e);
@@ -424,15 +391,13 @@ const getFilterItems = () => {
           />
         </div>
 
-        <div class="mt-1 filterElement">
+        <div class="mt-2 filterElement">
           <Icons
             name="filter"
             title="Фильтр"
             @click="
               useFilterCanvasVisible().toggleFilterCanvas();
-              getFilterItems();
-            "
-            class="mt-1"
+              getFilterItems();"
           />
           <span v-if="count !== 0" class="countFilter">{{ count }}</span>
         </div>

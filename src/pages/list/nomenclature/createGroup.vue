@@ -167,7 +167,7 @@ const rules = {
           rounded="xl"
         >
           <div class="d-flex justify-space-between align-center mb-2">
-            <span>{{
+            <span class="mr-4">{{
               isFilter
                 ? "Фильтр"
                 : props.isEditGroup

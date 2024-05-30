@@ -1,4 +1,5 @@
 <script setup>
+import Button from "../../../components/button/button.vue";
 import { onMounted, ref, watch, computed } from "vue";
 import groupApi from "../../../api/list/goodGroup";
 import goodsApi from "../../../api/list/goods";
@@ -14,6 +15,7 @@ import validate from "./validate";
 import {
   FIELD_COLOR,
   BASE_COLOR,
+  TITLE_COLOR
 } from "../../../composables/constant/colors.js";
 import {
   createAccess,
@@ -327,8 +329,8 @@ onMounted(async () => {
 <template>
   <div class="pa-4" @keyup.esc="$router.go(-1)">
     <div class="d-flex justify-space-between align-center mb-2 ms-4">
-      <div>
-        <div
+      <div class="d-flex ga-4">
+        <!-- <div
           style="cursor: pointer"
           @click="
             isEdit && !isCreateOnBase
@@ -338,20 +340,21 @@ onMounted(async () => {
           class="pa-1 bg-green rounded-circle d-inline-block mr-4 text-uppercase"
         >
           <v-icon icon="keyboard_backspace" size="x-small" />
-        </div>
-        <span>{{
-          isEdit && !isCreateOnBase ? `Товар: ${good_name}` : "Добавление"
-        }}</span>
+        </div> -->
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }"> {{ isEdit && !isCreateOnBase ? `Товар: ${good_name}` : "Добавление" }} </span>
       </div>
       <div class="d-flex align-center justify-space-between">
         <div class="d-flex ga-3 align-center mt-2 me-4">
-          <span
-            class="mt-1 ms-2 text-blue-darken-4 cursor-pointer"
-            style="text-decoration: underline"
+          <Button
+            v-if="
+              isEdit && !isCreateOnBase
+                ? updateAccess('nomenclature')
+                : createAccess('nomenclature')
+            "
             @click="goToImages()"
-            >ФОТО</span
-          >
-          <Icons
+            name="img"
+          />
+          <Button
             v-if="
               isEdit && !isCreateOnBase
                 ? updateAccess('nomenclature')
@@ -360,6 +363,14 @@ onMounted(async () => {
             @click="isEdit && !isCreateOnBase ? updateGood() : createGood()"
             name="save"
             title="Сохранить"
+          />
+          <Button
+            @click="
+              isEdit && !isCreateOnBase
+                ? checkUpdate()
+                : $router.push('/list/nomenclature')
+            "
+            name="close"
           />
         </div>
       </div>

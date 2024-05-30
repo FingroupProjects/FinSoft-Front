@@ -7,6 +7,7 @@ import getListStatus from "../../../composables/displayed/getListStatus";
 import { markedForDeletion } from "../../../composables/constant/items.js";
 import filterCanvas from "../../../components/canvas/filterCanvas.vue";
 import { useFilterCanvasVisible } from "../../../store/canvasVisible";
+import getExcel from "../../../composables/otherQueries/getExcel.js";
 import counterpartyApi from "../../../api/list/counterparty";
 import Button from "../../../components/button/button.vue";
 import showDate from "../../../composables/date/showDate";
@@ -110,7 +111,7 @@ const headerButtons = ref([
   {
     name: "excel",
     function: () => {
-      getExcel();
+      getExcel(counterpartyApi);
     },
   },
 ]);
@@ -301,23 +302,6 @@ const getCurrencies = async () => {
   } catch (e) {}
 };
 
-const getExcel = async () => {
-  try {
-    const { data } = await counterpartyApi.excel(filterForm.value);
-    const url = window.URL.createObjectURL(
-      new Blob([data], { type: "application/vnd.ms-excel" })
-    );
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "Отчет.xls");
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  } catch (e) {
-    console.error(e);
-  }
-};
-
 const getOrganizations = async () => {
   try {
     const { data } = await organizationApi.get({
@@ -392,7 +376,7 @@ onMounted(async () => {
         </v-card> -->
       <div class="d-flex justify-between ga-2">
         <div class="d-flex justify-end mb-3">
-          <div class="d-flex ga-2 position-relative">
+          <div class="d-flex ga-2">
             <Button
               v-for="(button, idx) in headerButtons"
               :name="button.name"
@@ -421,12 +405,11 @@ onMounted(async () => {
           />
         </div>
 
-        <div class="mt-1 filterElement">
+        <div class="mt-2 filterElement">
           <Icons
             name="filter"
             title="Фильтр"
             @click="useFilterCanvasVisible().toggleFilterCanvas()"
-            class="mt-1"
           />
           <span v-if="count !== 0" class="countFilter">{{ count }}</span>
         </div>
