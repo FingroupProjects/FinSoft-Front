@@ -76,7 +76,7 @@ const statusOptions = ['проведён', 'не проведён'];
 const headers = ref([
   {title: 'Номер', key: 'name'},
   {title: 'Дата', key: 'currency.name'},
-  {title: 'Поставщик', key: 'currency.name'},
+  {title: 'Клиент', key: 'currency.name'},
   {title: 'Организация', key: 'currency.name'},
   {title: 'Дата отгрузки', key: 'currency.name'},
   {title: 'Автор', key: 'currency.name'},
