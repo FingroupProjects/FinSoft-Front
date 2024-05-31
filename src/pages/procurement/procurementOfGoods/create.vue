@@ -180,7 +180,8 @@ const addNewProcurement = async () => {
       form.counterparty,
       form.cpAgreement,
       form.storage,
-      form.currency
+      form.currency,
+      goods.value
     ) !== true
   )
     return;
@@ -217,10 +218,9 @@ const addNewProcurement = async () => {
 
   try {
     const res = await procurementApi.add(body);
-    console.log(res)
     if (res.status === 201) {
       showToast(addMessage);
-      router.push(`/procurementOfGoods/${res.data.result.id}`);
+      window.open(`/procurementOfGoods/${res.data.result.id}`, "_blank");
     }
   } catch (e) {
     console.error(e);
@@ -432,7 +432,6 @@ onMounted(() => {
                         :items="listGoods"
                         :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                         min-width="150"
-                        @input="qwerty"
                         max-width="100%"
                         :isAmount="true"
                     />
