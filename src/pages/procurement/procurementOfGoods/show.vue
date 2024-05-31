@@ -66,6 +66,7 @@ const form = reactive({
   deleted_at: null,
 });
 
+const itemsPerPage = ref(10000)
 const select = ref(null);
 const author = ref(null);
 const selectGoods = ref([]);
@@ -206,6 +207,7 @@ const getGoods = async () => {
     sortBy: "name",
   });
   listGoods.value = data.result.data;
+  console.log(data);
 };
 
 const decreaseCountOfGoods = () => {
@@ -420,6 +422,7 @@ const getGood = async (good) => {
   try {
     const { data: { result: { data } } } = await goodApi.getGoodBySearch(good);
     selectGoods.value = data;
+    console.log(data);
   } catch (e) {
     console.error(e);
   }
@@ -427,7 +430,7 @@ const getGood = async (good) => {
 
 </script>
 <template>
-  <div class="document">
+  <div class="">
     <div class="d-flex justify-space-between">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
         <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">
@@ -495,6 +498,7 @@ const getGood = async (good) => {
               v-model="markedID"
               item-value="id"
               page-text="{0}-{1} от {2}"
+              v-model:items-per-page="itemsPerPage"
               :items-per-page-options="[
                 { value: 25, title: '25' },
                 { value: 50, title: '50' },
@@ -564,7 +568,7 @@ const getGood = async (good) => {
                 </tr>
                 <tr v-if="index === goods.length - 1">
                   <td></td>
-                  <td style="width: 150%" class="d-flex ga-2" colspan="10">
+                  <td style="width: 150%; height: 80px;" class="d-flex ga-2" colspan="10">
                     <ButtonGoods name="add" @click="increaseCountOfGoods" />
                     <ButtonGoods
                       v-if="goods.length !== 1"
