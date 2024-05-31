@@ -625,41 +625,44 @@ watch(rateDialog, newVal => {
   }
 })
 
-watch(search, debounce((newValue) => {
-  debounceSearch.value = newValue
-}, 500))
-
-const validatePrice = (price) => {
-  if (price === 0 || price === '0' || Number(price) === 0) {
-    return false;
-  }
-  return true;
-};
-const handlePriceInput = (item) => {
-  if (!validatePrice(item.price)) {
-    item.price = null;  
-  }
-};
+watch(
+  search,
+  debounce((newValue) => {
+    debounceSearch.value = newValue;
+  }, 500)
+);
 </script>
 
 <template>
-  <div>
-      <div class="d-flex justify-space-between text-uppercase ">
-        <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Валюты</span>
-        </div>
-        <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
-          <div class="d-flex w-100">
-          <div class="d-flex ga-2 mt-1 me-3 py-2">
-            <Button v-if="createAccess('currency')" @click="openDialog(0)" name="create" />
-            <Button v-if="createAccess('currency')" @click="addBasedOnCurrency" name="copy" />
-            <Button v-if="removeAccess('currency')" @click="compute" name="delete" />
+  <div class="pa-4">
+    <div class="d-flex justify-space-between calcWidth">
+      <div class="d-flex align-center ga-2 pe-2 ms-4">
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }"> Валюты </span>
+      </div>
+      <div class="d-flex justify-between ga-2">
+        <div class="d-flex justify-end mb-3">
+          <div class="d-flex ga-2 position-relative">
+            <Button
+              v-if="createAccess('currency')"
+              @click="openDialog(0)"
+              name="create"
+            />
+            <Button
+              v-if="createAccess('currency')"
+              @click="addBasedOnCurrency"
+              name="copy"
+            />
+            <Button
+              v-if="removeAccess('currency')"
+              @click="compute"
+              name="delete"
+            />
             <Button name="excel" @click="getExcel()" />
           </div>
         </div>
         <div class="custom_search">
           <v-text-field
-            style="width: 190px; margin-top: 4px;"
+            style="width: 190px;"
             v-model="search"
             prepend-inner-icon="search"
             density="compact"
@@ -685,7 +688,7 @@ const handlePriceInput = (item) => {
             />
             <span v-if="count !== 0" class="countFilter">{{ count }}</span>
           </div>
-        </v-card>
+        </div>
       </div>
 
       <v-card class="mt-2 table">
@@ -764,132 +767,74 @@ const handlePriceInput = (item) => {
                 >
                 <Icons name="close" title="Закрыть" />
               </v-btn>
-              </div>
             </div>
-            <v-form class="d-flex w-100" :disabled="!updateAccess('currency') && isExistsCurrency" @submit.prevent="addCurrency">
-              <v-row class="w-100">
-                <v-col class="d-flex flex-column w-100">
-                  <v-text-field
-                      v-model="nameRef"
-                      :rules="[rules.required]"
-                      :color="BASE_COLOR"
-                      rounded="md"
-                      :base-color="FIELD_COLOR"
-                      variant="outlined"
-                      class="w-auto text-sm-body-1"
-                      density="compact"
-                      placeholder="Доллар"
-                      label="Название"
-                      clear-icon="close"
-                      clearable
-                      autofocus
-                  />
-                  <v-text-field
-                      v-model="symbolRef"
-                      :rules="[rules.required]"
-                      :color="BASE_COLOR"
-                      rounded="md"
-                      :base-color="FIELD_COLOR"
-                      variant="outlined"
-                      density="compact"
-                      placeholder="USD"
-                      v-mask="'AAA'"
-                      label="Символный код"
-                      clear-icon="close"
-                      clearable
-                  />
-                  <v-text-field
-                      v-model="digitalRef"
-                      :rules="[rules.required]"
-                      :color="BASE_COLOR"
-                      rounded="md"
-                      density="compact"
-                      variant="outlined"
-                      :base-color="FIELD_COLOR"
-                      placeholder="132"
-                      v-mask="'###'"
-                      label="Цифровой код"
-                      clear-icon="close"
-                      clearable
-                  />
-                </v-col>
-              </v-row>
-            </v-form>
+          </div>
+          <v-form
+            class="d-flex w-100"
+            :disabled="!updateAccess('currency') && isExistsCurrency"
+            @submit.prevent="addCurrency"
+          >
+            <v-row class="w-100">
+              <v-col class="d-flex flex-column w-100">
+                <v-text-field
+                  v-model="nameRef"
+                  :rules="[rules.required]"
+                  :color="BASE_COLOR"
+                  rounded="md"
+                  :base-color="FIELD_COLOR"
+                  variant="outlined"
+                  class="w-auto text-sm-body-1"
+                  density="compact"
+                  placeholder="Доллар"
+                  label="Название"
+                  clear-icon="close"
+                  clearable
+                  autofocus
+                />
+                <v-text-field
+                  v-model="symbolRef"
+                  :rules="[rules.required]"
+                  :color="BASE_COLOR"
+                  rounded="md"
+                  :base-color="FIELD_COLOR"
+                  variant="outlined"
+                  density="compact"
+                  placeholder="USD"
+                  v-mask="'AAA'"
+                  label="Символный код"
+                  clear-icon="close"
+                  clearable
+                />
+                <v-text-field
+                  v-model="digitalRef"
+                  :rules="[rules.required]"
+                  :color="BASE_COLOR"
+                  rounded="md"
+                  density="compact"
+                  variant="outlined"
+                  :base-color="FIELD_COLOR"
+                  placeholder="132"
+                  v-mask="'###'"
+                  label="Цифровой код"
+                  clear-icon="close"
+                  clearable
+                />
+              </v-col>
+            </v-row>
+          </v-form>
 
-            <v-card class="table" :style="`border: 2px solid ${BASE_COLOR}`">
-              <div v-if="isExistsCurrency" class="d-flex w-100 rounded-t-lg mb-1 align-center "
-              :style="`border-bottom: 2px solid ${BASE_COLOR}`">
-                <div class="d-flex justify-end w-100 ga-2 pt-1 me-2" style="padding-top: 4px !important;">
-                  <Icons title="Удалить"  @click="computeRate" name="delete"/>
-                  <Icons title="Добавить"  @click="addDialogRate" name="add"/>
-                </div>
-              </div>
-              <v-data-table-server
-                  style="height: 38vh"
-                  items-per-page-text="Элементов на странице:"
-                  loading-text="Загрузка"
-                  no-data-text="Нет данных"
-                  v-model:items-per-page="paginationsRate.per_page"
-                  :loading="loadingRate"
-                  :headers="headersRate"
-                  :items-length="paginationsRate.total || 0"
-                  :items="rates"
-                  :item-value="headersRate.title"
-                  @update:options="getCurrencyRateData"
-                  page-text='{0}-{1} от {2}'
-                  :items-per-page-options="[
-                      {value: 25, title: '25'},
-                      {value: 50, title: '50'},
-                      {value: 100, title: '100'},
-                  ]"
-                  fixed-footer
-                  fixed-header
-                  hover
+          <v-card class="table" :style="`border: 2px solid ${BASE_COLOR}`">
+            <div
+              v-if="isExistsCurrency"
+              class="d-flex w-100 rounded-t-lg mb-1 align-center"
+              :style="`border-bottom: 2px solid ${BASE_COLOR}`"
+            >
+              <div
+                class="d-flex justify-end w-100 ga-2 pt-1 me-2"
+                style="padding-top: 4px !important"
               >
-                <template v-slot:item="{ item, index }">
-                  <tr @mouseenter="hoveredRowIndexRate = index" @mouseleave="hoveredRowIndexRate = null"
-                      @dblclick="editDialogRate(item)" @click="lineMarkingRate(item)"
-                      :class="{'bg-grey-lighten-2': markedIDRate.includes(item.id)}">
-                    <td>
-                      <template v-if="hoveredRowIndexRate === index || markedIDRate.includes(item.id)">
-                        <CustomCheckbox v-model="markedIDRate" :checked="markedIDRate.includes(item.id)"
-                                        @change="handleCheckboxClickRate(item)">
-                          <span>{{ index + 1 }}</span>
-                        </CustomCheckbox>
-                      </template>
-                      <template v-else>
-                        <div class="d-flex">
-                          <Icons style="margin-right: 10px;" :name="item.deleted_at === null ? 'valid' : 'inValid'"/>
-                          <span>{{ index + 1 }}</span>
-                        </div>
-                      </template>
-                    </td>
-                    <td>{{ item.date }}</td>
-                    <td>{{ item.value }}</td>
-                  </tr>
-                </template>
-              </v-data-table-server>
-            </v-card>
-          </v-card>
-        </v-dialog>
-
-        <!--  addCurrencyRate    -->
-        <v-dialog persistent v-model="rateDialog" activator="parent" @keyup.esc="isExistsCurrencyRate ? checkRateUpdate() : checkRateAndClose()">
-          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="400"
-                  class="d-flex  justify-center flex-column mx-auto my-0" rounded="xl">
-            <div class="d-flex justify-space-between align-center pr-5 pt-3">
-              <span class="pl-5">{{ isExistsCurrencyRate ? 'Изменить' : 'Добавить' }} курс</span>
-              <div class="d-flex align-center justify-space-between">
-                <div class="d-flex ga-3 align-center mt-2 me-4">
-                  <Icons title="Удалить" v-if="isExistsCurrencyRate"  @click="computeRate" name="delete"/>
-                  
-                  <Icons title="Сохранить"  v-if="isExistsCurrencyRate" @click="updateRate" name="save"/>
-                  <Icons  title="Сохранить" v-else @click="addRate" name="save"/>
-                </div>
-                <v-btn @click="isExistsCurrencyRate ? checkRateUpdate() : checkRateAndClose() "
-                  variant="text" :size="32" class="pt-2 pl-1">
-                  <Icons name="close"   title="Закрыть"/>
-                </v-btn>
+                <Icons title="Удалить" @click="computeRate" name="delete" />
+                <Icons title="Добавить" @click="addDialogRate" name="add" />
               </div>
             </div>
             <v-form class="d-flex w-100 pa-5">
@@ -910,7 +855,8 @@ const handlePriceInput = (item) => {
                   />
                   <v-text-field
                       v-model="valueRef"
-                      @input="validateCurrency"
+                      @input="formatInputPrice(valueRef, $event)"
+                      :value="validateNumberInput(valueRef)"
                       :rules="[rules.required]"
                       placeholder="1.0000"
                       label="Курс"
@@ -926,44 +872,221 @@ const handlePriceInput = (item) => {
                 </v-col>
               </v-row>
             </v-form>
+            <v-data-table-server
+              style="height: 38vh"
+              items-per-page-text="Элементов на странице:"
+              loading-text="Загрузка"
+              no-data-text="Нет данных"
+              v-model:items-per-page="paginationsRate.per_page"
+              :loading="loadingRate"
+              :headers="headersRate"
+              :items-length="paginationsRate.total || 0"
+              :items="rates"
+              :item-value="headersRate.title"
+              @update:options="getCurrencyRateData"
+              page-text="{0}-{1} от {2}"
+              :items-per-page-options="[
+                { value: 25, title: '25' },
+                { value: 50, title: '50' },
+                { value: 100, title: '100' },
+              ]"
+              fixed-footer
+              fixed-header
+              hover
+            >
+              <template v-slot:item="{ item, index }">
+                <tr
+                  @mouseenter="hoveredRowIndexRate = index"
+                  @mouseleave="hoveredRowIndexRate = null"
+                  @dblclick="editDialogRate(item)"
+                  @click="lineMarkingRate(item)"
+                  :class="{
+                    'bg-grey-lighten-2': markedIDRate.includes(item.id),
+                  }"
+                >
+                  <td>
+                    <template
+                      v-if="
+                        hoveredRowIndexRate === index ||
+                        markedIDRate.includes(item.id)
+                      "
+                    >
+                      <CustomCheckbox
+                        v-model="markedIDRate"
+                        :checked="markedIDRate.includes(item.id)"
+                        @change="handleCheckboxClickRate(item)"
+                      >
+                        <span>{{ index + 1 }}</span>
+                      </CustomCheckbox>
+                    </template>
+                    <template v-else>
+                      <div class="d-flex">
+                        <Icons
+                          style="margin-right: 10px"
+                          :name="item.deleted_at === null ? 'valid' : 'inValid'"
+                        />
+                        <span>{{ index + 1 }}</span>
+                      </div>
+                    </template>
+                  </td>
+                  <td>{{ item.date }}</td>
+                  <td>{{ item.value }}</td>
+                </tr>
+              </template>
+            </v-data-table-server>
           </v-card>
-        </v-dialog>
-      </v-card>
+        </v-card>
+      </v-dialog>
 
-      <div v-if="showModal">
-        <ConfirmModal :showModal="true" @close="toggleModal()" @closeClear="closeDialogWithoutSaving()"   @closeWithSaving="closingWithSaving()"/>
-      </div>
-      <div v-if="showRateModal">
-        <ConfirmModal :showModal="true" @close="toggleRateModal()" @closeClear="closeRateDialogWithoutSaving()"  @closeWithSaving="closingRateWithSaving()"/>
-      </div>
-      <filter-canvas >
-        <div class="d-flex flex-column ga-4 w-100">
-          <custom-filter-text-field min-width="106" v-model="filterForm.name" label="Наименование"/>
-          <custom-filter-text-field min-width="106" v-model="filterForm.symbol_code" label="Символьный код"/>
-        </div>  
-        <div class="d-flex flex-column ga-4 w-100">
-          <custom-filter-text-field min-width="106" v-model="filterForm.digital_code" label="Цифровой код"/>
-          <custom-filter-autocomplete min-width="106" label="Помечен на удаление" v-model="filterForm.deleted" :items="markedForDeletion"/>
-        </div>    
-        <div class="d-flex justify-end ">
-          <div class="d-flex ga-2" style="margin-right: -6%;">
-            <v-btn color="red" class="btn" @click="closeFilterModal"
-            >сбросить</v-btn
+      <!--  addCurrencyRate    -->
+      <v-dialog
+        persistent
+        v-model="rateDialog"
+        activator="parent"
+        @keyup.esc="
+          isExistsCurrencyRate ? checkRateUpdate() : checkRateAndClose()
+        "
+      >
+        <v-card
+          :style="`border: 2px solid ${BASE_COLOR}`"
+          min-width="400"
+          class="d-flex justify-center flex-column mx-auto my-0"
+          rounded="xl"
+        >
+          <div class="d-flex justify-space-between align-center pr-5 pt-3">
+            <span class="pl-5"
+              >{{ isExistsCurrencyRate ? "Изменить" : "Добавить" }} курс</span
             >
-            <v-btn
-                :color="BASE_COLOR"
-                class="btn"
-                @click="() => {getCurrencyData({}); getCurrencyRateData({}); useFilterCanvasVisible().closeFilterCanvas()}"
-            >применить</v-btn
-            >
+            <div class="d-flex align-center justify-space-between">
+              <div class="d-flex ga-3 align-center mt-2 me-4">
+                <Icons
+                  title="Удалить"
+                  v-if="isExistsCurrencyRate"
+                  @click="computeRate"
+                  name="delete"
+                />
+
+                <Icons
+                  title="Сохранить"
+                  v-if="isExistsCurrencyRate"
+                  @click="updateRate"
+                  name="save"
+                />
+                <Icons title="Сохранить" v-else @click="addRate" name="save" />
+              </div>
+              <v-btn
+                @click="
+                  isExistsCurrencyRate ? checkRateUpdate() : checkRateAndClose()
+                "
+                variant="text"
+                :size="32"
+                class="pt-2 pl-1"
+              >
+                <Icons name="close" title="Закрыть" />
+              </v-btn>
+            </div>
           </div>
+          <v-form class="d-flex w-100 pa-5">
+            <v-row class="w-100">
+              <v-col class="d-flex flex-column justify-between w-100">
+                <v-text-field
+                  v-model="dateRef"
+                  :rules="[rules.required]"
+                  type="date"
+                  label="Дата"
+                  rounded="md"
+                  :color="BASE_COLOR"
+                  :base-color="FIELD_COLOR"
+                  variant="outlined"
+                  density="compact"
+                  clear-icon="close"
+                  autofocus
+                />
+                <v-text-field
+                  v-model="valueRef"
+                  @input="validateCurrency"
+                  :rules="[rules.required]"
+                  placeholder="1.0000"
+                  label="Курс"
+                  rounded="md"
+                  :base-color="FIELD_COLOR"
+                  :color="BASE_COLOR"
+                  variant="outlined"
+                  density="compact"
+                  clear-icon="close"
+                  hide-spin-buttons
+                  clearable
+                />
+              </v-col>
+            </v-row>
+          </v-form>
+        </v-card>
+      </v-dialog>
+    </v-card>
+
+    <div v-if="showModal">
+      <ConfirmModal
+        :showModal="true"
+        @close="toggleModal()"
+        @closeClear="closeDialogWithoutSaving()"
+        @closeWithSaving="closingWithSaving()"
+      />
+    </div>
+    <div v-if="showRateModal">
+      <ConfirmModal
+        :showModal="true"
+        @close="toggleRateModal()"
+        @closeClear="closeRateDialogWithoutSaving()"
+        @closeWithSaving="closingRateWithSaving()"
+      />
+    </div>
+    <filter-canvas>
+      <div class="d-flex flex-column ga-4 w-100">
+        <custom-filter-text-field
+          min-width="106"
+          v-model="filterForm.name"
+          label="Наименование"
+        />
+        <custom-filter-text-field
+          min-width="106"
+          v-model="filterForm.symbol_code"
+          label="Символьный код"
+        />
+      </div>
+      <div class="d-flex flex-column ga-4 w-100">
+        <custom-filter-text-field
+          min-width="106"
+          v-model="filterForm.digital_code"
+          label="Цифровой код"
+        />
+        <custom-filter-autocomplete
+          min-width="106"
+          label="Помечен на удаление"
+          v-model="filterForm.deleted"
+          :items="markedForDeletion"
+        />
+      </div>
+      <div class="d-flex justify-end">
+        <div class="d-flex ga-2" style="margin-right: -6%">
+          <v-btn color="red" class="btn" @click="closeFilterModal"
+            >сбросить</v-btn
+          >
+          <v-btn
+            :color="BASE_COLOR"
+            class="btn"
+            @click="
+              () => {
+                getCurrencyData({});
+                getCurrencyRateData({});
+                useFilterCanvasVisible().closeFilterCanvas();
+              }
+            "
+            >применить</v-btn
+          >
         </div>
-      </filter-canvas>
+      </div>
+    </filter-canvas>
   </div>
 
 
 </template>
-
-<style scoped>
-
-</style>

@@ -55,7 +55,7 @@ const form = reactive({
 const author = ref(null);
 const markedID = ref([]);
 const goods = ref([]);
-const doc_name = ref('Покупка')
+const doc_name = ref('Поступление')
 
 const organizations = ref([]);
 const counterparties = ref([]);
@@ -294,7 +294,6 @@ const updateProcurement = async () => {
     const res = await procurementApi.update(route.params.id, body);
     if (res.status === 200) {
       showToast(editMessage);
-      router.push("/procurementOfGoods");
     }
   } catch (e) {
     console.error(e);
@@ -392,13 +391,28 @@ onMounted(() => {
     getGoods(),
   ]);
 });
+
+ const search = (event) => {
+  const { target: { value } } = event;
+  getGood(value);
+}
+
+const getGood = async (good) => {
+  try {
+    const { data: { result : { data } } } = await goodApi.getGoodBySearch(good)
+    listGoods.value = data
+    console.log(listGoods.value);
+  }catch(e) {
+    console.error(e);
+  }
+}
 </script>
 <template>
   <div class="document">
     <div class="d-flex justify-space-between">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
         <span :style="{ color: TITLE_COLOR, fontSize: '22px' }"
-          >{{ doc_name }} (просмотр) - {{ getStatus(form.active, form.deleted_at) }}</span>
+          >Покупка (просмотр) - {{ getStatus(form.active, form.deleted_at) }}</span>
       </div>
       <v-card variant="text" style="display: flex; align-items: center">
         <div class="d-flex w-100 justify-end my-3 pr-4">
@@ -494,11 +508,10 @@ onMounted(() => {
                     <custom-autocomplete
                       v-model="item.good_id"
                       :items="listGoods"
-                      :base-color="
-                        hoveredRowId === item.id ? FIELD_GOODS : '#fff'
-                      "
+                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                       min-width="150"
                       max-width="100%"
+                      :isAmount="true"
                     />
                   </td>
                   <td>
