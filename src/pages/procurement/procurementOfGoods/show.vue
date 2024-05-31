@@ -73,8 +73,6 @@ const headers = ref([
   { title: "Сумма", key: "currency.name", sortable: false },
 ]);
 
-
-
 const approve = async () => {
   try {
     await procurementApi.approve({ ids: [route.params.id] });
@@ -392,9 +390,9 @@ onMounted(() => {
 });
 
 const search = (event, idx) => {
-  const { target: { value } } = event;
+  const { target: { value } } = event
   select.value = idx
-  getGood(value);
+  getGood(value)
 }
 
 const select = ref(null)

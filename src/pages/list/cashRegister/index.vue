@@ -39,6 +39,7 @@ import {
   ErrorSelectMessage,
   selectOneItemMessage,
 } from "@/composables/constant/buttons.js";
+import getExcel from "../../../composables/otherQueries/getExcel.js";
 
 const router = useRouter();
 
@@ -119,7 +120,7 @@ const headerButtons = ref([
   {
     name: "excel",
     function: () => {
-      getExcel();
+      getExcel(cashRegister, 'Касса');
     },
   },
 ]);
@@ -247,23 +248,6 @@ const getcashRegisterData = async ({ page, itemsPerPage, sortBy, search }) => {
     cashRegisters.value = data.result.data;
     loading.value = false;
   } catch (e) {}
-};
-
-const getExcel = async () => {
-  try {
-    const { data } = await cashRegister.excel();
-    const url = window.URL.createObjectURL(
-      new Blob([data], { type: "application/vnd.ms-excel" })
-    );
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "Отчет.xls");
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  } catch (e) {
-    console.error(e);
-  }
 };
 
 const addCashRegister = async ({ page, itemsPerPage, sortBy }) => {
@@ -633,7 +617,7 @@ onMounted(() => {
               }}</span
             >
             <div class="d-flex align-center justify-space-between">
-              <div class="d-flex ga-3 align-center mt-2 me-4">
+              <div class="d-flex ga-3 align-center mt-2">
                 <Icons
                   title="Удалить"
                   v-if="removeAccess('cashRegister') && isExistsCashRegister"
@@ -652,15 +636,8 @@ onMounted(() => {
                   @click="update"
                   name="save"
                 />
+                <Icons name="close" title="Закрыть" @click="isExistsCashRegister ? checkUpdate() : checkAndClose()"/>
               </div>
-              <v-btn
-                @click="isExistsCashRegister ? checkUpdate() : checkAndClose()"
-                variant="text"
-                :size="32"
-                class="pt-2 pl-1"
-              >
-                <Icons name="close" title="Закрыть" />
-              </v-btn>
             </div>
           </div>
           <v-form

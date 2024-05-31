@@ -16,7 +16,7 @@ import {
   ErrorSelectMessage,
   removeMessage,
   restoreMessage,
-  selectOneItemMessage,
+  selectOneItemMessage, warningMessage,
 } from "../../../composables/constant/buttons.js";
 import Icons from "../../../composables/Icons/Icons.vue";
 import showDate from "../../../composables/date/showDate.js";
@@ -38,8 +38,8 @@ import CustomFilterTextField from "../../../components/formElements/CustomFilter
 import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
 import { markedForDeletion } from "../../../composables/constant/items.js";
 import debounce from "lodash.debounce";
+import getExcel from "../../../composables/otherQueries/getExcel.js";
 import formatInputPrice from "../../../composables/mask/formatInputPrice.js";
-import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
 
 const router = useRouter();
 
@@ -124,7 +124,7 @@ const countFilter = () => {
   return count;
 };
 
-const getCurrencyData = async ({ page, itemsPerPage, sortBy, search }) => {
+const getCurrencyData = async ({ page, itemsPerPage, sortBy, search } = {}) => {
   filterModal.value = false;
   const filterData = filterForm.value;
   count.value = 0;
@@ -256,7 +256,7 @@ const cleanForm = () => {
   symbolRef.value = null;
 };
 
-const getCurrencyRateData = async ({ page, itemsPerPage, sortBy, search }) => {
+const getCurrencyRateData = async ({ page, itemsPerPage, sortBy, search } = {}) => {
   if (idCurrency.value === 0 || !isExistsCurrency.value) {
     loadingRate.value = false;
     return;
@@ -280,6 +280,7 @@ const getCurrencyRateData = async ({ page, itemsPerPage, sortBy, search }) => {
     paginationsRate.value = data.result.pagination || [];
     markedIDRate.value = [];
   } catch (e) {
+    console.error(e)
   } finally {
     loadingRate.value = false;
   }
@@ -381,7 +382,7 @@ const openDialog = (item) => {
   }
 };
 
-const addRate = async ({ page, itemsPerPage, sortBy }) => {
+const addRate = async () => {
   const body = {
     date: showDate(dateRef.value, "-"),
     value: valueRef.value,
@@ -389,12 +390,13 @@ const addRate = async ({ page, itemsPerPage, sortBy }) => {
 
   try {
     await currency.addRate(idCurrency.value, body);
-    await getCurrencyRateData({ page, itemsPerPage, sortBy });
-    await getCurrencyData({ page, itemsPerPage, sortBy });
+    await getCurrencyRateData();
+    await getCurrencyData();
     showToast(addMessage);
     valueRef.value = null;
     rateDialog.value = false;
   } catch (e) {
+    console.log(e)
     showToast(e.response.data.message, "red");
   }
 };
@@ -432,12 +434,12 @@ const addDialogRate = () => {
   isExistsCurrencyRate.value = false;
 };
 
-const removeCurrencyRate = async ({ page, itemsPerPage, sortBy }) => {
+const removeCurrencyRate = async () => {
   try {
     const { status } = await currency.removeRate({ ids: markedIDRate.value });
     if (status === 200) {
       showToast(removeMessage, "red");
-      await getCurrencyRateData({ page, itemsPerPage, sortBy });
+      await getCurrencyRateData();
       markedIDRate.value = [];
       rateDialog.value = false;
     }
@@ -446,12 +448,12 @@ const removeCurrencyRate = async ({ page, itemsPerPage, sortBy }) => {
   }
 };
 
-const restoreCurrencyRate = async ({ page, itemsPerPage, sortBy }) => {
+const restoreCurrencyRate = async () => {
   try {
     const { status } = await currency.restoreRate({ ids: markedIDRate.value });
     if (status === 200) {
       showToast(restoreMessage);
-      await getCurrencyRateData({ page, itemsPerPage, sortBy });
+      await getCurrencyRateData();
       markedIDRate.value = [];
       rateDialog.value = false;
     }
@@ -474,26 +476,6 @@ const addBasedOnCurrency = () => {
       digitalRef.value = item.digital_code;
     }
   });
-};
-
-const getExcel = async () => {
-  if (currency.value === null) {
-    return showToast("Выберите поставщика", "warning");
-  }
-  try {
-    const { data } = await currency.excel(currency.value);
-    const url = window.URL.createObjectURL(
-      new Blob([data], { type: "application/vnd.ms-excel" })
-    );
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "Отчет.xls");
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  } catch (e) {
-    console.error(e);
-  }
 };
 
 const lineMarking = (item) => {
@@ -568,28 +550,14 @@ const handleCheckboxClickRate = (item) => {
   lineMarkingRate(item);
 };
 
-const computeRate = ({ page, itemsPerPage, sortBy }) => {
+const computeRate = () => {
+  if (markedIDRate.value.length === 0) return showToast(warningMessage, 'warning')
+
   if (markedItemRate.value.deleted_at !== null) {
-    return restoreCurrencyRate({ page, itemsPerPage, sortBy });
+    return restoreCurrencyRate();
   } else {
-    return removeCurrencyRate({ page, itemsPerPage, sortBy });
+    return removeCurrencyRate();
   }
-};
-
-const validateCurrency = () => {
-  let value = valueRef.value.toString();
-
-  value = value.replace(/(?!^\.)([^\d.])/g, "");
-
-  if (value.startsWith("0") && value.length > 1 && value[1] !== ".") {
-    value = value.substring(1);
-  }
-
-  if (value === "0") {
-    value = "";
-  }
-
-  valueRef.value = value;
 };
 
 onMounted(async () => {
@@ -653,7 +621,7 @@ watch(
               @click="compute"
               name="delete"
             />
-            <Button name="excel" @click="getExcel()" />
+            <Button name="excel" @click="getExcel(currency, 'Валюты')" />
           </div>
         </div>
         <div class="custom_search">
@@ -776,7 +744,7 @@ watch(
                 : "Добавление"
             }}</span>
             <div class="d-flex align-center justify-space-between">
-              <div class="d-flex ga-3 align-center mt-2 me-4">
+              <div class="d-flex ga-3 align-center mt-2">
                 <Icons
                   title="Удалить"
                   v-if="removeAccess('currency') && isExistsCurrency"
@@ -795,15 +763,8 @@ watch(
                   @click="update"
                   name="save"
                 />
+                <Icons name="close" @click="isExistsCurrency ? checkUpdate() : checkAndClose()" title="Закрыть" />
               </div>
-              <v-btn
-                @click="isExistsCurrency ? checkUpdate() : checkAndClose()"
-                variant="text"
-                :size="32"
-                class="pt-2 pl-1"
-              >
-                <Icons name="close" title="Закрыть" />
-              </v-btn>
             </div>
           </div>
           <v-form
@@ -867,10 +828,10 @@ watch(
               :style="`border-bottom: 2px solid ${BASE_COLOR}`"
             >
               <div
-                class="d-flex justify-end w-100 ga-2 pt-1 me-2"
+                class="d-flex justify-end w-100 ga-2 pt-1 pb-2 me-2"
                 style="padding-top: 4px !important"
               >
-                <Icons title="Удалить" @click="computeRate" name="delete" />
+                <Icons title="Удалить" v-if="rates.length !== 0" @click="computeRate" name="delete" />
                 <Icons title="Добавить" @click="addDialogRate" name="add" />
               </div>
             </div>
@@ -960,7 +921,7 @@ watch(
               >{{ isExistsCurrencyRate ? "Изменить" : "Добавить" }} курс</span
             >
             <div class="d-flex align-center justify-space-between">
-              <div class="d-flex ga-3 align-center mt-2 me-4">
+              <div class="d-flex ga-3 align-center mt-2">
                 <Icons
                   title="Удалить"
                   v-if="isExistsCurrencyRate"
@@ -975,17 +936,10 @@ watch(
                   name="save"
                 />
                 <Icons title="Сохранить" v-else @click="addRate" name="save" />
-              </div>
-              <v-btn
-                @click="
+                <Icons name="close" title="Закрыть" @click="
                   isExistsCurrencyRate ? checkRateUpdate() : checkRateAndClose()
-                "
-                variant="text"
-                :size="32"
-                class="pt-2 pl-1"
-              >
-                <Icons name="close" title="Закрыть" />
-              </v-btn>
+                "/>
+              </div>
             </div>
           </div>
           <v-form class="d-flex w-100 pa-5">
@@ -1007,7 +961,7 @@ watch(
                 />
                 <v-text-field
                   v-model="valueRef"
-                  @input="validateCurrency"
+                  @input="formatInputPrice(valueRef, $event)"
                   :rules="[rules.required]"
                   placeholder="1.0000"
                   label="Курс"

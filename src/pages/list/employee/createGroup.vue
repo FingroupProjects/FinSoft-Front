@@ -8,6 +8,7 @@ import {USER_GROUP} from "../../../composables/constant/paramsApi.js";
 import {FIELD_COLOR, BASE_COLOR} from "../../../composables/constant/colors.js";
 import {getUser} from "../../../composables/auth/index.js";
 import employeeGroup from "../../../api/list/employeeGroup.js";
+import {ca} from "vuetify/locale";
 
 
 const props = defineProps(['isEdit', 'item'])
@@ -33,6 +34,9 @@ const createGroup = async () => {
     emit("toggleDialog");
   } catch (e) {
     console.log(e)
+    if (e.response.status === 422) {
+      showToast('Такая группа сотрудников уже существует', "warning");
+    }
   } finally {
     isValid.value = false;
   }
@@ -77,19 +81,29 @@ const restore = async () => {
 }
 
 const destroy  = async () => {
-  const response = await employeeGroup.delete(props.item.id);
+  try {
+    const response = await employeeGroup.delete(props.item.id)
+
     if (response.status === 200) {
       showToast(removeMessage);
     }
     emit("toggleDialog");
+
+  } catch (e) {
+    console.error(e)
+    if (e.response.status === 400) {
+      showToast(e.response.data.message, 'warning')
+    }
+  }
+
 }
 
 const compute = async () => {
-  if(props.item.deleted_at !== null) {
-      restore()
+  if (props.item.deleted_at !== null) {
+    await restore()
   }
   else {
-    destroy()
+    await destroy()
   }
 }
 
@@ -110,15 +124,11 @@ const compute = async () => {
           <div class="d-flex justify-space-between align-center mb-2">
             <span>{{ props.isEdit ? "Изменить" : "Создать" }} группу</span>
             <div class="d-flex align-center justify-space-between">
-              <div class="d-flex ga-3 align-center mt-2 me-4">
-              <Icons v-if="props.isEdit"  @click="compute" name="delete"/>
-            </div>
-              <div class="d-flex ga-3 align-center mt-2 me-4">
+              <div class="d-flex ga-3 align-center mt-2">
+                <Icons v-if="props.isEdit"  @click="compute" name="delete"/>
                 <Icons @click="props.isEdit ? update() : createGroup()" name="save" />
+                <Icons name="close" @click="$emit('toggleDialog')" />
               </div>
-              <v-btn @click="$emit('toggleDialog')" variant="text" :size="32" class="pt-2 pl-1">
-                <Icons name="close" />
-              </v-btn>
             </div>
           </div>
           <v-form class="d-flex w-100">

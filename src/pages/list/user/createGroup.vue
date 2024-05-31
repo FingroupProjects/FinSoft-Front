@@ -123,15 +123,11 @@ onMounted(() => {
           <div class="d-flex justify-space-between align-center mb-2">
             <span>{{ props.isEdit ? "Изменить" : "Создать" }} группу</span>
             <div class="d-flex align-center justify-space-between">
-              <div class="d-flex ga-3 align-center mt-2 me-4">
+              <div class="d-flex ga-3 align-center mt-2">
                 <Icons v-if="props.isEdit"  @click="compute" name="delete"/>
-              </div>
-              <div class="d-flex ga-3 align-center mt-2 me-4">
                 <Icons @click="props.isEdit ? update() : createGroup()" name="save" />
+                <Icons name="close" @click="$emit('toggleDialog')"/>
               </div>
-              <v-btn @click="$emit('toggleDialog')" variant="text" :size="32" class="pt-2 pl-1">
-                <Icons name="close" />
-              </v-btn>
             </div>
           </div>
           <v-form class="d-flex w-100">

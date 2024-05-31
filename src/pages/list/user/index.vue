@@ -655,7 +655,7 @@ onMounted(async () => {
             <Button name="create" v-if="createAccess('user')" @click="openDialog(0)"/>
             <Button name="copy" v-if="createAccess('user')" @click="addBasedOnUser"/>
             <Button name="delete" v-if="removeAccess('user')" @click="compute"/>
-            <Button name="excel" @click="getExcel(user)"/>
+            <Button name="excel" @click="getExcel(user, 'Пользователи')"/>
           </div>
           <v-text-field
               class="custom_search"
@@ -797,23 +797,14 @@ onMounted(async () => {
           <div class="d-flex justify-space-between align-center mb-2">
             <span>{{ isExistsUser ? 'Пользователь: ' + userDialogTitle : 'Добавление' }}</span>
             <div class="d-flex align-center justify-space-between">
-              <div class="d-flex ga-3 align-center mt-2 me-4">
+              <div class="d-flex ga-3 align-center mt-2">
                 <span v-show="isExistsUser" class="mt-1 ms-2 text-blue-darken-4 cursor-pointer"
                       @click="$router.push({name: 'userAccess',params: {id: idUser}})">Доступ</span>
                 <Icons v-if="removeAccess('user') && isExistsUser" @click="compute" name="delete"/>
                 <Icons title="Сохранить" v-if="createAccess('user') && !isExistsUser" @click="addUser" name="save"/>
-                <div v-if="updateAccess('user') && isExistsUser" @click="update">
-                  <Icons title="Сохранить" name="save"/>
-                </div>
+                <Icons title="Сохранить" v-if="updateAccess('user') && isExistsUser" @click="update" name="save"/>
+                <Icons name="close" @click="isExistsUser ? checkUpdate() : checkAndClose()" title="Закрыть"/>
               </div>
-              <v-btn
-                  @click="isExistsUser ? checkUpdate() : checkAndClose()"
-                  variant="text"
-                  :size="32"
-                  class="pt-2 pl-1"
-              >
-                <Icons name="close" title="Закрыть"/>
-              </v-btn>
             </div>
           </div>
           <v-form class="d-flex w-100" :disabled="!updateAccess('user') && isExistsUser" @submit.prevent="addUser">

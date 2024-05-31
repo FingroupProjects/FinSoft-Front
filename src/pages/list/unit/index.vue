@@ -35,6 +35,7 @@ import showDate from "../../../composables/date/showDate.js";
 import getListColor from "../../../composables/displayed/getListColor.js";
 import getListStatus from "../../../composables/displayed/getListStatus";
 import { markedForDeletion } from "../../../composables/constant/items.js";
+import getExcel from "../../../composables/otherQueries/getExcel.js";
 
 const loading = ref(true);
 const dialog = ref(false);
@@ -249,27 +250,8 @@ const compute = (params = {}) => {
   } else {
     return massDel({ page, itemsPerPage, sortBy, search });
   }
-};
+}
 
-const getExcel = async () => {
-  if (unit.value === null) {
-    return showToast("Выберите поставщика", "warning");
-  }
-  try {
-    const { data } = await unit.excel(unit.value);
-    const url = window.URL.createObjectURL(
-      new Blob([data], { type: "application/vnd.ms-excel" })
-    );
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "Отчет.xls");
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  } catch (e) {
-    console.error(e);
-  }
-};
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
     const firstMarkedItem = units.value.find(
@@ -398,7 +380,7 @@ watch(
               @click="compute"
               name="delete"
             />
-            <Button name="excel" @click="getExcel()" />
+            <Button name="excel" @click="getExcel(unit, 'Единицы_измерения')" />
           </div>
         </div>
         <div class="custom_search">
@@ -513,7 +495,7 @@ watch(
               isExistsUnit ? unitInDialogTitle + " (изменение)" : "Добавление"
             }}</span>
             <div class="d-flex align-center justify-space-between">
-              <div class="d-flex ga-3 align-center mt-2 me-4">
+              <div class="d-flex ga-3 align-center mt-2">
                 <Icons
                   title="Удалить"
                   v-if="removeAccess('unit') && isExistsUnit"
@@ -532,15 +514,8 @@ watch(
                   @click="update()"
                   name="save"
                 />
+                <Icons name="close" @click="isExistsUnit ? checkUpdate() : checkAndClose()" title="Закрыть" />
               </div>
-              <v-btn
-                @click="isExistsUnit ? checkUpdate() : checkAndClose()"
-                variant="text"
-                :size="32"
-                class="pt-2 pl-1"
-              >
-                <Icons name="close" title="Закрыть" />
-              </v-btn>
             </div>
           </div>
           <v-form
