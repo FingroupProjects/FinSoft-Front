@@ -34,7 +34,7 @@ const headers = ref([
   { id: 5, title: "Сумма", key: "sum" },
 ]);
 
-const getProcurementDetails = async () => {
+const getItemDetails = async () => {
   try {
     const { data } = await procurementApi.getById(route.params.id);
     form.doc_number = data.result.doc_number;
@@ -57,6 +57,7 @@ const getProcurementDetails = async () => {
       amount: item.amount,
       price: item.price,
     }));
+    console.log(data);
   } catch (e) {
     console.error(e);
   }
@@ -99,15 +100,15 @@ const handleAfterPrint = () => {
 
 onMounted(async () => {
   doc_name.value = route.params.title;
-  await getProcurementDetails();
+  await getItemDetails();
   window.addEventListener("afterprint", handleAfterPrint);
   windowPrint();
-  window.close()
+  // window.close()
 });
 </script>
 
 <template>
-  <div class="w-100 d-flex justify-center align-start h-100">
+  <div style="overflow-y: auto;" class="w-100 d-flex justify-center align-start h-100">
     <div style="width: 80%; padding: 20px 15px">
       <div class="d-flex justify-space-between mb-4">
         <div class="d-flex ga-8">
