@@ -470,7 +470,7 @@ watch(search, debounce(newValue => {
               <Button name="create" v-if="createAccess('currency')" @click="openDialog(0)" />
               <Button name="copy" v-if="createAccess('currency')" @click="addBasedSchedule" />
               <Button name="delete" v-if="removeAccess('currency')" @click="compute" />
-              <Button name="excel" @click="getExcel(schedule)" />
+              <Button name="excel" @click="getExcel(schedule, 'График_работы')" />
             </div>
             <v-text-field
                style="max-width: 190px !important; width: 190px"
@@ -567,19 +567,12 @@ watch(search, debounce(newValue => {
             <div class="d-flex justify-space-between align-center mb-2">
               <span>{{ isExistsSchedule ? 'График работы: ' + scheduleInDialogTitle : 'Добавление' }}</span>
               <div class="d-flex align-center justify-space-between">
-                <div class="d-flex ga-3 align-center mt-2 me-4">
+                <div class="d-flex ga-3 align-center mt-2">
                   <Icons title="Удалить" v-if="removeAccess('currency') && isExistsSchedule" @click="compute" name="delete"/>
                   <Icons title="Сохранить" v-if="createAccess('currency') && !isExistsSchedule" @click="addSchedule" name="save"/>
                   <Icons title="Сохранить" v-if="updateAccess('currency') && isExistsSchedule" @click="update" name="save"/>
+                  <Icons name="close" @click="isExistsSchedule ? checkUpdate() : checkAndClose()" title="Закрыть" />
                 </div>
-                <v-btn
-                  @click="isExistsSchedule ? checkUpdate() : checkAndClose()"
-                  variant="text"
-                  :size="32"
-                  class="pt-2 pl-1"
-                >
-                <Icons name="close" title="Закрыть" />
-              </v-btn>
               </div>
             </div>
             <v-form class="d-flex w-100" :disabled="!updateAccess('unit') && isExistsSchedule" @submit.prevent="addSchedule">

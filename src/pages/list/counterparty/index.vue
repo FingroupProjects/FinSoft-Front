@@ -111,7 +111,7 @@ const headerButtons = ref([
   {
     name: "excel",
     function: () => {
-      getExcel(counterpartyApi);
+      getExcel(counterpartyApi, 'Контрагенты');
     },
   },
 ]);

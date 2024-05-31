@@ -12,6 +12,7 @@ const route = useRoute();
 
 const goods = ref([]);
 const doc_name = ref("");
+const currency = ref(null)
 
 const form = reactive({
   date: null,
@@ -38,6 +39,7 @@ const getItemDetails = async () => {
   try {
     const { data } = await procurementApi.getById(route.params.id);
     form.doc_number = data.result.doc_number;
+    currency.value = data.result.currency.name
     form.date = showDate(data.result.date, "-", true);
     (form.organization = data.result.organization.name),
       (form.counterparty = data.result.counterparty.name),
@@ -57,7 +59,6 @@ const getItemDetails = async () => {
       amount: item.amount,
       price: item.price,
     }));
-    console.log(data);
   } catch (e) {
     console.error(e);
   }
@@ -103,7 +104,7 @@ onMounted(async () => {
   await getItemDetails();
   window.addEventListener("afterprint", handleAfterPrint);
   windowPrint();
-  // window.close()
+  window.close()
 });
 </script>
 
@@ -156,7 +157,7 @@ onMounted(async () => {
               <td></td>
               <td class="text-right">Итого</td>
               <td>{{ totalCount }}</td>
-              <td>{{ totalSum }}</td>
+              <td>{{ totalSum }} {{ currency }}</td>
             </tr>
           </tbody>
         </table>

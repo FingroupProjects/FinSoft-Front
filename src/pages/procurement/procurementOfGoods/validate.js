@@ -12,8 +12,8 @@ export default function validate(
   cpAgreement,
   storage,
   currency,
+  goods,
 ) {
-
   if (!date) {
     return showToast("Поле Дата не может быть пустым", "warning")
   }
@@ -31,6 +31,9 @@ export default function validate(
   }
   if (!currency || currency.id === null) {
     return showToast("Поле Валюта не может быть пустым", "warning")
+  }
+  if (goods.length === 1 && goods[0][0].good_id === null) {
+    return showToast("Нельзя сохранить без товара", "warning")
   }
 
   return true

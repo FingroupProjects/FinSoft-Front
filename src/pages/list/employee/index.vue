@@ -641,7 +641,7 @@ onMounted(async () => {
             <Button name="create" v-if="createAccess('user')" @click="openDialog(0)"/>
             <Button name="copy" v-if="createAccess('user')" @click="addBasedOnEmployee"/>
             <Button name="delete" v-if="removeAccess('user')" @click="compute"/>
-            <Button name="excel" @click="getExcel(employee)"/>
+            <Button name="excel" @click="getExcel(employee, 'Сотрудники')"/>
           </div>
           <v-text-field
               style="width: 190px"
@@ -783,21 +783,12 @@ onMounted(async () => {
           <div class="d-flex justify-space-between align-center mb-2">
             <span>{{ isExistsEmployee ? 'Сотрудник: ' + employeeDialogTitle : 'Добавление' }}</span>
             <div class="d-flex align-center justify-space-between">
-              <div class="d-flex ga-3 align-center mt-2 me-4">
+              <div class="d-flex ga-3 align-center mt-2">
                 <Icons v-if="removeAccess('user') && isExistsEmployee" @click="compute" name="delete"/>
                 <Icons title="Сохранить" v-if="createAccess('user') && !isExistsEmployee" @click="addEmployee" name="save"/>
-                <div v-if="updateAccess('user') && isExistsEmployee" @click="update">
-                  <Icons title="Сохранить" name="save"/>
-                </div>
+                <Icons title="Сохранить" v-if="updateAccess('user') && isExistsEmployee" @click="update" name="save"/>
+                <Icons name="close" @click="isExistsEmployee ? checkUpdate() : checkAndClose()" title="Закрыть"/>
               </div>
-              <v-btn
-                  @click="isExistsEmployee ? checkUpdate() : checkAndClose()"
-                  variant="text"
-                  :size="32"
-                  class="pt-2 pl-1"
-              >
-                <Icons name="close" title="Закрыть"/>
-              </v-btn>
             </div>
           </div>
           <v-form class="d-flex w-100" :disabled="!updateAccess('employee') && isExistsEmployee" @submit.prevent="addEmployee">

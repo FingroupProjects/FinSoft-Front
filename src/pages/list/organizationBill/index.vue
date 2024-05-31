@@ -486,7 +486,7 @@ onMounted(() => {
               @click="compute"
               name="delete"
             />
-            <Button name="excel" @click="getExcel(organizationBill)" />
+            <Button name="excel" @click="getExcel(organizationBill, 'Банковские_счета')" />
           </div>
         </div>
         <div class="custom_search">
@@ -608,7 +608,7 @@ onMounted(() => {
               }}</span
             >
             <div class="d-flex align-center justify-space-between">
-              <div class="d-flex ga-3 align-center mt-2 me-4">
+              <div class="d-flex ga-3 align-center mt-2">
                 <Icons
                   v-if="
                     removeAccess('organizationBill') && isExistsOrganizationBill

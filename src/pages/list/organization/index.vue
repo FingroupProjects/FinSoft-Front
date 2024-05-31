@@ -494,7 +494,7 @@ onMounted(async () => {
               @click="compute"
               name="delete"
             />
-            <Button name="excel" @click="getExcel(organization)" />
+            <Button name="excel" @click="getExcel(organization, 'Организации')" />
           </div>
         </div>
         <div class="custom_search">
@@ -608,7 +608,7 @@ onMounted(async () => {
                 : "Добавление"
             }}</span>
             <div class="d-flex align-center justify-space-between">
-              <div class="d-flex ga-3 align-center mt-2 me-4">
+              <div class="d-flex ga-3 align-center mt-2">
                 <Icons
                   v-if="removeAccess('organization') && isExistsOrganization"
                   @click="destroy"
@@ -624,15 +624,8 @@ onMounted(async () => {
                   @click="update()"
                   name="save"
                 />
+                <Icons name="close" @click="isExistsOrganization ? checkUpdate() : checkAndClose()" title="Закрыть" />
               </div>
-              <v-btn
-                @click="isExistsOrganization ? checkUpdate() : checkAndClose()"
-                variant="text"
-                :size="32"
-                class="pt-2 pl-1"
-              >
-                <Icons name="close" title="Закрыть" />
-              </v-btn>
             </div>
           </div>
           <v-form

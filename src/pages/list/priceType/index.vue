@@ -417,7 +417,7 @@ onMounted(async () => {
               <Button @click="openDialog(0)" name="create"/>
               <Button @click="addBasedOnPriceType" name="copy"/>
               <Button @click="compute" name="delete"/>
-              <Button name="excel" @click="getExcel(priceType)"/>
+              <Button name="excel" @click="getExcel(priceType, 'Виды цен')"/>
             </div>
           </div>
 
@@ -521,23 +521,15 @@ onMounted(async () => {
           <div class="d-flex justify-space-between align-center mb-2">
             <span>Вид цены: {{ isExistsPriceType ? priceTypeInDialogTitle : 'Добавление' }}</span>
             <div class="d-flex align-center justify-space-between">
-              <div class="d-flex ga-3 align-center mt-2 me-4">
+              <div class="d-flex ga-3 align-center mt-2">
                 <Icons title="Удалить" v-if="removeAccess('priceType') && isExistsPriceType" @click="compute"
                        name="delete"/>
                 <Icons title="Сохранить" v-if="createAccess('priceType') && !isExistsPriceType" @click="addPriceType"
                        name="save"/>
                 <Icons title="Сохранить" v-if="updateAccess('priceType') && isExistsPriceType" @click="update"
                        name="save"/>
+                <Icons name="close" @click="isExistsPriceType ? checkUpdate() : checkAndClose()" title="Закрыть"/>
               </div>
-              <v-btn
-                  @click="isExistsPriceType ? checkUpdate() : checkAndClose()"
-
-                  variant="text"
-                  :size="32"
-                  class="pt-2 pl-1"
-              >
-                <Icons name="close" title="Закрыть"/>
-              </v-btn>
             </div>
           </div>
           <v-form class="d-flex w-100" :disabled="!updateAccess('priceType') && isExistsPriceType"
