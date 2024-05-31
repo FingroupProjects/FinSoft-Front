@@ -11,7 +11,7 @@ const router = useRouter();
 const route = useRoute();
 
 const goods = ref([]);
-const doc_name = ref('')
+const doc_name = ref("");
 
 const form = reactive({
   date: null,
@@ -98,7 +98,7 @@ const handleAfterPrint = () => {
 };
 
 onMounted(async () => {
-  doc_name.value = route.params.title
+  doc_name.value = route.params.title;
   await getProcurementDetails();
   window.addEventListener("afterprint", handleAfterPrint);
   windowPrint();
@@ -107,24 +107,21 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="w-100 d-flex justify-center align-start h-100 ">
+  <div class="w-100 d-flex justify-center align-start h-100">
     <div style="width: 80%; padding: 20px 15px">
       <div class="d-flex justify-space-between mb-4">
         <div class="d-flex ga-8">
           <CustomTextField
-            style="min-width: 120px"
             v-model="form.organization"
             variant="underlined"
             label="Ораганизация"
           />
           <CustomTextField
-            style="min-width: 120px"
             v-model="form.counterparty"
             variant="underlined"
             label="Поставщик"
           />
           <CustomTextField
-            style="min-width: 120px"
             v-model="form.storage"
             variant="underlined"
             label="Склад"
@@ -133,7 +130,9 @@ onMounted(async () => {
       </div>
       <div class="d-flex flex-column justify-center ga-10">
         <div class="text-center">
-          <h2>Накладная {{ doc_name }} № {{ form.doc_number }} от {{ form.date }}</h2>
+          <h2>
+            Накладная {{ doc_name }} № {{ form.doc_number }} от {{ form.date }}
+          </h2>
         </div>
         <table class="border-none table-auto w-full">
           <thead>
@@ -177,7 +176,7 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-td{
+td {
   padding: 10px;
 }
 

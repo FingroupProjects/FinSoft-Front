@@ -251,10 +251,6 @@ const lineMarking = (item) => {
 };
 
 const approve = async () => {
-  if (markedID.value.length !== 1) {
-    return showToast(selectOneItemMessage, 'warning')
-  }
-
   try {
     const res = await procurementApi.approve({ ids: markedID.value });
     showToast(approveDocument);
@@ -266,10 +262,6 @@ const approve = async () => {
 };
 
 const unApprove = async () => {
-  if (markedID.value.length !== 1) {
-    return showToast(selectOneItemMessage, 'warning')
-  }
-
   try {
     await procurementApi.unApprove({ ids: markedID.value });
     showToast(approveDocument);
