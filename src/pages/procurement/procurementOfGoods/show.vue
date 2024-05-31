@@ -1,14 +1,29 @@
 <script setup>
-import { approveDocument, editMessage, selectOneItemMessage } from "../../../composables/constant/buttons.js";
-import { computed, defineEmits, defineProps, onMounted, reactive, ref, watch } from "vue";
+import {
+  approveDocument,
+  editMessage,
+  selectOneItemMessage,
+} from "../../../composables/constant/buttons.js";
+import {
+  computed,
+  defineEmits,
+  defineProps,
+  onMounted,
+  reactive,
+  ref,
+  watch,
+} from "vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
-import { FIELD_GOODS, TITLE_COLOR } from "../../../composables/constant/colors.js";
+import {
+  FIELD_GOODS,
+  TITLE_COLOR,
+} from "../../../composables/constant/colors.js";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import goToHistory from "../../../composables/movementByPage/goToHistory.js";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
+import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
 import goToPrint from "../../../composables/movementByPage/goToPrint.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
@@ -51,10 +66,12 @@ const form = reactive({
   deleted_at: null,
 });
 
+const select = ref(null);
 const author = ref(null);
+const selectGoods = ref([]);
 const markedID = ref([]);
 const goods = ref([]);
-const doc_name = ref('Поступление')
+const doc_name = ref("Поступление");
 
 const organizations = ref([]);
 const counterparties = ref([]);
@@ -73,8 +90,6 @@ const headers = ref([
   { title: "Сумма", key: "currency.name", sortable: false },
 ]);
 
-
-
 const approve = async () => {
   try {
     await procurementApi.approve({ ids: [route.params.id] });
@@ -83,9 +98,9 @@ const approve = async () => {
     markedID.value = [];
   } catch (e) {
     console.error(e);
-    showToast('Ошибка', 'red');
+    showToast("Ошибка", "red");
   }
-}
+};
 
 const unApprove = async () => {
   try {
@@ -125,7 +140,6 @@ const getProcurementDetails = async () => {
     form.currency = data.result.currency;
     form.active = data.result.active;
     form.deleted_at = data.result.deleted_at;
-    console.log(form);
     goods.value = data.result.goods.map((item) => ({
       id: item.id,
       good_id: item.good.id,
@@ -136,7 +150,7 @@ const getProcurementDetails = async () => {
     prevGoods.value = [...goods.value];
     tempForm.value = Object.assign({}, form);
   } catch (e) {
-    console.error(e)
+    console.error(e);
   }
 };
 
@@ -168,7 +182,7 @@ const getCpAgreements = async (id) => {
 };
 
 const getStorages = async () => {
-  const { data } = await storageApi.get({ 
+  const { data } = await storageApi.get({
     page: 1,
     itemsPerPage: 100000,
     sortBy: "name",
@@ -200,7 +214,9 @@ const decreaseCountOfGoods = () => {
   }
   if (markedID.value.length === goods.value.length) {
     goods.value = [];
-    return goods.value.push([{ id: 1, good_id: null, amount: "1", price: null}])
+    return goods.value.push([
+      { id: 1, good_id: null, amount: "1", price: null },
+    ]);
   }
   goods.value = goods.value.filter((item) => !markedID.value.includes(item.id));
 };
@@ -311,7 +327,6 @@ const totalCount = computed(() =>
   goods.value.reduce((acc, item) => acc + Number(item.amount || 0), 0)
 );
 
-
 const arraysEqual = (arr1, arr2) => {
   if (arr1.length !== arr2.length) {
     return true;
@@ -352,7 +367,9 @@ watch(
     if (newValue === null) return;
     form.cpAgreement = null;
     form.currency = null;
-    await getCpAgreements(typeof newValue === "object" ? newValue.id : newValue);
+    await getCpAgreements(
+      typeof newValue === "object" ? newValue.id : newValue
+    );
   }
 );
 
@@ -380,7 +397,7 @@ const closeWindow = () => {
 
 onMounted(() => {
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
-  getProcurementDetails()
+  getProcurementDetails();
 
   Promise.all([
     getOrganizations(),
@@ -391,47 +408,42 @@ onMounted(() => {
   ]);
 });
 
-const search = (event, idx) => {
-  const { target: { value } } = event;
-  select.value = idx
-  getGood(value);
-}
-
-const select = ref(null)
-const selectGoods = ref([])
+const search = async (event, idx) => {
+  const {
+    target: { value },
+  } = event;
+  select.value = idx;
+  await getGood(value);
+};
 
 const getGood = async (good) => {
   try {
-    const { data: { result : { data } } } = await goodApi.getGoodBySearch(good)
-    selectGoods.value = data
-  }catch(e) {
+    const { data: { result: { data } } } = await goodApi.getGoodBySearch(good);
+    selectGoods.value = data;
+  } catch (e) {
     console.error(e);
   }
-}
+};
+
 </script>
 <template>
   <div class="document">
     <div class="d-flex justify-space-between">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
-        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }"
-          >Покупка (просмотр) - {{ getStatus(form.active, form.deleted_at) }}</span>
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">
+          Покупка (просмотр) - {{ getStatus(form.active, form.deleted_at) }}
+        </span>
       </div>
       <v-card variant="text" style="display: flex; align-items: center">
         <div class="d-flex w-100 justify-end my-3 pr-4">
           <div class="d-flex items-center ga-2 mt-1 me-3">
-              <Button
-                  name="history"
-                  @click="goToHistory(router, route)"
-              />
-              <Button name="approve" @click="approve" />
-              <Button name="cancel" @click="unApprove"/>
-              <Button
-                  name="print"
-                  @click="goToPrint(router, route, doc_name)"
-              />
-              <Button name="save" @click="updateProcurement" />
-              <Button name="close" @click="closeWindow" />
-            </div>
+            <Button name="history" @click="goToHistory(router, route)" />
+            <Button name="approve" @click="approve" />
+            <Button name="cancel" @click="unApprove" />
+            <Button name="print" @click="goToPrint(router, route, doc_name)" />
+            <Button name="save" @click="updateProcurement" />
+            <Button name="close" @click="closeWindow" />
+          </div>
         </div>
       </v-card>
     </div>
@@ -508,7 +520,7 @@ const getGood = async (good) => {
                   </td>
                   <td style="width: 40%">
                     <custom-autocomplete
-                      v-model="item.good_id"
+                      v-model.lazy="item.good_id"
                       :items="select === index ? selectGoods : listGoods"
                       :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                       min-width="150"
@@ -530,10 +542,12 @@ const getGood = async (good) => {
                   </td>
                   <td>
                     <custom-text-field
-                        v-model="item.price"
-                        @input="validateNumberInput(item.price)"
-                        :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                        min-width="80"
+                      v-model="item.price"
+                      @input="validateNumberInput(item.price)"
+                      :base-color="
+                        hoveredRowId === item.id ? FIELD_GOODS : '#fff'
+                      "
+                      min-width="80"
                     />
                   </td>
                   <td>
@@ -552,48 +566,54 @@ const getGood = async (good) => {
                   <td></td>
                   <td style="width: 150%" class="d-flex ga-2" colspan="10">
                     <ButtonGoods name="add" @click="increaseCountOfGoods" />
-                    <ButtonGoods v-if="goods.length !== 1" name="delete" @click="decreaseCountOfGoods" />
+                    <ButtonGoods
+                      v-if="goods.length !== 1"
+                      name="delete"
+                      @click="decreaseCountOfGoods"
+                    />
                   </td>
                 </tr>
               </template>
             </v-data-table>
           </div>
         </div>
-        <div class="d-flex flex-wrap ga-4 justify-space-between w-100 mt-2 bottomField">
+        <div
+          class="d-flex flex-wrap ga-4 justify-space-between w-100 mt-2 bottomField"
+        >
           <div class="d-flex ga-10">
             <custom-text-field
-                readonly
-                v-model="author"
-                label="Автор"
-                min-width="110"
+              readonly
+              v-model="author"
+              label="Автор"
+              min-width="110"
             />
             <custom-text-field
-                label="Комментарий"
-                v-model="form.comment"
-                min-width="310"
+              label="Комментарий"
+              v-model="form.comment"
+              min-width="310"
             />
           </div>
           <div class="d-flex ga-6">
             <custom-text-field
-                readonly
-                label="Количество"
-                v-model="totalCount"
-                min-width="130"
+              readonly
+              label="Количество"
+              v-model="totalCount"
+              min-width="130"
             />
             <custom-text-field
-                readonly
-                label="Общая сумма:"
-                v-model="totalPrice"
-                min-width="180"
-                max-width="110"
+              readonly
+              label="Общая сумма:"
+              v-model="totalPrice"
+              min-width="180"
+              max-width="110"
             />
             <custom-autocomplete
-                readonly
-                v-model="form.currency"
-                label="Валюта"
-                :items="currencies"
-                min-width="190"
-                maxWidth="190px"
+              readonly
+              v-model="form.currency"
+              label="Валюта"
+              :items="currencies"
+              min-width="190"
+              maxWidth="190px"
             />
           </div>
         </div>
