@@ -270,7 +270,8 @@ const updateProcurement = async () => {
       form.counterparty,
       form.cpAgreement,
       form.storage,
-      form.currency
+      form.currency,
+      goods.value
     ) !== true
   )
     return;
@@ -307,8 +308,10 @@ const updateProcurement = async () => {
         price: Number(item.price),
       })),
     };
-
+    
+    console.log(goods.value);
     const res = await procurementApi.update(route.params.id, body);
+    console.log(res);
     if (res.status === 200) {
       showToast(editMessage);
     }
@@ -430,7 +433,7 @@ const getGood = async (good) => {
 
 </script>
 <template>
-  <div class="">
+  <div class="document">
     <div class="d-flex justify-space-between">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
         <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">
@@ -489,7 +492,7 @@ const getGood = async (good) => {
         <div class="rounded">
           <div class="d-flex flex-column w-100">
             <v-data-table
-              style="height: calc(100vh - 305px)"
+              style="height: calc(100vh - 250px)"
               items-per-page-text="Элементов на странице:"
               loading-text="Загрузка"
               no-data-text="Нет данных"
@@ -566,9 +569,9 @@ const getGood = async (good) => {
                     />
                   </td>
                 </tr>
-                <tr v-if="index === goods.length - 1">
+                <tr v-if="index === goods.length - 1" style="height: 60px !important;">
                   <td></td>
-                  <td style="width: 150%; height: 80px;" class="d-flex ga-2" colspan="10">
+                  <td style="width: 150%;" class="d-flex ga-2 pt-3" colspan="10">
                     <ButtonGoods name="add" @click="increaseCountOfGoods" />
                     <ButtonGoods
                       v-if="goods.length !== 1"

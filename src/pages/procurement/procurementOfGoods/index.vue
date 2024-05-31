@@ -1,12 +1,16 @@
 <script setup>
-import {onMounted, ref, watch} from "vue";
-import {useRoute, useRouter} from "vue-router";
+import { onMounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import showToast from "../../../composables/toast/index.js";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import {BASE_COLOR, FIELD_OF_SEARCH, TITLE_COLOR,} from "../../../composables/constant/colors.js";
+import {
+  BASE_COLOR,
+  FIELD_OF_SEARCH,
+  TITLE_COLOR,
+} from "../../../composables/constant/colors.js";
 import {
   approveDocument,
   copyMessage,
@@ -29,12 +33,12 @@ import Button from "../../../components/button/button.vue";
 import getColor from "../../../composables/displayed/getColor.js";
 import copyDocument from "../../../api/documents/copyDocument.js";
 import getStatus from "../../../composables/displayed/getStatus.js";
-import {DOCUMENT_ITEMS} from "../../../composables/constant/items.js";
-import {useModalCreateBased} from "../../../store/modalCreateBased.js";
+import { DOCUMENT_ITEMS } from "../../../composables/constant/items.js";
+import { useModalCreateBased } from "../../../store/modalCreateBased.js";
 import createBased from "../../../composables/modal/createBased.js";
 import CreateBase from "../../../components/modal/CreateBase.vue";
 import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
-import {useFilterCanvasVisible} from "../../../store/canvasVisible.js";
+import { useFilterCanvasVisible } from "../../../store/canvasVisible.js";
 import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
 import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
 
@@ -79,8 +83,8 @@ const filterForm = ref({
   currency_id: null,
 });
 
-const statusOptions = ['проведён', 'не проведён'];
-const deletionStatuses = ['не удален', 'удален'];
+const statusOptions = ["проведён", "не проведён"];
+const deletionStatuses = ["Да", "Нет"];
 
 const headers = ref([
   { title: "Номер", key: "doc_number" },
@@ -102,10 +106,10 @@ const getProcurementData = async ({
   counterFilter.value = 0;
   countFilter();
   const filterData = {
-      ...filterForm.value,
-      active: filterForm.value.active === 'проведён' ? 1 : 0,
-      deleted: filterForm.value.deleted === 'удален' ? 1 : 0 ,
-    };
+    ...filterForm.value,
+    active: filterForm.value.active === "проведён" ? 1 : 0,
+    deleted: filterForm.value.deleted === "удален" ? 1 : 0,
+  };
   filterModal.value = false;
   loading.value = true;
   try {
@@ -128,34 +132,37 @@ const headerButtons = ref([
     name: "createBasedOn",
     function: async () => {
       if (markedID.value.length !== 1) {
-        return showToast(selectOneItemMessage, 'warning')
+        return showToast(selectOneItemMessage, "warning");
+      }
+      if (markedItem.value.active === false) {
+        return showToast("Сначало проведите документ", "warning");
       }
 
-      modalCreateBased.isModal()
+      modalCreateBased.isModal();
     },
   },
   {
     name: "copy",
     function: async () => {
       if (markedID.value.length !== 1) {
-        return showToast(selectOneItemMessage, 'warning')
+        return showToast(selectOneItemMessage, "warning");
       }
 
       try {
-        const res = await copyDocument.copy(markedID.value[0])
+        const res = await copyDocument.copy(markedID.value[0]);
         if (res.status === 200) {
-          showToast(copyMessage)
-          router.push(`/procurementOfGoods/${res.data.result.id}`)
+          showToast(copyMessage);
+          router.push(`/procurementOfGoods/${res.data.result.id}`);
         }
       } catch (e) {
-        console.error(e)
+        console.error(e);
       }
-    }
+    },
   },
   {
     name: "approve",
     function: () => {
-      approve()
+      approve();
     },
   },
   {
@@ -181,14 +188,13 @@ const countFilter = () => {
 };
 
 const compute = () => {
-  if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
+  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
   if (markedItem.value.deleted_at) {
-    return massRestore()
+    return massRestore();
+  } else {
+    return massDel();
   }
-  else{
-    return massDel()
-  }
-}
+};
 
 const massDel = async () => {
   try {
@@ -197,30 +203,30 @@ const massDel = async () => {
     });
     if (status === 200) {
       showToast(removeMessage, "red");
-      await getProcurementData()
+      await getProcurementData();
     }
   } catch (e) {
-    console.log(e)
+    console.error(e);
   } finally {
     markedID.value = [];
   }
-}
+};
 
 const massRestore = async () => {
   try {
-    const {status} = await procurementApi.restore({ids: markedID.value})
+    const { status } = await procurementApi.restore({ ids: markedID.value });
 
     if (status === 200) {
-      showToast(restoreMessage)
-      await getProcurementData()
-      dialog.value = false
+      showToast(restoreMessage);
+      await getProcurementData();
+      dialog.value = false;
     }
   } catch (e) {
-    console.error(e)
+    console.error(e);
   } finally {
-    markedID.value = []
+    markedID.value = [];
   }
-}
+};
 
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
@@ -237,7 +243,7 @@ const lineMarking = (item) => {
       if (item.deleted_at !== null) {
         showToast(ErrorSelectMessage, "warning");
         return;
-      } 
+      }
     }
   }
 
@@ -276,7 +282,7 @@ const closeFilterModal = async () => {
   filterModal.value = false;
   cleanFilterForm();
   await getProcurementData();
-  useFilterCanvasVisible().closeFilterCanvas()
+  useFilterCanvasVisible().closeFilterCanvas();
 };
 
 const cleanFilterForm = () => {
@@ -337,15 +343,15 @@ const show = (item) => {
   window.open(`/procurementOfGoods/${item.id}`, "_blank");
 };
 
-watch(markedID, (newVal) => {
+watch(markedID.value, (newVal) => {
   markedItem.value = procurements.value.find((el) => el.id === newVal[0]);
 });
 
 watch(
-    search,
-    debounce((newValue) => {
-      debounceSearch.value = newValue;
-    }, 500)
+  search,
+  debounce((newValue) => {
+    debounceSearch.value = newValue;
+  }, 500)
 );
 
 onMounted(() => {
@@ -360,7 +366,7 @@ onMounted(() => {
 
 <template>
   <div class="pa-4">
-    <div class="d-flex justify-space-between ">
+    <div class="d-flex justify-space-between calcWidth">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
         <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Покупка</span>
       </div>
@@ -403,7 +409,7 @@ onMounted(() => {
             class="mt-1"
           />
           <span v-if="counterFilter !== 0" class="countFilter">{{
-              counterFilter
+            counterFilter
           }}</span>
         </div>
       </div>
@@ -457,7 +463,9 @@ onMounted(() => {
                 class="w-100 d-flex justify-center"
                 :color="getColor(item.active, item.deleted_at)"
               >
-                <span class="padding: 5px;">{{ getStatus(item.active, item.deleted_at) }}</span>
+                <span class="padding: 5px;">{{
+                  getStatus(item.active, item.deleted_at)
+                }}</span>
               </v-chip>
             </td>
             <td>{{ item.counterparty.name }}</td>
@@ -470,60 +478,91 @@ onMounted(() => {
       </v-data-table-server>
     </v-card>
     <filter-canvas>
-      <div class="d-flex flex-column ga-4 w-100">
-        <custom-filter-text-field label="От" type="date" class="date" min-width="106"  v-model="filterForm.startDate"/>
-        <custom-filter-text-field label="По" type="date" class="date" min-width="106"  v-model="filterForm.endDate"/>
+      <div class="d-flex flex-column ga-2 w-100">
+        <custom-filter-text-field
+          label="От"
+          type="datetime-local"
+          class="date"
+          min-width="106"
+          clearable
+          v-model="filterForm.startDate"
+        />
+        <custom-filter-text-field
+          label="По"
+          type="datetime-local"
+          class="date"
+          min-width="106"
+          clearable
+          v-model="filterForm.endDate"
+        />
+      </div>
+      <div class="d-flex flex-column ga-2">
+        <custom-filter-autocomplete
+          min-width="106"
+          label="Организация"
+          :items="organizations"
+          v-model="filterForm.organization_id"
+        />
+        <custom-filter-autocomplete
+          min-width="106"
+          label="Поставщик"
+          :items="counterparties"
+          v-model="filterForm.counterparty_id"
+        />
+      </div>
+      <div class="d-flex flex-column ga-2">
+        <custom-filter-autocomplete
+          min-width="106"
+          label="Склад"
+          :items="storages"
+          v-model="filterForm.storage_id"
+        />
+        <custom-filter-autocomplete
+          min-width="106"
+          label="Договор"
+          :items="counterpartyAgreements"
+          v-model="filterForm.counterparty_agreement_id"
+        />
       </div>
       <div class="d-flex ga-2">
-        <custom-filter-autocomplete min-width="52" label="Статус" :items="statusOptions" v-model="filterForm.active"/>
-        <custom-filter-autocomplete min-width="52" label="Удалён" :items="deletionStatuses" v-model="filterForm.deleted"/>
-      </div>
-      <div class="d-flex ga-2">
         <custom-filter-autocomplete
-            label="Организация"
-            :items="organizations"
-            v-model="filterForm.organization_id"
+          label="Статус"
+          :items="statusOptions"
+          v-model="filterForm.active"
         />
         <custom-filter-autocomplete
-            label="Поставщик"
-            :items="counterparties"
-            v-model="filterForm.counterparty_id"
+          label="Удален"
+          :items="deletionStatuses"
+          v-model="filterForm.deleted"
         />
       </div>
       <div class="d-flex ga-2">
         <custom-filter-autocomplete
-            label="Склад"
-            :items="storages"
-            v-model="filterForm.storage_id"
+          label="Автор"
+          :items="authors"
+          v-model="filterForm.author_id"
         />
         <custom-filter-autocomplete
-            label="Валюта"
-            :items="currencies"
-            v-model="filterForm.currency_id"
+          label="Валюта"
+          :items="currencies"
+          v-model="filterForm.currency_id"
         />
       </div>
-      <div class="d-flex ga-2">
-        <custom-filter-autocomplete
-            label="Автор"
-            :items="authors"
-            v-model="filterForm.author_id"
-        />
-        <custom-filter-autocomplete
-            label="Договор"
-            :items="counterpartyAgreements"
-            v-model="filterForm.counterparty_agreement_id"
-        />
-      </div>
-      <div class="d-flex justify-end ">
-        <div class="d-flex ga-2" style="margin-right: -6%;">
+      <div class="d-flex justify-end">
+        <div class="d-flex ga-2" style="margin-right: -6%">
           <v-btn color="red" class="btn" @click="closeFilterModal"
-          >сбросить</v-btn
+            >сбросить</v-btn
           >
           <v-btn
-              :color="BASE_COLOR"
-              class="btn"
-              @click="() => {getProcurementData(); useFilterCanvasVisible().closeFilterCanvas()}"
-          >применить</v-btn
+            :color="BASE_COLOR"
+            class="btn"
+            @click="
+              () => {
+                getProcurementData();
+                useFilterCanvasVisible().closeFilterCanvas();
+              }
+            "
+            >применить</v-btn
           >
         </div>
       </div>
