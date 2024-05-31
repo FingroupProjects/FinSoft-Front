@@ -1,26 +1,10 @@
 <script setup>
-import {
-  approveDocument,
-  editMessage,
-  selectOneItemMessage,
-} from "../../../composables/constant/buttons.js";
-import goodsDeleteApi from "../../../api/documents/goodsDelete";
-import {
-  computed,
-  defineEmits,
-  defineProps,
-  onMounted,
-  reactive,
-  ref,
-  watch,
-} from "vue";
+import { approveDocument, editMessage, selectOneItemMessage } from "../../../composables/constant/buttons.js";
+import { computed, defineEmits, defineProps, onMounted, reactive, ref, watch } from "vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
-import {
-  FIELD_GOODS,
-  TITLE_COLOR,
-} from "../../../composables/constant/colors.js";
+import { FIELD_GOODS, TITLE_COLOR } from "../../../composables/constant/colors.js";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import goToHistory from "../../../composables/movementByPage/goToHistory.js";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
@@ -42,6 +26,7 @@ import { useRoute, useRouter } from "vue-router";
 import goodApi from "../../../api/list/goods.js";
 import "../../../assets/css/procurement.css";
 import validate from "./validate.js";
+import goodsDelete from "../../../composables/goods/goodsDel"
 
 const router = useRouter();
 const route = useRoute();
@@ -119,6 +104,7 @@ const unApprove = async () => {
 const getProcurementDetails = async () => {
   try {
     const { data } = await procurementApi.getById(route.params.id);
+    console.log(data);
     form.doc_number = data.result.doc_number;
     form.date = getDateTimeInShow(data.result.date, "-", true);
     form.organization = {
@@ -209,7 +195,6 @@ const getGoods = async () => {
     sortBy: "name",
   });
   listGoods.value = data.result.data;
-  console.log(data);
 };
 
 const decreaseCountOfGoods = () => {
@@ -238,21 +223,14 @@ const lineMarking = (item) => {
   }
 };
 
-const goodsDelete = async () => {
-  try {
-    const res = await goodsDeleteApi.delete({ ids: deletedGoods.value });
-    console.log('goods deleted',res);
-  } catch (e) {
-    console.error(e);
-  }
-};
+
 
 const increaseCountOfGoods = () => {
   const missingData = goods.value.some(validateItem);
   if (missingData) return;
 
   goods.value.push({
-    id: goods.value.length + 1,
+    id: null,
     good_id: null,
     amount: 1,
     price: null,
@@ -284,7 +262,7 @@ const updateProcurement = async () => {
       form.cpAgreement,
       form.storage,
       form.currency,
-      goods.value
+      goods.value.slice()
     ) !== true
   )
     return;
@@ -293,6 +271,7 @@ const updateProcurement = async () => {
   if (missingData) return;
 
   try {
+    console.log(goods.value);
     const body = {
       date: formatDateTime(form.date),
       organization_id:
@@ -321,11 +300,10 @@ const updateProcurement = async () => {
         price: Number(item.price),
       })),
     };
-
-    console.log(goods.value);
-    await goodsDelete()
+    if(deletedGoods.value.length > 0){
+      goodsDelete(deletedGoods.value)
+    }
     const res = await procurementApi.update(route.params.id, body);
-    console.log(res);
     if (res.status === 200) {
       showToast(editMessage);
     }
@@ -443,7 +421,6 @@ const getGood = async (good) => {
       },
     } = await goodApi.getGoodBySearch(good);
     selectGoods.value = data;
-    console.log(data);
   } catch (e) {
     console.error(e);
   }
