@@ -93,7 +93,7 @@ const headerButtons = ref([
   {
     name: "excel",
     function: () => {
-      getExcel(groupApi);
+      getExcel(groupApi, 'Номенклатура');
     },
   },
 ]);

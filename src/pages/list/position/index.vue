@@ -360,7 +360,7 @@ watch(search, debounce((newValue) => {
               <Button v-if="createAccess('position')" @click="openDialog(0)" name="create"/>
               <Button v-if="createAccess('position')" @click="addBasedOnPosition" name="copy"/>
               <Button v-if="removeAccess('position')" @click="compute" name="delete"/>
-              <Button name="excel" @click="getExcel(position)"/>
+              <Button name="excel" @click="getExcel(position, 'Должности')"/>
             </div>
           </div>
 
@@ -460,27 +460,21 @@ watch(search, debounce((newValue) => {
     <v-card>
       <v-dialog persistent class="mt-2 pa-2" v-model="dialog"
                 @keyup.esc="isExistsPosition ? checkUpdate() : checkAndClose()">
-        <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="400" min-height="150"
-                class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
+        <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="400" min-height="130"
+                class="d-flex pa-4 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
           <div class="d-flex justify-space-between align-center mb-2">
             <span>{{ isExistsPosition ? positionInDialogTitle + ' (изменение)' : 'Добавление' }}</span>
             <div class="d-flex align-center justify-space-between">
-              <div class="d-flex ga-3 align-center mt-2 me-4">
+              <div class="d-flex ga-3 align-center mt-2">
                 <Icons title="Удалить" v-if="removeAccess('position') && isExistsPosition" @click="destroy"
                        name="delete"/>
                 <Icons title="Сохранить" v-if="createAccess('position') && !isExistsPosition" @click="addPosition"
                        name="save"/>
                 <Icons title="Сохранить" v-if="updateAccess('position') && isExistsPosition" @click="update"
                        name="save"/>
+                <Icons name="close"  @click="isExistsPosition ? checkUpdate() : checkAndClose()" title="Закрыть"/>
               </div>
-              <v-btn
-                  @click="isExistsPosition ? checkUpdate() : checkAndClose()"
-                  variant="text"
-                  :size="32"
-                  class="pt-2 pl-1"
-              >
-                <Icons name="close" title="Закрыть"/>
-              </v-btn>
+
             </div>
           </div>
           <v-form class="d-flex w-100" :disabled="!updateAccess('position') && isExistsPosition"
@@ -500,6 +494,7 @@ watch(search, debounce((newValue) => {
                     placeholder="Бухгалтер"
                     label="Наименование"
                     clear-icon="close"
+                    hide-details
                     clearable
                 />
               </v-col>

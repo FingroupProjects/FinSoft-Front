@@ -28,13 +28,14 @@ const is_service = ref(false);
 const name = ref("");
 
 const createGroup = async () => {
+  isValid.value = true;
+
   try {
-    isValid.value = true;
     const body = {
       name: name.value,
       is_good: is_good.value,
       is_service: is_service.value,
-    };
+    }
     if (name.value.length === 0) {
       showToast("Поле Наименование не может быть пустым", "warning");
       return;
@@ -48,6 +49,9 @@ const createGroup = async () => {
     emit("toggleDialog");
   } catch (e) {
     console.log(e);
+    if (e.response.status === 422) {
+      showToast('Такая группа уже существует', "warning");
+    }
   } finally {
     isValid.value = false;
   }
@@ -78,6 +82,9 @@ const delGroup = async () => {
     emit("toggleDialog");
   } catch (e) {
     console.log(e);
+    if (e.response.status === 400) {
+      showToast(e.response.data.message, 'warning')
+    }
   }
 };
 

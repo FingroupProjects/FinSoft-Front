@@ -861,7 +861,7 @@ onMounted(async () => {
             <Button name="create" v-if="createAccess('storage')" @click="openDialog(0)" />
             <Button name="copy" v-if="createAccess('storage')" @click="addBasedOnStorage" />
             <Button name="delete" v-if="removeAccess('storage')" @click="compute" />
-            <Button name="excel" @click="getExcel(storage)" />
+            <Button name="excel" @click="getExcel(storage, 'Склады')" />
           </div>
           <v-text-field
               class="custom_search"
@@ -1002,19 +1002,12 @@ onMounted(async () => {
           <div class="d-flex justify-space-between align-center mb-2">
             <span>{{ isExistsStorage ? 'Склад: ' + storageInDialogTitle : 'Добавление' }}</span>
             <div class="d-flex align-center justify-space-between">
-              <div class="d-flex ga-3 align-center mt-2 me-4">
+              <div class="d-flex ga-3 align-center mt-2">
                 <Icons v-if="removeAccess('storage') && isExistsStorage" @click="compute" name="delete"/>
                 <Icons v-if="createAccess('storage') && !isExistsStorage" @click="addStorage" name="save"/>
                 <Icons v-if="updateAccess('storage') && isExistsStorage" @click="update" name="save"/>
+                <Icons name="close" @click="isExistsStorage ? checkUpdate() : checkAndClose()" title="Закрыть" />
               </div>
-              <v-btn
-                @click="isExistsStorage ? checkUpdate() : checkAndClose()"
-                variant="text"
-                :size="32"
-                class="pt-2 pl-1"
-              >
-                <Icons name="close" title="Закрыть" />
-              </v-btn>
             </div>
           </div>
           <v-form class="d-flex w-100" :disabled="!updateAccess('storage') && isExistsStorage" @submit.prevent="addStorage">
@@ -1132,14 +1125,12 @@ onMounted(async () => {
           <div class="d-flex justify-space-between align-center pr-5 pt-3">
             <span class="pl-5">{{ isExistsStorageData ? 'Изменить' : 'Добавить' }} сотрудника</span>
             <div class="d-flex align-center justify-space-between">
-              <div class="d-flex ga-3 align-center mt-2 me-4">
+              <div class="d-flex ga-3 align-center mt-2">
                 <Icons v-if="isExistsStorageData" @click="removeStorageEmployee" name="delete"/>
                 <Icons v-if="isExistsStorageData" @click="updateEmployee" name="save"/>
                 <Icons v-else @click="addStorageEmployee" name="save"/>
+                <Icons name="close" @click="dataDialog = false"/>
               </div>
-              <v-btn @click="dataDialog = false" variant="text" :size="32" class="pt-2 pl-1">
-                <Icons name="close"/>
-              </v-btn>
             </div>
           </div>
           <v-form class="d-flex w-100 pa-5">
@@ -1197,14 +1188,12 @@ onMounted(async () => {
           <div class="d-flex justify-space-between align-center mb-2">
             <span>{{ isExistsGroup ? 'Изменить' : 'Создать' }} группу</span>
             <div class="d-flex align-center justify-space-between">
-              <div class="d-flex ga-3 align-center mt-2 me-4">
+              <div class="d-flex ga-3 align-center mt-2">
                 <Icons v-if="isExistsGroup"  @click="computeGroup" name="delete"/>
                 <Icons v-if="isExistsGroup" @click="updateGroup" name="save"/>
                 <Icons v-else @click="addGroup" name="save"/>
+                <Icons name="close" @click="groupDialog = false"/>
               </div>
-              <v-btn @click="groupDialog = false" variant="text" :size="32" class="pt-2 pl-1">
-                <Icons name="close"/>
-              </v-btn>
             </div>
           </div>
           <v-form class="d-flex w-100" @submit.prevent="addGroup">
