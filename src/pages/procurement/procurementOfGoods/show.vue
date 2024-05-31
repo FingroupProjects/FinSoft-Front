@@ -4,6 +4,7 @@ import {
   editMessage,
   selectOneItemMessage,
 } from "../../../composables/constant/buttons.js";
+import goodsDeleteApi from "../../../api/documents/goodsDelete";
 import {
   computed,
   defineEmits,
@@ -66,7 +67,7 @@ const form = reactive({
   deleted_at: null,
 });
 
-const itemsPerPage = ref(10000)
+const itemsPerPage = ref(10000);
 const select = ref(null);
 const author = ref(null);
 const selectGoods = ref([]);
@@ -74,6 +75,7 @@ const markedID = ref([]);
 const goods = ref([]);
 const doc_name = ref("Поступление");
 
+const deletedGoods = ref([]);
 const organizations = ref([]);
 const counterparties = ref([]);
 const cpAgreements = ref([]);
@@ -211,6 +213,8 @@ const getGoods = async () => {
 };
 
 const decreaseCountOfGoods = () => {
+  deletedGoods.value = markedID.value.slice();
+
   if (markedID.value.length === 0) {
     return showToast(selectOneItemMessage, "warning");
   }
@@ -231,6 +235,15 @@ const lineMarking = (item) => {
     if (item.id !== null) {
       markedID.value.push(item.id);
     }
+  }
+};
+
+const goodsDelete = async () => {
+  try {
+    const res = await goodsDeleteApi.delete({ ids: deletedGoods.value });
+    console.log('goods deleted',res);
+  } catch (e) {
+    console.error(e);
   }
 };
 
@@ -308,8 +321,9 @@ const updateProcurement = async () => {
         price: Number(item.price),
       })),
     };
-    
+
     console.log(goods.value);
+    await goodsDelete()
     const res = await procurementApi.update(route.params.id, body);
     console.log(res);
     if (res.status === 200) {
@@ -423,14 +437,17 @@ const search = async (event, idx) => {
 
 const getGood = async (good) => {
   try {
-    const { data: { result: { data } } } = await goodApi.getGoodBySearch(good);
+    const {
+      data: {
+        result: { data },
+      },
+    } = await goodApi.getGoodBySearch(good);
     selectGoods.value = data;
     console.log(data);
   } catch (e) {
     console.error(e);
   }
 };
-
 </script>
 <template>
   <div class="document">
@@ -529,7 +546,9 @@ const getGood = async (good) => {
                     <custom-autocomplete
                       v-model.lazy="item.good_id"
                       :items="select === index ? selectGoods : listGoods"
-                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                      :base-color="
+                        hoveredRowId === item.id ? FIELD_GOODS : '#fff'
+                      "
                       min-width="150"
                       max-width="100%"
                       :isAmount="true"
@@ -569,9 +588,12 @@ const getGood = async (good) => {
                     />
                   </td>
                 </tr>
-                <tr v-if="index === goods.length - 1" style="height: 60px !important;">
+                <tr
+                  v-if="index === goods.length - 1"
+                  style="height: 60px !important"
+                >
                   <td></td>
-                  <td style="width: 150%;" class="d-flex ga-2 pt-3" colspan="10">
+                  <td style="width: 150%" class="d-flex ga-2 pt-3" colspan="10">
                     <ButtonGoods name="add" @click="increaseCountOfGoods" />
                     <ButtonGoods
                       v-if="goods.length !== 1"
