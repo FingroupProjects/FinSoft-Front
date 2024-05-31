@@ -80,7 +80,7 @@ const filterForm = ref({
 const headers = ref([
   {title: 'Номер', key: 'doc_number'},
   {title: 'Дата', key: 'date'},
-  {title: 'Клиент', key: 'counterparty.name'},
+  {title: 'Поставщик', key: 'counterparty.name'},
   {title: 'Организация', key: 'organization.name'},
   {title: 'Автор', key: 'author.name'},
   {title: 'Валюта', key: 'currency.name'},

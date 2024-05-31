@@ -319,7 +319,7 @@ const handlePriceInput = (item) => {
           <custom-text-field  :value="form.doc_number"/>   
           <custom-text-field label="Дата" type="datetime-local" class="date" v-model="form.date"/>
           <custom-autocomplete v-if="!useOrganization.getIsHasOneOrganization" label="Организация" :items="organizations"  v-model="form.organization"/>
-          <custom-autocomplete label="Поставщик" :items="counterparties" v-model="form.counterparty"/>
+          <custom-autocomplete label="Клиент" :items="counterparties" v-model="form.counterparty"/>
           <custom-text-field label="Дата" type="date" v-model="form.shipping_date"/>
           <custom-autocomplete label="Договор" :items="cpAgreements" v-model="form.cpAgreement"/>
           <custom-autocomplete label="Статус заказа" :items="statuses" v-model="form.status"/>
