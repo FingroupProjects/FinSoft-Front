@@ -449,7 +449,7 @@ const getGood = async (good) => {
     </div>
     <v-divider />
     <v-divider />
-    <div style="height: calc(100vh - 125px); background: #fff">
+    <div class="documentHeight">
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field disabled label="Номер" v-model="form.doc_number" />
@@ -486,7 +486,7 @@ const getGood = async (good) => {
         <div class="rounded">
           <div class="d-flex flex-column w-100">
             <v-data-table
-              style="height: calc(100vh - 250px)"
+            class="documentTable"
               items-per-page-text="Элементов на странице:"
               loading-text="Загрузка"
               no-data-text="Нет данных"

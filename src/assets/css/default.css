@@ -179,7 +179,8 @@ body{
 }
 
 .documentHeight {
-  height: calc(100vh - 115px); background: #fff
+  height: calc(100vh - 115px);
+   background: #fff
 }
 
 .documentTable {
