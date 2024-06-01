@@ -1,4 +1,6 @@
 <script setup>
+import { approveDocument, copyMessage, ErrorSelectMessage, removeMessage, restoreMessage, selectOneItemMessage, warningMessage} from "../../../composables/constant/buttons.js";
+import { BASE_COLOR, FIELD_OF_SEARCH, TITLE_COLOR } from "../../../composables/constant/colors.js";
 import { onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import showToast from "../../../composables/toast/index.js";
@@ -6,20 +8,6 @@ import Icons from "../../../composables/Icons/Icons.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import {
-  BASE_COLOR,
-  FIELD_OF_SEARCH,
-  TITLE_COLOR,
-} from "../../../composables/constant/colors.js";
-import {
-  approveDocument,
-  copyMessage,
-  ErrorSelectMessage,
-  removeMessage,
-  restoreMessage,
-  selectOneItemMessage,
-  warningMessage,
-} from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
 import procurementApi from "../../../api/documents/procurement.js";
 import organizationApi from "../../../api/list/organizations.js";
@@ -118,10 +106,13 @@ const getProcurementData = async ({
       search,
       filterData
     );
+    console.log(filterData);
     paginations.value = data.result.pagination;
     procurements.value = data.result.data;
     loading.value = false;
-  } catch (e) {}
+  } catch (e) {
+    console.error(e);
+  }
 };
 const headerButtons = ref([
   {
@@ -401,12 +392,12 @@ onMounted(() => {
             flat
           />
         </div>
-        <div class="mt-1 filterElement">
+        <div class="filterElement">
           <Icons
             name="filter"
             title="Фильтр"
             @click="useFilterCanvasVisible().toggleFilterCanvas()"
-            class="mt-1"
+            class="mt-2"
           />
           <span v-if="counterFilter !== 0" class="countFilter">{{
             counterFilter
