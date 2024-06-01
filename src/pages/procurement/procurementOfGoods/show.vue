@@ -404,6 +404,7 @@ onMounted(() => {
     getGoods(),
   ]);
 });
+const clicked = ref(false);
 
 const search = async (event, idx) => {
   const {

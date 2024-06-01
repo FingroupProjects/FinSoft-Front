@@ -409,7 +409,6 @@ watch(
             @click="useFilterCanvasVisible().toggleFilterCanvas()"
             class="mt-1"
           />
-
           <span v-if="count !== 0" class="countFilter">{{ count }}</span>
         </div>
       </div>
@@ -456,7 +455,7 @@ watch(
                 <span>{{ item.id }}</span>
               </CustomCheckbox>
             </td>
-            <td>
+            <td style="width: 150px;">
               <span>{{ item.name }}</span>
             </td>
             <td>
@@ -536,8 +535,9 @@ watch(
                   density="compact"
                   placeholder="Наименование"
                   label="Наименование"
-                  autofocus
                   clear-icon="close"
+                  hide-details
+                  autofocus
                   clearable
                 />
               </v-col>
