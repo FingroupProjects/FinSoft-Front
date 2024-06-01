@@ -562,7 +562,7 @@ onMounted(() => {
                 <span>{{ item.id }}</span>
               </CustomCheckbox>
             </td>
-            <td>
+            <td style="width: 300px;">
               <span>{{ item.name }}</span>
             </td>
             <td>
@@ -577,7 +577,7 @@ onMounted(() => {
               </v-chip>
             </td>
             <td>+2500</td>
-            <td>{{ item.organization.name }}</td>
+            <td style="width: 320px;">{{ item.organization.name }}</td>
             <td>{{ item.currency.name }}</td>
           </tr>
         </template>
@@ -634,25 +634,8 @@ onMounted(() => {
                   @click="update"
                   name="save"
                 />
+                <Icons name="close" @click="isExistsOrganizationBill ? checkUpdate() : checkAndClose()" title="Закрыть" />
               </div>
-              <v-btn
-                @click="
-                  isExistsOrganizationBill
-                    ? checkUpdate()
-                    : checkAndClose({
-                        page,
-                        itemsPerPage,
-                        sortBy,
-                        search,
-                        filterData,
-                      })
-                "
-                variant="text"
-                :size="32"
-                class="pt-2 pl-1"
-              >
-                <Icons name="close" title="Закрыть" />
-              </v-btn>
             </div>
           </div>
           <v-form
@@ -669,12 +652,11 @@ onMounted(() => {
                     v-model="nameRef"
                     :rules="[rules.required]"
                     :color="BASE_COLOR"
-                    rounded="md"
+                    rounded="lg"
                     variant="outlined"
                     class="w-auto text-sm-body-1"
                     density="compact"
                     :base-color="FIELD_COLOR"
-                    basecolor=""
                     placeholder="Наименование"
                     autofocus
                     label="Наименование"
@@ -700,7 +682,7 @@ onMounted(() => {
                     v-model="dateRef"
                     density="compact"
                     :base-color="FIELD_COLOR"
-                    rounded="md"
+                    rounded="lg"
                     :color="BASE_COLOR"
                     :append-inner-icon="dateRef ? 'close' : ''"
                     @click:append-inner="dateRef = null"
@@ -713,6 +695,7 @@ onMounted(() => {
                     :color="BASE_COLOR"
                     :items="currencies"
                     :base-color="FIELD_COLOR"
+                    rounded="lg"
                     item-title="name"
                     item-value="id"
                     :rules="[rules.required]"
@@ -729,6 +712,7 @@ onMounted(() => {
                   :items="organizations"
                   item-title="name"
                   :base-color="FIELD_COLOR"
+                  rounded="lg"
                   item-value="id"
                   :rules="[rules.required]"
                   label="Организация"
@@ -744,7 +728,7 @@ onMounted(() => {
                   label="Номер счёта"
                   style="margin-bottom: 10px; margin-top: -10px"
                   density="compact"
-                  rounded="md"
+                  rounded="lg"
                   @input="validateNumber"
                   :color="BASE_COLOR"
                   :append-inner-icon="bill_number ? 'close' : ''"
@@ -757,7 +741,7 @@ onMounted(() => {
                   label="Комментарий"
                   v-model="comment"
                   density="compact"
-                  rounded="md"
+                  rounded="lg"
                   :color="BASE_COLOR"
                   hide-details
                   :append-inner-icon="comment ? 'close' : ''"

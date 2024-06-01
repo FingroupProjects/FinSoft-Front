@@ -231,7 +231,7 @@ function countFilter() {
   return count;
 }
 
-const getcashRegisterData = async ({ page, itemsPerPage, sortBy, search }) => {
+const getCashRegisterData = async ({ page, itemsPerPage, sortBy, search }) => {
   loading.value = true;
   count.value = 0;
   countFilter();
@@ -264,7 +264,7 @@ const addCashRegister = async ({ page, itemsPerPage, sortBy }) => {
   const res = await cashRegister.add(body);
 
   if (res.status === 201) {
-    await getcashRegisterData({ page, itemsPerPage, sortBy });
+    await getCashRegisterData({ page, itemsPerPage, sortBy });
     showToast(addMessage);
     valueRef.value = null;
     currencyAdd.value = null;
@@ -284,7 +284,7 @@ const massDel = async ({ page, itemsPerPage, sortBy }) => {
 
     if (status === 200) {
       showToast(removeMessage, "red");
-      await getcashRegisterData({ page, itemsPerPage, sortBy });
+      await getCashRegisterData({ page, itemsPerPage, sortBy });
       markedID.value = [];
       dialog.value = false;
     }
@@ -297,7 +297,7 @@ const massRestore = async ({ page, itemsPerPage, sortBy }) => {
 
     if (status === 200) {
       showToast(restoreMessage);
-      await getcashRegisterData({ page, itemsPerPage, sortBy });
+      await getCashRegisterData({ page, itemsPerPage, sortBy });
       markedID.value = [];
       dialog.value = false;
     }
@@ -322,7 +322,7 @@ const update = async ({ page, itemsPerPage, sortBy }) => {
 
       dialog.value = null;
       cleanForm();
-      await getcashRegisterData({ page, itemsPerPage, sortBy });
+      await getCashRegisterData({ page, itemsPerPage, sortBy });
       showToast(editMessage);
     }
   } catch (e) {
@@ -448,7 +448,7 @@ const lineMarking = (item) => {
 const closeFilterModal = async ({ page, itemsPerPage, sortBy, search }) => {
   showFilterModal.value = false;
   filterForm.value = {};
-  await getcashRegisterData({ page, itemsPerPage, sortBy, search });
+  await getCashRegisterData({ page, itemsPerPage, sortBy, search });
   useFilterCanvasVisible().closeFilterCanvas();
 };
 
@@ -556,7 +556,7 @@ onMounted(() => {
           { value: 50, title: '50' },
           { value: 100, title: '100' },
         ]"
-        @update:options="getcashRegisterData"
+        @update:options="getCashRegisterData"
         fixed-header
         hover
       >
@@ -576,8 +576,8 @@ onMounted(() => {
                 <span>{{ item.id }}</span>
               </CustomCheckbox>
             </td>
-            <td>{{ item.name }}</td>
-            <td>
+            <td style="width: 250px;">{{ item.name }}</td>
+            <td style="width: 300px;">
               <v-chip
                 style="height: 50px !important; max-width: 200px"
                 class="d-flex justify-center"
@@ -588,7 +588,7 @@ onMounted(() => {
                 }}</span>
               </v-chip>
             </td>
-            <td>+2500</td>
+            <td style="width: 250px">+2500</td>
             <td>{{ item.currency.name }}</td>
           </tr>
         </template>
@@ -781,7 +781,7 @@ onMounted(() => {
               class="btn"
               @click="
                 () => {
-                  getcashRegisterData({});
+                  getCashRegisterData({});
                   useFilterCanvasVisible().closeFilterCanvas();
                 }
               "
