@@ -114,7 +114,16 @@ body{
 
 .v-list-item-title {
   z-index: 999999999 !important;
-  font-size: 18px !important;
+  font-size: 16px !important;
+
+}
+
+.v-list-item--density-default {
+  padding: 10px 16px !important;
+}
+
+.v-menu > .v-overlay__content > .v-list{
+  border-radius: 8px !important;
 }
 
 .v-list-item--density-default.v-list-item--one-line {
@@ -143,7 +152,7 @@ body{
 }
 
 .modal_create_based {
-  position: absolute;
+  position: absolute; 
   z-index: 99999;
 }
 
@@ -167,4 +176,18 @@ body{
   background-color: #4f4cd1;
   border-radius: 12px;
   color: white;
+}
+
+.documentHeight {
+  height: calc(100vh - 115px); background: #fff
+}
+
+.documentTable {
+  height: calc(100vh - 240px) !important;
+}
+
+@media screen and (max-width: 1400px) {
+  .documentTable {
+    height: calc(100vh - 300px) !important;
+  }
 }

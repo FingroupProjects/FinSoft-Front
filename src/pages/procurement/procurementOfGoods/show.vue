@@ -523,9 +523,7 @@ const getGood = async (good) => {
                     <custom-autocomplete
                       v-model.lazy="item.good_id"
                       :items="select === index ? selectGoods : listGoods"
-                      :base-color="
-                        hoveredRowId === item.id ? FIELD_GOODS : '#fff'
-                      "
+                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                       min-width="150"
                       max-width="100%"
                       :isAmount="true"

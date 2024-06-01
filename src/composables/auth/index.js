@@ -1,13 +1,14 @@
 export function setToken(token) {
-  localStorage.setItem('token', token.toString())
+  sessionStorage.setItem('token', token.toString())
 }
 
 export function deleteToken() {
-  localStorage.removeItem('token')
+  console.log('token deleted');
+  sessionStorage.removeItem('token')
 }
 
 export function getToken() {
-  return localStorage.getItem('token')
+  return sessionStorage.getItem('token')
 }
 
 export function setUser(user) {
@@ -15,6 +16,7 @@ export function setUser(user) {
 }
 
 export function deleteUser() {
+  console.log('user deleted');
   localStorage.removeItem('user')
 }
 

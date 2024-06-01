@@ -36,7 +36,6 @@ import CustomFilterTextField from "../../../components/formElements/CustomFilter
 const router = useRouter()
 
 const loading = ref(true)
-const loadingRate = ref(true)
 const dialog = ref(false)
 const filterModal = ref(false)
 const hoveredRowIndex = ref(null)
@@ -332,32 +331,31 @@ onMounted(() => {
             <create-base :marked-i-d="markedID[0]" />
           </div>
         </div>
-
         <div class="custom_search">
           <v-text-field
-              style="width: 190px"
-              v-model="search"
-              prepend-inner-icon="search"
-              density="compact"
-              label="Поиск..."
-              variant="outlined"
-              :color="BASE_COLOR"
-              rounded="lg"
-              :base-color="FIELD_OF_SEARCH"
-              clear-icon="close"
-              hide-details
-              single-line
-              :append-inner-icon="search ? 'close' : ''"
-              @click:append-inner="search = ''"
-              flat
+            style="width: 190px"
+            v-model="search"
+            prepend-inner-icon="search"
+            density="compact"
+            label="Поиск..."
+            variant="outlined"
+            :color="BASE_COLOR"
+            rounded="lg"
+            :base-color="FIELD_OF_SEARCH"
+            clear-icon="close"
+            hide-details
+            single-line
+            :append-inner-icon="search ? 'close' : ''"
+            @click:append-inner="search = ''"
+            flat
           />
         </div>
-        <div class="mt-1 filterElement">
+        <div class="filterElement">
           <Icons
               name="filter"
               title="Фильтр"
               @click="useFilterCanvasVisible().toggleFilterCanvas()"
-              class="mt-1"
+              class="mt-2"
           />
           <span v-if="count !== 0" class="countFilter">{{
               count
@@ -367,7 +365,7 @@ onMounted(() => {
     </div>
     <v-card class="table calcWidth">
       <v-data-table-server
-          style="height: 78vh"
+          style="height: calc(100vh - 150px)"
           items-per-page-text="Элементов на странице:"
           loading-text="Загрузка"
           no-data-text="Нет данных"
@@ -382,27 +380,27 @@ onMounted(() => {
           @update:options="getProviderData"
           page-text='{0}-{1} от {2}'
           :items-per-page-options="[
-                  {value: 25, title: '25'},
-                  {value: 50, title: '50'},
-                  {value: 100, title: '100'},
-              ]"
+            {value: 25, title: '25'},
+            {value: 50, title: '50'},
+            {value: 100, title: '100'},
+          ]"
           show-select
           fixed-header
           hover
       >
         <template v-slot:item="{ item, index }">
           <tr
-              @mouseenter="hoveredRowIndex = index"
-              @mouseleave="hoveredRowIndex = null"
-              @dblclick="show(item)"
-              :class="{'bg-grey-lighten-2': markedID.includes(item.id) }"
-              style="font-size: 12px"
+            @mouseenter="hoveredRowIndex = index"
+            @mouseleave="hoveredRowIndex = null"
+            @dblclick="show(item)"
+            :class="{'bg-grey-lighten-2': markedID.includes(item.id) }"
+            style="font-size: 12px"
           >
             <td>
               <CustomCheckbox
-                  v-model="markedID"
-                  :checked="markedID.includes(item.id)"
-                  @change="lineMarking(item)"
+                v-model="markedID"
+                :checked="markedID.includes(item.id)"
+                @change="lineMarking(item)"
               >
               </CustomCheckbox>
             </td>
@@ -410,17 +408,13 @@ onMounted(() => {
             <td>{{ getDateTimeInShow(item.date) }}</td>
             <td>
               <v-chip
-                  style="height: 50px !important"
-                  class="w-100 d-flex justify-center"
-                  :color="getColor(item.active, item.deleted_at)"
+                style="height: 50px !important"
+                class="w-100 d-flex justify-center"
+                :color="getColor(item.active, item.deleted_at)"
               >
-                  <span class="padding: 5px;">{{
-                      item.active
-                          ? "Проведен"
-                          : item.deleted_at !== null
-                              ? "Удален"
-                              : "Не проведен"
-                    }}</span>
+                <span class="padding: 5px;">
+                  {{ item.active ? "Проведен" : item.deleted_at !== null ? "Удален" : "Не проведен" }}
+                </span>
               </v-chip>
             </td>
             <td>{{ item.counterparty.name }}</td>

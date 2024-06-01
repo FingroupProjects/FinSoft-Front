@@ -28,7 +28,7 @@ const listProfile = async (item) => {
     if (res.status === 200) {
       deleteUser();
       deleteToken();
-      router.push("/mainpage");
+      router.push("/");
     }
   }
 };
@@ -49,7 +49,7 @@ const getOrganizationName = async () => {
 };
 
 onMounted(() => {
-  userName.value = JSON.parse(localStorage.getItem("user")).name || null;
+  userName.value = JSON.parse(localStorage.getItem("user"))?.name || null;
 
   getOrganizationName();
   window.addEventListener("keydown", handleKeyDown);
