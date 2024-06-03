@@ -209,7 +209,7 @@ const rules = {
                 variant="text"
                 title="Закрыть"
                 :size="32"
-                class="pt-2 pl-1"
+                class="pt-1"
               >
                 <Icons name="close" title="Закрыть" />
               </v-btn>

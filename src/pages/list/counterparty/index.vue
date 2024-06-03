@@ -48,7 +48,6 @@ const pagination = ref([]);
 
 const filterDialog = ref(false);
 const organizations = ref([]);
-const priceTypes = ref([]);
 const counterparties = ref([]);
 const currencies = ref([]);
 
@@ -88,33 +87,6 @@ const formatRole = (roles) => {
 
   return roles.map((role) => roleMap[role] || "Неизвестная роль");
 };
-
-const headerButtons = ref([
-  {
-    name: "create",
-    function: () => {
-      isCreate.value = true;
-    },
-  },
-  {
-    name: "copy",
-    function: async () => {
-      createBase();
-    },
-  },
-  {
-    name: "delete",
-    function: () => {
-      compute({ page: 1, itemsPerPage: 25, search: "" });
-    },
-  },
-  {
-    name: "excel",
-    function: () => {
-      getExcel(counterpartyApi, 'Контрагенты');
-    },
-  },
-]);
 
 watch(
   () => isEdit.value,
@@ -360,30 +332,12 @@ onMounted(async () => {
           Контрагенты
         </span>
       </div>
-      <!-- <v-card variant="text" min-width="350" class="d-flex align-center ga-2">
-          <div class="d-flex w-100 align-center">
-            <div class="d-flex ga-2 mt-2 me-3">
-              <Icons title="Добавить" v-if="createAccess('counterparty')" @click="isCreate = true" name="add" />
-              <Icons title="Скопировать" v-if="createAccess('counterparty')" @click="createBase()" name="copy" />
-              <Icons
-              v-if="removeAccess('counterparty')"
-                title="Удалить"
-                @click="compute({ page, itemsPerPage, sortBy, search })"
-                name="delete"
-              />
-            </div>
-          </div>
-        </v-card> -->
       <div class="d-flex justify-between ga-2">
-        <div class="d-flex justify-end mb-3">
-          <div class="d-flex ga-2">
-            <Button
-              v-for="(button, idx) in headerButtons"
-              :name="button.name"
-              :key="idx"
-              @click="button.function"
-            />
-          </div>
+        <div class="d-flex ga-2 mb-3">
+          <Button name="create" v-if="createAccess('counterparty')" @click="isCreate = true;" />
+          <Button name="copy" v-if="createAccess('counterparty')" @click="createBase()" />
+          <Button name="delete" v-if="removeAccess('counterparty')" @click="compute({})" />
+          <Button name="excel" @click="getExcel(counterpartyApi, 'Контрагенты')" />
         </div>
         <div class="custom_search">
           <v-text-field
@@ -404,18 +358,12 @@ onMounted(async () => {
             flat
           />
         </div>
-
         <div class="mt-2 filterElement">
-          <Icons
-            name="filter"
-            title="Фильтр"
-            @click="useFilterCanvasVisible().toggleFilterCanvas()"
-          />
+          <Icons name="filter" title="Фильтр" @click="useFilterCanvasVisible().toggleFilterCanvas()" />
           <span v-if="count !== 0" class="countFilter">{{ count }}</span>
         </div>
       </div>
     </div>
-
     <div class="table calcWidth">
       <v-data-table-server
         style="height: calc(100vh - 150px)"
@@ -571,22 +519,3 @@ onMounted(async () => {
     </filterCanvas>
   </div>
 </template>
-<style scoped>
-.filterElement {
-  position: relative;
-}
-.countFilter {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  width: 16px;
-  height: 16px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #82abf6;
-  border-radius: 50%;
-  font-size: 10px;
-  color: white;
-}
-</style>

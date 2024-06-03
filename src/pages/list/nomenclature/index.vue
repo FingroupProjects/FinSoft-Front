@@ -429,7 +429,8 @@ const getFilterItems = () => {
       >
         <template v-slot:group-header="{ item, toggleGroup, isGroupOpen }">
           <tr
-            style="background-color: rgba(122, 127, 176, 0.193)"
+            style="background-color: rgba(122, 127, 176, 0.193); cursor: pointer;"
+            @click="toggleGroup(item)"
             @dblclick="editGroup(item)"
           >
             <td style="width: 350px">

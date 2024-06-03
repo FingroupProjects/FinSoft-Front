@@ -710,8 +710,8 @@ onMounted(async () => {
           fixed-header
           hover
       >
-        <template v-slot:group-header="{ item, toggleGroup, isGroupOpen, index }">
-          <tr style="background-color: rgba(122, 127, 176, 0.193)" @dblclick="openGroupDialog(item)">
+        <template v-slot:group-header="{ item, toggleGroup, isGroupOpen }">
+          <tr style="background-color: rgba(122, 127, 176, 0.193);cursor: pointer" @click="toggleGroup(item)" @dblclick="openGroupDialog(item)">
             <td style="width: 350px;">
               <div class="d-flex align-center">
                 <CustomCheckbox
