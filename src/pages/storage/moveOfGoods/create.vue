@@ -155,7 +155,7 @@ onMounted(() => {
   form.organization = JSON.parse(localStorage.getItem('user')).organization || null
   author.value = JSON.parse(localStorage.getItem('user')).name || null
 
-  getDataBased(route.query.id, form, goods)
+  getDataBased(route.query.id, form, goods, route.query.isClient)
   getOrganizations()
   getStorages()
   getGoods()

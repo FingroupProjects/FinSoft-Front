@@ -1,7 +1,7 @@
 import getDateTimeInShow from "../date/getDateTimeInShow.js";
 import createOnBased from "../../api/documents/createOnBased.js";
 
-export default async function getDataBased(routId, form, goods) {
+export default async function getDataBased(routId, form, goods, isClient) {
   if (routId) {
     const {data} = await createOnBased.getById(routId)
     form.date = getDateTimeInShow(data.result.date, "-", true);
@@ -13,10 +13,12 @@ export default async function getDataBased(routId, form, goods) {
       id: data.result?.counterparty?.id,
       name: data.result?.counterparty?.name,
     };
-    form.cpAgreement = {
-      id: data.result?.counterpartyAgreement?.id,
-      name: data.result?.counterpartyAgreement?.name,
-    };
+    if (!isClient) {
+      form.cpAgreement = {
+        id: data.result?.counterpartyAgreement?.id,
+        name: data.result?.counterpartyAgreement?.name,
+      };
+    }
     form.storage = {
       id: data.result?.storage?.id,
       name: data.result?.storage?.name,

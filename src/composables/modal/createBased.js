@@ -14,10 +14,21 @@ export default function createBased(e, router, id) {
     'Инвентаризация склада': 'invertoryCreate'
   }
 
+  const query = {
+    'Покупка товаров': false,
+    'Возврат поставщику': false,
+    'Заказ поставщику': false,
+    'Продажа клиентам': true,
+    'Возврат от клиентов': true,
+    'Заказ клиентов': true,
+    'Перемещение между складами': false,
+    'Инвентаризация склада': false
+  }
+
   const routeName = routes[e.target.innerText];
 
   if (routeName) {
-    router.push({ name: routeName, query: { id } });
+    router.push({ name: routeName, query: { id, isClient: query[e.target.innerText]} });
   }
 
   modalCreateBased.isModal()
