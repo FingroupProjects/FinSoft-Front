@@ -25,6 +25,7 @@ import validateNumberInput from "../../../composables/mask/validateNumberInput.j
 import {useHasOneOrganization} from "../../../store/hasOneOrganization.js";
 import getDataBased from "../../../composables/otherQueries/getDataBased.js";
 import formatInputPrice from "../../../composables/mask/formatInputPrice.js";
+import CustomSearchableSelect from "../../../components/formElements/CustomSearchableSelect.vue";
 
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter();
@@ -322,7 +323,6 @@ watch([form, goods.value], () => {
 
 onUnmounted(() => {
   emits("changed", false);
-  localStorage.removeItem('createBasedOn');
 });
 
 onMounted(() => {
@@ -330,12 +330,12 @@ onMounted(() => {
   form.organization = JSON.parse(localStorage.getItem("user")).organization || null;
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
 
-  getDataBased(route.query.id, form, goods);
-  getOrganizations();
-  getCounterparties();
-  getStorages();
-});
+  getDataBased(route.query.id, form, goods, route.query.isClient)
 
+  getOrganizations()
+  getCounterparties()
+  getStorages()
+})
 </script>
 <template>
   <div class="document">
@@ -392,6 +392,9 @@ onMounted(() => {
             :items="storages"
             v-model="form.storage"
           />
+          <custom-searchable-select>
+
+          </custom-searchable-select>
         </div>
       </v-col>
       <v-col>
