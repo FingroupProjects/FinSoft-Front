@@ -362,7 +362,6 @@ onMounted(async () => {
             "
             @click="isEdit && !isCreateOnBase ? updateGood() : createGood()"
             name="save"
-            title="Сохранить"
           />
           <Button
             @click="

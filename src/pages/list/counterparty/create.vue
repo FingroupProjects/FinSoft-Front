@@ -17,6 +17,7 @@ import {
   restoreMessage,
   warningMessage,
 } from "@/composables/constant/buttons.js";
+import getListColor from "../../../composables/displayed/getListColor.js";
 import currencyApi from "../../../api/list/currency.js";
 import organizationApi from "@/api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
@@ -192,6 +193,7 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
   } else {
     return del({ page, itemsPerPage, sortBy, search });
   }
+  emits('computeCounterparty')
 };
 
 const openAgreementDialog = () => {
@@ -241,6 +243,7 @@ const editDialog = (item) => {
   isDocumentEdit.value = true;
   editAgreementDialog.value = true;
   agreementDialog.value = true;
+  lineMarking(item)
   getDated();
   cpAgreementGetById(item);
 };
@@ -407,6 +410,10 @@ const del = async ({ page, itemsPerPage, sortBy, search }) => {
       showToast(removeMessage, "red");
       await getDocuments({ page, itemsPerPage, sortBy });
       markedID.value = [];
+      agreementDialog.value = false
+      setTimeout(() => {
+        editAgreementDialog.value = false
+      }, 100);
     }
   } catch (e) {
     console.error(e);
@@ -427,6 +434,10 @@ const restore = async ({ page, itemsPerPage, sortBy }) => {
       showToast(restoreMessage, "green");
       await getDocuments({ page, itemsPerPage, sortBy });
       markedID.value = [];
+      agreementDialog.value = false
+      setTimeout(() => {
+        editAgreementDialog.value = false
+      }, 100);
     }
   } catch (e) {
     console.error(e);
@@ -448,7 +459,6 @@ const updateCounterparty = async () => {
       showToast("Выберите одну роль!", "warning");
       return;
     }
-    console.error(body);
     await counterpartyApi.update(props.item.id, body);
     showToast("Успешно изменено", "green");
     emits("toggleIsOpen");
@@ -644,11 +654,11 @@ const updateCpAgreement = async () => {
       contract_number: form.value.contract_number,
       payment_id: 2,
     };
-
-    await counterpartyAgreement.update(editID.value, body);
+    await counterpartyAgreement.update(editID.value.id, body);
     showToast("Успешно изменено", "green");
     agreementDialog.value = false;
     editAgreementDialog.value = false;
+    emits("toggleIsOpen");
   } catch (e) {
     console.error(e);
   }
@@ -731,7 +741,7 @@ const currencyProps = (item) => {
               variant="text"
               title="Закрыть"
               :size="32"
-              class="pt-2 pl-1"
+              class="pt-1"
             >
               <Icons name="close" />
             </v-btn>
@@ -850,27 +860,16 @@ const currencyProps = (item) => {
           >
             <div
               class="d-flex justify-space-between w-100 ga-2 pt-1 me-2"
-              style="padding-top: 4px !important"
+              style="padding: 4px 0px !important"
             >
               <span>Договоры</span>
-              <span style="display: flex">
-                <Icons
-                  v-if="removeAccess('counterparty') && isEdit"
-                  v-show="isEdit"
-                  @click="compute"
-                  class="mr-3"
-                  name="delete"
-                  title="Удалить"
-                />
-
-                <Icons
-                  v-if="createAccess('counterparty') && isEdit"
-                  v-show="isEdit"
-                  @click="openAgreementDialog"
-                  name="add"
-                  title="Добавить"
-                />
-              </span>
+              <Icons
+                v-if="createAccess('counterparty') && isEdit"
+                v-show="isEdit"
+                @click="openAgreementDialog"
+                name="add"
+                title="Добавить"
+              />
             </div>
           </div>
           <v-data-table-server
@@ -905,30 +904,17 @@ const currencyProps = (item) => {
                 @dblclick="editDialog(item)"
                 :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
               >
-                <td>
-                  <template
-                    v-if="
-                      hoveredRowIndex === index || markedID.includes(item.id)
-                    "
+                <td
+                  class="d-flex justify-center align-center"
+                  style="height: 55px"
+                >
+                  <v-chip
+                    style="height: 30px; width: 60px"
+                    class="d-flex justify-center"
+                    :color="getListColor(item?.deleted_at)"
                   >
-                    <CustomCheckbox
-                      v-model="markedID"
-                      :checked="markedID.includes(item.id)"
-                      @change="lineMarking(item)"
-                    >
-                      <span>{{ item.id }}</span>
-                    </CustomCheckbox>
-                  </template>
-
-                  <template v-else>
-                    <span class="d-flex align-center">
-                      <Icons
-                        style="margin-right: 10px; margin-top: 4px"
-                        :name="item.deleted_at === null ? 'valid' : 'inValid'"
-                      />
-                      <span>{{ item.id }}</span>
-                    </span>
-                  </template>
+                    <span class="padding: 5px;">{{ item.id }}</span>
+                  </v-chip>
                 </td>
                 <td>{{ item.contract_number }}</td>
                 <td>{{ item.currency_id.name }}</td>
@@ -951,28 +937,23 @@ const currencyProps = (item) => {
         <div class="d-flex justify-space-between align-center mb-2">
           <span>{{ editAgreementDialog ? "Изменение" : "Добавление" }}</span>
           <div class="d-flex align-center justify-space-between">
-            <div class="d-flex ga-3 align-center mt-2 me-4">
+            <div class="d-flex ga-2 align-center mt-2 me-4">
               <Icons
-                v-if="
-                  createAccess('counterpartyAgreement') && !editAgreementDialog
-                "
-                @click="
-                  editAgreementDialog
-                    ? updateCpAgreement()
-                    : createCpAgreement()
-                "
-                name="save"
-              />
+                  v-if="removeAccess('counterpartyAgreement') && editAgreementDialog"
+                  v-show="isEdit"
+                  @click="compute"
+                  class="mr-3"
+                  name="delete"
+                  title="Удалить"
+                />
+              <Icons
+                v-if="createAccess('counterpartyAgreement')"
+                @click="editAgreementDialog ? updateCpAgreement() : createCpAgreement()" name="save" />
             </div>
-            <v-btn
-              @click="
-                editAgreementDialog
-                  ? checkUpdateAgreement()
-                  : checkAndCloseAgreement()
-              "
+            <v-btn @click="editAgreementDialog ? checkUpdateAgreement() : checkAndCloseAgreement()"
               variant="text"
               :size="32"
-              class="pt-2 pl-1"
+              class="pt-1"
             >
               <Icons name="close" />
             </v-btn>
