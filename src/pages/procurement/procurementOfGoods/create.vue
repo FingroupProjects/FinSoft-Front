@@ -17,6 +17,7 @@ import counterpartyApi from "../../../api/list/counterparty.js";
 import storageApi from "../../../api/list/storage.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import procurementApi from "../../../api/documents/procurement.js";
+import formatInputPrice from "../../../composables/mask/formatInputPrice.js";
 import goodApi from "../../../api/list/goods.js";
 import Button from "../../../components/button/button.vue";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";
@@ -24,7 +25,6 @@ import "../../../assets/css/procurement.css";
 import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
 import {useHasOneOrganization} from "../../../store/hasOneOrganization.js";
 import getDataBased from "../../../composables/otherQueries/getDataBased.js";
-import formatInputPrice from "../../../composables/mask/formatInputPrice.js";
 import CustomSearchableSelect from "../../../components/formElements/CustomSearchableSelect.vue";
 
 const useOrganization = ref(useHasOneOrganization())
@@ -446,12 +446,12 @@ onMounted(() => {
                         :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                         v-mask="'########'"
                         min-width="50"
+                        @input="formatInputPrice(item.amount)"
                     />
                   </td>
                   <td>
                     <custom-text-field
                         v-model="item.price"
-                        :value="validateNumberInput(item.price)"
                         :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                         min-width="80"
                         @input="formatInputPrice(item.price, $event)"

@@ -8,11 +8,11 @@ import { FIELD_GOODS, TITLE_COLOR } from "../../../composables/constant/colors.j
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import goToHistory from "../../../composables/movementByPage/goToHistory.js";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
+import formatInputPrice from "../../../composables/mask/formatInputPrice.js";
 import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
 import goToPrint from "../../../composables/movementByPage/goToPrint.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
-import formatNumber from "../../../composables/format/formatNumber.js";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";
 import getStatus from "../../../composables/displayed/getStatus.js";
 import procurementApi from "../../../api/documents/procurement.js";
@@ -319,7 +319,7 @@ const totalPrice = computed(() => {
   goods.value.forEach((item) => {
     sum += item.price * item.amount;
   });
-  return formatNumber(sum);
+  return formatInputPrice(sum);
 });
 
 const totalCount = computed(() =>
@@ -547,6 +547,7 @@ const getGood = async (good) => {
                   <td>
                     <custom-text-field
                       v-model="item.amount"
+                      @input="formatInputPrice(item.amount)"
                       :base-color="
                         hoveredRowId === item.id ? FIELD_GOODS : '#fff'
                       "
@@ -557,7 +558,7 @@ const getGood = async (good) => {
                   <td>
                     <custom-text-field
                       v-model="item.price"
-                      @input="validateNumberInput(item.price)"
+                      @input="formatInputPrice(item.price)"
                       :base-color="
                         hoveredRowId === item.id ? FIELD_GOODS : '#fff'
                       "
@@ -571,7 +572,7 @@ const getGood = async (good) => {
                       :base-color="
                         hoveredRowId === item.id ? FIELD_GOODS : '#fff'
                       "
-                      :value="formatNumber(item.amount * item.price)"
+                      :value="formatInputPrice(item.amount * item.price)"
                       min-width="100"
                     />
                   </td>
