@@ -104,7 +104,6 @@ const unApprove = async () => {
 const getProcurementDetails = async () => {
   try {
     const { data } = await procurementApi.getById(route.params.id);
-    console.log(data);
     form.doc_number = data.result.doc_number;
     form.date = getDateTimeInShow(data.result.date, "-", true);
     form.organization = {
@@ -193,6 +192,10 @@ const getGoods = async () => {
     page: 1,
     itemsPerPage: 100000,
     sortBy: "name",
+    search: '',
+    good_storage_id: form.storage,
+    good_organization_id: form.organization,
+    for_sale: 1
   });
   listGoods.value = data.result.data;
 };
@@ -271,7 +274,6 @@ const updateProcurement = async () => {
   if (missingData) return;
 
   try {
-    console.log(goods.value);
     const body = {
       date: formatDateTime(form.date),
       organization_id:
@@ -359,6 +361,17 @@ watch(form, () => {
 });
 
 watch(
+  () => [form.storage, form.organization],
+  (newValue) => {
+    if (newValue[0] !== null && newValue[1] !== null) {
+      const storage_id = typeof newValue[0] === "object" ? newValue[0].id : newValue[0];
+      const organization_id = typeof newValue[1] === "object" ? newValue[1].id : newValue[1];
+      getGoods(storage_id, organization_id);
+    }
+  }
+);
+
+watch(
   () => form.counterparty,
   async (newValue) => {
     if (newValue === null) return;
@@ -401,7 +414,6 @@ onMounted(() => {
     getCounterparties(),
     getStorages(),
     getCurrencies(),
-    getGoods(),
   ]);
 });
 const clicked = ref(false);

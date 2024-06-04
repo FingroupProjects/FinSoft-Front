@@ -118,7 +118,8 @@ const getGoods = async (good_storage_id, good_organization_id) => {
     },
     search,
     good_storage_id,
-    good_organization_id
+    good_organization_id,
+    1,
   )
   listGoods.value = data.result.data;
 }
