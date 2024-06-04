@@ -704,15 +704,14 @@ onMounted(async () => {
                     v-model="markedID"
                     :checked="isGroupChecked(item)"
                     @change="toggleGroupSelection(item)"
+                    @click.stop
                 >
                 </CustomCheckbox>
                 <VBtn
                     :icon="isGroupOpen(item) ? '$expand' : '$next'"
                     size="small"
-                    variant="text"
-                    @click="toggleGroup(item)"
-
-                ></VBtn>
+                    variant="text"  
+                />
                 <span>{{ item.value }}</span>
               </div>
 

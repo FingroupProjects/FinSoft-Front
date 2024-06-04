@@ -55,6 +55,7 @@ const getDocumentHistory = async () => {
       ...item,
       date: formatDateTime(item.date),
     }));
+    console.log(historyDoc.value);
   } catch (e) {
     console.error(e);
   }
@@ -197,12 +198,49 @@ onMounted(() => {
               v-for="(value, key) in history.body"
               :key="key"
             >
-              <div class="bg-white pa-3 rounded-lg">
+              <div class="bg-white rounded-lg">
                 <span>{{ key }}: </span>
                 <span>{{ value.previous_value }}</span> =>
                 <span>{{ value.new_value }}</span>
               </div>
             </span>
+            <div class="mb-4" v-for="(item, key) in history.goods" :key="key">
+              <div class="w-100">
+                <div>
+                  <h3>Товар {{ item.type }}</h3>
+                </div>
+              </div>
+              <div class="d-flex ga-2">
+                <span v-if="item.body.created_at" style="color: #9b9b9b"
+                  >Дата: {{ formatDateTime(item.body.created_at) }}</span
+                >
+              </div>
+              <div
+                class="d-flex flex-column ga-2 mt-2"
+                v-for="(good, key) in [item.body]"
+                :key="key"
+              >
+                <span v-if="good.amount">Количество: {{ good.amount }}</span>
+                <span v-if="good.price">Цена: {{ good.price }}</span>
+              </div>
+              <div v-if="item.type == 'Изменен '">
+                <div
+                  class="d-flex flex-column ga-2 mt-2"
+                  v-for="(values, keys) in [item.body]"
+                  :key="keys"
+                >
+                  <div
+                    class="d-flex ga-2 mt-2"
+                    v-for="(value, key) in values"
+                    :key="key"
+                  >
+                    <span>{{ key }}</span>
+                    <span> {{ value?.previous_value }}</span> =>
+                    <span>{{ value?.new_value }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </v-card>
       </div>
