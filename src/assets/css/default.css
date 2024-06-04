@@ -198,8 +198,8 @@ body{
 }
 .countFilter {
   position: absolute;
-  top: -5px;
-  right: -5px;
+  top: 2px;
+  right: -3px;
   width: 16px;
   height: 16px;
   display: flex;
