@@ -193,7 +193,7 @@ onMounted(() => {
             :key="index"
             class="d-flex flex-column"
           >
-            <span
+            <spanw
               class="d-flex ga-2"
               v-for="(value, key) in history.body"
               :key="key"
@@ -203,7 +203,7 @@ onMounted(() => {
                 <span>{{ value.previous_value }}</span> =>
                 <span>{{ value.new_value }}</span>
               </div>
-            </span>
+            </spanw>
             <div class="mb-4" v-for="(item, key) in history.goods" :key="key">
               <div class="w-100">
                 <div>

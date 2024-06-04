@@ -48,3 +48,14 @@ export const markedForDeletion = [
     id: 0
   }
 ]
+  
+export const statusOptions = [
+  {
+    name: 'Проведён',
+    id: 1
+  },
+  {
+    name: 'Не проведён',
+    id: 0
+  }
+]
