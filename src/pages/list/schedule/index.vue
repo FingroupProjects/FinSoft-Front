@@ -107,8 +107,8 @@ const paginationsMonth = ref([])
 const paginations = ref([]);
 
 const headers = ref([
-  {title: 'Наименование', key: 'name'},
   {title: 'Статус', key: 'status', sortable: false},
+  {title: 'Наименование', key: 'name'},
 ])
 
 const headersMonths = ref([
@@ -543,8 +543,7 @@ watch(search, debounce(newValue => {
                   <span>{{ item.id }}</span>
                 </div>
               </td>
-              <td style="width: 250px;">{{ item.name }}</td>
-              <td>
+              <td style="width: 350px;">
                 <v-chip
                     style="height: 50px; width: 200px;"
                     class="d-flex justify-center"
@@ -555,6 +554,7 @@ watch(search, debounce(newValue => {
                 }}</span>
                 </v-chip>
               </td>
+              <td >{{ item.name }}</td>
             </tr>
           </template>
         </v-data-table-server>

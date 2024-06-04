@@ -110,7 +110,7 @@ const headers = ref([
 
 const headersGroup = ref([
   {title: 'Статус', key: 'deleted_at'},
-  {title: '', key: 'name', sortable: false},
+  {title: 'ФИО', key: 'name', sortable: false},
 ])
 
 const rules = {
@@ -719,15 +719,14 @@ onMounted(async () => {
                     v-model="markedID"
                     :checked="isGroupChecked(item)"
                     @change="toggleGroupSelection(item)"
+                    @click.stop
                 >
                 </CustomCheckbox>
                 <VBtn
                     :icon="isGroupOpen(item) ? '$expand' : '$next'"
                     size="small"
                     variant="text"
-                    @click="toggleGroup(item)"
-
-                ></VBtn>
+                />
                 <span>{{ item.value }}</span>
               </div>
             </td>

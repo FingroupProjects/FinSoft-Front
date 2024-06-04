@@ -15,7 +15,7 @@ import validate from "./validate";
 import {
   FIELD_COLOR,
   BASE_COLOR,
-  TITLE_COLOR
+  TITLE_COLOR,
 } from "../../../composables/constant/colors.js";
 import {
   createAccess,
@@ -330,18 +330,9 @@ onMounted(async () => {
   <div class="pa-4" @keyup.esc="$router.go(-1)">
     <div class="d-flex justify-space-between align-center mb-2 ms-4">
       <div class="d-flex ga-4">
-        <!-- <div
-          style="cursor: pointer"
-          @click="
-            isEdit && !isCreateOnBase
-              ? checkUpdate()
-              : $router.push('/list/nomenclature')
-          "
-          class="pa-1 bg-green rounded-circle d-inline-block mr-4 text-uppercase"
-        >
-          <v-icon icon="keyboard_backspace" size="x-small" />
-        </div> -->
-        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }"> {{ isEdit && !isCreateOnBase ? `Товар: ${good_name}` : "Добавление" }} </span>
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">
+          {{ isEdit && !isCreateOnBase ? `Товар: ${good_name}` : "Добавление" }}
+        </span>
       </div>
       <div class="d-flex align-center justify-space-between">
         <div class="d-flex ga-3 align-center mt-2 me-4">
@@ -377,7 +368,7 @@ onMounted(async () => {
     <v-card
       min-width="650"
       class="d-flex pa-5 justify-center flex-column mx-auto my-0"
-      rounded="xl"
+      style="border-radius: 12px"
     >
       <v-form
         :disabled="!updateAccess('nomenclature') && isEdit"
@@ -385,118 +376,72 @@ onMounted(async () => {
       >
         <v-row class="w-100">
           <v-col class="d-flex flex-column w-100 ga-3">
-            <div class="d-flex ga-4">
-              <v-text-field
-                v-model="name"
-                style="max-width: 49.4%; min-width: 49.4%"
-                :rules="isValid ? [rules.required] : []"
-                :color="BASE_COLOR"
-                rounded="lg"
-                variant="outlined"
-                class="w-auto text-sm-body-1"
-                density="compact"
-                placeholder="Наименование"
-                label="Наименование"
-                autofocus
-                clear-icon="close"
-                clearablehide-details
-                clearable
-                hide-details
-                :base-color="FIELD_COLOR"
-              />
-              <v-text-field
-                style="max-width: 49.4%; min-width: 49.4%"
-                v-model="vendor_code"
-                :rules="isValid ? [rules.required] : []"
-                :color="BASE_COLOR"
-                rounded="lg"
-                variant="outlined"
-                class="w-auto text-sm-body-1"
-                density="compact"
-                maxlength="8"
-                placeholder="Артикуль"
-                v-mask="'########'"
-                label="Артикуль"
-                clear-icon="close"
-                clearable
-                hide-details
-                :base-color="FIELD_COLOR"
-              />
-            </div>
-            <div class="d-flex ga-4">
-              <v-autocomplete
-                style="max-width: 49.4%; min-width: 49.4%"
-                :rules="isValid ? [rules.required] : []"
-                placeholder="Место расположения"
-                label="Место расположения"
-                :item-props="itemsProps"
-                v-model="storage_id"
-                variant="outlined"
-                item-title="name"
-                item-value="id"
-                rounded="lg"
-                :items="storages"
-                :color="BASE_COLOR"
-                hide-details
-                :base-color="FIELD_COLOR"
-              />
-              <v-autocomplete
-                style="max-width: 49.4%; min-width: 49.4%"
-                :rules="isValid ? [rules.required] : []"
-                placeholder="Ед измерения"
-                :item-props="itemsProps"
-                label="Ед измерения"
-                v-model="unit_id"
-                rounded="lg"
-                variant="outlined"
-                item-title="name"
-                item-value="id"
-                :items="units"
-                :color="BASE_COLOR"
-                hide-details
-                :base-color="FIELD_COLOR"
-              />
-            </div>
-            <div
-              :class="add_images.length > 1 ? 'mb-3' : ''"
-              class="d-flex justify-space-between ga-3"
-            >
-              <div style="min-width: 240px; max-height: 186px">
-                <div>
-                  <img
-                    @click="
-                      (updateAccess('nomenclature') && isEdit) ||
-                      (createAccess('nomenclature') && !isEdit)
-                        ? goToImages()
-                        : ''
-                    "
-                    v-if="main_image"
-                    :src="main_image"
-                    class="image"
-                    alt="Main Image"
-                    style="
-                      width: 100%;
-                      height: 100%;
-                      border-radius: 4px;
-                      border: 1px solid #274d87;
-                      cursor: pointer;
-                      object-fit: contain;
-                    "
-                  />
-                  <div
-                    v-if="!notImg && add_images.length > 1"
-                    class="d-flex justify-space-between w-100"
-                  >
-                    <div style="cursor: pointer" @click="previousImage()">
-                      <Icons name="left"></Icons>
-                    </div>
-                    <div style="cursor: pointer" @click="nextImage()">
-                      <Icons name="right"></Icons>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="d-flex flex-column ga-3" style="width: 100%">
+            <div class="d-flex ga-4 w-100">
+              <div class="d-flex flex-column ga-4 w-75">
+                <v-text-field
+                  v-model="name"
+                  :rules="isValid ? [rules.required] : []"
+                  :color="BASE_COLOR"
+                  rounded="lg"
+                  variant="outlined"
+                  class="w-auto text-sm-body-1"
+                  density="compact"
+                  placeholder="Наименование"
+                  label="Наименование"
+                  autofocus
+                  clear-icon="close"
+                  clearablehide-details
+                  clearable
+                  hide-details
+                  :base-color="FIELD_COLOR"
+                />
+                <v-text-field
+                  v-model="vendor_code"
+                  :rules="isValid ? [rules.required] : []"
+                  :color="BASE_COLOR"
+                  rounded="lg"
+                  variant="outlined"
+                  class="w-auto text-sm-body-1"
+                  density="compact"
+                  maxlength="8"
+                  placeholder="Артикуль"
+                  v-mask="'########'"
+                  label="Артикуль"
+                  clear-icon="close"
+                  clearable
+                  hide-details
+                  :base-color="FIELD_COLOR"
+                />
+                <v-autocomplete
+                  :rules="isValid ? [rules.required] : []"
+                  placeholder="Место расположения"
+                  label="Место расположения"
+                  :item-props="itemsProps"
+                  v-model="storage_id"
+                  variant="outlined"
+                  item-title="name"
+                  item-value="id"
+                  rounded="lg"
+                  :items="storages"
+                  :color="BASE_COLOR"
+                  hide-details
+                  :base-color="FIELD_COLOR"
+                />
+                <v-autocomplete
+                  :rules="isValid ? [rules.required] : []"
+                  placeholder="Ед измерения"
+                  :item-props="itemsProps"
+                  label="Ед измерения"
+                  v-model="unit_id"
+                  rounded="lg"
+                  variant="outlined"
+                  item-title="name"
+                  item-value="id"
+                  :items="units"
+                  :color="BASE_COLOR"
+                  hide-details
+                  :base-color="FIELD_COLOR"
+                />
                 <v-autocomplete
                   :rules="isValid ? [rules.required] : []"
                   placeholder="Группа номенклатуры"
@@ -520,6 +465,33 @@ onMounted(async () => {
                   hide-details
                   rows="4"
                 />
+              </div>
+              <div
+                :class="add_images.length > 1 ? 'mb-3' : ''"
+                class="d-flex justify-space-between ga-3"
+              >
+                <div>
+                  <a :href="main_image" target="_blank">
+                    <img
+                      v-if="main_image"
+                      :src="main_image"
+                      class="image"
+                      alt="Main Image"
+                      width="400"
+                    />
+                  </a>
+                  <div
+                    v-if="!notImg && add_images.length > 1"
+                    class="d-flex justify-space-between w-100"
+                  >
+                    <v-btn :disabled="!notImg && main_image === add_images[0]" color="#524ED8" @click="previousImage()">
+                      <Icons name="left"></Icons>
+                    </v-btn>
+                    <v-btn :disabled="!notImg && main_image === add_images[add_images.length - 1]" color="#524ED8" @click="nextImage()">
+                      <Icons name="right"></Icons>
+                    </v-btn>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -554,8 +526,11 @@ onMounted(async () => {
   cursor: pointer;
 }
 .image {
+  border-radius: 4px;
+  border: 1px solid #274d87;
+  cursor: pointer;
+  max-height: 400px;
+  max-width: 400px;
   object-fit: contain;
-  max-height: 180px;
-  /* max-width: 280px; */
 }
 </style>
