@@ -8,11 +8,11 @@ import { FIELD_GOODS, TITLE_COLOR } from "../../../composables/constant/colors.j
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import goToHistory from "../../../composables/movementByPage/goToHistory.js";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
+import formatInputPrice from "../../../composables/mask/formatInputPrice.js";
 import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
 import goToPrint from "../../../composables/movementByPage/goToPrint.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
-import formatNumber from "../../../composables/format/formatNumber.js";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";
 import getStatus from "../../../composables/displayed/getStatus.js";
 import procurementApi from "../../../api/documents/procurement.js";
@@ -104,7 +104,6 @@ const unApprove = async () => {
 const getProcurementDetails = async () => {
   try {
     const { data } = await procurementApi.getById(route.params.id);
-    console.log(data);
     form.doc_number = data.result.doc_number;
     form.date = getDateTimeInShow(data.result.date, "-", true);
     form.organization = {
@@ -193,6 +192,10 @@ const getGoods = async () => {
     page: 1,
     itemsPerPage: 100000,
     sortBy: "name",
+    search: '',
+    good_storage_id: form.storage,
+    good_organization_id: form.organization,
+    for_sale: 1
   });
   listGoods.value = data.result.data;
 };
@@ -271,7 +274,6 @@ const updateProcurement = async () => {
   if (missingData) return;
 
   try {
-    console.log(goods.value);
     const body = {
       date: formatDateTime(form.date),
       organization_id:
@@ -317,7 +319,7 @@ const totalPrice = computed(() => {
   goods.value.forEach((item) => {
     sum += item.price * item.amount;
   });
-  return formatNumber(sum);
+  return formatInputPrice(sum);
 });
 
 const totalCount = computed(() =>
@@ -357,6 +359,17 @@ watch(form, () => {
     }
   }
 });
+
+watch(
+  () => [form.storage, form.organization],
+  (newValue) => {
+    if (newValue[0] !== null && newValue[1] !== null) {
+      const storage_id = typeof newValue[0] === "object" ? newValue[0].id : newValue[0];
+      const organization_id = typeof newValue[1] === "object" ? newValue[1].id : newValue[1];
+      getGoods(storage_id, organization_id);
+    }
+  }
+);
 
 watch(
   () => form.counterparty,
@@ -401,7 +414,6 @@ onMounted(() => {
     getCounterparties(),
     getStorages(),
     getCurrencies(),
-    getGoods(),
   ]);
 });
 const clicked = ref(false);
@@ -535,6 +547,7 @@ const getGood = async (good) => {
                   <td>
                     <custom-text-field
                       v-model="item.amount"
+                      @input="formatInputPrice(item.amount)"
                       :base-color="
                         hoveredRowId === item.id ? FIELD_GOODS : '#fff'
                       "
@@ -545,7 +558,7 @@ const getGood = async (good) => {
                   <td>
                     <custom-text-field
                       v-model="item.price"
-                      @input="validateNumberInput(item.price)"
+                      @input="formatInputPrice(item.price)"
                       :base-color="
                         hoveredRowId === item.id ? FIELD_GOODS : '#fff'
                       "
@@ -559,7 +572,7 @@ const getGood = async (good) => {
                       :base-color="
                         hoveredRowId === item.id ? FIELD_GOODS : '#fff'
                       "
-                      :value="formatNumber(item.amount * item.price)"
+                      :value="formatInputPrice(item.amount * item.price)"
                       min-width="100"
                     />
                   </td>

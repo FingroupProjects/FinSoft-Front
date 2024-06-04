@@ -130,7 +130,7 @@ const headerButtons = ref([
         const res = await copyDocument.copy(markedID.value[0]);
         if (res.status === 200) {
           showToast(copyMessage);
-          router.push(`/procurementOfGoods/${res.data.result.id}`);
+          window.open(`/procurementOfGoods/${res.data.result.id}`, "_blank");
         }
       } catch (e) {
         console.error(e);

@@ -29,6 +29,7 @@ const accountingOfGoodsHeaders = ref([
   { title: "Дата", key: "date" },
   { title: "Тип движения", key: "movement_type" },
   { title: "Склад", key: "storage.name" },
+  { title: "Товар", key: "good.name" },
   { title: "Количество", key: "amount" },
   { title: "Сумма", key: "sum" },
 ]);
@@ -55,7 +56,6 @@ const getDocumentHistory = async () => {
       ...item,
       date: formatDateTime(item.date),
     }));
-    console.log(historyDoc.value);
   } catch (e) {
     console.error(e);
   }
@@ -95,6 +95,7 @@ const getAccountingOfGoods = async ({
       search
     );
     data.value = result.data;
+    console.log(result);
     pagination.value = result.pagination;
     loading.value = false;
   } catch (e) {
@@ -193,7 +194,7 @@ onMounted(() => {
             :key="index"
             class="d-flex flex-column"
           >
-            <spanw
+            <span
               class="d-flex ga-2"
               v-for="(value, key) in history.body"
               :key="key"
@@ -203,7 +204,7 @@ onMounted(() => {
                 <span>{{ value.previous_value }}</span> =>
                 <span>{{ value.new_value }}</span>
               </div>
-            </spanw>
+            </span>
             <div class="mb-4" v-for="(item, key) in history.goods" :key="key">
               <div class="w-100">
                 <div>
@@ -325,6 +326,7 @@ onMounted(() => {
                 </v-chip>
               </td>
               <td>{{ item.storage.name }}</td>
+              <td>{{ item.good.name }}</td>
               <td>{{ item.amount }}</td>
               <td>{{ item.sum }}</td>
             </tr>

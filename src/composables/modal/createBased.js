@@ -11,7 +11,8 @@ export default function createBased(e, router, id) {
     'Возврат от клиентов': 'clientReturnCreate',
     'Заказ клиентов': 'clientOrderCreate',
     'Перемещение между складами': 'moveOfGoodsCreate',
-    'Инвентаризация склада': 'invertoryCreate'
+    'Инвентаризация склада': 'invertoryCreate',
+    'Перемещение': 'moveOfGoodsCreate',
   }
 
   const query = {
