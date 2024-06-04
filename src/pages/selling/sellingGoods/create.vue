@@ -357,7 +357,7 @@ onMounted(() => {
   form.organization =
     JSON.parse(localStorage.getItem("user")).organization || null;
 
-  getDataBased(route.query.id, form, goods);
+  getDataBased(route.query.id, form, goods, route.query.isClient);
   getOrganizations();
   getCounterparties();
   getStorages();

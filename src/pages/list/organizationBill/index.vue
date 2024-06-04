@@ -678,6 +678,7 @@ onMounted(() => {
                     variant="outlined"
                     :rules="[rules.required]"
                     label="Дата создания"
+                    class="date"
                     type="date"
                     v-model="dateRef"
                     density="compact"
