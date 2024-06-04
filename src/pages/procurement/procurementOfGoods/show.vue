@@ -28,6 +28,7 @@ import goodApi from "../../../api/list/goods.js";
 import "../../../assets/css/procurement.css";
 import validate from "./validate.js";
 import goodsDelete from "../../../composables/goods/goodsDel"
+import CustomSearchableSelect from "../../../components/formElements/CustomSearchableSelect.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -135,6 +136,7 @@ const getProcurementDetails = async () => {
       amount: item.amount,
       price: item.price,
     }));
+    console.log(goods.value)
     prevForm.value = { ...form };
     prevGoods.value = [...goods.value];
     tempForm.value = Object.assign({}, form);
@@ -534,16 +536,17 @@ const getGood = async (good) => {
                     </CustomCheckbox>
                   </td>
                   <td style="width: 40%">
-                    <custom-autocomplete
-                      v-model.lazy="item.good_id"
-                      :items="select === index ? selectGoods : listGoods"
-                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                      min-width="150"
-                      max-width="100%"
-                      :isAmount="true"
-                      @input="search($event, index)"
-                      @blur="getGoods"
-                    />
+<!--                    <custom-autocomplete-->
+<!--                      v-model.lazy="item.good_id"-->
+<!--                      :items="select === index ? selectGoods : listGoods"-->
+<!--                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"-->
+<!--                      min-width="150"-->
+<!--                      max-width="100%"-->
+<!--                      :isAmount="true"-->
+<!--                      @input="search($event, index)"-->
+<!--                      @blur="getGoods"-->
+<!--                    />-->
+                    <custom-searchable-select :items="listGoods" v-model.lazy="item.good_id" />
                   </td>
                   <td>
                     <custom-text-field

@@ -1,66 +1,82 @@
 <script setup>
-import {ref, onMounted, watch} from "vue";
+import { ref, onMounted, watch } from "vue";
+import { defineProps, defineEmits } from "vue";
+
+const props = defineProps({
+  modelValue: [String, Number],
+  items: {
+    type: Array,
+    required: true
+  }
+});
+const emit = defineEmits(['update:modelValue']);
 
 const input = ref(null);
 const list = ref(null);
-const items = ref([
-  { id: 1, name: "testAPI" },
-  { id: 2, name: "getUser" },
-  { id: 3, name: "postData" },
-  { id: 4, name: "addPerson", description: "Add a new person to the system" }
-]);
-const filteredItems = ref(items.value);
+const filteredItems = ref([...props.items]);
+const displayValue = ref('');
 
-const getGoods = async () => {
-  try {
+watch(
+    () => props.items,
+    (newItems) => {
+      filteredItems.value = [...newItems];
+    },
+    { immediate: true }
+);
 
-  } catch (e) {
-    console.log(e)
-  }
-}
+watch(
+    () => props.modelValue,
+    (newValue) => {
+      const selectedItem = props.items.find(item => item.id === newValue);
+      if (selectedItem) {
+        displayValue.value = selectedItem.name;
+      } else {
+        displayValue.value = '';
+      }
+    },
+    { immediate: true }
+);
 
 onMounted(() => {
-  input.value = document.querySelector(".dropdown-input");
-  list.value = document.querySelector(".dropdown-list");
-
-  input.value.addEventListener("focus", () => {
-    list.value.style.display = "block";
-  });
-
-  input.value.addEventListener("input", () => {
-    const searchText = input.value.value.toLowerCase();
-
-    filteredItems.value = items.value.filter(item => {
-      return Object.values(item).some(value =>
-          (typeof value === "string" || typeof value === "number") &&
-          value.toString().toLowerCase().includes(searchText)
-      );
-    });
-
-    list.value.style.display = filteredItems.value.length > 0 ? "block" : "none";
-  });
-
-  document.addEventListener("click", (event) => {
-    if (!input.value.contains(event.target) && !list.value.contains(event.target)) {
-      list.value.style.display = "none";
-    }
-  });
+  document.addEventListener("click", onClickOutside);
 });
 
-const selectItem = (item) => {
-  input.value.value = item.name;
-  list.value.style.display = "none";
-
-  console.log(item)
+const onClickOutside = (event) => {
+  if (!input.value.contains(event.target) && !list.value.contains(event.target)) {
+    list.value.style.display = "none";
+  }
 };
 
+const onFocus = () => {
+  list.value.style.display = "block";
+};
 
+const onInput = () => {
+  const searchText = input.value.value.toLowerCase();
+  displayValue.value = input.value.value;
+
+  filteredItems.value = props.items.filter(item => {
+    return Object.values(item).some(value =>
+        (typeof value === "string" || typeof value === "number") &&
+        value.toString().toLowerCase().includes(searchText)
+    );
+  });
+
+  list.value.style.display = filteredItems.value.length > 0 ? "block" : "none";
+};
+
+const selectItem = (item) => {
+  emit('update:modelValue', item.id);
+  list.value.style.display = "none";
+  displayValue.value = item.name;
+};
 </script>
 
 <template>
-  <div class="dropdown">
-    <input type="text" class="dropdown-input" placeholder="Search...">
-    <div class="dropdown-list">
+  <div class="dropdown w-100" @click.stop>
+    <input type="text" style="width: 100%;" class="dropdown-input" :value="displayValue"
+           @input="onInput" placeholder="Поиск..." @focus="onFocus" ref="input"/>
+    <div class="dropdown-list" ref="list">
       <div
           v-for="item in filteredItems"
           :key="item.id"
@@ -74,7 +90,6 @@ const selectItem = (item) => {
 </template>
 
 <style scoped>
-
 .dropdown {
   position: relative;
   display: inline-block;
@@ -83,7 +98,7 @@ const selectItem = (item) => {
 .dropdown-input {
   padding: 7px 7px 7px 12px;
   width: 300px;
-  border: 1px solid #274D87;
+  border: 1px solid rgba(39, 77, 135, 0.5);
   border-radius: 10px;
 }
 
