@@ -22,7 +22,6 @@ import goodApi from "../../../api/list/goods.js";
 import Button from "../../../components/button/button.vue";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";
 import "../../../assets/css/procurement.css";
-import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
 import {useHasOneOrganization} from "../../../store/hasOneOrganization.js";
 import getDataBased from "../../../composables/otherQueries/getDataBased.js";
 import CustomSearchableSelect from "../../../components/formElements/CustomSearchableSelect.vue";
@@ -174,6 +173,10 @@ const validateItem = (item) => {
   return false;
 };
 
+function toDecimal(number) {
+  return parseFloat(number).toFixed(2);
+}
+
 const addNewProcurement = async () => {
   if (
     validate(
@@ -211,13 +214,13 @@ const addNewProcurement = async () => {
     salePercent: Number(form.salePercent),
     currency_id:
       typeof form.currency === "object" ? form.currency.id : form.currency,
-    goods: goods.value.map((item) => ({
+    goods: goods.value.map(item => ({
       good_id: Number(item.good_id),
       amount: Number(item.amount),
-      price: Number(item.price),
+      price: toDecimal(Number(item.price)),
     })),
   }
-
+  console.log(body)
   try {
     const res = await procurementApi.add(body);
     if (res.status === 201) {
@@ -393,9 +396,6 @@ onMounted(() => {
             :items="storages"
             v-model="form.storage"
           />
-          <custom-searchable-select>
-
-          </custom-searchable-select>
         </div>
       </v-col>
       <v-col>
@@ -431,14 +431,18 @@ onMounted(() => {
                     </CustomCheckbox>
                   </td>
                   <td style="width: 40%">
-                    <custom-autocomplete
-                        v-model="item.good_id"
-                        :items="listGoods"
-                        :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                        min-width="150"
-                        max-width="100%"
-                        :isAmount="true"
+                    <custom-searchable-select
+                       :items="listGoods"
+                       v-model="item.good_id"
                     />
+<!--                    <custom-autocomplete-->
+<!--                        v-model="item.good_id"-->
+<!--                        :items="listGoods"-->
+<!--                        :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"-->
+<!--                        min-width="150"-->
+<!--                        max-width="100%"-->
+<!--                        :isAmount="true"-->
+<!--                    />-->
                   </td>
                   <td>
                     <custom-text-field
@@ -446,7 +450,6 @@ onMounted(() => {
                         :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                         v-mask="'########'"
                         min-width="50"
-                        @input="formatInputPrice(item.amount)"
                     />
                   </td>
                   <td>
