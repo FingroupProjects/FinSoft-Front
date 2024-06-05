@@ -219,15 +219,18 @@ const decreaseCountOfGoods = () => {
 };
 
 const lineMarking = (item) => {
-  const index = markedID.value.indexOf(item.id);
+  const { id } = item;
+  if (id === null || id === undefined) {
+    return;
+  }
+  const index = markedID.value.indexOf(id);
   if (index !== -1) {
     markedID.value.splice(index, 1);
   } else {
-    if (item.id !== null) {
-      markedID.value.push(item.id);
-    }
+    markedID.value.push(id);
   }
 };
+
 
 
 

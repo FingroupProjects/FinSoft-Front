@@ -209,7 +209,7 @@ onMounted(() => {
             <div class="mb-4" v-for="(item, key) in history.goods" :key="key">
               <div class="w-100">
                 <div>
-                  <h3>Товар {{ item.type }}</h3>
+                  <h3>Товар {{ item.good }} ({{ item.type }})</h3>
                 </div>
               </div>
               <div class="d-flex ga-2">
