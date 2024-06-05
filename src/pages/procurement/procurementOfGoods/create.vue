@@ -25,6 +25,7 @@ import "../../../assets/css/procurement.css";
 import {useHasOneOrganization} from "../../../store/hasOneOrganization.js";
 import getDataBased from "../../../composables/otherQueries/getDataBased.js";
 import CustomSearchableSelect from "../../../components/formElements/CustomSearchableSelect.vue";
+import toDecimal from "../../../composables/format/toDecimal.js";
 
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter();
@@ -173,10 +174,6 @@ const validateItem = (item) => {
   return false;
 };
 
-function toDecimal(number) {
-  return parseFloat(number).toFixed(2);
-}
-
 const addNewProcurement = async () => {
   if (
     validate(
@@ -217,7 +214,7 @@ const addNewProcurement = async () => {
     goods: goods.value.map(item => ({
       good_id: Number(item.good_id),
       amount: Number(item.amount),
-      price: toDecimal(Number(item.price)),
+      price: toDecimal(item.price),
     })),
   }
   console.log(body)
@@ -432,18 +429,10 @@ onMounted(() => {
                   </td>
                   <td style="width: 40%">
                     <custom-searchable-select
-
                        :items="listGoods"
                        v-model="item.good_id"
+                       :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                     />
-<!--                    <custom-autocomplete-->
-<!--                        v-model="item.good_id"-->
-<!--                        :items="listGoods"-->
-<!--                        :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"-->
-<!--                        min-width="150"-->
-<!--                        max-width="100%"-->
-<!--                        :isAmount="true"-->
-<!--                    />-->
                   </td>
                   <td>
                     <custom-text-field

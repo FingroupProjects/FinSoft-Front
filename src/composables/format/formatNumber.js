@@ -1,7 +1,7 @@
 export default function formatNumber(amount) {
   const formatter = new Intl.NumberFormat('ru', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: 3,
+    maximumFractionDigits: 3,
   });
 
   return formatter.format(amount);

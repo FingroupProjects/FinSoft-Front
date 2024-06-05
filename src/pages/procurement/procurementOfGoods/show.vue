@@ -29,6 +29,7 @@ import "../../../assets/css/procurement.css";
 import validate from "./validate.js";
 import goodsDelete from "../../../composables/goods/goodsDel"
 import CustomSearchableSelect from "../../../components/formElements/CustomSearchableSelect.vue";
+import toDecimal from "../../../composables/format/toDecimal.js";
 
 const router = useRouter();
 const route = useRoute();
@@ -302,7 +303,7 @@ const updateProcurement = async () => {
         id: item.id,
         good_id: Number(item.good_id),
         amount: Number(item.amount),
-        price: Number(item.price),
+        price: toDecimal(item.price),
       })),
     };
     if(deletedGoods.value.length > 0){
@@ -538,7 +539,11 @@ const getGood = async (good) => {
                     </CustomCheckbox>
                   </td>
                   <td style="width: 40%">
-                    <custom-searchable-select :items="listGoods" v-model="item.good_id" />
+                    <custom-searchable-select
+                        :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                        :items="listGoods"
+                        v-model="item.good_id"
+                    />
                   </td>
                   <td>
                     <custom-text-field
