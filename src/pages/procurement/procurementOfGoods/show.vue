@@ -56,9 +56,7 @@ const form = reactive({
 });
 
 const itemsPerPage = ref(10000);
-const select = ref(null);
 const author = ref(null);
-const selectGoods = ref([]);
 const markedID = ref([]);
 const goods = ref([]);
 const doc_name = ref("Поступление");
@@ -137,7 +135,6 @@ const getProcurementDetails = async () => {
       amount: item.amount,
       price: item.price,
     }));
-    console.log(goods.value)
     prevForm.value = { ...form };
     prevGoods.value = [...goods.value];
     tempForm.value = Object.assign({}, form);
@@ -422,28 +419,8 @@ onMounted(() => {
     getCurrencies(),
   ]);
 });
-const clicked = ref(false);
 
-const search = async (event, idx) => {
-  const {
-    target: { value },
-  } = event;
-  select.value = idx;
-  await getGood(value);
-};
 
-const getGood = async (good) => {
-  try {
-    const {
-      data: {
-        result: { data },
-      },
-    } = await goodApi.getGoodBySearch(good);
-    selectGoods.value = data;
-  } catch (e) {
-    console.error(e);
-  }
-};
 </script>
 <template>
   <div class="document">
@@ -540,6 +517,8 @@ const getGood = async (good) => {
                   </td>
                   <td style="width: 40%">
                     <custom-searchable-select
+                        :organization="form.organization"
+                        :storage="form.storage"
                         :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                         :items="listGoods"
                         v-model="item.good_id"
