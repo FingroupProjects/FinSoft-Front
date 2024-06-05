@@ -457,9 +457,8 @@ const getTypes = async () => {
     const {
       data: { result },
     } = await bankAppi.getTypes("RKO");
-    console.log(result);
-    typeOperations.value = result.filter((item) => item.title_ru !== "Оплата зарплаты");
-    form.typeOperation = typeOperations.value[0].title_ru;
+    typeOperations.value = result.filter((item) => item.title_ru !== 'Оплата зарплаты');
+    form.typeOperation = typeOperations.value[0].id;
   } catch (e) {
     console.error(e);
   }
@@ -613,45 +612,60 @@ function validateNumberInput(event) {
                   :color="BASE_COLOR"
                   :key="typeOperation.id"
                   :label="typeOperation.title_ru"
-                  :value="typeOperation.title_ru"
+                  :value="typeOperation.id"
                 ></v-radio>
               </v-radio-group>
             </div>
           </div>
           <div class="d-flex flex-column ga-4">
-            <div v-if="form.typeOperation === 'Пополнение с Р/С'">
+            <div v-if="form.typeOperation === 11">
               <custom-autocomplete
                 label="Банковский счет"
                 :items="organizationBills"
                 v-model="form.organization_bill"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Отправка на другую кассу'">
+            <div v-else-if="form.typeOperation === 12">
               <custom-autocomplete
-                label="Касса отправителя"
+                label="Касса получателя"
                 :items="cashRegisters"
                 v-model="form.sender_cash"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Оплата аванс подотчетнику'">
+            <div v-else-if="form.typeOperation === 16">
               <custom-autocomplete
                 label="Сотрудник"
                 :items="employees"
                 v-model="form.employee"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Прочие расходы'">
+            <div v-else-if="form.typeOperation === 17">
               <custom-autocomplete
                 label="Статья дохода"
                 :items="incomeItems"
                 v-model="form.incomeItem"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Прочие оплаты'">
+            <div v-else-if="form.typeOperation === 18">
               <custom-autocomplete
                 label="Статья баланса"
                 :items="incomeItems"
                 v-model="form.balanceItem"
+              />
+            </div>
+            <div
+              v-else-if="form.typeOperation === 19"
+              class="d-flex flex-column ga-4"
+            >
+              <custom-autocomplete
+                label="Сотрудник"
+                :items="employees"
+                v-model="form.employee"
+              />
+              <custom-autocomplete
+                label="Месяц"
+                :items="months"
+                v-model="form.months_id"
               />
             </div>
             <div v-else class="d-flex flex-column ga-4">
