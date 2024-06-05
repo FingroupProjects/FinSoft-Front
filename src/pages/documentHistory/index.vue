@@ -14,8 +14,8 @@ const selectedBlock = ref("История");
 
 const loading = ref(true);
 
-const historyDoc = ref([]);
 const data = ref([]);
+const historyDoc = ref([]);
 const pagination = ref([]);
 
 const balanceHeaders = ref([
