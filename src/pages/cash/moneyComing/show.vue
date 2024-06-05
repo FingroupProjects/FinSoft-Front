@@ -13,7 +13,6 @@ import incomeItemApi from "../../../api/list/incomeItem.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import cashRegisterApi from "../../../api/list/cashRegister.js";
 import organizationApi from "../../../api/list/organizations.js";
-import currentDate from "../../../composables/date/currentDate.js";
 import clientPaymentApi from "../../../api/documents/cashRegister.js";
 import organizationBillApi from "../../../api/list/organizationBill.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
@@ -21,7 +20,6 @@ import formatDateTime from "../../../composables/date/formatDateTime.js";
 import { add, addMessage } from "../../../composables/constant/buttons.js";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
-import showDate from "../../../composables/date/showDate.js";
 
 const route = useRoute();
 const router = useRouter();
@@ -156,6 +154,7 @@ const firstAccess = async () => {
         : form.cpAgreement,
     basis: form.base,
     comment: form.comment,
+    operation_type_id: form.typeOperation,
     type: "PKO",
   };
   try {
@@ -188,6 +187,7 @@ const secondAccess = async () => {
         : form.organization_bill,
     basis: form.base,
     comment: form.comment,
+    operation_type_id: form.typeOperation,
     type: "PKO",
   };
   try {
@@ -219,6 +219,7 @@ const thirdAccess = async () => {
         : form.sender_cash,
     basis: form.base,
     comment: form.comment,
+    operation_type_id: form.typeOperation,
     type: "PKO",
   };
   try {
@@ -258,6 +259,7 @@ const fourthAccess = async () => {
         : form.cpAgreement,
     basis: form.base,
     comment: form.comment,
+    operation_type_id: form.typeOperation,
     type: "PKO",
   };
   try {
@@ -295,6 +297,7 @@ const fifthAccess = async () => {
         : form.cpAgreement,
     basis: form.base,
     comment: form.comment,
+    operation_type_id: form.typeOperation,
     type: "PKO",
   };
   try {
@@ -332,6 +335,7 @@ const sixthAccess = async () => {
         : form.cpAgreement,
     basis: form.base,
     comment: form.comment,
+    operation_type_id: form.typeOperation,
     type: "PKO",
   };
   try {
@@ -362,6 +366,7 @@ const seventhAccess = async () => {
       typeof form.employee === "object" ? form.employee.id : form.employee,
     basis: form.base,
     comment: form.comment,
+    operation_type_id: form.typeOperation,
     type: "PKO",
   };
   try {
@@ -397,6 +402,7 @@ const eighthAccess = async () => {
         : form.incomeItem,
     basis: form.base,
     comment: form.comment,
+    operation_type_id: form.typeOperation,
     type: "PKO",
   };
   try {
@@ -430,6 +436,7 @@ const ninthAccess = async () => {
         : form.balanceItem,
     basis: form.base,
     comment: form.comment,
+    operation_type_id: form.typeOperation,
     type: "PKO",
   };
   try {
@@ -639,7 +646,7 @@ function validateNumberInput(event) {
         <div class="d-flex ga-6">
           <div
             style="
-              width: 250px;
+              width: 280px;
               height: 420px;
               border: 1px solid rgba(39, 77, 135, 0.45);
               border-radius: 4px;

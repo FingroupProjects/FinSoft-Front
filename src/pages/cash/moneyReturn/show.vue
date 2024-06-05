@@ -13,14 +13,13 @@ import incomeItemApi from "../../../api/list/incomeItem.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import cashRegisterApi from "../../../api/list/cashRegister.js";
 import organizationApi from "../../../api/list/organizations.js";
-import currentDate from "../../../composables/date/currentDate.js";
 import clientPaymentApi from "../../../api/documents/cashRegister.js";
 import organizationBillApi from "../../../api/list/organizationBill.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import { add, addMessage } from "../../../composables/constant/buttons.js";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
-import showDate from "../../../composables/date/showDate.js";
+import formatDateTime from "../../../composables/date/formatDateTime.js";
 
 const route = useRoute();
 const router = useRouter();
@@ -49,6 +48,7 @@ const form = reactive({
   cash: null,
   comment: null,
   employee: null,
+  months_id: null,
   incomeItem: null,
   doc_number: "Номер",
   balanceItem: null,
@@ -60,6 +60,7 @@ const form = reactive({
   typeOperation: typeOperations.value[0].title,
 });
 
+const months = ref([]);
 const employees = ref([]);
 const incomeItems = ref([]);
 const cpAgreements = ref([]);
@@ -71,7 +72,7 @@ const organizationBills = ref([]);
 watch(
   () => form.typeOperation,
   (newValue, oldValue) => {
-    if(oldValue === null) return;
+    if (oldValue === null) return;
     resetFields();
   }
 );
@@ -113,22 +114,25 @@ const getTypes = async () => {
 };
 const getSellingGoods = async () => {
   try {
-    const { data: { result }, } = await clientPaymentApi.getById(route.params.id);
-    console.log(result);
-    form.typeOperation = result.operationType;
+    const {
+      data: { result },
+    } = await clientPaymentApi.getById(route.params.id);
+    form.typeOperation = result.operationType.id;
     (form.sum = result.sum), (author.value = result.author.name);
     (form.base = result.basis),
       (form.doc_number = result.doc_number),
-      (form.date = showDate(result.created_at, "-", true)),
+      (form.date = formatDateTime(result.created_at, "-", true)),
       (form.cash = result.cashRegister),
       (form.comment = result.comment),
       (form.employee = result.employee),
       (form.incomeItem = result.incomeItem),
       (form.balanceItem = result.balanceItem),
-      (form.counterparty = result.counterparty),
       (form.sender_cash = result.sender_cash),
       (form.organization = result.organization),
       (form.organization_bill = result.organization_bill),
+      setTimeout(() => {
+        (form.counterparty = result.counterparty)
+      });
       setTimeout(() => {
         form.cpAgreement = result.counterpartyAgreement;
       });
@@ -146,7 +150,7 @@ const firstAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
@@ -163,6 +167,7 @@ const firstAccess = async () => {
         : form.cpAgreement,
     basis: form.base,
     comment: form.comment,
+    operation_type_id: form.typeOperation,
     type: "RKO",
   };
   try {
@@ -182,7 +187,7 @@ const secondAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
@@ -195,6 +200,7 @@ const secondAccess = async () => {
         : form.organization_bill,
     basis: form.base,
     comment: form.comment,
+    operation_type_id: form.typeOperation,
     type: "RKO",
   };
   try {
@@ -213,7 +219,7 @@ const thirdAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
@@ -226,10 +232,14 @@ const thirdAccess = async () => {
         : form.sender_cash,
     basis: form.base,
     comment: form.comment,
+    operation_type_id: form.typeOperation,
     type: "RKO",
   };
   try {
-    const res = await clientPaymentApi.updateAnotherCashRegister(id.value, body);
+    const res = await clientPaymentApi.updateAnotherCashRegister(
+      id.value,
+      body
+    );
     showToast(addMessage, "green");
     router.push("/moneyReturn");
   } catch (e) {
@@ -245,7 +255,7 @@ const fourthAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
@@ -262,6 +272,7 @@ const fourthAccess = async () => {
         : form.cpAgreement,
     basis: form.base,
     comment: form.comment,
+    operation_type_id: form.typeOperation,
     type: "RKO",
   };
   try {
@@ -282,7 +293,7 @@ const fifthAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
@@ -299,6 +310,7 @@ const fifthAccess = async () => {
         : form.cpAgreement,
     basis: form.base,
     comment: form.comment,
+    operation_type_id: form.typeOperation,
     type: "RKO",
   };
   try {
@@ -319,7 +331,7 @@ const sixthAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
@@ -336,6 +348,7 @@ const sixthAccess = async () => {
         : form.cpAgreement,
     basis: form.base,
     comment: form.comment,
+    operation_type_id: form.typeOperation,
     type: "RKO",
   };
   try {
@@ -355,20 +368,25 @@ const seventhAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
         : form.organization,
     cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    employee_id: typeof form.employee === "object" ? form.employee.id : form.employee,
+    employee_id:
+      typeof form.employee === "object" ? form.employee.id : form.employee,
     basis: form.base,
     comment: form.comment,
+    operation_type_id: form.typeOperation,
     type: "RKO",
   };
   try {
-    const res = await clientPaymentApi.updateAccountablePersonRefund(id.value, body);
+    const res = await clientPaymentApi.updateAccountablePersonRefund(
+      id.value,
+      body
+    );
     showToast(addMessage, "green");
     router.push("/moneyReturn");
   } catch (e) {
@@ -384,16 +402,20 @@ const eighthAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
         : form.organization,
     cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    balance_article_id: typeof form.incomeItem === "object" ? form.incomeItem.id : form.incomeItem,
+    balance_article_id:
+      typeof form.incomeItem === "object"
+        ? form.incomeItem.id
+        : form.incomeItem,
     basis: form.base,
     comment: form.comment,
+    operation_type_id: form.typeOperation,
     type: "RKO",
   };
   try {
@@ -414,16 +436,20 @@ const ninthAccess = async () => {
   }
 
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
         : form.organization,
     cash_register_id: typeof form.cash === "object" ? form.cash.id : form.cash,
     sum: form.sum,
-    balance_article_id: typeof form.balanceItem === "object" ? form.balanceItem.id : form.balanceItem,
+    balance_article_id:
+      typeof form.balanceItem === "object"
+        ? form.balanceItem.id
+        : form.balanceItem,
     basis: form.base,
     comment: form.comment,
+    operation_type_id: form.typeOperation,
     type: "RKO",
   };
   try {
@@ -435,34 +461,66 @@ const ninthAccess = async () => {
   }
 };
 
+const tenthAccess = async () => {
+  if (
+    !validate(form.sum, form.base, form.date, form.organization, form.cash) ||
+    isValid(form.employee, "Сотрудник", form.months_id, "Месяц") !== true
+  ) {
+    return;
+  }
+
+  const body = {
+    date: formatDateTime(form.date),
+    organization_id: form.organization,
+    cash_register_id: form.cash,
+    sum: form.sum,
+    employee_id: form.employee,
+    month_id: form.months_id,
+    basis: form.base,
+    comment: form.comment,
+    operation_type_id: form.typeOperation,
+    type: "RKO",
+  };
+  try {
+    await clientPaymentApi.salaryPayment(body);
+    showToast(addMessage, "green");
+    router.push("/moneyReturn");
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 const getAccess = () => {
   switch (form.typeOperation) {
-    case "Возврат клиенту":
+    case 10:
       firstAccess();
       break;
-    case "Пополнение с Р/С":
+    case 11:
       secondAccess();
       break;
-    case "Отправка на другую кассу":
+    case 12:
       thirdAccess();
       break;
-    case "Возврат вложения":
+    case 13:
       fourthAccess();
       break;
-    case "Оплата кредита":
+    case 14:
       fifthAccess();
       break;
-    case "Возврат поставщику":
+    case 15:
       sixthAccess();
       break;
-    case "Оплата аванс подотчетнику":
+    case 16:
       seventhAccess();
       break;
-    case "Прочие расходы":
+    case 17:
       eighthAccess();
       break;
-    case "Прочие оплаты":
+    case 18:
       ninthAccess();
+      break;
+    case 19:
+      tenthAccess();
       break;
   }
 };
@@ -551,13 +609,13 @@ onMounted(async () => {
   id.value = route.params.id;
   await Promise.all([
     getTypes(),
-    getSellingGoods(),
     getEmployees(),
     getIncomeItems(),
     getCashregisters(),
     getOrganizations(),
     getCounterparties(),
     getOrganizationBills(),
+    getSellingGoods(),
   ]);
 });
 
@@ -598,7 +656,7 @@ function validateNumberInput(event) {
             max-width="110"
           />
           <v-text-field
-            type="date"
+            type="datetime-local"
             rounded="lg"
             hide-details
             label="Дата"
@@ -608,7 +666,7 @@ function validateNumberInput(event) {
             clear-icon="close"
             variant="outlined"
             class="text-sm-body-1"
-            style="max-width: 145px; max-height: 40px !important"
+            style="max-width: 220px; max-height: 40px !important"
             :base-color="FIELD_COLOR"
           />
           <custom-autocomplete
@@ -631,7 +689,7 @@ function validateNumberInput(event) {
         <div class="d-flex ga-6">
           <div
             style="
-              width: 250px;
+              width: 280px;
               height: 450px;
               border: 1px solid rgba(39, 77, 135, 0.45);
               border-radius: 4px;
@@ -648,45 +706,60 @@ function validateNumberInput(event) {
                   :color="BASE_COLOR"
                   :key="typeOperation.id"
                   :label="typeOperation.title_ru"
-                  :value="typeOperation.title_ru"
+                  :value="typeOperation.id"
                 ></v-radio>
               </v-radio-group>
             </div>
           </div>
           <div class="d-flex flex-column ga-4">
-            <div v-if="form.typeOperation === 'Пополнение с Р/С'">
+            <div v-if="form.typeOperation === 11">
               <custom-autocomplete
                 label="Банковский счет"
                 :items="organizationBills"
                 v-model="form.organization_bill"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Отправка на другую кассу'">
+            <div v-else-if="form.typeOperation === 12">
               <custom-autocomplete
-                label="Касса отправителя"
+                label="Касса получателя"
                 :items="cashRegisters"
                 v-model="form.sender_cash"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Оплата аванс подотчетнику'">
+            <div v-else-if="form.typeOperation === 16">
               <custom-autocomplete
                 label="Сотрудник"
                 :items="employees"
                 v-model="form.employee"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Прочие расходы'">
+            <div v-else-if="form.typeOperation === 17">
               <custom-autocomplete
                 label="Статья дохода"
                 :items="incomeItems"
                 v-model="form.incomeItem"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Прочие оплаты'">
+            <div v-else-if="form.typeOperation === 18">
               <custom-autocomplete
                 label="Статья баланса"
                 :items="incomeItems"
                 v-model="form.balanceItem"
+              />
+            </div>
+            <div
+              v-else-if="form.typeOperation === 19"
+              class="d-flex flex-column ga-4"
+            >
+              <custom-autocomplete
+                label="Сотрудник"
+                :items="employees"
+                v-model="form.employee"
+              />
+              <custom-autocomplete
+                label="Месяц"
+                :items="months"
+                v-model="form.months_id"
               />
             </div>
             <div v-else class="d-flex flex-column ga-4">

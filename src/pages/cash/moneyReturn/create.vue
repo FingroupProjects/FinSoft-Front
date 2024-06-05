@@ -5,7 +5,7 @@ import {
 } from "../../../composables/constant/colors.js";
 import { useRouter } from "vue-router";
 import validate from "../moneyComing/validate.js";
-import monthApi from "../../../api/list/schedule.js"; 
+import monthApi from "../../../api/list/schedule.js";
 import { ref, reactive, onMounted, watch } from "vue";
 import employeeApi from "../../../api/list/employee.js";
 import Icons from "../../../composables/Icons/Icons.vue";
@@ -14,11 +14,12 @@ import incomeItemApi from "../../../api/list/incomeItem.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import cashRegisterApi from "../../../api/list/cashRegister.js";
 import organizationApi from "../../../api/list/organizations.js";
-import currentDate from "../../../composables/date/currentDate.js";
 import clientPaymentApi from "../../../api/documents/cashRegister.js";
+import formatDateTime from "../../../composables/date/formatDateTime.js";
 import organizationBillApi from "../../../api/list/organizationBill.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import { add, addMessage } from "../../../composables/constant/buttons.js";
+import currentDateWithTime from "../../../composables/date/currentDateWithTime.js";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 
@@ -44,7 +45,7 @@ const form = reactive({
   counterparty: null,
   organization: null,
   organization_bill: null,
-  typeOperation: null
+  typeOperation: null,
 });
 
 const months = ref([]);
@@ -92,7 +93,7 @@ const firstAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id: form.organization,
     cash_register_id: form.cash,
     sum: form.sum,
@@ -120,7 +121,7 @@ const secondAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id: form.organization,
     cash_register_id: form.cash,
     sum: form.sum,
@@ -146,7 +147,7 @@ const thirdAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id: form.organization,
     cash_register_id: form.cash,
     sum: form.sum,
@@ -173,7 +174,7 @@ const fourthAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id: form.organization,
     cash_register_id: form.cash,
     sum: form.sum,
@@ -202,7 +203,7 @@ const fifthAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id: form.organization,
     cash_register_id: form.cash,
     sum: form.sum,
@@ -231,7 +232,7 @@ const sixthAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id: form.organization,
     cash_register_id: form.cash,
     sum: form.sum,
@@ -259,7 +260,7 @@ const seventhAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id: form.organization,
     cash_register_id: form.cash,
     sum: form.sum,
@@ -286,7 +287,7 @@ const eighthAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id: form.organization,
     cash_register_id: form.cash,
     sum: form.sum,
@@ -314,7 +315,7 @@ const ninthAccess = async () => {
   }
 
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id: form.organization,
     cash_register_id: form.cash,
     sum: form.sum,
@@ -342,7 +343,7 @@ const tenthAccess = async () => {
   }
 
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id: form.organization,
     cash_register_id: form.cash,
     sum: form.sum,
@@ -493,7 +494,7 @@ const getTypes = async () => {
       data: { result },
     } = await clientPaymentApi.getTypes("RKO");
     typeOperations.value = result;
-    form.typeOperation = typeOperations.value[0].id;  
+    form.typeOperation = typeOperations.value[0].id;
   } catch (e) {
     console.error(e);
   }
@@ -519,9 +520,9 @@ const getMonths = async () => {
   } catch (e) {
     console.error(e);
   }
-}
+};
 onMounted(async () => {
-  form.date = currentDate();
+  form.date = currentDateWithTime();
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
   await Promise.all([
     getTypes(),
@@ -572,7 +573,7 @@ function validateNumberInput(event) {
             max-width="110"
           />
           <v-text-field
-            type="date"
+            type="datetime-local"
             rounded="lg"
             hide-details
             label="Дата"
@@ -582,7 +583,7 @@ function validateNumberInput(event) {
             clear-icon="close"
             variant="outlined"
             class="text-sm-body-1"
-            style="max-width: 145px; max-height: 40px !important"
+            style="max-width: 210px; max-height: 40px !important"
             :base-color="FIELD_COLOR"
           />
           <custom-autocomplete
@@ -605,7 +606,7 @@ function validateNumberInput(event) {
         <div class="d-flex ga-6">
           <div
             style="
-              width: 250px;
+              width: 280px;
               height: 450px;
               border: 1px solid rgba(39, 77, 135, 0.45);
               border-radius: 4px;
@@ -622,7 +623,7 @@ function validateNumberInput(event) {
                   :color="BASE_COLOR"
                   :key="typeOperation.id"
                   :label="typeOperation.title_ru"
-                  :value="typeOperation.id" 
+                  :value="typeOperation.id"
                 ></v-radio>
               </v-radio-group>
             </div>
@@ -663,7 +664,10 @@ function validateNumberInput(event) {
                 v-model="form.balanceItem"
               />
             </div>
-            <div v-else-if="form.typeOperation === 19" class="d-flex flex-column ga-4">
+            <div
+              v-else-if="form.typeOperation === 19"
+              class="d-flex flex-column ga-4"
+            >
               <custom-autocomplete
                 label="Сотрудник"
                 :items="employees"

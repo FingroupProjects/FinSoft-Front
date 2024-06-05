@@ -564,7 +564,7 @@ function validateNumberInput(event) {
         <div class="d-flex ga-6">
           <div
             style="
-              width: 250px;
+              width: 280px;
               height: 420px;
               border: 1px solid rgba(39, 77, 135, 0.45);
               border-radius: 4px;
