@@ -17,6 +17,7 @@ import currentDate from "../../../composables/date/currentDate.js";
 import clientPaymentApi from "../../../api/documents/cashRegister.js";
 import organizationBillApi from "../../../api/list/organizationBill.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
+import formatDateTime from "../../../composables/date/formatDateTime.js";
 import { add, addMessage } from "../../../composables/constant/buttons.js";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
@@ -111,7 +112,7 @@ const getSellingGoods = async () => {
     (form.sum = result.sum), (author.value = result.author.name);
     (form.base = result.basis),
       (form.doc_number = result.doc_number),
-      (form.date = showDate(result.created_at, "-", true)),
+      (form.date = formatDateTime(result.created_at)),
       (form.cash = result.cashRegister),
       (form.comment = result.comment),
       (form.employee = result.employee_id),
@@ -605,7 +606,7 @@ function validateNumberInput(event) {
             max-width="110"
           />
           <v-text-field
-            type="date"
+            type="datetime-local"
             rounded="lg"
             hide-details
             label="Дата"
@@ -615,7 +616,7 @@ function validateNumberInput(event) {
             clear-icon="close"
             variant="outlined"
             class="text-sm-body-1"
-            style="max-width: 145px; max-height: 40px !important"
+            style="max-width: 220px; max-height: 40px !important"
             :base-color="FIELD_COLOR"
           />
           <custom-autocomplete
@@ -655,41 +656,41 @@ function validateNumberInput(event) {
                   :color="BASE_COLOR"
                   :key="typeOperation.id"
                   :label="typeOperation.title_ru"
-                  :value="typeOperation.title_ru"
+                  :value="typeOperation.id"
                 ></v-radio>
               </v-radio-group>
             </div>
           </div>
           <div class="d-flex flex-column ga-4">
-            <div v-if="form.typeOperation === 'Снятие с P/C'">
+            <div v-if="form.typeOperation === 2">
               <custom-autocomplete
                 label="Банковский счет"
                 :items="organizationBills"
                 v-model="form.organization_bill"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Получение с другой кассы'">
+            <div v-else-if="form.typeOperation === 3">
               <custom-autocomplete
                 label="Касса отправителя"
                 :items="cashRegisters"
                 v-model="form.sender_cash"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Возврат от подотчетника'">
+            <div v-else-if="form.typeOperation === 7">
               <custom-autocomplete
                 label="Сотрудник"
                 :items="employees"
                 v-model="form.employee"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Прочие доходы'">
+            <div v-else-if="form.typeOperation === 8">
               <custom-autocomplete
                 label="Статья дохода"
                 :items="incomeItems"
                 v-model="form.incomeItem"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Прочие приходы'">
+            <div v-else-if="form.typeOperation === 9">
               <custom-autocomplete
                 label="Статья баланса"
                 :items="incomeItems"
