@@ -13,7 +13,8 @@ import incomeItemApi from "../../../api/list/incomeItem.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import cashRegisterApi from "../../../api/list/cashRegister.js";
 import organizationApi from "../../../api/list/organizations.js";
-import currentDate from "../../../composables/date/currentDate.js";
+import currentDateWithTime from "../../../composables/date/currentDateWithTime.js";
+import formatDateTime from "../../../composables/date/formatDateTime.js";
 import clientPaymentApi from "../../../api/documents/cashRegister.js";
 import organizationBillApi from "../../../api/list/organizationBill.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
@@ -89,7 +90,7 @@ const firstAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id: form.organization,
     cash_register_id: form.cash,
     sum: form.sum,
@@ -117,7 +118,7 @@ const secondAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id: form.organization,
     cash_register_id: form.cash,
     sum: form.sum,
@@ -143,7 +144,7 @@ const thirdAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id: form.organization,
     cash_register_id: form.cash,
     sum: form.sum,
@@ -170,7 +171,7 @@ const fourthAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id: form.organization,
     cash_register_id: form.cash,
     sum: form.sum,
@@ -199,7 +200,7 @@ const fifthAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id: form.organization,
     cash_register_id: form.cash,
     sum: form.sum,
@@ -228,7 +229,7 @@ const sixthAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id: form.organization,
     cash_register_id: form.cash,
     sum: form.sum,
@@ -256,7 +257,7 @@ const seventhAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id: form.organization,
     cash_register_id: form.cash,
     sum: form.sum,
@@ -283,7 +284,7 @@ const eighthAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id: form.organization,
     cash_register_id: form.cash,
     sum: form.sum,
@@ -311,7 +312,7 @@ const ninthAccess = async () => {
   }
 
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id: form.organization,
     cash_register_id: form.cash,
     sum: form.sum,
@@ -480,7 +481,7 @@ const getEmployees = async () => {
 };
 
 onMounted(async () => {
-  form.date = currentDate();
+  form.date = currentDateWithTime();
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
   await Promise.all([
     getTypes(),
@@ -530,7 +531,7 @@ function validateNumberInput(event) {
             max-width="110"
           />
           <v-text-field
-            type="date"
+            type="datetime-local"
             rounded="lg"
             hide-details
             label="Дата"
@@ -540,7 +541,7 @@ function validateNumberInput(event) {
             clear-icon="close"
             variant="outlined"
             class="text-sm-body-1"
-            style="max-width: 145px; max-height: 40px !important"
+            style="max-width: 220px; max-height: 40px !important"
             :base-color="FIELD_COLOR"
           />
           <custom-autocomplete
@@ -563,7 +564,7 @@ function validateNumberInput(event) {
         <div class="d-flex ga-6">
           <div
             style="
-              width: 250px;
+              width: 280px;
               height: 420px;
               border: 1px solid rgba(39, 77, 135, 0.45);
               border-radius: 4px;
@@ -600,21 +601,21 @@ function validateNumberInput(event) {
                 v-model="form.sender_cash"
               />
             </div>
-            <div v-else-if="form.typeOperation === 4">
+            <div v-else-if="form.typeOperation === 7">
               <custom-autocomplete
                 label="Сотрудник"
                 :items="employees"
                 v-model="form.employee"
               />
             </div>
-            <div v-else-if="form.typeOperation === 5">
+            <div v-else-if="form.typeOperation === 8">
               <custom-autocomplete
                 label="Статья дохода"
                 :items="incomeItems"
                 v-model="form.incomeItem"
               />
             </div>
-            <div v-else-if="form.typeOperation === 6">
+            <div v-else-if="form.typeOperation === 9">
               <custom-autocomplete
                 label="Статья баланса"
                 :items="incomeItems"

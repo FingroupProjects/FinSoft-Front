@@ -179,17 +179,17 @@ body{
 }
 
 .documentHeight {
-  height: calc(100vh - 115px);
+  height: calc(100vh - 125px);
    background: #fff
 }
 
 .documentTable {
-  height: calc(100vh - 240px) !important;
+  height: calc(100vh - 250px) !important;
 }
 
 @media screen and (max-width: 1400px) {
   .documentTable {
-    height: calc(100vh - 300px) !important;
+    height: calc(100vh - 310px) !important;
   }
 }
 

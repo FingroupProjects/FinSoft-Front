@@ -56,6 +56,7 @@ const getDocumentHistory = async () => {
       ...item,
       date: formatDateTime(item.date),
     }));
+    console.log(data);
   } catch (e) {
     console.error(e);
   }

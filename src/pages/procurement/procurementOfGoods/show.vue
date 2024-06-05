@@ -205,8 +205,7 @@ const getGoods = async () => {
 };
 
 const decreaseCountOfGoods = () => {
-  deletedGoods.value = markedID.value.slice();
-
+  deletedGoods.value = markedID.value;
   if (markedID.value.length === 0) {
     return showToast(selectOneItemMessage, "warning");
   }
@@ -503,7 +502,7 @@ const getGood = async (good) => {
       </v-col>
       <v-col>
         <div class="rounded">
-          <div class="d-flex flex-column w-100">
+          <div class="d-flex flex-column">
             <v-data-table
             class="documentTable"
               items-per-page-text="Элементов на странице:"
