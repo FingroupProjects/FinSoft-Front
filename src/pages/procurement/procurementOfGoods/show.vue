@@ -388,12 +388,14 @@ watch(
 
 watch(
   () => form.cpAgreement,
-  (newValue, oldValue) => {
+  newValue => {
     if (newValue !== null) {
-      const cpAgreement = cpAgreements.value.find((el) =>
-        (el.id === typeof newValue) === "object" ? newValue.id : newValue
-      );
-      form.currency = cpAgreement.currency_id;
+      setTimeout(() => {
+        const cpAgreement = cpAgreements.value.find((el) =>
+            (el.id === typeof newValue) === "object" ? newValue.id : newValue
+        );
+        form.currency = cpAgreement.currency_id;
+      }, 1000)
     }
   }
 );
@@ -536,17 +538,7 @@ const getGood = async (good) => {
                     </CustomCheckbox>
                   </td>
                   <td style="width: 40%">
-<!--                    <custom-autocomplete-->
-<!--                      v-model.lazy="item.good_id"-->
-<!--                      :items="select === index ? selectGoods : listGoods"-->
-<!--                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"-->
-<!--                      min-width="150"-->
-<!--                      max-width="100%"-->
-<!--                      :isAmount="true"-->
-<!--                      @input="search($event, index)"-->
-<!--                      @blur="getGoods"-->
-<!--                    />-->
-                    <custom-searchable-select :items="listGoods" v-model.lazy="item.good_id" />
+                    <custom-searchable-select :items="listGoods" v-model="item.good_id" />
                   </td>
                   <td>
                     <custom-text-field

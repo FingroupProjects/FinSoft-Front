@@ -432,6 +432,7 @@ onMounted(() => {
                   </td>
                   <td style="width: 40%">
                     <custom-searchable-select
+
                        :items="listGoods"
                        v-model="item.good_id"
                     />

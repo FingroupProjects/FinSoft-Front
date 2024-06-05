@@ -7,6 +7,16 @@ const props = defineProps({
   items: {
     type: Array,
     required: true
+  },
+  itemTitle: {
+    type: String,
+    default: 'name',
+    required: false
+  },
+  itemValue: {
+    type: String,
+    default: 'id',
+    required: false
   }
 });
 const emit = defineEmits(['update:modelValue']);
@@ -16,6 +26,7 @@ const list = ref(null);
 const filteredItems = ref([...props.items]);
 const displayValue = ref('');
 
+// Следим за изменениями в props.items и обновляем filteredItems
 watch(
     () => props.items,
     (newItems) => {
@@ -27,12 +38,15 @@ watch(
 watch(
     () => props.modelValue,
     (newValue) => {
-      const selectedItem = props.items.find(item => item.id === newValue);
-      if (selectedItem) {
-        displayValue.value = selectedItem.name;
-      } else {
-        displayValue.value = '';
-      }
+      setTimeout(() => {
+        const selectedItem = props.items.find(item => item[props.itemValue] === newValue);
+        if (selectedItem) {
+          displayValue.value = selectedItem[props.itemTitle];
+        } else {
+          displayValue.value = '';
+        }
+      }, 1000)
+
     },
     { immediate: true }
 );
@@ -66,9 +80,10 @@ const onInput = () => {
 };
 
 const selectItem = (item) => {
-  emit('update:modelValue', item.id);
+  emit('update:modelValue', item[props.itemValue]);
   list.value.style.display = "none";
-  displayValue.value = item.name;
+  displayValue.value = item[props.itemTitle];
+  console.log(displayValue.value)
 };
 </script>
 
@@ -79,11 +94,11 @@ const selectItem = (item) => {
     <div class="dropdown-list" ref="list">
       <div
           v-for="item in filteredItems"
-          :key="item.id"
+          :key="item[props.itemValue]"
           class="dropdown-item"
           @click="selectItem(item)"
       >
-        {{ item.name }}
+        {{ item[props.itemTitle] }}
       </div>
     </div>
   </div>
