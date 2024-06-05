@@ -35,12 +35,12 @@ defineProps({
     ]"
     variant="outlined"
     :color="BASE_COLOR"
-    hide-details
     rounded="lg"
     no-data-text="Нет данных"
     :base-color="FIELD_COLOR"
     item-title="name"
     item-value="id"
+    hide-details
   >
     <template v-if="isAmount" v-slot:item="{ props, item }">
       <v-list-item
