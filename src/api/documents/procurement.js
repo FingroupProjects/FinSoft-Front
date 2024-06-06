@@ -12,7 +12,7 @@ export default {
     return api.get(`/document/show/${id}`)
   },
   update(id, data) {
-    return api.patch(`/document/update/${id}`, data)
+    return api.patch(`/document/client/update/${id}`, data)
   },
   approve(data) {
     return api.post(`/document/purchase/approve/`, data)
