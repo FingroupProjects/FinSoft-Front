@@ -26,6 +26,7 @@ import Button from "../../../components/button/button.vue";
 import {useModalCreateBased} from "../../../store/modalCreateBased.js";
 import getDataBased from "../../../composables/otherQueries/getDataBased.js";
 import formatInputPrice from "../../../composables/mask/formatInputPrice.js";
+import CustomSearchableSelect from "../../../components/formElements/CustomSearchableSelect.vue";
 
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter()
@@ -95,9 +96,21 @@ const getStorages = async () => {
   storages.value = data.result.data
 }
 
-const getGoods = async () => {
-  const { data } = await goodApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  listGoods.value = data.result.data
+
+const getGoods = async (good_storage_id, good_organization_id) => {
+  const search = "";
+  const { data } = await goodApi.get(
+      {
+        page: 1,
+        itemsPerPage: 100000,
+        sortBy: "name",
+      },
+      search,
+      good_storage_id,
+      good_organization_id,
+      1,
+  )
+  listGoods.value = data.result.data;
 }
 
 const decreaseCountOfGoods = () => {
@@ -228,6 +241,17 @@ watch(
     }
 );
 
+watch(
+    () => [form.storage, form.organization],
+    (newValue) => {
+      if (newValue[0] !== null && newValue[1] !== null) {
+        const storage_id = typeof newValue[0] === "object" ? newValue[0].id : newValue[0];
+        const organization_id = typeof newValue[1] === "object" ? newValue[1].id : newValue[1];
+        getGoods(storage_id, organization_id);
+      }
+    }
+);
+
 
 watch(confirmDocument, () => {
   if (confirmDocument.isUpdateOrCreateDocument) {
@@ -256,7 +280,6 @@ onMounted(() => {
   getOrganizations()
   getCounterparties()
   getStorages()
-  getGoods()
 })
 
 </script>
@@ -326,13 +349,13 @@ onMounted(() => {
                     </CustomCheckbox>
                   </td>
                   <td style="width: 40%">
-                    <custom-autocomplete
+                    <custom-searchable-select
                         v-model="item.good_id"
                         :items="listGoods"
                         :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                        min-width="150"
-                        max-width="100%"
-                        :isAmount="true"
+                        :organization="form.organization"
+                        :storage="form.storage"
+                        :is-amount="true"
                     />
                   </td>
                   <td>

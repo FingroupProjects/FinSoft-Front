@@ -28,6 +28,7 @@ import formatNumber from "../../../composables/format/formatNumber.js";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";
 import goToPrint from "../../../composables/movementByPage/goToPrint.js";
 import goToHistory from "../../../composables/movementByPage/goToHistory.js";
+import formatInputPrice from "../../../composables/mask/formatInputPrice.js";
 
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter()
@@ -116,12 +117,11 @@ const getProviderDetails = async () => {
     prevGoods.value = [...goods.value];
     tempForm.value = Object.assign({}, form);
 
-    loading.value = false
 
   } catch (e) {
     console.error(e)
   } finally {
-
+    loading.value = false
   }
 
 }
@@ -151,9 +151,20 @@ const getCurrencies = async () => {
   currencies.value = data.result.data
 }
 
-const getGoods = async () => {
-  const { data } = await goodApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  listGoods.value = data.result.data
+const getGoods = async (good_storage_id, good_organization_id) => {
+  const search = "";
+  const { data } = await goodApi.get(
+      {
+        page: 1,
+        itemsPerPage: 100000,
+        sortBy: "name",
+      },
+      search,
+      good_storage_id,
+      good_organization_id,
+      1,
+  )
+  listGoods.value = data.result.data;
 }
 
 const decreaseCountOfGoods = () => {
@@ -210,7 +221,6 @@ const updateProvider = async () => {
   if (useOrganization.value.getIsHasOneOrganization) {
     form.organization = useOrganization.value.getOrganization
   }
-
 
   const body = {
     date: formatDateTime(form.date),
@@ -329,17 +339,7 @@ onMounted( () => {
   ])
 
 })
-const validatePrice = (price) => {
-  if (price === 0 || price === '0' || Number(price) === 0) {
-    return false;
-  }
-  return true;
-};
-const handlePriceInput = (item) => {
-  if (!validatePrice(item.price)) {
-    item.price = null;  
-  }
-};
+
 </script>
 <template>
   <div class="document">
@@ -430,8 +430,8 @@ const handlePriceInput = (item) => {
                     <custom-text-field
                         v-model="item.amount"
                         :base-color="
-                        hoveredRowId === item.id ? FIELD_GOODS : '#fff'
-                      "
+                          hoveredRowId === item.id ? FIELD_GOODS : '#fff'
+                        "
                         v-mask="'########'"
                         min-width="50"
                     />
@@ -439,7 +439,7 @@ const handlePriceInput = (item) => {
                   <td>
                     <custom-text-field
                         v-model="item.price"
-                        @input="validateNumberInput(item.price), handlePriceInput(item)"
+                        @input="formatInputPrice(item.price, $event)"
                         :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                         min-width="80"                  
                     />

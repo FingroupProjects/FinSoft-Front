@@ -2,11 +2,18 @@
 import { ref, onMounted, watch } from "vue";
 import { defineProps, defineEmits } from "vue";
 import hexToRgba from "../../composables/format/hexToRgba.js";
+import goodApi from "../../api/list/goods.js";
 
 const props = defineProps({
   modelValue: [String, Number],
   items: {
     type: Array,
+    required: true,
+  },
+  organization: {
+    required: true,
+  },
+  storage: {
     required: true,
   },
   baseColor: {
@@ -31,6 +38,8 @@ const props = defineProps({
 });
 const emit = defineEmits(["update:modelValue"]);
 
+const select = ref(null);
+const selectGoods = ref([]);
 const input = ref(null);
 const list = ref(null);
 const filteredItems = ref([...props.items]);
@@ -39,7 +48,7 @@ const displayValue = ref("");
 watch(
   () => props.items,
   (newItems) => {
-    filteredItems.value = [...newItems];
+    filteredItems.value = [...newItems]
   },
   { immediate: true }
 );
@@ -78,20 +87,35 @@ const onFocus = () => {
   list.value.style.display = "block";
 };
 
-const onInput = () => {
-  const searchText = input.value.value.toLowerCase();
-  displayValue.value = input.value.value;
+const search = async (event) => {
+  const {
+    target: { value },
+  } = event
 
-  filteredItems.value = props.items.filter((item) => {
-    return Object.values(item).some(
-      (value) =>
-        (typeof value === "string" || typeof value === "number") &&
-        value.toString().toLowerCase().includes(searchText)
-    );
-  });
+  displayValue.value = event.target.value
+  await getGood(value);
+}
 
-  list.value.style.display = filteredItems.value.length > 0 ? "block" : "none";
-};
+const getGood = async (good) => {
+  if (!props.storage || !props.organization) return
+
+  console.log(props.storage)
+
+  const filterData = {
+    storage_id: props.storage,
+    organization_id: props.organization.id,
+  }
+  try {
+    const {
+      data: {
+        result: { data },
+      },
+    } = await goodApi.getGoodBySearch(good, filterData);
+    filteredItems.value = data;
+  } catch (e) {
+    console.error(e);
+  }
+}
 
 const selectItem = (item) => {
   emit("update:modelValue", item[props.itemValue]);
@@ -111,7 +135,7 @@ const selectItem = (item) => {
       class="dropdown-input"
       placeholder="Поиск по id, наименовании, штрих-коду"
       ref="input"
-      @input="onInput"
+      @input="search($event)"
       @focus="onFocus"
       :value="displayValue"
     />
