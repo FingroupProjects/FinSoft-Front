@@ -25,6 +25,9 @@ import formatNumber from "../../../composables/format/formatNumber.js";
 import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";
 import getDataBased from "../../../composables/otherQueries/getDataBased.js";
+import CustomSearchableSelect from "../../../components/formElements/CustomSearchableSelect.vue";
+import formatInputPrice from "../../../composables/format/formatInputPrice.js";
+import formatInputAmount from "../../../composables/format/formatInputAmount.js";
 
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter()
@@ -328,22 +331,20 @@ onMounted(() => {
                     </CustomCheckbox>
                   </td>
                   <td style="width: 40%">
-                    <custom-autocomplete
-                    v-model="item.good_id"
-                    :items="listGoods"
-                    :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                    min-width="150"
-                    max-width="100%"
-                    :isAmount="true"
-                    />
+                    <custom-searchable-select
+                      :organization="form.organization"
+                      v-model="item.good_id"
+                      :items="listGoods"
+                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                      :isAmount="true"
+                      />
                   </td>
                   <td>
                     <custom-text-field
-                    v-model="item.amount"
-                    v-mask="'########'"
-                    :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                    min-width="50"
-
+                      v-model="item.amount"
+                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                      :value="formatInputAmount(item.amount)"
+                      min-width="50"
                     />
                   </td>
                   <td>
@@ -365,10 +366,10 @@ onMounted(() => {
                   <td>
                     <custom-text-field
                     v-model="item.price"
-                    :value="validateNumberInput(item.price)"
                     :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                    v-mask="'##########'"
                     min-width="80"
+                    :value="validateNumberInput(item.price)"
+                    @input="formatInputPrice(item.price, $event)"
                     />
                   </td>
                   <td>

@@ -25,6 +25,9 @@ import validateNumberInput from "../../../composables/mask/validateNumberInput.j
 import formatNumber from "../../../composables/format/formatNumber.js";
 import goToPrint from "../../../composables/movementByPage/goToPrint.js";
 import goToHistory from "../../../composables/movementByPage/goToHistory.js";
+import CustomSearchableSelect from "../../../components/formElements/CustomSearchableSelect.vue";
+import formatInputAmount from "../../../composables/format/formatInputAmount.js";
+import formatInputPrice from "../../../composables/format/formatInputPrice.js";
 
 const useOrganization = ref(useHasOneOrganization())
 
@@ -361,20 +364,19 @@ const handlePriceInput = (item) => {
                     </CustomCheckbox>
                   </td>
                   <td style="width: 40%">
-                    <custom-autocomplete 
-                    v-model="item.good_id" 
-                    :items="listGoods" 
-                    min-width="150" 
-                    :base-color="
-                        hoveredRowId === item.id ? FIELD_GOODS : '#fff'
+                    <custom-searchable-select
+                      :organization="form.organization"
+                      v-model="item.good_id"
+                      :items="listGoods"
+                      :base-color="
+                       hoveredRowId === item.id ? FIELD_GOODS : '#fff'
                       "
-                      max-width="100%"
-                      />
+                    />
                   </td>
                   <td>
                     <custom-text-field 
-                    v-model="item.amount" 
-                    v-mask="'########'" 
+                    v-model="item.amount"
+                    :value="formatInputAmount(item.amount)"
                     :base-color="
                         hoveredRowId === item.id ? FIELD_GOODS : '#fff'
                       "
@@ -403,10 +405,11 @@ const handlePriceInput = (item) => {
                   </td>
                   <td>
                     <custom-text-field 
-                    v-model="item.price" 
-                    @input="validateNumberInput(item.price), handlePriceInput(item)"
-                    :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'" 
-                    min-width="80" 
+                    v-model="item.price"
+                    :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                    min-width="80"
+                    :value="validateNumberInput(item.price)"
+                    @input="formatInputPrice(item.price, $event)"
                     />
                   </td>
                   <td>

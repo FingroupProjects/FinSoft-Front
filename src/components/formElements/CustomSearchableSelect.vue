@@ -1,6 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from "vue";
-import { defineProps, defineEmits } from "vue";
+import {defineEmits, defineProps, onMounted, ref, watch} from "vue";
 import hexToRgba from "../../composables/format/hexToRgba.js";
 import goodApi from "../../api/list/goods.js";
 
@@ -11,10 +10,10 @@ const props = defineProps({
     required: true,
   },
   organization: {
-    required: true,
+    required: false,
   },
   storage: {
-    required: true,
+    required: false,
   },
   baseColor: {
     type: String,
@@ -37,59 +36,61 @@ const props = defineProps({
   },
 });
 const emit = defineEmits(["update:modelValue"]);
-
+const isOpen = ref(false);
 const select = ref(null);
-const selectGoods = ref([]);
 const input = ref(null);
 const list = ref(null);
 const filteredItems = ref([...props.items]);
 const displayValue = ref("");
 
 watch(
-  () => props.items,
-  (newItems) => {
-    filteredItems.value = [...newItems]
-  },
-  { immediate: true }
+    () => props.items,
+    (newItems) => {
+      filteredItems.value = [...newItems]
+    },
+    {immediate: true}
 );
 
 watch(
-  () => props.modelValue,
-  (newValue) => {
-    setTimeout(() => {
-      const selectedItem = props.items.find(
-        (item) => item[props.itemValue] === newValue
-      );
-      if (selectedItem) {
-        displayValue.value = selectedItem[props.itemTitle];
-      } else {
-        displayValue.value = "";
-      }
-    }, 1000);
-  },
-  { immediate: true }
+    () => props.modelValue,
+    (newValue) => {
+      setTimeout(() => {
+        const selectedItem = props.items.find(
+            (item) => item[props.itemValue] === newValue
+        );
+        if (selectedItem) {
+          displayValue.value = selectedItem[props.itemTitle];
+        } else {
+          displayValue.value = "";
+        }
+      }, 1000);
+    },
+    {immediate: true}
 );
 
 onMounted(() => {
   document.addEventListener("click", onClickOutside);
 });
 
-const onClickOutside = (event) => {
+const onClickOutside = event => {
   if (
-    !input.value.contains(event.target) &&
-    !list.value.contains(event.target)
+      !input.value?.contains(event.target) &&
+      !list.value?.contains(event.target)
   ) {
+    list.value.style.display
     list.value.style.display = "none";
   }
+  isOpen.value = false;
 };
 
 const onFocus = () => {
+  isOpen.value = true;
   list.value.style.display = "block";
 };
 
 const search = async (event) => {
   const {
-    target: { value },
+    target: {value},
   } = event
 
   displayValue.value = event.target.value
@@ -97,21 +98,23 @@ const search = async (event) => {
 }
 
 const getGood = async (good) => {
-  if (!props.storage || !props.organization) return
+  let filterData = {}
 
-  console.log(props.storage)
-
-  const filterData = {
-    storage_id: props.storage,
-    organization_id: props.organization.id,
+  if (props.storage !== null && props.organization !== null) {
+    filterData = {
+      storage_id: typeof props.storage === "object" ? props.storage.id : props.storage,
+      organization_id: typeof props.organization === "object" ? props.organization.id : props.organization,
+    }
   }
+
   try {
     const {
       data: {
-        result: { data },
+        result: {data},
       },
     } = await goodApi.getGoodBySearch(good, filterData);
     filteredItems.value = data;
+    console.log(data)
   } catch (e) {
     console.error(e);
   }
@@ -121,35 +124,47 @@ const selectItem = (item) => {
   emit("update:modelValue", item[props.itemValue]);
   list.value.style.display = "none";
   displayValue.value = item[props.itemTitle];
+  isOpen.value = false;
 };
 </script>
 
 <template>
-  <div class="dropdown w-100" @click.stop>
-    <input
-      type="text"
-      :style="[
-        'width: 100%;',
-        `outline: 1px solid ${hexToRgba(props.baseColor, 0.5)}`,
-      ]"
-      class="dropdown-input"
-      placeholder="Поиск по id, наименовании, штрих-коду"
-      ref="input"
-      @input="search($event)"
-      @focus="onFocus"
-      :value="displayValue"
-    />
+  <div style="top: -24px" class="dropdown w-100" @click.stop>
+    <div class="position-relative">
+      <input
+        type="text"
+        :style="[
+          'width: 100%;',
+          `outline: 1px solid ${hexToRgba(props.baseColor, 0.5)}`,
+        ]"
+        class="dropdown-input position-absolute"
+        placeholder="Поиск по id, наименовании, штрих-коду"
+        ref="input"
+        @input="search($event)"
+        @focus="onFocus"
+        :value="displayValue"
+      />
+      <span v-if="baseColor === '#274D87'" class="arrow">
+        <i
+            style="top: -5px; color: rgba(125, 148, 183)"
+            class="material-icons v-icon notranslate v-icon--size-default v-icon--clickable v-autocomplete__menu-icon"
+            role="button"
+        >
+          {{ isOpen ? "arrow_drop_up" : "arrow_drop_down" }}
+        </i>
+      </span>
+    </div>
     <div class="dropdown-list" ref="list">
       <div v-if="filteredItems.length !== 0">
         <div
-          v-for="item in filteredItems"
-          :key="item[props.itemValue]"
-          class="dropdown-item"
-          @click="selectItem(item)"
+            v-for="item in filteredItems"
+            :key="item[props.itemValue]"
+            class="dropdown-item"
+            @click="selectItem(item)"
         >
           <span>{{ item[props.itemTitle] }}</span>
           <span v-if="props.isAmount" class="amount"
-            >Кол. {{ item["amount"] }} шт.</span
+          >Кол. {{ item["amount"] }} шт.</span
           >
         </div>
       </div>
@@ -179,7 +194,7 @@ const selectItem = (item) => {
   top: 40px;
   z-index: 99;
   width: 100%;
-  padding: 8px 0px;
+  padding: 8px 0;
   max-height: 200px;
   overflow-y: auto;
   border-top: none;
@@ -203,5 +218,11 @@ const selectItem = (item) => {
 .amount {
   font-size: 12px;
   color: #999;
+}
+
+.arrow {
+  position: absolute;
+  right: 15px;
+  top: 10px;
 }
 </style>

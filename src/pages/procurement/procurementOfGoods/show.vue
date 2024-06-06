@@ -9,7 +9,7 @@ import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import goToHistory from "../../../composables/movementByPage/goToHistory.js";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
-import formatInputPrice from "../../../composables/mask/formatInputPrice.js";
+import formatInputPrice from "../../../composables/format/formatInputPrice.js";
 import goToPrint from "../../../composables/movementByPage/goToPrint.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";

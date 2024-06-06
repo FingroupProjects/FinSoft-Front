@@ -21,7 +21,7 @@ export default function formatInputPrice(price, event) {
   }
 
   if (value === '' || value === '.') {
-    value = '0.';
+    value = null;
   }
 
   if (parts.length === 2) {

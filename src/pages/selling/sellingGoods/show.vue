@@ -25,6 +25,9 @@ import validateNumberInput from "../../../composables/mask/validateNumberInput.j
 import formatNumber from "../../../composables/format/formatNumber.js";
 import goToHistory from "../../../composables/movementByPage/goToHistory.js";
 import goToPrint from "../../../composables/movementByPage/goToPrint.js";
+import formatInputPrice from "../../../composables/format/formatInputPrice.js";
+import formatInputAmount from "../../../composables/format/formatInputAmount.js";
+import CustomSearchableSelect from "../../../components/formElements/CustomSearchableSelect.vue";
 
 const useOrganization = ref(useHasOneOrganization())
 
@@ -460,12 +463,12 @@ const handlePriceInput = (item) => {
                     </CustomCheckbox>
                   </td>
                   <td style="width: 40%">
-                    <custom-autocomplete
+                    <custom-searchable-select
+                        :organization="form.organization"
+                        :storage="form.storage"
                         v-model="item.good_id"
                         :items="listGoods"
                         :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                        min-width="150"
-                        max-width="100%"
                         :isAmount="true"
                     />
                   </td>
@@ -473,18 +476,19 @@ const handlePriceInput = (item) => {
                     <custom-text-field
                         v-model="item.amount"
                         :base-color="
-                        hoveredRowId === item.id ? FIELD_GOODS : '#fff'
-                      "
-                        v-mask="'########'"
+                          hoveredRowId === item.id ? FIELD_GOODS : '#fff'
+                        "
                         min-width="50"
+                        :value="formatInputAmount(item.amount)"
                     />
                   </td>
                   <td>
                     <custom-text-field
                         v-model="item.price"
-                        @input="validateNumberInput(item.price), handlePriceInput(item)"
                         :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                         min-width="80"
+                        :value="validateNumberInput(item.price)"
+                        @input="formatInputPrice(item.price, $event)"
                     />
                   </td>
                   <td>

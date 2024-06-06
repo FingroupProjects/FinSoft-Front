@@ -39,7 +39,7 @@ import CustomFilterAutocomplete from "../../../components/formElements/CustomFil
 import { markedForDeletion } from "../../../composables/constant/items.js";
 import debounce from "lodash.debounce";
 import getExcel from "../../../composables/otherQueries/getExcel.js";
-import formatInputPrice from "../../../composables/mask/formatInputPrice.js";
+import formatInputPrice from "../../../composables/format/formatInputPrice.js";
 
 const router = useRouter();
 
