@@ -1,4 +1,5 @@
 <script setup>
+import "../../assets/css/procurement.css";
 import getDateTimeInShow from "../../composables/date/getDateTimeInShow.js";
 import documentHistoryApi from "../../api/documents/documentHistory";
 import { onMounted, ref, watch } from "vue";
@@ -9,6 +10,7 @@ import { useRoute } from "vue-router";
 const route = useRoute();
 
 const id = ref(route.params.id);
+const per_page = ref(100000);
 
 const selectedBlock = ref("История");
 
@@ -17,6 +19,15 @@ const loading = ref(true);
 const data = ref([]);
 const historyDoc = ref([]);
 const pagination = ref([]);
+const search = ref("");
+
+const headers = ref([
+  { title: "Товар", key: "good.name" },
+  { title: "Дата", key: "date" },
+  { title: "Статус", key: "type" },
+  { title: "Количество", key: "count" },
+  { title: "Цена", key: "price" },
+]);
 
 const balanceHeaders = ref([
   { title: "Дата", key: "date" },
@@ -139,10 +150,11 @@ onMounted(() => {
   id.value = route.params.id;
   getDocumentHistory();
 });
+
 </script>
 
 <template>
-  <div class="pa-4 mb-0">
+  <div class="pa-4 mb-0 document">
     <div class="d-flex align-center">
       <div style="min-height: 60px !important" class="switcher">
         <button
@@ -206,10 +218,52 @@ onMounted(() => {
                 <span>{{ value.new_value }}</span>
               </div>
             </span>
-            <div class="mb-4" v-for="(item, key) in history.goods" :key="key">
+            <div style="border: 1px solid black;" class="table">
+              <v-data-table
+                style="height: 350px"
+                items-per-page-text="Элементов на странице:"
+                loading-text="Загрузка"
+                no-data-text="Нет данных"
+                v-model:items-per-page="per_page"
+                :headers="headers"
+                :items-length="0"
+                :items="history.goods"
+                :item-value="headers.title"
+                :search="search"
+                page-text="{0}-{1} от {2}"
+                :items-per-page-options="[
+                  { value: 25, title: '25' },
+                  { value: 50, title: '50' },
+                  { value: 100, title: '100' },
+                ]"
+                fixed-header
+                hover
+              >
+                <template v-slot:item="{ item }">
+                  <tr>
+                    <td>
+                      {{ item.good }}
+                    </td>
+                    <td>
+                      {{ formatDateTime(item.body.created_at) }}
+                    </td>
+                    <td>
+                      {{ item.type }}
+                    </td>
+                    <td>
+                      {{ item.body.amount }}
+                    </td>
+                    <td>
+                      {{ item.body.price }}
+                    </td>
+                  </tr>
+                </template>
+              </v-data-table>
+            </div>
+            <!-- <div class="mb-4" v-for="(item, key) in history.goods" :key="key">
               <div class="w-100">
                 <div>
-                  <h3>Товар {{ item.type }}</h3>
+                  <h3>Товар {{ item.good }} ({{ item.type }})</h3>
                 </div>
               </div>
               <div class="d-flex ga-2">
@@ -242,7 +296,7 @@ onMounted(() => {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> -->
           </div>
         </v-card>
       </div>
