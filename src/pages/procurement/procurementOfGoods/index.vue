@@ -29,7 +29,6 @@ import { onMounted, ref, watch } from "vue";
 import debounce from "lodash.debounce";
 
 const router = useRouter();
-const route = useRoute();
 
 const loading = ref(true);
 const dialog = ref(false);
