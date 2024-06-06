@@ -1,5 +1,6 @@
 <script setup>
 import {useFilterCanvasVisible} from "../../store/canvasVisible.js";
+const props = defineProps(['isAproveError'])
 const canvasVisible = useFilterCanvasVisible()
 
 </script>
@@ -7,7 +8,7 @@ const canvasVisible = useFilterCanvasVisible()
 <template>
     <div :class="['cartOffcanvas', 'offcanvas-end', { show: canvasVisible.isFilterCanvasVisible }]" tabindex="-1" id="cartOffcanvas" aria-labelledby="cartOffcanvasLabel">
       <div class="offcanvas-header">
-        <h3 class="offcanvas-title" id="cartOffcanvasLabel">Фильтр</h3>
+        <h3 class="offcanvas-title" id="cartOffcanvasLabel">{{ isAproveError ? 'Ошибка' : 'Фильтр' }}</h3>
         <i class="bi bi-x text-h4 cursor-pointer" @click="canvasVisible.closeFilterCanvas"></i>
       </div>
       <div class="offcanvas-body" >

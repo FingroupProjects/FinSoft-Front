@@ -18,6 +18,7 @@ defineProps({
 
 <template>
   <v-text-field
+      :tabindex="-1"
       :style="[`max-width: ${maxWidth}%`, `min-width: ${minWidth}%`, `max-height: 40px !important;`]"
       :color="BASE_COLOR"
       hide-details
