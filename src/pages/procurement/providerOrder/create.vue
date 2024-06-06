@@ -24,7 +24,9 @@ import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
 import Button from "../../../components/button/button.vue";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";
 import getDataBased from "../../../composables/otherQueries/getDataBased.js";
-import formatInputPrice from "../../../composables/mask/formatInputPrice.js";
+import formatInputPrice from "../../../composables/format/formatInputPrice.js";
+import CustomSearchableSelect from "../../../components/formElements/CustomSearchableSelect.vue";
+import formatInputAmount from "../../../composables/format/formatInputAmount.js";
 
 const hoveredRowId = ref(null);
 const useOrganization = ref(useHasOneOrganization())
@@ -270,7 +272,6 @@ onMounted(() => {
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1">
-          
               <Button @click="addNewProviderOrder" name="save1" />
               <Button
                   @click="router.push('/providerOrder')"
@@ -325,28 +326,29 @@ onMounted(() => {
                     </CustomCheckbox>
                   </td>
                   <td style="width: 40%;">
-                    <custom-autocomplete 
-                    v-model="item.good_id" 
-                    :items="listGoods" 
-                    :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                    min-width="150" 
-                    max-width="100%"
-                    :isAmount="true"/>
+                    <custom-searchable-select
+                      organization="form.organization"
+                      v-model="item.good_id"
+                      :items="listGoods"
+                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                    />
                   </td>
                   <td>
                     <custom-text-field 
-                    :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                    v-model="item.amount" 
-                    v-mask="'########'" 
-                    min-width="50"/>
+                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                      v-model="item.amount"
+                      :value="formatInputAmount(item.amount)"
+                      min-width="50"
+                    />
                   </td>
                   <td>
                     <custom-text-field 
-                    v-model="item.price" 
-                    :value="validateNumberInput(item.price)"
-                    :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                    @input="formatInputPrice(item.price, $event)"
-                    min-width="80"/>
+                      v-model="item.price"
+                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                      min-width="80"
+                      :value="validateNumberInput(item.price)"
+                      @input="formatInputPrice(item.price, $event)"
+                     />
                   </td>
                   <td>
                     <custom-text-field 

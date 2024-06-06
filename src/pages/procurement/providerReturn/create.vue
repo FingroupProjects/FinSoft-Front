@@ -25,7 +25,7 @@ import {FIELD_GOODS, TITLE_COLOR} from "../../../composables/constant/colors.js"
 import Button from "../../../components/button/button.vue";
 import {useModalCreateBased} from "../../../store/modalCreateBased.js";
 import getDataBased from "../../../composables/otherQueries/getDataBased.js";
-import formatInputPrice from "../../../composables/mask/formatInputPrice.js";
+import formatInputPrice from "../../../composables/format/formatInputPrice.js";
 import CustomSearchableSelect from "../../../components/formElements/CustomSearchableSelect.vue";
 
 const useOrganization = ref(useHasOneOrganization())
@@ -369,10 +369,10 @@ onMounted(() => {
                   <td>
                     <custom-text-field
                         v-model="item.price"
-                        :value="validateNumberInput(item.price)"
                         :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                        @input="formatInputPrice(item.price, $event)"
                         min-width="80"
+                        @input="formatInputPrice(item.price, $event)"
+                        :value="validateNumberInput(item.price)"
                     />
                   </td>
                   <td>

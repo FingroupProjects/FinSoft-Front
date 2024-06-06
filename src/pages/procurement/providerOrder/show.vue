@@ -25,6 +25,8 @@ import formatDateTime from "../../../composables/date/formatDateTime.js";
 import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
 import goToHistory from "../../../composables/movementByPage/goToHistory.js";
 import goToPrint from "../../../composables/movementByPage/goToPrint.js";
+import CustomSearchableSelect from "../../../components/formElements/CustomSearchableSelect.vue";
+import formatInputPrice from "../../../composables/format/formatInputPrice.js";
 
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter()
@@ -401,14 +403,15 @@ const handlePriceInput = (item) => {
                     </CustomCheckbox>
                   </td>
                   <td style="width: 40%;">
-                    <custom-autocomplete 
-                    v-model="item.good_id" 
-                    :base-color="
+                    <custom-searchable-select
+                      :organization="form.organization"
+                      v-model="item.good_id"
+                      :base-color="
                         hoveredRowId === item.id ? FIELD_GOODS : '#fff'
                       "
-                    :items="listGoods" 
-                    min-width="150" 
-                    max-width="100%"/>
+                      :items="listGoods"
+                      min-width="150"
+                      max-width="100%"/>
                   </td>
                   <td>
                     <custom-text-field 
@@ -421,11 +424,12 @@ const handlePriceInput = (item) => {
                   </td>
                   <td>
                     <custom-text-field 
-                    v-model="item.price" 
-                    @input="validateNumberInput(item.price), handlePriceInput(item)"
-                        :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                    v-mask="'##########'"
-                     min-width="80"/>
+                      v-model="item.price"
+                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                      min-width="80"
+                      :value="validateNumberInput(item.price)"
+                      @input="formatInputPrice(item.price, $event)"
+                    />
                   </td>
                   <td>
                     <custom-text-field 

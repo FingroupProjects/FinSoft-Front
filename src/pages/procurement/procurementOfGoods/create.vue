@@ -17,7 +17,7 @@ import counterpartyApi from "../../../api/list/counterparty.js";
 import storageApi from "../../../api/list/storage.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import procurementApi from "../../../api/documents/procurement.js";
-import formatInputPrice from "../../../composables/mask/formatInputPrice.js";
+import formatInputPrice from "../../../composables/format/formatInputPrice.js";
 import goodApi from "../../../api/list/goods.js";
 import Button from "../../../components/button/button.vue";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";
