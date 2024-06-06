@@ -194,11 +194,11 @@ onMounted(() => {
       <div class="d-flex flex-column ga-4">
         <v-card class="pa-5 rounded-xl" v-for="item in historyDoc" :key="item">
           <div class="w-100" style="border-bottom: 2px solid #08072e">
-            <h3>{{ item.status }}</h3>
+            <h2>{{ item.status }}</h2>
           </div>
           <div class="d-flex ga-2">
             <span style="color: #9b9b9b">Дата: {{ item.date }}</span>
-            <span>{{ item.user.name }}</span>
+            <span style="font-weight: 600;">{{ item.user.name }}</span>
           </div>
           <div
             v-for="(history, index) in item.changes"
@@ -206,6 +206,7 @@ onMounted(() => {
             class="d-flex flex-column"
           >
             <span
+              style="font-size: 18px;"
               class="d-flex ga-2"
               v-for="(value, key) in history.body"
               :key="key"
@@ -221,6 +222,7 @@ onMounted(() => {
               style="border: 1px solid black"
               class="table mt-4"
             >
+            <h2 class="ml-4 mt-2">Товары</h2>
               <v-data-table
                 style="height: 350px"
                 items-per-page-text="Элементов на странице:"

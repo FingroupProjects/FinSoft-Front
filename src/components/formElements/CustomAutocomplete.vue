@@ -1,4 +1,3 @@
-<script setup>
 import { BASE_COLOR, FIELD_COLOR } from "../../composables/constant/colors.js";
 
 defineProps({

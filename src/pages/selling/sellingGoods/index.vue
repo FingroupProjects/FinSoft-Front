@@ -1,40 +1,30 @@
 <script setup>
-import { onMounted, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import showToast from "../../../composables/toast/index.js";
-import Icons from "../../../composables/Icons/Icons.vue";
-import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
+import { approveDocument, copyMessage, ErrorSelectMessage, removeMessage, selectOneItemMessage } from "../../../composables/constant/buttons.js";
 import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
+import { BASE_COLOR, FIELD_OF_SEARCH, TITLE_COLOR } from "../../../composables/constant/colors.js";
 import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
-import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import {
-  BASE_COLOR,
-  FIELD_OF_SEARCH,
-  TITLE_COLOR,
-} from "../../../composables/constant/colors.js";
-import {
-  approveDocument,
-  copyMessage,
-  ErrorSelectMessage,
-  removeMessage,
-  selectOneItemMessage,
-} from "../../../composables/constant/buttons.js";
-import debounce from "lodash.debounce";
-import saleApi from "../../../api/documents/sale.js";
-import organizationApi from "../../../api/list/organizations.js";
-import counterpartyApi from "../../../api/list/counterparty.js";
-import storageApi from "../../../api/list/storage.js";
-import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
-import currencyApi from "../../../api/list/currency.js";
-import user from "../../../api/list/user.js";
+import { markedForDeletion, statusOptions } from "../../../composables/constant/items.js"
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
-import Button from "../../../components/button/button.vue";
+import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
+import { useModalCreateBased } from "../../../store/modalCreateBased.js";
+import { useFilterCanvasVisible } from "../../../store/canvasVisible.js";
+import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
+import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
 import getColor from "../../../composables/displayed/getColor.js";
 import copyDocument from "../../../api/documents/copyDocument.js";
-import { useModalCreateBased } from "../../../store/modalCreateBased.js";
 import CreateBase from "../../../components/modal/CreateBase.vue";
-import { useFilterCanvasVisible } from "../../../store/canvasVisible.js";
-import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
+import organizationApi from "../../../api/list/organizations.js";
+import counterpartyApi from "../../../api/list/counterparty.js";
+import showToast from "../../../composables/toast/index.js";
+import Button from "../../../components/button/button.vue";
+import Icons from "../../../composables/Icons/Icons.vue";
+import currencyApi from "../../../api/list/currency.js";
+import storageApi from "../../../api/list/storage.js";
+import saleApi from "../../../api/documents/sale.js";
+import { useRoute, useRouter } from "vue-router";
+import user from "../../../api/list/user.js";
+import { onMounted, ref, watch } from "vue";
+import debounce from "lodash.debounce";
 
 const route = useRoute();
 const router = useRouter();
@@ -85,9 +75,6 @@ const headers = ref([
   { title: "Автор", key: "author.name" },
   { title: "Валюта", key: "currency.name" },
 ]);
-
-const statusOptions = ["проведён", "не проведён"];
-const deletionStatuses = ["не удален", "удален"];
 
 const headerButtons = ref([
   {
@@ -145,18 +132,13 @@ const headerButtons = ref([
 const getSellingGoods = async ({ page, itemsPerPage, sortBy, search } = {}) => {
   count.value = 0;
   countFilter();
-  const filterData = {
-    ...filterForm.value,
-    active: filterForm.value.active === "проведён" ? 1 : 0,
-    deleted: filterForm.value.deleted === "удален" ? 1 : 0,
-  };
   filterModal.value = false;
   loading.value = true;
   try {
     const { data } = await saleApi.get(
       { page, itemsPerPage, sortBy },
       search,
-      filterData
+      filterForm.value
     );
     paginations.value = data.result.pagination;
     sales.value = data.result.data;
@@ -220,7 +202,7 @@ const closeFilterModal = async ({ page, itemsPerPage, sortBy, search }) => {
   cleanFilterForm();
   await getSellingGoods({ page, itemsPerPage, sortBy, search });
   useFilterCanvasVisible().closeFilterCanvas();
-  isAproveError.value = false
+  isAproveError.value = false;
 };
 
 const cleanFilterForm = () => {
@@ -236,7 +218,7 @@ const approve = async () => {
     markedID.value = [];
   } catch (e) {
     console.error(e);
-    isAproveError.value = true
+    isAproveError.value = true;
   }
 };
 
@@ -310,8 +292,8 @@ watch(markedID, (newVal) => {
 });
 
 watch(isAproveError, (newVal) => {
-  if(newVal){
-    useFilterCanvasVisible().toggleFilterCanvas()
+  if (newVal) {
+    useFilterCanvasVisible().toggleFilterCanvas();
   }
 });
 
@@ -448,9 +430,7 @@ onMounted(() => {
     </div>
 
     <filter-canvas :isAproveError="isAproveError">
-      <div v-if="isAproveError">
-f
-      </div>
+      <div v-if="isAproveError"></div>
       <div v-else class="d-flex flex-column w-100 ga-2">
         <div class="d-flex flex-column ga-2 w-100">
           <custom-filter-text-field
@@ -507,7 +487,7 @@ f
           />
           <custom-filter-autocomplete
             label="Удалён"
-            :items="deletionStatuses"
+            :items="markedForDeletion"
             v-model="filterForm.deleted"
           />
         </div>
