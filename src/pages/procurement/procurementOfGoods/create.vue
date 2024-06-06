@@ -26,6 +26,7 @@ import {useHasOneOrganization} from "../../../store/hasOneOrganization.js";
 import getDataBased from "../../../composables/otherQueries/getDataBased.js";
 import CustomSearchableSelect from "../../../components/formElements/CustomSearchableSelect.vue";
 import toDecimal from "../../../composables/format/toDecimal.js";
+import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
 
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter();
@@ -431,9 +432,11 @@ onMounted(() => {
                   </td>
                   <td style="width: 40%">
                     <custom-searchable-select
-                       :items="listGoods"
-                       v-model="item.good_id"
-                       :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                        v-model="item.good_id"
+                        :items="listGoods"
+                        :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                        :organization="form.organization"
+                        :storage="form.storage"
                     />
                   </td>
                   <td>
@@ -446,9 +449,10 @@ onMounted(() => {
                   </td>
                   <td>
                     <custom-text-field
+                        min-width="80"
                         v-model="item.price"
                         :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                        min-width="80"
+                        :value="validateNumberInput(item.price)"
                         @input="formatInputPrice(item.price, $event)"
                     />
                   </td>
