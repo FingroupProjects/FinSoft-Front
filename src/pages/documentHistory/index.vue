@@ -23,7 +23,6 @@ const search = ref("");
 
 const headers = ref([
   { title: "Товар", key: "good.name" },
-  { title: "Дата", key: "date" },
   { title: "Статус", key: "type" },
   { title: "Количество", key: "count" },
   { title: "Цена", key: "price" },
@@ -150,7 +149,6 @@ onMounted(() => {
   id.value = route.params.id;
   getDocumentHistory();
 });
-
 </script>
 
 <template>
@@ -218,7 +216,11 @@ onMounted(() => {
                 <span>{{ value.new_value }}</span>
               </div>
             </span>
-            <div style="border: 1px solid black;" class="table">
+            <div
+              v-if="history.goods.length > 0"
+              style="border: 1px solid black"
+              class="table mt-4"
+            >
               <v-data-table
                 style="height: 350px"
                 items-per-page-text="Элементов на странице:"
@@ -245,58 +247,34 @@ onMounted(() => {
                       {{ item.good }}
                     </td>
                     <td>
-                      {{ formatDateTime(item.body.created_at) }}
-                    </td>
-                    <td>
                       {{ item.type }}
                     </td>
                     <td>
-                      {{ item.body.amount }}
+                      <span v-if="item.body['Количество']">
+                        <span v-if="item.body['Количество'].previous_value !== undefined && item.body['Количество'].new_value !== undefined">
+                          {{ item.body["Количество"].previous_value }} =>
+                          {{ item.body["Количество"].new_value }}
+                        </span>
+                        <span v-else>
+                          {{ item.body["Количество"].amount }}
+                        </span>
+                      </span>
                     </td>
                     <td>
-                      {{ item.body.price }}
+                      <span v-if="item.body['Цена']">
+                        <span v-if="item.body['Цена'].previous_value !== undefined && item.body['Цена'].new_value !== undefined">
+                          {{ item.body["Цена"].previous_value }} =>
+                          {{ item.body["Цена"].new_value }}
+                        </span>
+                        <span v-else>
+                          {{ item.body["Цена"].price }}
+                        </span>
+                      </span>
                     </td>
                   </tr>
                 </template>
               </v-data-table>
             </div>
-            <!-- <div class="mb-4" v-for="(item, key) in history.goods" :key="key">
-              <div class="w-100">
-                <div>
-                  <h3>Товар {{ item.good }} ({{ item.type }})</h3>
-                </div>
-              </div>
-              <div class="d-flex ga-2">
-                <span v-if="item.body.created_at" style="color: #9b9b9b"
-                  >Дата: {{ formatDateTime(item.body.created_at) }}</span
-                >
-              </div>
-              <div
-                class="d-flex flex-column ga-2 mt-2"
-                v-for="(good, key) in [item.body]"
-                :key="key"
-              >
-                <span v-if="good.amount">Количество: {{ good.amount }}</span>
-                <span v-if="good.price">Цена: {{ good.price }}</span>
-              </div>
-              <div v-if="item.type == 'Изменен '">
-                <div
-                  class="d-flex flex-column ga-2 mt-2"
-                  v-for="(values, keys) in [item.body]"
-                  :key="keys"
-                >
-                  <div
-                    class="d-flex ga-2 mt-2"
-                    v-for="(value, key) in values"
-                    :key="key"
-                  >
-                    <span>{{ key }}</span>
-                    <span> {{ value?.previous_value }}</span> =>
-                    <span>{{ value?.new_value }}</span>
-                  </div>
-                </div>
-              </div>
-            </div> -->
           </div>
         </v-card>
       </div>

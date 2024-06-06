@@ -27,6 +27,7 @@ defineProps({
 
 <template>
   <v-autocomplete
+  :tabindex="-1"
     :disabled="disabled"
     :style="[
       `max-width: ${maxWidth}%`,

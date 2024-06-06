@@ -41,6 +41,7 @@ const router = useRouter();
 
 const loading = ref(true);
 const filterModal = ref(false);
+const isAproveError = ref(false);
 const hoveredRowIndex = ref(null);
 const modalCreateBased = useModalCreateBased();
 
@@ -48,8 +49,6 @@ const markedID = ref([]);
 const markedItem = ref([]);
 const search = ref("");
 const debounceSearch = ref("");
-const nameRef = ref(null);
-const descriptionRef = ref(null);
 const sales = ref([]);
 const paginations = ref([]);
 const count = ref(0);
@@ -221,6 +220,7 @@ const closeFilterModal = async ({ page, itemsPerPage, sortBy, search }) => {
   cleanFilterForm();
   await getSellingGoods({ page, itemsPerPage, sortBy, search });
   useFilterCanvasVisible().closeFilterCanvas();
+  isAproveError.value = false
 };
 
 const cleanFilterForm = () => {
@@ -236,7 +236,7 @@ const approve = async () => {
     markedID.value = [];
   } catch (e) {
     console.error(e);
-    showToast("Ошибка", "red");
+    isAproveError.value = true
   }
 };
 
@@ -307,6 +307,12 @@ const show = (item) => {
 
 watch(markedID, (newVal) => {
   markedItem.value = sales.value.find((el) => el.id === newVal[0]);
+});
+
+watch(isAproveError, (newVal) => {
+  if(newVal){
+    useFilterCanvasVisible().toggleFilterCanvas()
+  }
 });
 
 watch(
@@ -441,8 +447,11 @@ onMounted(() => {
       </v-data-table-server>
     </div>
 
-    <filter-canvas>
-      <div class="d-flex flex-column w-100 ga-2">
+    <filter-canvas :isAproveError="isAproveError">
+      <div v-if="isAproveError">
+f
+      </div>
+      <div v-else class="d-flex flex-column w-100 ga-2">
         <div class="d-flex flex-column ga-2 w-100">
           <custom-filter-text-field
             label="От"
@@ -492,14 +501,14 @@ onMounted(() => {
         </div>
         <div class="d-flex ga-2">
           <custom-filter-autocomplete
-          label="Статус"
-          :items="statusOptions"
-          v-model="filterForm.active"
+            label="Статус"
+            :items="statusOptions"
+            v-model="filterForm.active"
           />
           <custom-filter-autocomplete
-          label="Удалён"
-          :items="deletionStatuses"
-          v-model="filterForm.deleted"
+            label="Удалён"
+            :items="deletionStatuses"
+            v-model="filterForm.deleted"
           />
         </div>
         <div class="d-flex ga-2">
@@ -516,10 +525,15 @@ onMounted(() => {
         </div>
         <div class="d-flex justify-end ga-2">
           <div class="d-flex ga-2" style="margin-right: -6%">
-            <v-btn color="red" class="btn" @click="closeFilterModal"
+            <v-btn
+              :tabindex="-1"
+              color="red"
+              class="btn"
+              @click="closeFilterModal"
               >сбросить</v-btn
             >
             <v-btn
+              :tabindex="-1"
               :color="BASE_COLOR"
               class="btn"
               @click="
