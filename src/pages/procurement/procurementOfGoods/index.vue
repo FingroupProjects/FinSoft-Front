@@ -381,12 +381,11 @@ onMounted(() => {
             flat
           />
         </div>
-        <div class="filterElement">
+        <div class="mt-2 filterElement">
           <Icons
             name="filter"
             title="Фильтр"
             @click="useFilterCanvasVisible().toggleFilterCanvas()"
-            class="mt-2"
           />
           <span v-if="counterFilter !== 0" class="countFilter">{{
             counterFilter
@@ -479,6 +478,7 @@ onMounted(() => {
       <div class="d-flex flex-column ga-2">
         <custom-filter-autocomplete
           min-width="106"
+          clearable
           label="Организация"
           :items="organizations"
           v-model="filterForm.organization_id"
