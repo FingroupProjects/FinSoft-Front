@@ -126,13 +126,13 @@ const routes = [
     component: () => import("../pages/selling/sellingGoods/index.vue"),
   },
   {
-    path: "/sellingGoodsCreate",
+    path: "/sellingGoods/Create",
     name: "sellingGoodsCreate",
     component: () => import("../pages/selling/sellingGoods/create.vue"),
   },
   {
-    path: "/SellingGoodsEdit/:id",
-    name: "SellingGoodsEdit",
+    path: "/sellingGoods/:id",
+    name: "sellingGoodsShow",
     component: () => import("../pages/selling/sellingGoods/show.vue"),
   },
   {

@@ -365,22 +365,19 @@ const validatePrice = (price) => {
   }
   return true;
 };
-const handlePriceInput = (item) => {
-  if (!validatePrice(item.price)) {
-    item.price = null;  
-  }
-};
+
 </script>
 <template>
   <div class="document">
-    <v-col>
-      <div class="d-flex justify-space-between text-uppercase">
+      <div class="d-flex justify-space-between">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>{{ doc_name }} (просмотр)</span>
+          <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">
+            {{ doc_name }} (просмотр)
+          </span>
         </div>
-        <v-card variant="text" class="d-flex align-center ga-2">
+        <v-card variant="text" class="d-flex align-center ga-2 py-2">
           <div class="d-flex w-100">
-            <div class="d-flex items-center ga-2 mt-1 me-3">
+            <div class="d-flex ga-2 mt-1 me-3">
               <Button
                   name="history"
                   @click="goToHistory(router, route)"
@@ -395,11 +392,9 @@ const handlePriceInput = (item) => {
           </div>
         </v-card>
       </div>
-    </v-col>
     <v-divider />
-    <v-divider />
-    <div style="height: calc(99vh - 116px); background: #fff">
-      <v-col class="d-flex flex-column ga-2 pb-0">
+    <div class="documentHeight">
+      <v-col class="d-flex flex-column ga-2">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field :value="form.doc_number" />
           <custom-text-field label="Дата" type="datetime-local" class="date" v-model="form.date" />
@@ -427,10 +422,10 @@ const handlePriceInput = (item) => {
         </div>
       </v-col>
       <v-col>
-        <div :style="`border: 1px solid ${BASE_COLOR}`" class="rounded">
+        <div class="rounded">
           <div class="d-flex flex-column w-100">
             <v-data-table
-              style="height: calc(100vh - 304px)"
+              class="documentTable"
               items-per-page-text="Элементов на странице:"
               loading-text="Загрузка"
               no-data-text="Нет данных"

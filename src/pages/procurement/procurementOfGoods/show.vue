@@ -432,9 +432,9 @@ onMounted(() => {
           Покупка (просмотр) - {{ getStatus(form.active, form.deleted_at) }}
         </span>
       </div>
-      <v-card variant="text" style="display: flex; align-items: center">
-        <div class="d-flex w-100 justify-end my-3 pr-4">
-          <div class="d-flex items-center ga-2 mt-1 me-3">
+      <v-card variant="text" class="d-flex align-center ga-2">
+        <div class="d-flex w-100">
+          <div class="d-flex ga-2 mt-1 me-3 py-2">
             <Button name="history" @click="goToHistory(router, route)" />
             <Button name="approve" @click="approve" />
             <Button name="cancel" @click="unApprove" />
@@ -448,7 +448,7 @@ onMounted(() => {
     <v-divider />
     <v-divider />
     <div class="documentHeight">
-      <v-col class="d-flex flex-column ga-2 pb-0">
+      <v-col class="d-flex flex-column ga-2">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field disabled label="Номер" v-model="form.doc_number" />
           <custom-text-field

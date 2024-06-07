@@ -27,7 +27,10 @@ import {
   selectOneItemMessage,
 } from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
-import { BASE_COLOR, TITLE_COLOR } from "../../../composables/constant/colors.js";
+import {
+  BASE_COLOR,
+  TITLE_COLOR,
+} from "../../../composables/constant/colors.js";
 import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
 import { useHasOneOrganization } from "../../../store/hasOneOrganization.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
@@ -129,7 +132,6 @@ const getStorages = async () => {
 
 const getGoods = async (good_storage_id, good_organization_id) => {
   const search = "";
-  const for_sale = 1;
   const { data } = await goodApi.get(
     {
       page: 1,
@@ -139,8 +141,9 @@ const getGoods = async (good_storage_id, good_organization_id) => {
     search,
     good_storage_id,
     good_organization_id,
-    for_sale,
+    1
   );
+  console.log(data);
   listGoods.value = data.result.data;
 };
 
@@ -245,7 +248,7 @@ const addNewSale = async () => {
     const res = await saleApi.add(body);
     if (res.status === 201) {
       showToast(addMessage);
-      router.push("/sellingGoods");
+      window.open(`/sellingGoods/${res.data.result.id}`, "_blank");
     }
   } catch (e) {
     console.error(e);
@@ -305,7 +308,7 @@ watch(
   () => form.counterparty,
   async (id) => {
     form.cpAgreement = null;
-    const counterpartyId = typeof id === 'object' ? id.id : id;
+    const counterpartyId = typeof id === "object" ? id.id : id;
     await getCpAgreements(counterpartyId);
   }
 );
@@ -313,7 +316,6 @@ watch(
 watch(
   () => form.cpAgreement,
   (newValue) => {
-
     if (newValue !== null) {
       const cpAgreement = cpAgreements.value.find((el) =>
         (el.id === typeof newValue) === "object" ? newValue.id : newValue
@@ -365,31 +367,28 @@ onMounted(() => {
   getCounterparties();
   getStorages();
 });
-
 </script>
 
 <template>
   <div class="document">
-      <div class="d-flex justify-space-between">
-        <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Продажа (создание)</span>
-        </div>
-        <v-card variant="text" class="d-flex align-center ga-2 py-2">
-          <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <Button @click="addNewSale" name="save1" />
-              <Button
-                @click="router.push('/sellingGoods')"
-                name="close"
-              />
-            </div>
-          </div>
-        </v-card>
+    <div class="d-flex justify-space-between">
+      <div class="d-flex align-center ga-2 pe-2 ms-4">
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">
+          Продажа (создание)
+        </span>
       </div>
+      <v-card variant="text" class="d-flex align-center ga-2 py-2">
+        <div class="d-flex w-100">
+          <div class="d-flex ga-2 mt-1 me-3">
+            <Button @click="addNewSale" name="save1" />
+            <Button @click="router.push('/sellingGoods')" name="close" />
+          </div>
+        </div>
+      </v-card>
+    </div>
     <v-divider />
-    <v-divider />
-    <div style="height: calc(99vh - 117px); background: #fff">
-      <v-col class="d-flex flex-column ga-2 pb-0">
+    <div class="documentHeight">
+      <v-col class="d-flex flex-column ga-2">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field disabled value="Номер" v-model="form.number" />
           <custom-text-field
@@ -426,7 +425,7 @@ onMounted(() => {
         <div class="rounded">
           <div class="d-flex flex-column w-100">
             <v-data-table
-              style="height: calc(100vh - 302px)"
+              class="documentTable"
               items-per-page-text="Элементов на странице:"
               loading-text="Загрузка"
               no-data-text="Нет данных"
@@ -455,7 +454,7 @@ onMounted(() => {
                       @change="lineMarking(item)"
                       :checked="markedID.includes(item.id)"
                     >
-                      <span>{{ index + 1 }}</span>
+                      <span class="fz-12">{{ index + 1 }}</span>
                     </CustomCheckbox>
                   </td>
                   <td style="width: 40%">
