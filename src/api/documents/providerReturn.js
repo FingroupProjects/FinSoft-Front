@@ -14,8 +14,11 @@ export default {
   update(id, data) {
     return api.patch(`/document/update/${id}`, data)
   },
-  delete(id) {
-    return api.post(`/document/client/delete`, id)
+  remove(data) {
+    return api.post('/document/provider/return/massDelete', data)
+  },
+  restore(data) {
+    return api.post('/document/provider/return/massRestore', data)
   },
   approve(data) {
     return api.post(`/document/return/approve/`, data)

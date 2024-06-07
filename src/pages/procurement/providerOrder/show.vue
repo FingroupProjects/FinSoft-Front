@@ -14,8 +14,8 @@ import currencyApi from "../../../api/list/currency.js";
 import providerOrderApi from "../../../api/documents/providerOrder.js";
 import goodApi from "../../../api/list/goods.js";
 import formatNumber from "../../../composables/format/formatNumber.js";
-import {editMessage, selectOneItemMessage} from "../../../composables/constant/buttons.js";
-import {FIELD_GOODS} from "../../../composables/constant/colors.js";
+import {approveDocument, editMessage, selectOneItemMessage} from "../../../composables/constant/buttons.js";
+import {FIELD_GOODS, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
 import "../../../assets/css/procurement.css";
 import Button from "../../../components/button/button.vue";
@@ -27,6 +27,7 @@ import goToHistory from "../../../composables/movementByPage/goToHistory.js";
 import goToPrint from "../../../composables/movementByPage/goToPrint.js";
 import CustomSearchableSelect from "../../../components/formElements/CustomSearchableSelect.vue";
 import formatInputPrice from "../../../composables/format/formatInputPrice.js";
+import getStatus from "../../../composables/displayed/getStatus.js";
 
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter()
@@ -94,6 +95,8 @@ const getProviderOrderDetails = async () => {
     form.salePercent = data.result.salePercent !== 0 ? data.result.salePercent : null
     form.comment = data.result.comment
     form.currency = data.result.currency
+    form.active = data.result.active;
+    form.deleted_at = data.result.deleted_at;
     goods.value = data.result.orderGoods.map(item => ({
       id: item.id,
       good_id: item.good.id,
@@ -138,6 +141,30 @@ const getGoods = async () => {
   listGoods.value = data.result.data
 }
 
+const approve = async () => {
+  try {
+    await providerOrderApi.approve({ ids: [route.params.id] });
+    showToast(approveDocument);
+    await getProviderOrderDetails();
+    markedID.value = [];
+  } catch (e) {
+    console.error(e);
+    showToast("Ошибка", "red");
+  }
+};
+
+const unApprove = async () => {
+  try {
+    await providerOrderApi.unApprove({ ids: [route.params.id] });
+    showToast(approveDocument);
+    await getProviderOrderDetails();
+    markedID.value = [];
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+
 const decreaseCountOfGoods = () => {
   if (markedID.value.length === 0) {
     return showToast(selectOneItemMessage, "warning");
@@ -146,7 +173,6 @@ const decreaseCountOfGoods = () => {
     goods.value = [];
     return goods.value.push([{ id: 1, good_id: null, amount: "1", price: null}])
   }
-  goo
   goods.value = goods.value.filter((item) => !markedID.value.includes(item.id))
 }
 
@@ -214,7 +240,6 @@ const updateProviderOrder = async () => {
    const res = await providerOrderApi.update(route.params.id, body)
    if (res.status === 200) {
      showToast(editMessage)
-     router.push('/providerOrder')
    }
  } catch (e) {
    console.log(e)
@@ -228,13 +253,6 @@ const totalPrice = computed(() => {
   })
   return sum
 })
-
-
-
-const isSaleIntegerDisabled = computed(() => !!form.salePercent);
-const isSalePercentDisabled = computed(() => !!form.saleInteger);
-
-
 
 const arraysEqual = (arr1, arr2) => {
   if (arr1.length !== arr2.length) {
@@ -315,47 +333,32 @@ onMounted( () => {
     getProviderOrderDetails()
   ])
 })
-
-const validatePrice = (price) => {
-  if (price === 0 || price === '0' || Number(price) === 0) {
-    return false;
-  }
-  return true;
-};
-const handlePriceInput = (item) => {
-  if (!validatePrice(item.price)) {
-    item.price = null;  
-  }
-};
 </script>
+
 <template>
   <div class="document">
-    <v-col>
-      <div class="d-flex justify-space-between text-uppercase ">
-        <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>{{ doc_name }} (просмотр)</span>
-        </div>
-        <v-card variant="text" class="d-flex align-center ga-2">
-          <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <Button
-                  name="history"
-                  @click="goToHistory(router, route)"
-              />
-              <Button
-                  name="print"
-                  @click="goToPrint(router, route, doc_name)"
-              />
-              <Button name="save" @click="updateProviderOrder" />
-              <Button name="close" @click="closeWindow" />
-            </div>
-          </div>
-        </v-card>
+    <div class="d-flex justify-space-between">
+      <div class="d-flex align-center ga-2 pe-2 ms-4">
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">
+          Заказ Поставщику (просмотр) - {{ getStatus(form.active, form.deleted_at) }}
+        </span>
       </div>
-    </v-col>
+      <v-card variant="text" class="d-flex align-center">
+        <div class="d-flex w-100 justify-end my-3 pr-4">
+          <div class="d-flex items-center ga-2 mt-1 me-3">
+            <Button name="history" @click="goToHistory(router, route)" />
+            <Button name="approve" @click="approve" />
+            <Button name="cancel" @click="unApprove" />
+            <Button name="print" @click="goToPrint(router, route, doc_name)" />
+            <Button name="save" @click="updateProviderOrder" />
+            <Button name="close" @click="closeWindow" />
+          </div>
+        </div>
+      </v-card>
+    </div>
     <v-divider/>
     <v-divider/>
-    <div style="height: calc(99vh - 116px); background: #fff">
+    <div class="documentHeight">
       <v-col class="d-flex flex-column ga-2 pb-0"> 
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field readonly label="Номер" v-model="form.doc_number"/>
