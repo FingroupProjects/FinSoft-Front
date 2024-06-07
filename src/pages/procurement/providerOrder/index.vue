@@ -481,8 +481,8 @@ watch(search, debounce((newValue) => {
         </div>
         <div class="d-flex justify-end ga-2">
           <div class="d-flex ga-2" style="margin-right: -6%;">
-            <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-            <v-btn :color="BASE_COLOR" class="btn"  @click="() => {getProviderOrderData(); useFilterCanvasVisible().closeFilterCanvas()}">применить</v-btn>
+            <v-btn tabindex="-1" color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
+            <v-btn tabindex="-1" :color="BASE_COLOR" class="btn"  @click="() => {getProviderOrderData(); useFilterCanvasVisible().closeFilterCanvas()}">применить</v-btn>
           </div>
         </div>
       </filter-canvas>

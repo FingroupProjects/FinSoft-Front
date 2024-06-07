@@ -264,27 +264,21 @@ onMounted(() => {
 </script>
 <template>
   <div class="document">
-    <v-col>
-      <div class="d-flex justify-space-between text-uppercase ">
-        <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span :style="`color: ${TITLE_COLOR}`">Заказ поставщику (создание)</span>
-        </div>
-        <v-card variant="text" class="d-flex align-center ga-2">
-          <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1">
-              <Button @click="addNewProviderOrder" name="save1" />
-              <Button
-                  @click="router.push('/providerOrder')"
-                  name="close"
-              />
-            </div>
-          </div>
-        </v-card>
+    <div class="d-flex justify-space-between">
+      <div class="d-flex align-center ga-2 pe-2 ms-4">
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Заказ поставщику (создание)</span>
       </div>
-    </v-col>
+      <v-card variant="text" class="d-flex align-center ga-2">
+        <div class="d-flex w-100">
+          <div class="d-flex ga-2 mt-1 me-3 py-2">
+            <Button @click="addNewProviderOrder" name="save1" />
+            <Button @click="router.push('/providerOrder')" name="close" />
+          </div>
+        </div>
+      </v-card>
+    </div>
     <v-divider/>
-    <v-divider/>
-    <div style="height: calc(99vh - 116px); background: #fff">
+    <div class="documentHeight">
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field disabled value="Номер"/>
@@ -295,6 +289,7 @@ onMounted(() => {
         </div>
       </v-col>
       <v-col>
+        <div class="rounded">
           <div class="d-flex flex-column w-100">
             <v-data-table
                 style="height: calc(100vh - 250px)"
@@ -368,19 +363,20 @@ onMounted(() => {
               </template>
             </v-data-table>
           </div>
+        </div>
         <div class="d-flex justify-space-between w-100 mt-2 bottomField">
           <div class="d-flex ga-10">
             <custom-text-field 
-            readonly 
-            v-model="author"
-            label="Автор"
-            min-width="140"
-            max-width="110"
+              readonly
+              v-model="author"
+              label="Автор"
+              min-width="140"
+              max-width="110"
             />
             <custom-text-field 
-            label="Комментарий" 
-            v-model="form.comment" 
-            min-width="310"
+              label="Комментарий"
+              v-model="form.comment"
+              min-width="310"
             />
           </div>
           <div class="d-flex ga-6">
