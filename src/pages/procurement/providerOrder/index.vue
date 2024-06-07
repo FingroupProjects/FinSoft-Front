@@ -3,19 +3,20 @@ import {onMounted, ref, watch} from "vue";
 import {useRouter} from "vue-router";
 import showToast from '../../../composables/toast/index.js'
 import Icons from "../../../composables/Icons/Icons.vue";
-import CustomTextField from "../../../components/formElements/CustomTextField.vue";
-import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import {BASE_COLOR, FIELD_COLOR, FIELD_OF_SEARCH,TITLE_COLOR} from "../../../composables/constant/colors.js";
+import {BASE_COLOR, FIELD_OF_SEARCH, TITLE_COLOR} from "../../../composables/constant/colors.js";
+import { markedForDeletion, statusOptions } from "../../../composables/constant/items.js"
 import {
-  removeMessage,
-  warningMessage,
+  approveDocument,
+  copyMessage,
   ErrorSelectMessage,
-  restoreMessage, selectOneItemMessage
+  removeMessage,
+  restoreMessage,
+  selectOneItemMessage,
+  warningMessage
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
 import providerOrderApi from '../../../api/documents/providerOrder.js';
-import showDate from "../../../composables/date/showDate.js";
 import organizationApi from "../../../api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import storageApi from "../../../api/list/storage.js";
@@ -30,6 +31,9 @@ import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
 import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
 import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
 import {useFilterCanvasVisible} from "../../../store/canvasVisible.js";
+import copyDocument from "../../../api/documents/copyDocument.js";
+import getColor from "../../../composables/displayed/getColor.js";
+import getStatus from "../../../composables/displayed/getStatus.js";
 
 const router = useRouter()
 
@@ -80,30 +84,25 @@ const filterForm = ref({
 const headers = ref([
   {title: 'Номер', key: 'doc_number'},
   {title: 'Дата', key: 'date'},
+  { title: "Статус", key: "active" },
   {title: 'Поставщик', key: 'counterparty.name'},
   {title: 'Организация', key: 'organization.name'},
   {title: 'Автор', key: 'author.name'},
   {title: 'Валюта', key: 'currency.name'},
 ])
-const statusOptions = ['проведён', 'не проведён'];
-const deletionStatuses = ['не удален', 'удален'];
   
 const getProviderOrderData = async ({page, itemsPerPage, sortBy, search} = {}) => {
   count.value = 0;
   countFilter()
-  const filterData = {
-      ...filterForm.value,
-      active: filterForm.value.active === 'проведён' ? 1 : 0,
-      deleted: filterForm.value.deleted === 'удален' ? 1 : 0 ,
-  };
   filterModal.value = false
   loading.value = true
   try {
-    const { data } = await providerOrderApi.get({page, itemsPerPage, sortBy}, search, filterData)
+    const { data } = await providerOrderApi.get({page, itemsPerPage, sortBy}, search, filterForm.value)
     paginations.value = data.result.pagination
     providerOrders.value = data.result.data
     loading.value = false
   } catch (e) {
+    console.error(e)
   }
 }
 
@@ -116,7 +115,10 @@ const headerButtons = ref([
     name: "createBasedOn",
     function: async () => {
       if (markedID.value.length !== 1) {
-        return showToast(selectOneItemMessage, 'warning')
+        return showToast(selectOneItemMessage, "warning");
+      }
+      if (markedItem.value.active === false) {
+        return showToast("Сначало проведите документ", "warning");
       }
 
       modalCreateBased.isModal()
@@ -124,6 +126,33 @@ const headerButtons = ref([
   },
   {
     name: "copy",
+    function: async () => {
+      if (markedID.value.length !== 1) {
+        return showToast(selectOneItemMessage, "warning");
+      }
+
+      try {
+        const res = await copyDocument.copyOrder(markedID.value[0]);
+        if (res.status === 200) {
+          showToast(copyMessage);
+          window.open(`/providerOrder/${res.data.result.id}`, "_blank");
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    },
+  },
+  {
+    name: "approve",
+    function: () => {
+      approve();
+    },
+  },
+  {
+    name: "cancel",
+    function: () => {
+      unApprove();
+    },
   },
   {
     name: "delete",
@@ -141,13 +170,10 @@ function countFilter() {
   }
 }
 
-
-
-
 const massDel = async () => {
 
   try {
-    const {status} = await providerOrderApi.massDeletion({ids: markedID.value})
+    const {status} = await providerOrderApi.remove({ids: markedID.value})
 
     if (status === 200) {
 
@@ -165,7 +191,7 @@ const massDel = async () => {
 const massRestore = async () => {
 
   try {
-    const {status} = await providerOrderApi.massRestore({ids: markedID.value})
+    const {status} = await providerOrderApi.restore({ids: markedID.value})
 
     if (status === 200) {
       showToast(restoreMessage)
@@ -271,6 +297,32 @@ const getCurrencies = async () => {
 const show = (item) => {
   window.open(`/providerOrder/${item.id}`, '_blank')
 }
+
+const approve = async () => {
+  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
+
+  try {
+    const res = await providerOrderApi.approve({ ids: markedID.value });
+    showToast(approveDocument);
+    await getProviderOrderData();
+    markedID.value = [];
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const unApprove = async () => {
+  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
+
+  try {
+    await providerOrderApi.unApprove({ ids: markedID.value });
+    showToast(approveDocument);
+    await getProviderOrderData();
+    markedID.value = [];
+  } catch (e) {
+    console.error(e);
+  }
+};
 
 onMounted(() => {
   getOrganizations()
@@ -386,6 +438,17 @@ watch(search, debounce((newValue) => {
               </td>
               <td>{{ item.doc_number }}</td>
               <td>{{ getDateTimeInShow(item.date) }}</td>
+              <td>
+                <v-chip
+                    style="height: 50px !important"
+                    class="w-100 d-flex justify-center"
+                    :color="getColor(item.active, item.deleted_at)"
+                >
+                <span class="padding: 5px;">{{
+                    getStatus(item.active, item.deleted_at)
+                  }}</span>
+                </v-chip>
+              </td>
               <td>{{ item.counterparty.name }}</td>
               <td>{{ item.organization.name }}</td>
               <td>{{ item.author.name }}</td>
@@ -402,7 +465,7 @@ watch(search, debounce((newValue) => {
         </div>
         <div class="d-flex ga-2">
           <custom-filter-autocomplete label="Статус" :items="statusOptions" v-model="filterForm.active"/>
-          <custom-filter-autocomplete label="Удалён" :items="deletionStatuses" v-model="filterForm.deleted"/>
+          <custom-filter-autocomplete label="Удалён" :items="markedForDeletion" v-model="filterForm.deleted"/>
         </div>
         <div class="d-flex ga-2">
           <custom-filter-autocomplete label="Организация" :items="organizations"  v-model="filterForm.organization_id"/>

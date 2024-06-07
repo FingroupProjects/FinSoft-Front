@@ -146,11 +146,11 @@ const selectItem = (item) => {
       />
       <span v-if="baseColor === '#274D87'" class="arrow">
         <i
-            style="top: -5px; color: rgba(125, 148, 183)"
+            :style="['top: -5px; color: rgba(125, 148, 183)', isOpen ? 'transform: rotate(180deg)' : '']"
             class="material-icons v-icon notranslate v-icon--size-default v-icon--clickable v-autocomplete__menu-icon"
             role="button"
         >
-          {{ isOpen ? "arrow_drop_up" : "arrow_drop_down" }}
+          arrow_drop_down
         </i>
       </span>
     </div>

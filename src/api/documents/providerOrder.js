@@ -12,6 +12,18 @@ export default {
     return api.get(`/document/provider/order/show/${id}`)
   },
   update(id, data) {
-    return api.patch(`/document/update-order/${id}`, data)
+    return api.patch(`/document/client/update-order/${id}`, data)
+  },
+  remove(data) {
+    return api.post('/document/provider/order/massDelete', data)
+  },
+  restore(data) {
+    return api.post('/document/provider/order/massRestore', data)
+  },
+  approve(data) {
+    return api.post(`/document/provider/order/approve`, data)
+  },
+  unApprove(data) {
+    return api.post(`/document/provider/order/unApprove`, data)
   },
 }
