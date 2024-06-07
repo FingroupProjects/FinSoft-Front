@@ -1,9 +1,22 @@
 <script setup>
-import { approveDocument, copyMessage, ErrorSelectMessage, removeMessage, selectOneItemMessage } from "../../../composables/constant/buttons.js";
+import {
+  approveDocument,
+  copyMessage,
+  ErrorSelectMessage,
+  removeMessage,
+  selectOneItemMessage,
+} from "../../../composables/constant/buttons.js";
 import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
-import { BASE_COLOR, FIELD_OF_SEARCH, TITLE_COLOR } from "../../../composables/constant/colors.js";
+import {
+  BASE_COLOR,
+  FIELD_OF_SEARCH,
+  TITLE_COLOR,
+} from "../../../composables/constant/colors.js";
 import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
-import { markedForDeletion, statusOptions } from "../../../composables/constant/items.js"
+import {
+  markedForDeletion,
+  statusOptions,
+} from "../../../composables/constant/items.js";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import { useModalCreateBased } from "../../../store/modalCreateBased.js";
@@ -43,6 +56,7 @@ const sales = ref([]);
 const paginations = ref([]);
 const count = ref(0);
 
+const approveError = ref([]);
 const organizations = ref([]);
 const storages = ref([]);
 const authors = ref([]);
@@ -209,6 +223,14 @@ const cleanFilterForm = () => {
   filterForm.value = {};
 };
 
+const total = () => {
+  const totalAmount = approveError.value.reduce(
+    (amount, item) => amount + item.amount,
+    0
+  );
+  return totalAmount;
+};
+
 const approve = async () => {
   try {
     const res = await saleApi.approve({ ids: markedID.value });
@@ -218,6 +240,7 @@ const approve = async () => {
     markedID.value = [];
   } catch (e) {
     console.error(e);
+    approveError.value = e.response.data.errors;
     isAproveError.value = true;
   }
 };
@@ -429,8 +452,37 @@ onMounted(() => {
       </v-data-table-server>
     </div>
 
-    <filter-canvas :isAproveError="isAproveError">
-      <div v-if="isAproveError"></div>
+    <filter-canvas @closeCanvas="isAproveError = false" :isAproveError="isAproveError">
+      <div v-if="isAproveError">
+        <p>Недостаточно следующих товаров для проведения документа</p>
+        <div
+          style="border-bottom: 3px solid black"
+          class="d-flex justify-space-between px-2"
+        >
+          <div class="my-2">
+            <span style="font-weight: 600">Наименований: </span>
+            <span>{{ approveError.length }}</span>
+          </div>
+          <div class="my-2">
+            <span style="font-weight: 600">Кол-во: </span>
+            <span>{{ total() }}</span>
+          </div>
+        </div>
+        <div style="max-height: 70vh; overflow: auto">
+          <div
+            v-for="good in approveError"
+            :key="good.id"
+            style="box-shadow: 1px 1px 1px 1px lightgray; border-radius: 12px"
+            class="d-flex flex-column ga-2 my-4 mx-1 pa-4"
+          >
+            <span style="font-weight: 600">{{ good.good }}</span>
+            <span style="font-size: 12px; color: gray"
+              >Кол-во: {{ good.amount }}</span
+            >
+          </div>
+        </div>
+        <!-- {{ approveError }} -->
+      </div>
       <div v-else class="d-flex flex-column w-100 ga-2">
         <div class="d-flex flex-column ga-2 w-100">
           <custom-filter-text-field

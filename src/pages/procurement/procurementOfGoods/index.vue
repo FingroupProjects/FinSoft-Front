@@ -11,7 +11,6 @@ import { useFilterCanvasVisible } from "../../../store/canvasVisible.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
 import getStatus from "../../../composables/displayed/getStatus.js";
-import createBased from "../../../composables/modal/createBased.js";
 import procurementApi from "../../../api/documents/procurement.js";
 import getColor from "../../../composables/displayed/getColor.js";
 import copyDocument from "../../../api/documents/copyDocument.js";
@@ -23,10 +22,10 @@ import Button from "../../../components/button/button.vue";
 import Icons from "../../../composables/Icons/Icons.vue";
 import currencyApi from "../../../api/list/currency.js";
 import storageApi from "../../../api/list/storage.js";
-import { useRoute, useRouter } from "vue-router";
 import user from "../../../api/list/user.js";
 import { onMounted, ref, watch } from "vue";
 import debounce from "lodash.debounce";
+import { useRouter } from "vue-router";
 
 const router = useRouter();
 

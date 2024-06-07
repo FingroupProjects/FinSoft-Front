@@ -1,15 +1,22 @@
 <script setup>
 import {useFilterCanvasVisible} from "../../store/canvasVisible.js";
+const emits = defineEmits(['closeCanvas'])
 const props = defineProps(['isAproveError'])
 const canvasVisible = useFilterCanvasVisible()
 
+const closeApproveError = () =>{
+  canvasVisible.closeFilterCanvas()
+  setTimeout(() => {
+    emits('closeCanvas')
+  }, 500); 
+}
 </script>
 
 <template>
     <div :class="['cartOffcanvas', 'offcanvas-end', { show: canvasVisible.isFilterCanvasVisible }]" tabindex="-1" id="cartOffcanvas" aria-labelledby="cartOffcanvasLabel">
-      <div class="offcanvas-header">
-        <h3 class="offcanvas-title" id="cartOffcanvasLabel">{{ isAproveError ? 'Ошибка' : 'Фильтр' }}</h3>
-        <i class="bi bi-x text-h4 cursor-pointer" @click="canvasVisible.closeFilterCanvas"></i>
+      <div class="offcanvas-header mx-2">
+        <h3 class="offcanvas-title" id="cartOffcanvasLabel">{{ isAproveError ? 'Недостаток товаров' : 'Фильтр' }}</h3>
+        <i class="bi bi-x text-h4 cursor-pointer" @click="closeApproveError()"></i>
       </div>
       <div class="offcanvas-body" >
         <v-form tabindex="-1" style="position: absolute" class="d-flex w-100">
