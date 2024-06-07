@@ -1,22 +1,9 @@
 <script setup>
-import {
-  approveDocument,
-  copyMessage,
-  ErrorSelectMessage,
-  removeMessage,
-  selectOneItemMessage,
-} from "../../../composables/constant/buttons.js";
+import { approveDocument, copyMessage, ErrorSelectMessage, removeMessage, selectOneItemMessage } from "../../../composables/constant/buttons.js";
 import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
-import {
-  BASE_COLOR,
-  FIELD_OF_SEARCH,
-  TITLE_COLOR,
-} from "../../../composables/constant/colors.js";
+import { BASE_COLOR, FIELD_OF_SEARCH, TITLE_COLOR } from "../../../composables/constant/colors.js";
 import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
-import {
-  markedForDeletion,
-  statusOptions,
-} from "../../../composables/constant/items.js";
+import { markedForDeletion, statusOptions } from "../../../composables/constant/items.js";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import { useModalCreateBased } from "../../../store/modalCreateBased.js";
@@ -307,7 +294,7 @@ const getCurrencies = async () => {
 };
 
 const show = (item) => {
-  window.open(`/SellingGoodsEdit/${item.id}`, "_blank");
+  window.open(`/sellingGoods/${item.id}`, "_blank");
 };
 
 watch(markedID, (newVal) => {

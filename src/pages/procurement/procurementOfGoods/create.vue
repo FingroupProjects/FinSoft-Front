@@ -68,7 +68,7 @@ const hoveredRowId = ref(null);
 
 const headers = ref([
   { title: "Товары", key: "goods", sortable: false },
-  { title: "Кол-во", key: "currency.name", sortable: false },
+  { title: "Количество", key: "currency.name", sortable: false },
   { title: "Цена", key: "currency.name", sortable: false },
   { title: "Сумма", key: "currency.name", sortable: false },
 ]);
@@ -194,6 +194,9 @@ const addNewProcurement = async () => {
   const missingData = goods.value.some(validateItem);
   if (missingData) return;
 
+  if (useOrganization.value.getIsHasOneOrganization) {
+    form.organization = useOrganization.value.getOrganization;
+  }
   const body = {
     date: formatDateTime(form.date),
     organization_id:
@@ -220,7 +223,6 @@ const addNewProcurement = async () => {
       price: toDecimal(item.price),
     })),
   }
-  console.log(body)
   try {
     const res = await procurementApi.add(body);
     if (res.status === 201) {
