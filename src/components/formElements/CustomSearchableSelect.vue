@@ -77,7 +77,7 @@ const onClickOutside = event => {
       !input.value?.contains(event.target) &&
       !list.value?.contains(event.target)
   ) {
-    list.value.style.display
+    // list.value.style.display
     list.value.style.display = "none";
   }
   isOpen.value = false;

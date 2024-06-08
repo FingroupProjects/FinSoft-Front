@@ -12,4 +12,4 @@ export const selectOneItemMessage = 'Выберите одну запись!'
 export const ErrorSelectMessage = 'Выберите одинаковые записи!'
 export const cannotDeleteAllProducts = 'Нельзя удалить все записи!'
 export const cannotDeleteLastProduct = 'Нельзя удалить последний запись!'
-
+export const documentAprove = 'Сначало проведите документ!'

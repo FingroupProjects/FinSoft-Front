@@ -345,7 +345,7 @@ onMounted(() => {
 </script>
 <template>
   <div class="document">
-    <div class="d-flex justify-space-between">
+    <div class="d-flex justify-space-between documentCalcWidth">
       <div class="d-flex align-center ga-2 pe-2 ms-4" >
         <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Покупка (создание)</span>
       </div>
@@ -362,7 +362,7 @@ onMounted(() => {
       </v-card>
     </div>
     <v-divider />
-    <div class="documentHeight">
+    <div class="documentHeight documentCalcWidth">
       <v-col class="d-flex flex-column ga-2 pb-0"> 
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field

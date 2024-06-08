@@ -1,5 +1,5 @@
 <script setup>
-import { approveDocument, copyMessage, ErrorSelectMessage, removeMessage, restoreMessage, selectOneItemMessage, warningMessage} from "../../../composables/constant/buttons.js";
+import { approveDocument, copyMessage, ErrorSelectMessage, removeMessage, restoreMessage, selectOneItemMessage, warningMessage, documentAprove} from "../../../composables/constant/buttons.js";
 import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
 import { BASE_COLOR, FIELD_OF_SEARCH, TITLE_COLOR } from "../../../composables/constant/colors.js";
 import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
@@ -111,7 +111,7 @@ const headerButtons = ref([
         return showToast(selectOneItemMessage, "warning");
       }
       if (markedItem.value.active === false) {
-        return showToast("Сначало проведите документ", "warning");
+        return showToast(documentAprove, "warning");
       }
 
       modalCreateBased.isModal();

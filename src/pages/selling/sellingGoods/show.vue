@@ -1,61 +1,69 @@
 <script setup>
-import {computed, onMounted, reactive, ref, watch} from "vue";
-import CustomTextField from "../../../components/formElements/CustomTextField.vue";
+import { approveDocument, editMessage, selectOneItemMessage } from "../../../composables/constant/buttons.js";
+import CustomSearchableSelect from "../../../components/formElements/CustomSearchableSelect.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
+import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
+import CustomTextField from "../../../components/formElements/CustomTextField.vue";
+import { BASE_COLOR, TITLE_COLOR } from "../../../composables/constant/colors.js";
+import formatInputAmount from "../../../composables/format/formatInputAmount.js";
+import formatInputPrice from "../../../composables/format/formatInputPrice.js";
+import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import showToast from "../../../composables/toast/index.js";
-import validate from "./validate.js";
-import {useRoute, useRouter} from "vue-router";
+import { useHasOneOrganization } from "../../../store/hasOneOrganization.js";
+import goToHistory from "../../../composables/movementByPage/goToHistory.js";
+import goodErrorCanvas from "../../../components/Errors/goodErrorCanvas.vue";
+import { useFilterCanvasVisible } from "../../../store/canvasVisible.js";
+import goToPrint from "../../../composables/movementByPage/goToPrint.js";
+import formatDateTime from "../../../composables/date/formatDateTime.js";
+import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
+import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
+import formatNumber from "../../../composables/format/formatNumber.js";
+import ButtonGoods from "../../../components/button/buttonGoods.vue";
+import getStatus from "../../../composables/displayed/getStatus.js";
 import organizationApi from "../../../api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
-import storageApi from "../../../api/list/storage.js";
-import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
+import { computed, onMounted, reactive, ref, watch } from "vue";
+import showToast from "../../../composables/toast/index.js";
+import Button from "../../../components/button/button.vue";
 import currencyApi from "../../../api/list/currency.js";
+import storageApi from "../../../api/list/storage.js";
 import saleApi from "../../../api/documents/sale.js";
 import goodApi from "../../../api/list/goods.js";
-import {editMessage, selectOneItemMessage} from "../../../composables/constant/buttons.js";
+import { useRoute, useRouter } from "vue-router";
 import "../../../assets/css/procurement.css";
-import {BASE_COLOR, TITLE_COLOR} from "../../../composables/constant/colors.js";
-import formatDateTime from "../../../composables/date/formatDateTime.js";
-import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
-import Button from "../../../components/button/button.vue";
-import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
-import ButtonGoods from "../../../components/button/buttonGoods.vue";
-import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
-import formatNumber from "../../../composables/format/formatNumber.js";
-import goToHistory from "../../../composables/movementByPage/goToHistory.js";
-import goToPrint from "../../../composables/movementByPage/goToPrint.js";
-import formatInputPrice from "../../../composables/format/formatInputPrice.js";
-import formatInputAmount from "../../../composables/format/formatInputAmount.js";
-import CustomSearchableSelect from "../../../components/formElements/CustomSearchableSelect.vue";
+import validate from "./validate.js";
 
-const useOrganization = ref(useHasOneOrganization())
+const useOrganization = ref(useHasOneOrganization());
 
-const doc_name = ref('Продажа')
+const doc_name = ref("Продажа");
 const document = ref(null);
 const router = useRouter();
 const route = useRoute();
 const emits = defineEmits(["changed"]);
 
 const form = reactive({
-  doc_number: null,
   date: null,
-  organization: null,
-  counterparty: null,
-  cpAgreement: null,
+  active: null,
   storage: null,
-  saleInteger: null,
-  salePercent: null,
   comment: null,
   currency: null,
   isChange: true,
+  deleted_at: null,
+  doc_number: null,
+  cpAgreement: null,
+  saleInteger: null,
+  salePercent: null,
+  counterparty: null,
+  organization: null,
 });
 
+const isAproveError = ref(false);
 const loading = ref(false);
 const author = ref(null);
+
 const markedID = ref([]);
 const goods = ref([]);
-
+const approveError = ref([]);
 const organizations = ref([]);
 const counterparties = ref([]);
 const cpAgreements = ref([]);
@@ -75,7 +83,7 @@ const headers = ref([
 const getSellingGoodsDetail = async () => {
   const { data } = await saleApi.getById(route.params.id);
   form.doc_number = data.result.doc_number;
-  form.date = getDateTimeInShow(data.result.date, '-', true);
+  form.date = getDateTimeInShow(data.result.date, "-", true);
   form.organization = {
     id: data.result.organization.id,
     name: data.result.organization.name,
@@ -100,6 +108,8 @@ const getSellingGoodsDetail = async () => {
     data.result.salePercent !== 0 ? data.result.salePercent : null;
   form.comment = data.result.comment;
   form.currency = data.result.currency;
+  form.active = data.result.active;
+  form.deleted_at = data.result.deleted_at;
 
   goods.value = data.result.goods.map((item) => ({
     id: item.id,
@@ -111,6 +121,30 @@ const getSellingGoodsDetail = async () => {
   setTimeout(() => {
     document.value = data.result;
   }, 3000);
+};
+
+const approve = async () => {
+  try {
+    await saleApi.approve({ ids: [route.params.id] });
+    showToast(approveDocument);
+    await getSellingGoodsDetail();
+    markedID.value = [];
+  } catch (e) {
+    console.error(e);
+    approveError.value = e.response.data.errors;
+    isAproveError.value = true;
+  }
+};
+
+const unApprove = async () => {
+  try {
+    await saleApi.unApprove({ ids: [route.params.id] });
+    showToast(approveDocument);
+    await getSellingGoodsDetail();
+    markedID.value = [];
+  } catch (e) {
+    console.error(e);
+  }
 };
 
 const getOrganizations = async () => {
@@ -163,7 +197,7 @@ const getGoods = async (good_storage_id, good_organization_id) => {
     page: 1,
     itemsPerPage: 100000,
     sortBy: "name",
-    good_storage_id: good_storage_id, 
+    good_storage_id: good_storage_id,
     good_organization_id: good_organization_id,
     for_sale: 1,
   });
@@ -176,7 +210,9 @@ const decreaseCountOfGoods = () => {
   }
   if (markedID.value.length === goods.value.length) {
     goods.value = [];
-    return goods.value.push([{ id: 1, good_id: null, amount: "1", price: null}])
+    return goods.value.push([
+      { id: 1, good_id: null, amount: "1", price: null },
+    ]);
   }
   goods.value = goods.value.filter((item) => !markedID.value.includes(item.id));
 };
@@ -236,7 +272,7 @@ const updateProcurement = async () => {
   if (missingData) return;
 
   if (useOrganization.value.getIsHasOneOrganization) {
-    form.organization = useOrganization.value.getOrganization
+    form.organization = useOrganization.value.getOrganization;
   }
 
   const body = {
@@ -288,9 +324,8 @@ const totalPrice = computed(() => {
 });
 
 const totalCount = computed(() =>
-    goods.value.reduce((acc, item) => acc + Number(item.amount || 0), 0)
+  goods.value.reduce((acc, item) => acc + Number(item.amount || 0), 0)
 );
-
 
 const getHistory = () => {
   router.push({
@@ -300,8 +335,8 @@ const getHistory = () => {
 };
 
 const closeWindow = () => {
-  window.close()
-}
+  window.close();
+};
 
 const isDataChanged = () => {
   return form.saleInteger != document.value.saleInteger;
@@ -328,9 +363,35 @@ watch(
   }
 );
 
+watch(isAproveError, (newVal) => {
+  if (newVal) {
+    useFilterCanvasVisible().toggleFilterCanvas();
+  }
+});
+
+watch(
+  () => form.counterparty,
+  async (id) => {
+    form.cpAgreement = null;
+    await getCpAgreements(id);
+  }
+);
+
+watch(
+  () => form.cpAgreement,
+  (newValue) => {
+    if (newValue !== null) {
+      const cpAgreement = cpAgreements.value.find((el) =>
+        (el.id === typeof newValue) === "object" ? newValue.id : newValue
+      );
+      form.currency = cpAgreement.currency_id;
+    }
+  }
+);
+
 onMounted(() => {
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
-  getSellingGoodsDetail()
+  getSellingGoodsDetail();
   Promise.all([
     getOrganizations(),
     getCounterparties(),
@@ -339,67 +400,42 @@ onMounted(() => {
     getCurrencies(),
   ]);
 });
-
-watch(
-    () => form.counterparty,
-    async (id) => {
-      form.cpAgreement = null;
-      await getCpAgreements(id);
-    }
-);
-
-watch(
-    () => form.cpAgreement,
-    (newValue) => {
-      if (newValue !== null) {
-        const cpAgreement = cpAgreements.value.find((el) =>
-            (el.id === typeof newValue) === "object" ? newValue.id : newValue
-        );
-        form.currency = cpAgreement.currency_id;
-      }
-    }
-);
-const validatePrice = (price) => {
-  if (price === 0 || price === '0' || Number(price) === 0) {
-    return false;
-  }
-  return true;
-};
-
 </script>
 <template>
   <div class="document">
-      <div class="d-flex justify-space-between">
-        <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">
-            {{ doc_name }} (просмотр)
-          </span>
-        </div>
-        <v-card variant="text" class="d-flex align-center ga-2 py-2">
-          <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <Button
-                  name="history"
-                  @click="goToHistory(router, route)"
-              />
-              <Button
-                  name="print"
-                  @click="goToPrint(router, route, doc_name)"
-              />
-              <Button name="save" @click="updateProcurement" />
-              <Button name="close" @click="closeWindow" />
-            </div>
-          </div>
-        </v-card>
+    <div class="d-flex justify-space-between documentCalcWidth">
+      <div class="d-flex align-center ga-2 pe-2 ms-4">
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">
+          {{ doc_name }} (просмотр) -
+          {{ getStatus(form.active, form.deleted_at) }}
+        </span>
       </div>
+      <v-card variant="text" class="d-flex align-center ga-2 py-2">
+        <div class="d-flex w-100">
+          <div class="d-flex ga-2 mt-1 me-3">
+            <Button name="history" @click="goToHistory(router, route)" />
+            <Button name="approve" @click="approve" />
+            <Button name="cancel" @click="unApprove" />
+            <Button name="print" @click="goToPrint(router, route, doc_name)" />
+            <Button name="save" @click="updateProcurement" />
+            <Button name="close" @click="closeWindow" />
+          </div>
+        </div>
+      </v-card>
+    </div>
     <v-divider />
-    <div class="documentHeight">
+    <div class="documentHeight documentCalcWidth">
       <v-col class="d-flex flex-column ga-2">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field :value="form.doc_number" />
-          <custom-text-field label="Дата" type="datetime-local" class="date" v-model="form.date" />
+          <custom-text-field
+            label="Дата"
+            type="datetime-local"
+            class="date"
+            v-model="form.date"
+          />
           <custom-autocomplete
-          v-if="!useOrganization.getIsHasOneOrganization"
+            v-if="!useOrganization.getIsHasOneOrganization"
             label="Организация"
             :items="organizations"
             v-model="form.organization"
@@ -444,111 +480,128 @@ const validatePrice = (price) => {
             >
               <template v-slot:item="{ item, index }">
                 <tr
-                    :key="index"
-                    @mouseenter="hoveredRowId = item.id"
-                    @mouseleave="hoveredRowId = null"
+                  :key="index"
+                  @mouseenter="hoveredRowId = item.id"
+                  @mouseleave="hoveredRowId = null"
                 >
                   <td>
                     <CustomCheckbox
-                        v-model="markedID"
-                        @change="lineMarking(item)"
-                        :checked="markedID.includes(item.id)"
+                      v-model="markedID"
+                      @change="lineMarking(item)"
+                      :checked="markedID.includes(item.id)"
                     >
                       <span class="fz-12">{{ index + 1 }}</span>
                     </CustomCheckbox>
                   </td>
                   <td style="width: 40%">
                     <custom-searchable-select
-                        :organization="form.organization"
-                        :storage="form.storage"
-                        v-model="item.good_id"
-                        :items="listGoods"
-                        :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                        :isAmount="true"
-                    />
-                  </td>
-                  <td>
-                    <custom-text-field
-                        v-model="item.amount"
-                        :base-color="
-                          hoveredRowId === item.id ? FIELD_GOODS : '#fff'
-                        "
-                        min-width="50"
-                        :value="formatInputAmount(item.amount)"
-                    />
-                  </td>
-                  <td>
-                    <custom-text-field
-                        v-model="item.price"
-                        :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                        min-width="80"
-                        :value="validateNumberInput(item.price)"
-                        @input="formatInputPrice(item.price, $event)"
-                    />
-                  </td>
-                  <td>
-                    <custom-text-field
-                        readonly
-                        v-model="item.summa"
-                        :base-color="
+                      :organization="form.organization"
+                      :storage="form.storage"
+                      v-model="item.good_id"
+                      :items="listGoods"
+                      :base-color="
                         hoveredRowId === item.id ? FIELD_GOODS : '#fff'
                       "
-                        :value="formatNumber(item.amount * item.price)"
-                        min-width="100"
+                      :isAmount="true"
+                    />
+                  </td>
+                  <td>
+                    <custom-text-field
+                      v-model="item.amount"
+                      :base-color="
+                        hoveredRowId === item.id ? FIELD_GOODS : '#fff'
+                      "
+                      min-width="50"
+                      :value="formatInputAmount(item.amount)"
+                    />
+                  </td>
+                  <td>
+                    <custom-text-field
+                      v-model="item.price"
+                      :base-color="
+                        hoveredRowId === item.id ? FIELD_GOODS : '#fff'
+                      "
+                      min-width="80"
+                      :value="validateNumberInput(item.price)"
+                      @input="formatInputPrice(item.price, $event)"
+                    />
+                  </td>
+                  <td>
+                    <custom-text-field
+                      readonly
+                      v-model="item.summa"
+                      :base-color="
+                        hoveredRowId === item.id ? FIELD_GOODS : '#fff'
+                      "
+                      :value="formatNumber(item.amount * item.price)"
+                      min-width="100"
                     />
                   </td>
                 </tr>
                 <tr v-if="index === goods.length - 1">
                   <td></td>
-                  <td style="width: 150%" class="d-flex ga-2" colspan="10">
+                  <td style="width: 150%" class="d-flex ga-2 pt-3" colspan="10">
                     <ButtonGoods name="add" @click="increaseCountOfGoods" />
-                    <ButtonGoods v-if="goods.length !== 1" name="delete" @click="decreaseCountOfGoods" />
+                    <ButtonGoods
+                      v-if="goods.length !== 1"
+                      name="delete"
+                      @click="decreaseCountOfGoods"
+                    />
                   </td>
                 </tr>
               </template>
             </v-data-table>
           </div>
         </div>
-        <div class="d-flex flex-wrap ga-4 justify-space-between w-100 mt-2 bottomField">
+        <div
+          class="d-flex flex-wrap ga-4 justify-space-between w-100 mt-2 bottomField"
+        >
           <div class="d-flex ga-10">
             <custom-text-field
-                readonly
-                v-model="author"
-                label="Автор"
-                min-width="110"
+              readonly
+              v-model="author"
+              label="Автор"
+              min-width="110"
             />
             <custom-text-field
-                label="Комментарий"
-                v-model="form.comment"
-                min-width="310"
+              label="Комментарий"
+              v-model="form.comment"
+              min-width="310"
             />
           </div>
           <div class="d-flex ga-6">
             <custom-text-field
-                readonly
-                label="Количество"
-                v-model="totalCount"
-                min-width="130"
+              readonly
+              label="Количество"
+              v-model="totalCount"
+              min-width="130"
             />
             <custom-text-field
-                readonly
-                label="Общая сумма:"
-                v-model="totalPrice"
-                min-width="180"
-                max-width="110"
+              readonly
+              label="Общая сумма:"
+              v-model="totalPrice"
+              min-width="180"
+              max-width="110"
             />
             <custom-autocomplete
-                readonly
-                v-model="form.currency"
-                label="Валюта"
-                :items="currencies"
-                min-width="190"
-                maxWidth="190px"
+              readonly
+              v-model="form.currency"
+              label="Валюта"
+              :items="currencies"
+              min-width="190"
+              maxWidth="190px"
             />
           </div>
         </div>
       </v-col>
     </div>
+
+    <filter-canvas
+      @closeCanvas="isAproveError = false"
+      :isAproveError="isAproveError"
+    >
+      <goodErrorCanvas :approveError="approveError" />
+    </filter-canvas>
   </div>
 </template>
 
