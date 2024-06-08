@@ -37,6 +37,7 @@ import user from "../../../api/list/user.js";
 import { onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import debounce from "lodash.debounce";
+import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
 
 const router = useRouter();
 
@@ -89,18 +90,13 @@ const headers = ref([
 const getProviderData = async ({ page, itemsPerPage, sortBy, search }) => {
   count.value = 0;
   countFilter();
-  const filterData = {
-    ...filterForm.value,
-    active: filterForm.value.active === "проведён" ? 1 : 0,
-    deleted: filterForm.value.deleted === "удален" ? 1 : 0,
-  };
   filterModal.value = false;
   loading.value = true;
   try {
     const { data } = await providerApi.get(
       { page, itemsPerPage, sortBy },
       search,
-      filterData
+      filterForm.value
     );
     providerReturns.value = data.result.data;
     paginations.value = data.result.pagination;
@@ -155,7 +151,7 @@ function countFilter() {
 
 const massDel = async () => {
   try {
-    const { status } = await providerApi.delete({ ids: markedID.value });
+    const { status } = await providerApi.remove({ ids: markedID.value });
 
     if (status === 200) {
       showToast(removeMessage, "red");
@@ -169,7 +165,7 @@ const massDel = async () => {
 };
 const massRestore = async () => {
   try {
-    const { status } = await providerApi.massRestore({ ids: markedID.value });
+    const { status } = await providerApi.restore({ ids: markedID.value });
 
     if (status === 200) {
       showToast(restoreMessage);
@@ -520,10 +516,11 @@ onMounted(() => {
       </div>
       <div class="d-flex justify-end ga-2">
         <div class="d-flex ga-2" style="margin-right: -6%">
-          <v-btn color="red" class="btn" @click="closeFilterModal"
+          <v-btn tabindex="-1" color="red" class="btn" @click="closeFilterModal"
             >сбросить</v-btn
           >
           <v-btn
+            tabindex="-1"
             :color="BASE_COLOR"
             class="btn"
             @click="

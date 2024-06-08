@@ -17,7 +17,7 @@ import currencyApi from "../../../api/list/currency.js";
 import clientReturnApi from "../../../api/documents/clientReturn.js";
 import Button from "../../../components/button/button.vue";
 import goodApi from "../../../api/list/goods.js";
-import { editMessage, selectOneItemMessage } from "../../../composables/constant/buttons.js";
+import {approveDocument, editMessage, selectOneItemMessage} from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";
 import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
@@ -26,6 +26,12 @@ import showDate from "../../../composables/date/showDate.js";
 import {BASE_COLOR, FIELD_GOODS,TITLE_COLOR} from "../../../composables/constant/colors.js";
 import goToPrint from "../../../composables/movementByPage/goToPrint.js";
 import goToHistory from "../../../composables/movementByPage/goToHistory.js";
+import saleApi from "../../../api/documents/sale.js";
+import getStatus from "../../../composables/displayed/getStatus.js";
+import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
+import GoodErrorCanvas from "../../../components/Errors/goodErrorCanvas.vue";
+import {useFilterCanvasVisible} from "../../../store/canvasVisible.js";
+import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 
 const router = useRouter()
 const route = useRoute()
@@ -52,9 +58,12 @@ const form = reactive({
 
 const loading = ref(false)
 const author = ref(null)
+const isApproveError = ref(false);
+
 const markedID = ref([])
 const goods = ref([])
 
+const approveError = ref([]);
 const organizations = ref([])
 const counterparties = ref([])
 const cpAgreements = ref([])
@@ -75,7 +84,7 @@ const headers = ref([
 const getClientReturnDetails = async () => {
   const { data } = await clientReturnApi.getById(route.params.id)
   form.doc_number = data.result.doc_number;
-  form.date = showDate(data.result.date, '-', true);
+  form.date = getDateTimeInShow(data.result.date, '-', true);
   form.organization = {
     id: data.result.organization.id,
     name: data.result.organization.name
@@ -98,7 +107,8 @@ const getClientReturnDetails = async () => {
   form.salePercent = data.result.salePercent !== 0 ? data.result.salePercent : null
   form.comment = data.result.comment
   form.currency = data.result.currency
-  
+  form.active = data.result.active;
+  form.deleted_at = data.result.deleted_at;
   goods.value = data.result.goods.map(item => ({
     id: item.id,
     good_id: item.good.id,
@@ -117,7 +127,6 @@ const getOrganizations = async () => {
 const getCounterparties = async () => {
   const { data } = await counterpartyApi.getClientCounterparty({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   counterparties.value = data.result.data 
-  console.log(data);
 }
 
 const getCpAgreements = async () => {
@@ -214,16 +223,37 @@ const updateClientReturn = async () => {
    const res = await clientReturnApi.update(route.params.id ,body)
    if (res.status === 200) {
      showToast(editMessage)
-     router.push('/clientReturn')
-     setTimeout(() => {
-     window.location.reload()
-     }, 100);
    }
  } catch (e) {
    console.error(e)
  }
 }
 
+const approve = async () => {
+  try {
+    await clientReturnApi.approve({ ids: [route.params.id] });
+    showToast(approveDocument);
+    await getClientReturnDetails();
+    markedID.value = [];
+  } catch (e) {
+    console.error(e);
+    if (e.response.status === 400) {
+      approveError.value = e.response.data.errors;
+      isApproveError.value = true;
+    }
+  }
+};
+
+const unApprove = async () => {
+  try {
+    await clientReturnApi.unApprove({ ids: [route.params.id] });
+    showToast(approveDocument);
+    await getClientReturnDetails();
+    markedID.value = [];
+  } catch (e) {
+    console.error(e);
+  }
+};
 
 const totalPrice = computed(() => {
   let sum = 0
@@ -248,21 +278,20 @@ const totalPriceWithSale = computed(() => {
 })
 
 
-onMounted( () => {
-  author.value = JSON.parse(localStorage.getItem('user')).name || null
 
-  Promise.all([
-    getClientReturnDetails(),
-    getOrganizations(),
-    getCounterparties(),
-    getCpAgreements(),
-    getStorages(),
-    getCurrencies(),
-    getGoods(),
-  ])
+const closeWindow = () => {
+  window.close()
+}
+const count = ref(10000)
 
-})
+const isSaleIntegerDisabled = computed(() => !!form.salePercent);
+const isSalePercentDisabled = computed(() => !!form.saleInteger);
 
+watch(isApproveError, (newVal) => {
+  if (newVal) {
+    useFilterCanvasVisible().toggleFilterCanvas();
+  }
+});
 
 watch(
     () => form.counterparty,
@@ -283,65 +312,63 @@ watch(
       }
     }
 );
-const closeWindow = () => {
-  window.close()
-}
-
-const isSaleIntegerDisabled = computed(() => !!form.salePercent);
-const isSalePercentDisabled = computed(() => !!form.saleInteger);
 
 watch(() => form.saleInteger, (newValue) => {
   if (!newValue) {
     form.salePercent = ''
   }
 })
-const getHistory = () => {
-  router.push({
-    name: "documentHistory",
-    params: route.params.id,
-  });
-};
+
 
 watch(() => form.salePercent, (newValue) => {
   if (!newValue) {
     form.saleInteger = ''
   }
 })
-const count = ref(10000)
 
+onMounted( () => {
+  author.value = JSON.parse(localStorage.getItem('user')).name || null
+
+  Promise.all([
+    getClientReturnDetails(),
+    getOrganizations(),
+    getCounterparties(),
+    getCpAgreements(),
+    getStorages(),
+    getCurrencies(),
+    getGoods(),
+  ])
+
+})
 
 </script>
 <template>
   <div class="document">
-    <v-col>
-      <div class="d-flex justify-space-between">
+      <div class="d-flex justify-space-between documentCalcWidth">
       <div class="d-flex align-center ms-4">
-        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">{{ doc_name }} (просмотр)</span>
+         <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">
+          {{ doc_name }} (просмотр) -
+          {{ getStatus(form.active, form.deleted_at) }}
+        </span>
       </div>
-        <v-card variant="text" class="d-flex align-center ga-2">
-          <div class="d-flex w-100 justify-end mb-1 mt-2">
-            <div class="d-flex ga-2">
-              <Button
-                  name="history"
-                  @click="goToHistory(router, route)"
-              />
-              <Button
-                  name="print"
-                  @click="goToPrint(router, route, doc_name)"
-              />
+        <v-card variant="text" class="d-flex align-center ga-2 py-2">
+          <div class="d-flex w-100">
+            <div class="d-flex ga-2 mt-1 me-3">
+              <Button name="history" @click="goToHistory(router, route)" />
+              <Button name="approve" @click="approve" />
+              <Button name="cancel" @click="unApprove" />
+              <Button name="print" @click="goToPrint(router, route, doc_name)" />
               <Button name="save" @click="updateClientReturn" />
               <Button name="close" @click="closeWindow" />
             </div>
           </div>
         </v-card>
       </div>
-    </v-col>
     <v-divider/>
-    <v-divider/>
-    <div style="height: calc(99vh - 125px); background: #fff">
-      <v-col class="d-flex flex-column ga-2 pb-0">
+    <div class="documentHeight documentCalcWidth">
+      <v-col class="d-flex flex-column ga-2">
         <div class="d-flex flex-wrap ga-4">
-          <custom-text-field  :value="form.doc_number"/>
+          <custom-text-field  label="Номер" v-model="form.doc_number"/>
           <custom-text-field label="Дата" type="datetime-local" class="date" v-model="form.date"/>
           <custom-autocomplete label="Организация" :items="organizations"  v-model="form.organization"/>
           <custom-autocomplete label="Клиент" :items="counterparties" v-model="form.counterparty"/>
@@ -352,7 +379,7 @@ const count = ref(10000)
         </div>
       </v-col>
       <v-col>
-        <div :style="`border: 1px solid ${BASE_COLOR}`" class="rounded">
+        <div class="rounded">
           <div class="d-flex flex-column w-100">
             <v-data-table
                 style="height: calc(100vh - 315px)"
@@ -496,6 +523,12 @@ const count = ref(10000)
         </div>
       </v-col>
     </div>
+    <filter-canvas
+        @closeCanvas="isApproveError = false"
+        :isApproveError="isApproveError"
+    >
+      <goodErrorCanvas :approveError="approveError" />
+    </filter-canvas>
   </div>
 </template>
 

@@ -15,7 +15,7 @@ import clientReturnApi from "../../../api/documents/clientReturn.js";
 import goodApi from "../../../api/list/goods.js";
 import {addMessage, selectOneItemMessage} from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
-import {FIELD_GOODS} from "../../../composables/constant/colors.js";
+import {FIELD_GOODS, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
 import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
 import currentDateWithTime from "../../../composables/date/currentDateWithTime.js";
@@ -179,7 +179,7 @@ const addNewClientReturn = async () => {
    const res = await clientReturnApi.add(body)
    if (res.status === 201) {
      showToast(addMessage)
-     router.push('/clientReturn')
+     window.open(`/clientReturn/${res.data.result.id}`, "_blank");
    }
  } catch (e) {
    console.error(e)
@@ -287,29 +287,24 @@ onMounted(() => {
 </script>
 <template>
   <div class="document">
-    <v-col>
-      <div class="d-flex justify-space-between text-uppercase ">
-        <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Возврат от клиента (создание)</span>
-        </div>
-        <v-card variant="text" class="d-flex align-center ga-2">
-          <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <Button @click="addNewClientReturn" name="save1" />
-              <Button
-                  @click="router.push('/clientReturn')"
-                  name="close"
-              />
-            </div>
-          </div>
-
-        </v-card>
+    <div class="d-flex justify-space-between">
+      <div class="d-flex align-center ga-2 pe-2 ms-4">
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">
+          Возврат от клиента (создание)
+        </span>
       </div>
-    </v-col>
+      <v-card variant="text" class="d-flex align-center ga-2 py-2">
+        <div class="d-flex w-100">
+          <div class="d-flex ga-2 mt-1 me-3">
+            <Button @click="addNewClientReturn" name="save1" />
+            <Button @click="router.push('/clientReturn')" name="close"/>
+          </div>
+        </div>
+      </v-card>
+    </div>
     <v-divider/>
-    <v-divider/>
-    <div style="height: calc(99vh - 116px); background: #fff">
-      <v-col class="d-flex flex-column ga-2 pb-0">
+    <div class="documentHeight">
+      <v-col class="d-flex flex-column ga-2">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field disabled value="Номер" v-model="form.number"/>
           <custom-text-field label="Дата" type="datetime-local" class="date" v-model="form.date"/>

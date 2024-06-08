@@ -5,7 +5,7 @@ import {
   restoreMessage,
   selectOneItemMessage,
   warningMessage,
-  documentAprove,
+  documentAprove, copyMessage, approveDocument,
 } from "../../../composables/constant/buttons.js";
 import {
   BASE_COLOR,
@@ -37,10 +37,15 @@ import user from "../../../api/list/user.js";
 import { onMounted, ref, watch } from "vue";
 import debounce from "lodash.debounce";
 import { useRouter } from "vue-router";
+import getColor from "../../../composables/displayed/getColor.js";
+import getStatus from "../../../composables/displayed/getStatus.js";
+import GoodErrorCanvas from "../../../components/Errors/goodErrorCanvas.vue";
+import {markedForDeletion, statusOptions} from "../../../composables/constant/items.js";
 
 const router = useRouter();
 const modalCreateBased = useModalCreateBased();
 const loading = ref(true);
+const isAproveError = ref(false);
 const filterModal = ref(false);
 const hoveredRowIndex = ref(null);
 
@@ -52,6 +57,7 @@ const clientReturns = ref([]);
 const paginations = ref([]);
 const count = ref(0);
 
+const approveError = ref([]);
 const organizations = ref([]);
 const storages = ref([]);
 const authors = ref([]);
@@ -62,8 +68,6 @@ const counterpartyAgreements = ref([]);
 const filterForm = ref({
   startDate: null,
   endDate: null,
-  startDate: null,
-  endDate: null,
   active: null,
   deleted: null,
   name: null,
@@ -72,21 +76,19 @@ const filterForm = ref({
 });
 
 const headers = ref([
-  { title: "Номер", key: "name" },
-  { title: "Дата", key: "currency.name" },
-  { title: "Клиент", key: "currency.name" },
-  { title: "Организация", key: "currency.name" },
-  { title: "Склад", key: "currency.name" },
-  { title: "Автор", key: "currency.name" },
+  { title: "Номер", key: "doc_number" },
+  { title: "Дата", key: "date" },
+  { title: "Статус", key: "active" },
+  { title: "Клиент", key: "counterparty.name" },
+  { title: "Организация", key: "organization.name" },
+  { title: "Склад", key: "storage.name" },
+  { title: "Автор", key: "author.name" },
   { title: "Валюта", key: "currency.name" },
 ]);
 
 const rules = {
   required: (v) => !!v,
 };
-
-const statusOptions = ["проведён", "не проведён"];
-const deletionStatuses = ["не удален", "удален"];
 
 const headerButtons = ref([
   {
@@ -139,12 +141,12 @@ const headerButtons = ref([
   {
     name: "delete",
     function: () => {
-      massDel({});
+      compute();
     },
   },
 ]);
 
-const getClientReturnData = async ({ page, itemsPerPage, sortBy, search }) => {
+const getClientReturnData = async ({ page, itemsPerPage, sortBy, search } = {}) => {
   count.value = 0;
   countFilter();
   filterModal.value = false;
@@ -157,8 +159,11 @@ const getClientReturnData = async ({ page, itemsPerPage, sortBy, search }) => {
     );
     paginations.value = data.result.pagination;
     clientReturns.value = data.result.data;
+  } catch (e) {
+    console.error(e)
+  } finally {
     loading.value = false;
-  } catch (e) {}
+  }
 };
 
 function countFilter() {
@@ -174,12 +179,15 @@ const approve = async () => {
   try {
     const res = await clientReturnApi.approve({ ids: markedID.value });
     showToast(approveDocument);
-    await getClientReturnData({});
+    await getClientReturnData();
     markedID.value = [];
   } catch (e) {
     console.error(e);
-    approveError.value = e.response.data.errors;
-    isAproveError.value = true;
+    if (e.response.status === 400) {
+      approveError.value = e.response.data.errors;
+      isAproveError.value = true;
+    }
+
   }
 };
 
@@ -196,18 +204,20 @@ const unApprove = async () => {
 
 const massDel = async () => {
   try {
-    const { status } = await deleteRestoreApi.delete({ ids: markedID.value });
+    const { status } = await clientReturnApi.remove({ ids: markedID.value });
     if (status === 200) {
       showToast(removeMessage, "red");
       await getClientReturnData({});
       markedID.value = [];
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error(e)
+  }
 };
 
 const massRestore = async () => {
   try {
-    const { status } = await deleteRestoreApi.restore({ ids: markedID.value });
+    const { status } = await clientReturnApi.restore({ ids: markedID.value });
     if (status === 200) {
       showToast(restoreMessage);
       await getClientReturnData({});
@@ -216,13 +226,13 @@ const massRestore = async () => {
   } catch (e) {}
 };
 
-const compute = ({ page, itemsPerPage, sortBy, search }) => {
+const compute = () => {
   if (markedID.value.length === 0) return showToast(warningMessage, "warning");
 
   if (markedItem.value.deleted_at) {
-    return massRestore({ page, itemsPerPage, sortBy });
+    return massRestore();
   } else {
-    return massDel({ page, itemsPerPage, sortBy, search });
+    return massDel();
   }
 };
 
@@ -258,6 +268,7 @@ const closeFilterModal = async ({ page, itemsPerPage, sortBy, search }) => {
   filterModal.value = false;
   cleanFilterForm();
   await getClientReturnData({ page, itemsPerPage, sortBy, search });
+  isAproveError.value = false
 };
 
 const cleanFilterForm = () => {
@@ -320,6 +331,12 @@ const show = (item) => {
 
 watch(markedID, (newVal) => {
   markedItem.value = clientReturns.value.find((el) => el.id === newVal[0]);
+});
+
+watch(isAproveError, (newVal) => {
+  if (newVal) {
+    useFilterCanvasVisible().toggleFilterCanvas();
+  }
 });
 
 watch(
@@ -433,6 +450,17 @@ onMounted(() => {
             </td>
             <td>{{ item.doc_number }}</td>
             <td>{{ getDateTimeInShow(item.date) }}</td>
+            <td>
+              <v-chip
+                  style="height: 50px !important"
+                  class="w-100 d-flex justify-center"
+                  :color="getColor(item.active, item.deleted_at)"
+              >
+                <span class="padding: 5px;">{{
+                    getStatus(item.active, item.deleted_at)
+                  }}</span>
+              </v-chip>
+            </td>
             <td>{{ item.counterparty.name }}</td>
             <td>{{ item.organization.name }}</td>
             <td>{{ item.storage.name }}</td>
@@ -443,8 +471,11 @@ onMounted(() => {
       </v-data-table-server>
     </v-card>
 
-    <filter-canvas>
-      <div class="d-flex flex-column ga-2 w-100">
+    <filter-canvas @closeCanvas="isAproveError = false" :isAproveError="isAproveError">
+      <div v-if="isAproveError">
+        <goodErrorCanvas :approveError="approveError"/>
+      </div>
+      <div v-else class="d-flex flex-column ga-2 w-100">
         <div class="d-flex flex-column ga-2">
           <custom-filter-text-field
             clearable
@@ -495,7 +526,7 @@ onMounted(() => {
           />
           <custom-filter-autocomplete
             label="Удалён"
-            :items="deletionStatuses"
+            :items="markedForDeletion"
             v-model="filterForm.deleted"
           />
         </div>
@@ -513,10 +544,11 @@ onMounted(() => {
         </div>
         <div class="d-flex justify-end ga-2">
           <div class="d-flex ga-2" style="margin-right: -6%">
-            <v-btn color="red" class="btn" @click="closeFilterModal"
+            <v-btn tabindex="-1" color="red" class="btn" @click="closeFilterModal"
               >сбросить</v-btn
             >
             <v-btn
+              tabindex="-1"
               :color="BASE_COLOR"
               class="btn"
               @click="

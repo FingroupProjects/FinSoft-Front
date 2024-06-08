@@ -57,7 +57,7 @@ const form = reactive({
   organization: null,
 });
 
-const isAproveError = ref(false);
+const isApproveError = ref(false);
 const loading = ref(false);
 const author = ref(null);
 
@@ -75,8 +75,8 @@ const hoveredRowId = ref(null);
 
 const headers = ref([
   { title: "Товары", key: "goods", sortable: false },
-  { title: "Количество", key: "currency.name", sortable: false },
-  { title: "Цена", key: "currency.name", sortable: false },
+  { title: "Количество", key: "amount", sortable: false },
+  { title: "Цена", key: "price", sortable: false },
   { title: "Сумма", key: "currency.name", sortable: false },
 ]);
 
@@ -131,8 +131,10 @@ const approve = async () => {
     markedID.value = [];
   } catch (e) {
     console.error(e);
-    approveError.value = e.response.data.errors;
-    isAproveError.value = true;
+    if (e.response.status === 400) {
+      approveError.value = e.response.data.errors;
+      isApproveError.value = true;
+    }
   }
 };
 
@@ -308,7 +310,6 @@ const updateProcurement = async () => {
     const res = await saleApi.update(route.params.id, body);
     if (res.status === 200) {
       showToast(editMessage);
-      router.push("/sellingGoods");
     }
   } catch (e) {
     console.error(e);
@@ -363,7 +364,7 @@ watch(
   }
 );
 
-watch(isAproveError, (newVal) => {
+watch(isApproveError, (newVal) => {
   if (newVal) {
     useFilterCanvasVisible().toggleFilterCanvas();
   }
@@ -597,8 +598,8 @@ onMounted(() => {
     </div>
 
     <filter-canvas
-      @closeCanvas="isAproveError = false"
-      :isAproveError="isAproveError"
+      @closeCanvas="isApproveError = false"
+      :isApproveError="isApproveError"
     >
       <goodErrorCanvas :approveError="approveError" />
     </filter-canvas>

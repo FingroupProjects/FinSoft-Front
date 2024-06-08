@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { getToken } from '../composables/auth/index.js';
 import routes from './routes.js';
 import { api } from "../api/api.js";
+import showToast from "../composables/toast/index.js";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -11,6 +12,9 @@ const router = createRouter({
 api.interceptors.response.use(
   response => response,
   error => {
+    if (error.response && error.response.status === 429) {
+      showToast('Повторите попытку!', 'warning')
+    }
     if (error.response && error.response.status === 403) {
       localStorage.setItem('isPayment', true);
     }

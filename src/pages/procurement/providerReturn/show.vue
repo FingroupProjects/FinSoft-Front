@@ -14,10 +14,10 @@ import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import currencyApi from "../../../api/list/currency.js";
 import providerReturnApi from "../../../api/documents/providerReturn.js";
 import goodApi from "../../../api/list/goods.js";
-import {editMessage, selectOneItemMessage} from "../../../composables/constant/buttons.js";
+import {approveDocument, editMessage, selectOneItemMessage} from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
 import showDate from "../../../composables/date/showDate.js";
-import {BASE_COLOR, FIELD_GOODS} from "../../../composables/constant/colors.js";
+import {BASE_COLOR, FIELD_GOODS, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
 import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
 import formatDateTime from "../../../composables/date/formatDateTime.js";
@@ -30,6 +30,8 @@ import goToPrint from "../../../composables/movementByPage/goToPrint.js";
 import goToHistory from "../../../composables/movementByPage/goToHistory.js";
 import formatInputPrice from "../../../composables/format/formatInputPrice.js";
 import CustomSearchableSelect from "../../../components/formElements/CustomSearchableSelect.vue";
+import getStatus from "../../../composables/displayed/getStatus.js";
+import procurementApi from "../../../api/documents/procurement.js";
 
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter()
@@ -106,7 +108,8 @@ const getProviderDetails = async () => {
     form.salePercent = data.result.salePercent !== 0 ? data.result.salePercent : null
     form.comment = data.result.comment
     form.currency = data.result.currency
-
+    form.active = data.result.active
+    form.deleted_at = data.result.deleted_at
     goods.value = data.result.goods.map(item => ({
       id: item.id,
       good_id: item.good.id,
@@ -167,6 +170,28 @@ const getGoods = async (good_storage_id, good_organization_id) => {
   )
   listGoods.value = data.result.data;
 }
+
+const approve = async () => {
+  try {
+    await providerReturnApi.approve({ ids: [route.params.id] });
+    showToast(approveDocument);
+    await getProviderDetails();
+    markedID.value = [];
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const unApprove = async () => {
+  try {
+    await providerReturnApi.unApprove({ ids: [route.params.id] });
+    showToast(approveDocument);
+    await getProviderDetails();
+    markedID.value = [];
+  } catch (e) {
+    console.error(e);
+  }
+};
 
 const decreaseCountOfGoods = () => {
   if (markedID.value.length === 0) {
@@ -242,7 +267,6 @@ const updateProvider = async () => {
    const res = await providerReturnApi.update(route.params.id, body)
    if (res.status === 200) {
      showToast(editMessage)
-     router.push('/providerReturn')
    }
  } catch (e) {
    console.error(e)
@@ -342,37 +366,34 @@ onMounted( () => {
 })
 
 </script>
+
 <template>
   <div class="document">
-    <v-col>
-      <div class="d-flex justify-space-between text-uppercase ">
-        <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>{{doc_name}} (просмотр)</span>
-        </div>
-        <v-card variant="text" class="d-flex align-center ga-2">
-          <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <Button
-                  name="history"
-                  @click="goToHistory(router, route)"
-              />
-              <Button
-                  name="print"
-                  @click="goToPrint(router, route, doc_name)"
-              />
-              <Button name="save" @click="updateProvider" />
-              <Button name="close" @click="closeWindow" />
-            </div>
-          </div>
-        </v-card>
+    <div class="d-flex justify-space-between documentCalcWidth ">
+      <div class="d-flex align-center ga-2 pe-2 ms-4">
+       <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">
+        {{ doc_name }} (просмотр) - {{ getStatus(form.active, form.deleted_at) }}
+       </span>
       </div>
-    </v-col>
+      <v-card variant="text" class="d-flex align-center ga-2">
+        <div class="d-flex w-100">
+          <div class="d-flex ga-2 mt-1 me-3 py-2">
+            <Button name="history" @click="goToHistory(router, route)" />
+            <Button name="approve" @click="approve" />
+            <Button name="cancel" @click="unApprove" />
+            <Button name="print" @click="goToPrint(router, route, doc_name)"/>
+            <Button name="save" @click="updateProvider" />
+            <Button name="close" @click="closeWindow" />
+          </div>
+        </div>
+      </v-card>
+    </div>
     <v-divider/>
     <v-divider/>
     <div style="height: calc(99vh - 116px); background: #fff">
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
-          <custom-text-field  :value="form.doc_number"/>
+          <custom-text-field  label="Номер" v-model="form.doc_number"/>
           <custom-text-field label="Дата" type="datetime-local" class="date" v-model="form.date"/>
           <custom-autocomplete v-if="!useOrganization.getIsHasOneOrganization" label="Организация" :items="organizations"  v-model="form.organization"/>
           <custom-autocomplete label="Поставщик" :items="counterparties" v-model="form.counterparty"/>
