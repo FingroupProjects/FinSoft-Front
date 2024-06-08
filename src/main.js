@@ -8,10 +8,8 @@ import './assets/css/default.css'
 import 'material-design-icons-iconfont/dist/material-design-icons.css'
 import { mask } from 'vue-the-mask'
 
-const count = 14;
 
 const app = createApp(App)
-  app.config.globalProperties.$count = count
   app.use(vuetify)
   app.use(createPinia())
   app.use(router)

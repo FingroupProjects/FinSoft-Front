@@ -116,14 +116,7 @@ onMounted(() => {
               class="d-flex justify-space-between align-center text-h6"
           >
             <span>Подтверждение</span>
-            <v-btn
-                @click="showConfirmModal = false"
-                variant="text"
-                :size="32"
-                class="pt-2 pl-1"
-            >
-              <Icons name="close" title="Закрыть" />
-            </v-btn>
+            <Icons @click="showConfirmModal = false" name="close" title="Закрыть" />
           </v-card-title>
           <v-card-text class="text-subtitle-1"
           >Сохранить текущие изменения?</v-card-text

@@ -182,13 +182,12 @@ const addNewProvider = async () => {
       price: Number(item.price),
     })),
   }
-  console.log(body)
 
    try {
      const res = await providerApi.add(body)
      if (res.status === 201) {
        showToast(addMessage)
-       router.push('/providerReturn')
+       window.open(`/providerReturn/${res.data.result.id}`, "_blank");
      }
    } catch (e) {
      console.log(e)
@@ -285,27 +284,24 @@ onMounted(() => {
 </script>
 <template>
   <div class="document">
-    <v-col>
-      <div class="d-flex justify-space-between text-uppercase">
-        <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span :style="`color: ${TITLE_COLOR}`">Возврат поставщику (создание)</span>
-        </div>
-        <v-card variant="text" class="d-flex align-center ga-2">
-          <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <Button @click="addNewProvider" name="save1" />
-              <Button
-                  @click="router.push('/providerReturn')"
-                  name="close"
-              />
-            </div>
-          </div>
-        </v-card>
+    <div class="d-flex justify-space-between documentCalcWidth">
+      <div class="d-flex align-center ga-2 pe-2 ms-4">
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Возврат поставщику (создание)</span>
       </div>
-    </v-col>
+      <v-card variant="text" class="d-flex align-center ga-2">
+        <div class="d-flex w-100">
+          <div class="d-flex ga-2 mt-1 me-3 py-2">
+            <Button @click="addNewProvider" name="save1" />
+            <Button
+                @click="router.push('/providerReturn')"
+                name="close"
+            />
+          </div>
+        </div>
+      </v-card>
+    </div>
     <v-divider/>
-    <v-divider/>
-    <div style="height: calc(99vh - 116px); background: #fff">
+    <div class="documentHeight documentCalcWidth">
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field disabled value="Номер" v-model="form.number"/>

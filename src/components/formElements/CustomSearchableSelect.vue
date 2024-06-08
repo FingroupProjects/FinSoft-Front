@@ -77,11 +77,13 @@ const onClickOutside = event => {
       !input.value?.contains(event.target) &&
       !list.value?.contains(event.target)
   ) {
-    // list.value.style.display
-    list.value.style.display = "none";
+    if (list.value) { // Проверка на null перед обращением к свойству
+      list.value.style.display = "none";
+    }
+    isOpen.value = false;
   }
-  isOpen.value = false;
 };
+
 
 const onFocus = () => {
   isOpen.value = true;

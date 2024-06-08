@@ -221,8 +221,10 @@ const approve = async () => {
     markedID.value = [];
   } catch (e) {
     console.error(e);
-    approveError.value = e.response.data.errors;
-    isAproveError.value = true;
+    if (e.response.status === 400) {
+      approveError.value = e.response.data.errors;
+      isAproveError.value = true;
+    }
   }
 };
 

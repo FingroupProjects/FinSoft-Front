@@ -15,9 +15,15 @@ export default {
     return api.patch(`/document/update/${id}`, data)
   },
   approve(data) {
-    return api.post(`/document/client/approve/`, data)
+    return api.post(`/document/client/return/approve/`, data)
   },
   unApprove(data) {
-    return api.post(`/document/client/unApprove/`, data)
+    return api.post(`/document/client/return/unApprove/`, data)
   },
+  remove(data) {
+    return api.post('/document/client/return/massDelete', data)
+  },
+  restore(data) {
+    return api.post('/document/client/return/massRestore', data)
+  }
 }
