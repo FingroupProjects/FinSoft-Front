@@ -438,7 +438,7 @@ onMounted(() => {
         <goodErrorCanvas :approveError="approveError"/>
       </div>
       <div v-else class="d-flex flex-column w-100 ga-2">
-        <div class="d-flex flex-column ga-2 w-100">
+        <div class="d-flex flex-column ga-2">
           <custom-filter-text-field
             label="От"
             type="datetime-local"
