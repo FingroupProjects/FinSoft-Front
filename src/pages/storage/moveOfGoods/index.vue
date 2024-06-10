@@ -8,6 +8,9 @@ import CustomTextField from "../../../components/formElements/CustomTextField.vu
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import {BASE_COLOR, FIELD_OF_SEARCH, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import {
+  approveDocument,
+  copyMessage,
+  documentAprove,
   ErrorSelectMessage,
   removeMessage,
   restoreMessage,
@@ -22,14 +25,26 @@ import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import Button from "../../../components/button/button.vue";
 import CreateBase from "../../../components/modal/CreateBase.vue";
 import {useModalCreateBased} from "../../../store/modalCreateBased.js";
+import {markedForDeletion, statusOptions} from "../../../composables/constant/items.js";
+import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
+import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
+import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
+import {useFilterCanvasVisible} from "../../../store/canvasVisible.js";
+import getColor from "../../../composables/displayed/getColor.js";
+import getStatus from "../../../composables/displayed/getStatus.js";
+import copyDocument from "../../../api/documents/copyDocument.js";
+import procurementApi from "../../../api/documents/procurement.js";
+import GoodErrorCanvas from "../../../components/Errors/goodErrorCanvas.vue";
 
 const router = useRouter()
 const modalCreateBased = useModalCreateBased()
 const loading = ref(true)
 const filterModal = ref(false)
 const hoveredRowIndex = ref(null)
+const isApproveError = ref(false);
 
 const markedID = ref([]);
+const approveError = ref([]);
 const markedItem = ref([])
 const search = ref('')
 const debounceSearch = ref('')
@@ -40,6 +55,7 @@ const paginations = ref([])
 const showConfirmDialog = ref(false);
 const showModal = ref(false);
 const count = ref(0);
+
 
 const organizations = ref([])
 const storages = ref([])
@@ -59,13 +75,10 @@ const filterForm = ref({
   comment: null,
 })
 
-const statusOptions = ['проведён', 'не проведён'];
-  const deletionStatuses = ['не удален', 'удален'];
-
-
 const headers = ref([
   {title: 'Номер', key: 'doc_number'},
   {title: 'Дата', key: 'date'},
+  { title: "Статус", key: "active" },
   {title: 'Склад-отправитель', key: 'storage.name'},
   {title: 'Склад-получатель', key: 'storage.name'},
   {title: 'Организация', key: 'organization.name'},
@@ -77,23 +90,21 @@ const rules = {
 }
 
 
-const getMoveData = async ({page, itemsPerPage, sortBy, search}) => {
+const getMoveData = async ({page, itemsPerPage, sortBy, search} = {}) => {
   count.value = 0;
   countFilter()
-  const filterData = {
-      ...filterForm.value,
-      active: filterForm.value.active === 'проведён' ? 1 : 0,
-      deleted: filterForm.value.deleted === 'удален' ? 1 : 0 ,
-    };
   filterModal.value = false
   loading.value = true
   try {
-    const { data } = await moveApi.get({page, itemsPerPage, sortBy}, search, filterData)
+    const { data } = await moveApi.get({page, itemsPerPage, sortBy}, search, filterForm.value)
     console.log(data);
     paginations.value = data.result.pagination
     moves.value = data.result.data
-    loading.value = false
+
   } catch (e) {
+    console.error(e)
+  } finally {
+    loading.value = false
   }
 }
 
@@ -106,21 +117,49 @@ const headerButtons = ref([
     name: "createBasedOn",
     function: () => {
       if (markedID.value.length !== 1) {
-        return showToast(selectOneItemMessage, 'warning')
+        return showToast(selectOneItemMessage, "warning");
+      }
+      if (markedItem.value.active === false) {
+        return showToast(documentAprove, "warning");
       }
 
-      modalCreateBased.isModal()
+      modalCreateBased.isModal();
     },
   },
   {
     name: "copy",
+    function: async () => {
+      if (markedID.value.length !== 1) {
+        return showToast(selectOneItemMessage, "warning");
+      }
+
+      try {
+        const res = await copyDocument.copy(markedID.value[0]);
+        if (res.status === 200) {
+          showToast(copyMessage);
+          window.open(`/moveOfGoods/${res.data.result.id}`, "_blank");
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    },
   },
- 
-   
+  {
+    name: "approve",
+    function: () => {
+      approve();
+    },
+  },
+  {
+    name: "cancel",
+    function: () => {
+      unApprove();
+    },
+  },
   {
     name: "delete",
     function: () => {
-      massDel({});
+      compute()
     },
   },
 ]);
@@ -148,12 +187,6 @@ const getRecipientStorage = async () => {
   recipient_storages.value = data.result.data
 }
 
-onMounted(() => {
-  getOrganizations()
-  getStorages()
-  getSenderStorage()
-  getRecipientStorage()
-})
 
 
 function countFilter() {
@@ -167,46 +200,72 @@ function countFilter() {
   return count;
 }
 
+const approve = async () => {
+  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
+  try {
+    await moveApi.approve({ ids: markedID.value })
+    showToast(approveDocument)
+    await getMoveData()
+    markedID.value = []
+  } catch (e) {
+    console.error(e)
+    if (e.response.status === 400) {
+      approveError.value = e.response.data.errors;
+      isApproveError.value = true;
+    }
+  }
+};
+
+const unApprove = async () => {
+  if (markedID.value.length === 0) return showToast(warningMessage, "warning")
+  try {
+    await moveApi.unApprove({ ids: markedID.value })
+    showToast(approveDocument)
+    await getMoveData()
+    markedID.value = []
+  } catch (e) {
+    console.error(e)
+
+  }
+};
+
 const massDel = async () => {
   try {
-    const {status} = await moveApi.massDeletion({ids: markedID.value})
+    const {status} = await moveApi.remove({ids: markedID.value})
 
     if (status === 200) {
-
       showToast(removeMessage, 'red')
       await getMoveData({})
       markedID.value = []
-      dialog.value = false
     }
 
   } catch (e) {
-
+    console.error(e)
   }
 }
-const massRestore = async () => {
 
+const massRestore = async () => {
   try {
-    const {status} = await moveApi.massRestore({ids: markedID.value})
+    const {status} = await moveApi.restore({ids: markedID.value})
 
     if (status === 200) {
       showToast(restoreMessage)
       await getMoveData({})
       markedID.value = []
-      dialog.value = false
     }
   } catch (e) {
-
+    console.error(e)
   }
 }
 
-const compute = ({ page, itemsPerPage, sortBy, search }) => {
-  if(markedID.value.length === 0) return showToast(warningMessage, 'warning')
+const compute = () => {
+  if (markedID.value.length === 0) return showToast(warningMessage, 'warning')
 
-  if(markedItem.value.deleted_at) {
-    return massRestore({ page, itemsPerPage, sortBy })
+  if (markedItem.value.deleted_at) {
+    return massRestore()
   }
   else{
-    return massDel({ page, itemsPerPage, sortBy, search })
+    return massDel()
   }
 }
 
@@ -254,6 +313,19 @@ watch(search, debounce((newValue) => {
   debounceSearch.value = newValue
 }, 500))
 
+watch(isApproveError, (newVal) => {
+  if (newVal) {
+    useFilterCanvasVisible().toggleFilterCanvas();
+  }
+});
+
+onMounted(() => {
+  getOrganizations()
+  getStorages()
+  getSenderStorage()
+  getRecipientStorage()
+})
+
 </script>
 
 <template>
@@ -294,11 +366,11 @@ watch(search, debounce((newValue) => {
             flat
           />
         </div>
-          <div class=" filterElement">
+          <div class="filterElement">
             <Icons
               name="filter"
               title="Фильтр"
-              @click="filterModal = true"
+              @click="useFilterCanvasVisible().toggleFilterCanvas()"
               class="mt-1"
             />
             <span v-if="count !== 0" class="countFilter">{{
@@ -309,7 +381,7 @@ watch(search, debounce((newValue) => {
       </div>
       <v-card class="table calcWidth">
         <v-data-table-server
-            style="height: 78vh"
+            style="height: calc(100vh - 150px)"
             items-per-page-text="Элементов на странице:"
             loading-text="Загрузка"
             no-data-text="Нет данных"
@@ -351,6 +423,17 @@ watch(search, debounce((newValue) => {
                  
               <td>{{ item.doc_number }}</td>
               <td>{{ getDateTimeInShow(item.date) }}</td>
+              <td>
+                <v-chip
+                    style="height: 50px !important"
+                    class="w-100 d-flex justify-center"
+                    :color="getColor(item.active, item.deleted_at)"
+                >
+                <span class="padding: 5px;">{{
+                    getStatus(item.active, item.deleted_at)
+                  }}</span>
+                </v-chip>
+              </td>
               <td>{{ item.sender_storage_id.name }}</td>
               <td>{{ item.recipient_storage_id.name }}</td>
               <td>{{ item.organization_id.name }}</td>
@@ -359,39 +442,46 @@ watch(search, debounce((newValue) => {
           </template>
         </v-data-table-server>
       </v-card>
-      <v-card>
-        <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup.esc="closeFilterModal">
-          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="450"
-                  class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
-            <div class="d-flex justify-space-between align-center mb-2">
-              <span>Фильтр</span>
+
+    <filter-canvas @closeCanvas="isApproveError = false" :isApproveError="isApproveError">
+      <div v-if="isApproveError">
+        <goodErrorCanvas :approveError="approveError"/>
+      </div>
+      <div v-else class="d-flex flex-column w-100 ga-2">
+          <div class="d-flex flex-column w-100 ga-2">
+            <custom-filter-text-field min-width="106" class="date" label="От" type="date" v-model="filterForm.startDate"/>
+            <custom-filter-text-field min-width="106" class="date" label="По" type="date" v-model="filterForm.endDate"/>
+          </div>
+          <div class="d-flex ga-2">
+            <custom-filter-autocomplete label="Статус" :items="statusOptions" v-model="filterForm.active"/>
+            <custom-filter-autocomplete label="Удалён" :items="markedForDeletion" v-model="filterForm.deleted"/>
+          </div>
+          <div class="d-flex flex-column w-100 ga-2">
+            <custom-filter-autocomplete min-width="106" label="Огранизация" :items="organizations"  v-model="filterForm.organization_id"/>
+            <custom-filter-autocomplete min-width="106" label="Склад-отправитель" :items="storages" v-model="filterForm.storage_id"/>
+          </div>
+          <custom-filter-autocomplete min-width="106" label="Склад-получатель" :items="storages" v-model="filterForm.storage_id"/>
+          <div class="d-flex justify-end">
+            <div class="d-flex ga-2" style="margin-right: -6%">
+              <v-btn tabindex="-1" color="red" class="btn" @click="closeFilterModal"
+              >сбросить</v-btn
+              >
+              <v-btn
+                  tabindex="-1"
+                  :color="BASE_COLOR"
+                  class="btn"
+                  @click="
+                () => {
+                  getMoveData();
+                  useFilterCanvasVisible().closeFilterCanvas();
+                }
+              "
+              >применить</v-btn
+              >
             </div>
-            <v-form class="d-flex w-100" @submit.prevent="">
-              <v-row class="w-100">
-                <v-col class="d-flex flex-column w-100 ga-4">
-                  <div class="d-flex flex-column ga-2 w-100">
-                    <custom-text-field label="От" type="date" min-width="508"  v-model="filterForm.startDate"/>
-                    <custom-text-field label="По" type="date" min-width="508"  v-model="filterForm.endDate"/>
-                    </div>
-                    <div class="d-flex ga-2">                
-                      <custom-autocomplete min-width="250" label="Статус" :items="statusOptions" v-model="filterForm.active"/>
-                      <custom-autocomplete min-width="250" label="Удалён" :items="deletionStatuses" v-model="filterForm.deleted"/>               
-                  </div>
-                  <div class="d-flex ga-2">
-                    <custom-autocomplete min-width="250" label="Огранизация" :items="organizations"  v-model="filterForm.organization_id"/>
-                    <custom-autocomplete min-width="250" label="Склад-отправитель" :items="storages" v-model="filterForm.storage_id"/>               
-                  </div>
-                  <custom-autocomplete min-width="508" label="Склад-получатель" :items="storages" v-model="filterForm.storage_id"/>               
-                  <div class="d-flex justify-end ga-2">
-                    <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-                    <v-btn :color="BASE_COLOR" class="btn"  @click="getMoveData">применить</v-btn>
-                  </div>
-                </v-col>
-              </v-row>
-            </v-form>
-          </v-card>
-        </v-dialog>
-      </v-card>
+          </div>
+      </div>
+      </filter-canvas>
   </div>
 
 

@@ -286,7 +286,7 @@ onMounted(() => {
       <h2 class="my-4">Баланс</h2>
       <v-card class="table">
         <v-data-table-server
-          style="height: cacl(100vh - 150px)"
+          style="height: calc(100vh - 150px)"
           :loading="loading"
           loading-text="Загрузка"
           items-per-page-text="Элементов на странице:"

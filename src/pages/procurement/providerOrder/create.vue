@@ -168,7 +168,7 @@ const addNewProviderOrder = async () => {
     const res = await providerOrderApi.add(body)
     if (res.status === 201) {
       showToast(addMessage)
-      router.push('/providerOrder')
+      window.open(`/providerOrder/${res.data.result.id}`, "_blank");
     }
   } catch (e) {
     console.log(e)

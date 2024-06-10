@@ -132,7 +132,7 @@ const selectItem = (item) => {
 
 <template>
   <div style="top: -24px" class="dropdown w-100" @click.stop>
-    <div class="position-relative">
+    <div class="position-relative" @click="onFocus">
       <input
         type="text"
         :style="[
@@ -143,7 +143,6 @@ const selectItem = (item) => {
         placeholder="Поиск по id, наименовании, штрих-коду"
         ref="input"
         @input="search($event)"
-        @focus="onFocus"
         :value="displayValue"
       />
       <span v-if="baseColor === '#274D87'" class="arrow">

@@ -27,6 +27,7 @@ import getDataBased from "../../../composables/otherQueries/getDataBased.js";
 import CustomSearchableSelect from "../../../components/formElements/CustomSearchableSelect.vue";
 import toDecimal from "../../../composables/format/toDecimal.js";
 import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
+import formatInputAmount from "../../../composables/format/formatInputAmount.js";
 
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter();
@@ -343,6 +344,7 @@ onMounted(() => {
   getStorages()
 })
 </script>
+
 <template>
   <div class="document">
     <div class="d-flex justify-space-between documentCalcWidth">
@@ -363,7 +365,7 @@ onMounted(() => {
     </div>
     <v-divider />
     <div class="documentHeight documentCalcWidth">
-      <v-col class="d-flex flex-column ga-2 pb-0"> 
+      <v-col class="d-flex flex-column ga-2">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field
             disabled
@@ -444,7 +446,10 @@ onMounted(() => {
                   <td>
                     <custom-text-field
                         v-model="item.amount"
-                        :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                        :value="formatInputAmount(item.amount)"
+                        :base-color="
+                          hoveredRowId === item.id ? FIELD_GOODS : '#fff'
+                        "
                         v-mask="'########'"
                         min-width="50"
                     />
