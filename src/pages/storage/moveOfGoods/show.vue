@@ -1,11 +1,9 @@
 <script setup>
 import {computed, onMounted, reactive, ref, watch} from "vue";
-import Icons from "../../../composables/Icons/Icons.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../../composables/toast/index.js";
-import currentDate from "../../../composables/date/currentDate.js";
 import validate from "./validate.js";
 
 import {useRoute, useRouter} from "vue-router";
@@ -13,15 +11,23 @@ import organizationApi from "../../../api/list/organizations.js";
 import storageApi from "../../../api/list/storage.js";
 import moveApi from "../../../api/documents/move.js";
 import goodApi from "../../../api/list/goods.js";
-import { editMessage } from "../../../composables/constant/buttons.js";
+import {approveDocument, editMessage} from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
-import {BASE_COLOR , TITLE_COLOR} from "../../../composables/constant/colors.js";
+import {FIELD_GOODS, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import {useHasOneOrganization} from '../../../store/hasOneOrganization.js'
 import formatDateTime from "../../../composables/date/formatDateTime.js";
 import Button from "../../../components/button/button.vue";
 import goToHistory from "../../../composables/movementByPage/goToHistory.js";
 import goToPrint from "../../../composables/movementByPage/goToPrint.js";
 import showDate from "../../../composables/date/showDate.js";
+import getStatus from "../../../composables/displayed/getStatus.js";
+import formatInputAmount from "../../../composables/format/formatInputAmount.js";
+import ButtonGoods from "../../../components/button/buttonGoods.vue";
+import CustomSearchableSelect from "../../../components/formElements/CustomSearchableSelect.vue";
+import {useFilterCanvasVisible} from "../../../store/canvasVisible.js";
+import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
+import GoodErrorCanvas from "../../../components/Errors/goodErrorCanvas.vue";
+import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 
 const useOrganization = ref(useHasOneOrganization()) 
 const router = useRouter()
@@ -40,6 +46,9 @@ const form = reactive({
 
 const loading = ref(false)
 const author = ref(null)
+const hoveredRowId = ref(null)
+const isApproveError = ref(false)
+const approveError = ref([])
 const markedID = ref([])
 const goods = ref([{
   id: 1,
@@ -59,9 +68,8 @@ const headers = ref([
 
 const getMoveDetails = async () => {
   const { data } = await moveApi.getById(route.params.id)
-  console.log(data);
   form.doc_number = data.data.doc_number
-  form.date = showDate(data.data.date, '-', true);
+  form.date = getDateTimeInShow(data.data.date, '-', true);
   form.organization = {
     id: data.data.organization_id.id,
     name: data.data.organization_id.name
@@ -75,7 +83,8 @@ const getMoveDetails = async () => {
     name: data.data.recipient_storage_id.name
   }
   form.comment = data.data.comment
-
+  form.active = data.data.active;
+  form.deleted_at = data.data.deleted_at;
   goods.value = data.data.goods.map(item => ({
     id: item.id,
     good_id: item.good.id,
@@ -106,6 +115,32 @@ const getGoods = async () => {
   const { data } = await goodApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   listGoods.value = data.result.data
 }
+
+const approve = async () => {
+  try {
+    await moveApi.approve({ ids: [route.params.id] });
+    showToast(approveDocument);
+    await getMoveDetails();
+    markedID.value = [];
+  } catch (e) {
+    console.error(e);
+    if (e.response.status === 400) {
+      approveError.value = e.response.data.errors;
+      isApproveError.value = true;
+    }
+  }
+};
+
+const unApprove = async () => {
+  try {
+    await moveApi.unApprove({ ids: [route.params.id] });
+    showToast(approveDocument);
+    await getMoveDetails();
+    markedID.value = [];
+  } catch (e) {
+    console.error(e);
+  }
+};
 
 const lineMarking = (item) => {
   const index = markedID.value.indexOf(item.id);
@@ -173,7 +208,6 @@ const updateMove = async () => {
    }
 }
 
-
 const totalPrice = computed(() => {
   let sum = 0
   goods.value.forEach(item => {
@@ -186,29 +220,41 @@ const closeWindow = () => {
   window.close()
 }
 
+watch(isApproveError, (newVal) => {
+  if (newVal) {
+    useFilterCanvasVisible().toggleFilterCanvas();
+  }
+});
+
 onMounted( () => {
   author.value = JSON.parse(localStorage.getItem('user')).name || null
 
    Promise.all([
-      getOrganizations(),
-      getStorages(),
-      getGoods(),
-      getMoveDetails()
+     getOrganizations(),
+     getStorages(),
+     getGoods(),
+     getMoveDetails()
   ])
 })
 
 </script>
+
 <template>
   <div class="document">
-    <div class="d-flex justify-space-between text-uppercase ">
+    <div class="d-flex justify-space-between documentCalcWidth ">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
-        <span>{{ doc_name }} (просмотр)</span>
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">
+          {{ doc_name }} (просмотр) -
+          {{ getStatus(form.active, form.deleted_at) }}
+        </span>
       </div>
-      <v-card variant="text" class="d-flex align-center ga-2">
+      <v-card variant="text" class="d-flex align-center ga-2 py-2">
         <div class="d-flex w-100">
           <div class="d-flex items-center ga-2 mt-1 me-3">
-            <Button name="history" @click="goToHistory(router, route)"/>
-            <Button name="print" @click="goToPrint(router, route, doc_name)"/>
+            <Button name="history" @click="goToHistory(router, route)" />
+            <Button name="approve" @click="approve" />
+            <Button name="cancel" @click="unApprove" />
+            <Button name="print" @click="goToPrint(router, route, doc_name)" />
             <Button name="save" @click="updateMove" />
             <Button name="close" @click="closeWindow" />
           </div>
@@ -216,25 +262,21 @@ onMounted( () => {
       </v-card>
     </div>
     <v-divider/>
-    <div style="height: calc(99vh - 116px); background: #fff">
-      <v-col class="d-flex flex-column ga-2 pb-0">
+    <div class="documentHeight documentCalcWidth">
+      <v-col class="d-flex flex-column ga-2">
         <div class="d-flex flex-wrap ga-4">
-          <custom-text-field  :value="form.doc_number"/>
+          <custom-text-field label="Номер" readonly v-model="form.doc_number"/>
           <custom-text-field label="Дата" type="datetime-local" class="date" v-model="form.date"/>
-          <custom-autocomplete  v-if="!useOrganization.getIsHasOneOrganization" label="Организация" :items="organizations"  v-model="form.organization"/>
+          <custom-autocomplete v-if="!useOrganization.getIsHasOneOrganization" label="Организация" :items="organizations"  v-model="form.organization"/>
           <custom-autocomplete label="Склад-отп" :items="storages" v-model="form.sender_storage"/>
           <custom-autocomplete label="Склад-пол" :items="storages" v-model="form.recipient_storage"/>
         </div>
       </v-col>
       <v-col>
-        <div :style="`border: 1px solid ${BASE_COLOR}`" class="rounded">
-          <div class="d-flex pa-1 ga-1">
-            <Icons name="add" title="Добавить поле" @click="increaseCountOfGoods"/>
-            <Icons name="delete" @click="decreaseCountOfGoods"/>
-          </div>
-          <div class="d-flex flex-column w-100 goods">
+        <div class="rounded">
+          <div class="d-flex flex-column w-100">
             <v-data-table
-                style="height: calc(100vh - 300px)"
+                class="documentTable"
                 items-per-page-text="Элементов на странице:"
                 loading-text="Загрузка"
                 no-data-text="Нет данных"
@@ -252,21 +294,40 @@ onMounted( () => {
                 fixed-header
             >
               <template v-slot:item="{ item, index }">
-                <tr :key="index">
+                <tr :key="index" @mouseenter="hoveredRowId = item.id" @mouseleave="hoveredRowId = null">
                   <td>
                     <CustomCheckbox
-                      v-model="markedID"
-                      @change="lineMarking(item)"
-                      :checked="markedID.includes(item.id)"
+                        v-model="markedID"
+                        @change="lineMarking(item)"
+                        :checked="markedID.includes(item.id)"
                     >
-                      <span>{{ index + 1}}</span>
+                      <span class="fz-12">{{ index + 1}}</span>
                     </CustomCheckbox>
                   </td>
                   <td style="width: 40%">
-                    <custom-autocomplete v-model="item.good_id" :items="listGoods"  max-width="200"/>
+                    <custom-searchable-select
+                        v-model="item.good_id"
+                        :items="listGoods"
+                        :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
+                        :organization="form.organization"
+                    />
                   </td>
                   <td>
-                    <custom-text-field v-model="item.amount" v-mask="'########'" min-width="50" max-width="120" />
+                    <custom-text-field
+                        v-model="item.amount"
+                        :value="formatInputAmount(item.amount)"
+                        :base-color="
+                          hoveredRowId === item.id ? FIELD_GOODS : '#fff'
+                        "
+                        min-width="50"
+                    />
+                  </td>
+                </tr>
+                <tr v-if="index === goods.length - 1">
+                  <td></td>
+                  <td style="width: 150%" class="d-flex ga-2" colspan="10">
+                    <ButtonGoods name="add" @click="increaseCountOfGoods"/>
+                    <ButtonGoods v-if="goods.length !== 1" name="delete" @click="decreaseCountOfGoods"/>
                   </td>
                 </tr>
               </template>
@@ -281,6 +342,12 @@ onMounted( () => {
         </div>
       </v-col>
     </div>
+    <filter-canvas
+        @closeCanvas="isApproveError = false"
+        :isApproveError="isApproveError"
+    >
+      <goodErrorCanvas :approveError="approveError" />
+    </filter-canvas>
   </div>
 </template>
 

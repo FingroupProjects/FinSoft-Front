@@ -14,4 +14,16 @@ export default {
   update(id, data) {
     return api.patch(`/document/inventory/${id}`, data)
   },
+  approve(data) {
+    return api.post(`/document/inventory/approve/`, data)
+  },
+  unApprove(data) {
+    return api.post(`/document/inventory/unApprove/`, data)
+  },
+  remove(data) {
+    return api.post('/document/inventory/massDelete', data)
+  },
+  restore(data) {
+    return api.post('/document/inventory/massRestore', data)
+  }
 }
