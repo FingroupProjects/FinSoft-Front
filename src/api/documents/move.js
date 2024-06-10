@@ -20,4 +20,10 @@ export default {
   unApprove(data) {
     return api.post(`/document/movement/unApprove/`, data)
   },
+  remove(data) {
+    return api.post('/document/movement/massDelete', data)
+  },
+  restore(data) {
+    return api.post('/document/movement/massRestore', data)
+  }
 }

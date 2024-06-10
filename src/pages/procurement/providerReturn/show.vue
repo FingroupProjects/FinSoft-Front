@@ -393,7 +393,7 @@ onMounted( () => {
     <div style="height: calc(99vh - 116px); background: #fff">
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
-          <custom-text-field  label="Номер" v-model="form.doc_number"/>
+          <custom-text-field label="Номер" readonly v-model="form.doc_number"/>
           <custom-text-field label="Дата" type="datetime-local" class="date" v-model="form.date"/>
           <custom-autocomplete v-if="!useOrganization.getIsHasOneOrganization" label="Организация" :items="organizations"  v-model="form.organization"/>
           <custom-autocomplete label="Поставщик" :items="counterparties" v-model="form.counterparty"/>
