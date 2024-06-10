@@ -14,4 +14,10 @@ export default {
   update(id, data) {
     return api.patch(`/document/movement/${id}`, data)
   },
+  approve(data) {
+    return api.post(`/document/movement/approve/`, data)
+  },
+  unApprove(data) {
+    return api.post(`/document/movement/unApprove/`, data)
+  },
 }

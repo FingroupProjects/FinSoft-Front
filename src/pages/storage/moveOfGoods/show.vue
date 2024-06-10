@@ -32,13 +32,9 @@ const form = reactive({
   doc_number: null,
   date: null,
   organization: null,
-  organizations: [],
   storage: null,
-  storages: [],
   sender_storage: null,
-  sender_storages: [],
   recipient_storage: null,
-  recipient_storages: [],
   comment: null,
 })
 
@@ -110,9 +106,7 @@ const getGoods = async () => {
   const { data } = await goodApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
   listGoods.value = data.result.data
 }
-const decreaseCountOfGoods = () => {
-  goods.value = goods.value.filter((item) => !markedID.value.includes(item.id))
-}
+
 const lineMarking = (item) => {
   const index = markedID.value.indexOf(item.id);
   if (index !== -1) {
@@ -123,6 +117,11 @@ const lineMarking = (item) => {
     }
   }
 }
+
+const decreaseCountOfGoods = () => {
+  goods.value = goods.value.filter((item) => !markedID.value.includes(item.id))
+}
+
 const increaseCountOfGoods = () => {
   const missingData = goods.value.some(validateItem)
   if (missingData) return
@@ -152,7 +151,7 @@ const updateMove = async () => {
     form.organization = useOrganization.value.getOrganization
   }
 
-  const body = {
+   const body = {
     date: formatDateTime(form.date),
     organization_id: typeof form.organization === 'object' ? form.organization.id : form.organization,
     sender_storage_id: typeof form.sender_storage === 'object' ? form.sender_storage.id : form.sender_storage,
@@ -162,17 +161,16 @@ const updateMove = async () => {
       good_id: Number(item.good_id),
       amount: Number(item.amount),
     }))
- }
-
- try {
-   const res = await moveApi.update(route.params.id ,body)
-   if (res.status === 200) {
-     showToast(editMessage)
-     router.push('/moveOfGoods')
    }
- } catch (e) {
-   console.error(e)
- }
+
+   try {
+     const res = await moveApi.update(route.params.id ,body)
+     if (res.status === 200) {
+       showToast(editMessage)
+     }
+   } catch (e) {
+     console.error(e)
+   }
 }
 
 
@@ -184,19 +182,6 @@ const totalPrice = computed(() => {
   return sum
 })
 
-const totalPriceWithSale = computed(() => {
-  let sum = 0
-  if (form.salePercent !== null) {
-      sum = totalPrice.value - (totalPrice.value * form.salePercent / 100)
-  } else {
-    goods.value.forEach(item => {
-      sum += (item.price * item.amount)
-    })
-    sum -= form.saleInteger
-  }
-
-  return sum
-})
 const closeWindow = () => {
   window.close()
 }
@@ -210,36 +195,26 @@ onMounted( () => {
       getGoods(),
       getMoveDetails()
   ])
-
 })
 
 </script>
 <template>
   <div class="document">
-    <v-col>
-      <div class="d-flex justify-space-between text-uppercase ">
-        <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>{{ doc_name }} (просмотр)</span>
-        </div>
-        <v-card variant="text" class="d-flex align-center ga-2">
-          <div class="d-flex w-100">
-            <div class="d-flex items-center ga-2 mt-1 me-3">
-              <Button
-                  name="history"
-                  @click="goToHistory(router, route)"
-              />
-              <Button
-                  name="print"
-                  @click="goToPrint(router, route, doc_name)"
-              />
-              <Button name="save" @click="updateMove" />
-              <Button name="close" @click="closeWindow" />
-            </div>
-          </div>
-        </v-card>
+    <div class="d-flex justify-space-between text-uppercase ">
+      <div class="d-flex align-center ga-2 pe-2 ms-4">
+        <span>{{ doc_name }} (просмотр)</span>
       </div>
-    </v-col>
-    <v-divider/>
+      <v-card variant="text" class="d-flex align-center ga-2">
+        <div class="d-flex w-100">
+          <div class="d-flex items-center ga-2 mt-1 me-3">
+            <Button name="history" @click="goToHistory(router, route)"/>
+            <Button name="print" @click="goToPrint(router, route, doc_name)"/>
+            <Button name="save" @click="updateMove" />
+            <Button name="close" @click="closeWindow" />
+          </div>
+        </div>
+      </v-card>
+    </div>
     <v-divider/>
     <div style="height: calc(99vh - 116px); background: #fff">
       <v-col class="d-flex flex-column ga-2 pb-0">

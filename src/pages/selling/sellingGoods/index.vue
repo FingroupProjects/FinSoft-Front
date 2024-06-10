@@ -31,7 +31,7 @@ const router = useRouter();
 
 const loading = ref(true);
 const filterModal = ref(false);
-const isAproveError = ref(false);
+const isApproveError = ref(false);
 const hoveredRowIndex = ref(null);
 const modalCreateBased = useModalCreateBased();
 
@@ -42,8 +42,8 @@ const debounceSearch = ref("");
 const sales = ref([]);
 const paginations = ref([]);
 const count = ref(0);
-
 const approveError = ref([]);
+
 const organizations = ref([]);
 const storages = ref([]);
 const authors = ref([]);
@@ -206,7 +206,7 @@ const closeFilterModal = async ({ page, itemsPerPage, sortBy, search }) => {
   cleanFilterForm();
   await getSellingGoods({ page, itemsPerPage, sortBy, search });
   useFilterCanvasVisible().closeFilterCanvas();
-  isAproveError.value = false;
+  isApproveError.value = false;
 };
 
 const cleanFilterForm = () => {
@@ -223,7 +223,7 @@ const approve = async () => {
     console.error(e);
     if (e.response.status === 400) {
       approveError.value = e.response.data.errors;
-      isAproveError.value = true;
+      isApproveError.value = true;
     }
   }
 
@@ -298,7 +298,7 @@ watch(markedID, (newVal) => {
   markedItem.value = sales.value.find((el) => el.id === newVal[0]);
 });
 
-watch(isAproveError, (newVal) => {
+watch(isApproveError, (newVal) => {
   if (newVal) {
     useFilterCanvasVisible().toggleFilterCanvas();
   }
@@ -436,8 +436,8 @@ onMounted(() => {
       </v-data-table-server>
     </div>
 
-    <filter-canvas @closeCanvas="isAproveError = false" :isAproveError="isAproveError">
-      <div v-if="isAproveError">
+    <filter-canvas @closeCanvas="isApproveError = false" :isApproveError="isApproveError">
+      <div v-if="isApproveError">
         <goodErrorCanvas :approveError="approveError"/>
       </div>
       <div v-else class="d-flex flex-column w-100 ga-2">

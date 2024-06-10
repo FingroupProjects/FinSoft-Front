@@ -386,7 +386,7 @@ onMounted(() => {
       </v-card>
     </div>
     <v-divider />
-    <div class="documentHeight">
+    <div class="documentHeight documentCalcWidth">
       <v-col class="d-flex flex-column ga-2">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field disabled value="Номер" v-model="form.number" />
