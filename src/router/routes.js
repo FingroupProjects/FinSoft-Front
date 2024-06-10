@@ -138,17 +138,17 @@ const routes = [
   {
     path: "/invertory",
     name: "invertory",
-    component: () => import("../pages/storage/invertor/index.vue"),
+    component: () => import("../pages/storage/inventor/index.vue"),
   },
   {
     path: "/invertoryCreate",
     name: "invertoryCreate",
-    component: () => import("../pages/storage/invertor/create.vue"),
+    component: () => import("../pages/storage/inventor/create.vue"),
   },
   {
     path: "/InvertoryEdit/:id",
     name: "InvertoryEdit",
-    component: () => import("../pages/storage/invertor/show.vue"),
+    component: () => import("../pages/storage/inventor/show.vue"),
   },
   {
     path: "/moneyComing",

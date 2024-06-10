@@ -448,7 +448,7 @@ onMounted(() => {
     <div class="documentHeight documentCalcWidth">
       <v-col class="d-flex flex-column ga-2">
         <div class="d-flex flex-wrap ga-4">
-          <custom-text-field label="Номер" v-model="form.doc_number" />
+          <custom-text-field label="Номер" readonly v-model="form.doc_number" />
           <custom-text-field
             class="date"
             label="Дата"

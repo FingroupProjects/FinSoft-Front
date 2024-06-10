@@ -1,21 +1,19 @@
 <script setup>
-import { ref, watch, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import {onMounted, ref, watch} from "vue";
+import {useRouter} from "vue-router";
 import showToast from "../../../composables/toast/index.js";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import CustomTextField from "../../../components/formElements/CustomTextField.vue";
-import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
+import {BASE_COLOR, FIELD_OF_SEARCH, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import {
-  BASE_COLOR,
-  FIELD_OF_SEARCH,
-  TITLE_COLOR
-} from "../../../composables/constant/colors.js";
-import {
-  removeMessage,
-  warningMessage,
+  approveDocument,
+  copyMessage,
+  documentAprove,
   ErrorSelectMessage,
+  removeMessage,
   restoreMessage,
+  selectOneItemMessage,
+  warningMessage,
 } from "../../../composables/constant/buttons.js";
 import debounce from "lodash.debounce";
 import organizationApi from "../../../api/list/organizations.js";
@@ -24,16 +22,26 @@ import invertorApi from "../../../api/documents/invertor.js";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import Button from "../../../components/button/button.vue";
 import CreateBase from "../../../components/modal/CreateBase.vue";
-
+import {useModalCreateBased} from "../../../store/modalCreateBased.js";
+import {useFilterCanvasVisible} from "../../../store/canvasVisible.js";
+import getColor from "../../../composables/displayed/getColor.js";
+import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
+import {markedForDeletion, statusOptions} from "../../../composables/constant/items.js";
+import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
+import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
+import copyDocument from "../../../api/documents/copyDocument.js";
 
 const router = useRouter();
 
+const modalCreateBased = useModalCreateBased();
 const loading = ref(true);
 const loadingRate = ref(true);
 const dialog = ref(false);
 const filterModal = ref(false);
 const hoveredRowIndex = ref(null);
+const isApproveError = ref(false);
 
+const approveError = ref([])
 const markedID = ref([]);
 const markedItem = ref([]);
 const search = ref("");
@@ -62,12 +70,11 @@ const filterForm = ref({
   comment: null,
 });
 
-const statusOptions = ['проведён', 'не проведён'];
-  const deletionStatuses = ['не удален', 'удален'];
 
 const headers = ref([
   { title: "Номер", key: "doc_number" },
   { title: "Дата", key: "date" },
+  { title: "Статус", key: "active" },
   { title: "Склад", key: "storage.name" },
   { title: "Организация", key: "organization.name" },
   { title: "Автор", key: "storage.name" },
@@ -77,27 +84,22 @@ const rules = {
   required: (v) => !!v,
 };
 
-const getDataInvertor = async ({ page, itemsPerPage, sortBy, search }) => {
+const getDataInventory = async ({ page, itemsPerPage, sortBy, search } = {}) => {
   count.value = 0;
   countFilter();
-  const filterData = {
-      ...filterForm.value,
-      active: filterForm.value.active === 'проведён' ? 1 : 0,
-      deleted: filterForm.value.deleted === 'удален' ? 1 : 0 ,
-    };
   filterModal.value = false;
   loading.value = true;
   try {
     const { data } = await invertorApi.get(
       { page, itemsPerPage, sortBy },
-      search, filterData
+      search, filterForm.value
     );
-    console.log(data);
     paginations.value = data.result.pagination;
     invertors.value = data.result.data;
-    loading.value = false;
   } catch (e) {
     console.error(e);
+  } finally {
+    loading.value = false;
   }
 };
 const getOrganizations = async () => {
@@ -124,26 +126,54 @@ const headerButtons = ref([
   },
   {
     name: "createBasedOn",
-    function: () => {},
+    function: async () => {
+      if (markedID.value.length !== 1) {
+        return showToast(selectOneItemMessage, "warning");
+      }
+      if (markedItem.value.active === false) {
+        return showToast(documentAprove, "warning");
+      }
+
+      modalCreateBased.isModal();
+    },
   },
   {
     name: "copy",
+    function: async () => {
+      if (markedID.value.length !== 1) {
+        return showToast(selectOneItemMessage, "red");
+      }
+
+      try {
+        const res = await copyDocument.copy(markedID.value[0]);
+        if (res.status === 200) {
+          showToast(copyMessage);
+          window.open(`/invertoryCreate/${res.data.result.id}`, "_blank");
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    },
   },
- 
-   
+  {
+    name: "approve",
+    function: () => {
+      approve();
+    },
+  },
+  {
+    name: "cancel",
+    function: () => {
+      unApprove();
+    },
+  },
   {
     name: "delete",
     function: () => {
-      massDel({});
+      compute()
     },
   },
 ]);
-
-
-onMounted(() => {
-  getOrganizations();
-  getStorages();
-});
 
 function countFilter() {
   for (const key in filterForm.value) {
@@ -155,38 +185,68 @@ function countFilter() {
   return count;
 }
 
+const approve = async () => {
+  try {
+    await invertorApi.approve({ ids: markedID.value });
+    showToast(approveDocument);
+    await getDataInventory();
+    markedID.value = [];
+  } catch (e) {
+    console.error(e);
+    if (e.response.status === 400) {
+      approveError.value = e.response.data.errors;
+      isApproveError.value = true;
+    }
+  }
+
+};
+
+const unApprove = async () => {
+  try {
+    await invertorApi.unApprove({ ids: markedID.value });
+    showToast(approveDocument);
+    await getDataInventory();
+    markedID.value = [];
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 const massDel = async () => {
   try {
-    const { status } = await invertorApi.massDeletion({ ids: markedID.value });
+    const { status } = await invertorApi.remove({ ids: markedID.value });
 
     if (status === 200) {
       showToast(removeMessage, "red");
-      await getDataInvertor({});
+      await getDataInventory();
       markedID.value = [];
-      dialog.value = false;
     }
-  } catch (e) {}
-};
+  } catch (e) {
+    console.error(e)
+  }
+}
+
 const massRestore = async () => {
   try {
-    const { status } = await invertorApi.massRestore({ ids: markedID.value });
+    const { status } = await invertorApi.restore({ ids: markedID.value });
 
     if (status === 200) {
       showToast(restoreMessage);
-      await getDataInvertor({});
+      await getDataInventory();
       markedID.value = [];
-      dialog.value = false;
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error(e)
+  }
 };
 
-const compute = ({ page, itemsPerPage, sortBy, search }) => {
+const compute = () => {
   if (markedID.value.length === 0) return showToast(warningMessage, "warning");
 
   if (markedItem.value.deleted_at) {
-    return massRestore({ page, itemsPerPage, sortBy });
+    return massRestore();
   } else {
-    return massDel({ page, itemsPerPage, sortBy, search });
+    return massDel();
   }
 };
 
@@ -221,21 +281,16 @@ const lineMarking = (item) => {
 const closeFilterModal = async ({ page, itemsPerPage, sortBy, search }) => {
   filterModal.value = {};
   cleanFilterForm();
-  await getDataInvertor({ page, itemsPerPage, sortBy, search });
+  await getDataInventory({ page, itemsPerPage, sortBy, search });
 };
 
 const cleanFilterForm = () => {
   filterForm.value = {};
 };
-watch(dialog, (newVal) => {
-  if (!newVal) {
-    nameRef.value = null;
-    descriptionRef.value = null;
-    loadingRate.value = true;
-  } else {
-    markedID.value = [markedID.value[markedID.value.length - 1]];
-  }
-});
+
+const show = (item) => {
+  window.open(`/InvertoryEdit/${item.id}`, "_blank");
+};
 
 watch(markedID, (newVal) => {
   markedItem.value = invertors.value.find((el) => el.id === newVal[0]);
@@ -247,6 +302,11 @@ watch(
     debounceSearch.value = newValue;
   }, 500)
 );
+
+onMounted(() => {
+  getOrganizations();
+  getStorages();
+});
 </script>
 
 <template>
@@ -255,8 +315,8 @@ watch(
         <div class="d-flex align-center ga-2 pe-2 ms-4">
           <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Инвентаризация товаров</span>
         </div>
-        <div class="d-flex align-center ga-2">
-          <div class="d-flex w-100 justify-end mb-3">
+        <div class="d-flex justify-between ga-2">
+          <div class="d-flex justify-end mb-3">
           <div class="d-flex ga-2 position-relative">
             <Button
               v-for="(button, idx) in headerButtons"
@@ -267,11 +327,9 @@ watch(
             <create-base :marked-i-d="markedID[0]" />
           </div>
         </div>
-
         <div class="custom_search">
           <v-text-field
             style="width: 190px"
-            class="mb-3"
             v-model="search"
             prepend-inner-icon="search"
             density="compact"
@@ -293,7 +351,7 @@ watch(
             style="margin-bottom: 15px;"
             name="filter"
             title="Фильтр"
-            @click="filterModal = true"
+            @click="useFilterCanvasVisible().toggleFilterCanvas()"
             class="mt-1"
           />
           <span v-if="count !== 0" class="countFilter">{{
@@ -304,7 +362,7 @@ watch(
       </div>
       <v-card class="table calcWidth">
         <v-data-table-server
-          style="height: 78vh"
+          style="height: calc(100vh - 150px)"
           items-per-page-text="Элементов на странице:"
           loading-text="Загрузка"
           no-data-text="Нет данных"
@@ -316,7 +374,7 @@ watch(
           :item-value="headers.title"
           :search="debounceSearch"
           v-model="markedID"
-          @update:options="getDataInvertor"
+          @update:options="getDataInventory"
           page-text="{0}-{1} от {2}"
           :items-per-page-options="[
             { value: 25, title: '25' },
@@ -331,33 +389,34 @@ watch(
             <tr
               @mouseenter="hoveredRowIndex = index"
               @mouseleave="hoveredRowIndex = null"
-              @dblclick="$router.push(`/InvertoryEdit/${item.id}`)"
+              @dblclick="show(item)"
               :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
             >
               <td>
-                <template
-                  v-if="hoveredRowIndex === index || markedID.includes(item.id)"
-                >
-                  <CustomCheckbox
+                <CustomCheckbox
                     v-model="markedID"
                     :checked="markedID.includes(item.id)"
                     @change="lineMarking(item)"
-                  >
-                    <span>{{ index + 1 }}</span>
-                  </CustomCheckbox>
-                </template>
-                <template v-else>
-                  <div class="d-flex align-center">
-                    <Icons
-                      style="margin-right: 10px; margin-top: 4px"
-                      :name="item.deleted_at === null ? 'valid' : 'inValid'"
-                    />
-                    <span>{{ index + 1 }}</span>
-                  </div>
-                </template>
+                >
+                </CustomCheckbox>
               </td>
               <td>{{ item.doc_number }}</td>
               <td>{{ getDateTimeInShow(item.date) }}</td>
+              <td>
+                <v-chip
+                    style="height: 50px !important"
+                    class="w-100 d-flex justify-center"
+                    :color="getColor(item.active, item.deleted_at)"
+                >
+                <span class="padding: 5px;">{{
+                    item.active
+                        ? "Проведен"
+                        : item.deleted_at !== null
+                            ? "Удален"
+                            : "Не проведен"
+                  }}</span>
+                </v-chip>
+              </td>
               <td>{{ item.storage.name }}</td>
               <td>{{ item.organization.name }}</td>
               <td>{{ item.author_id.name }}</td>
@@ -366,38 +425,45 @@ watch(
         </v-data-table-server>
       </v-card>
 
-      <v-card>
-        <v-dialog persistent class="mt-2 pa-2" v-model="filterModal" @keyup.esc="closeFilterModal">
-          <v-card :style="`border: 2px solid ${BASE_COLOR}`" min-width="450"
-                  class="d-flex pa-5 pt-2  justify-center flex-column mx-auto my-0" rounded="xl">
-            <div class="d-flex justify-space-between align-center mb-2">
-              <span>Фильтр</span>
+      <filter-canvas>
+        <div class="d-flex flex-column w-100 ga-4">
+          <div class="d-flex flex-column ga-2 w-100">
+            <custom-filter-text-field min-width="106" label="От" type="date" class="date" v-model="filterForm.startDate"/>
+            <custom-filter-text-field min-width="106" label="По" type="date" class="date" v-model="filterForm.endDate"/>
+          </div>
+          <div class="d-flex ga-2">
+            <custom-filter-autocomplete label="Статус" :items="statusOptions" v-model="filterForm.active"/>
+            <custom-filter-autocomplete label="Удалён" :items="markedForDeletion" v-model="filterForm.deleted"/>
+          </div>
+          <div class="d-flex ga-2">
+            <custom-filter-autocomplete label="Склад-отправитель" :items="organizations"  v-model="filterForm.organization_id"/>
+            <custom-filter-autocomplete label="Склад-получатель" :items="storages" v-model="filterForm.storage_id"/>
+          </div>
+          <div class="d-flex justify-end ga-2">
+            <div class="d-flex ga-2" style="margin-right: -6%">
+              <v-btn
+                  :tabindex="-1"
+                  color="red"
+                  class="btn"
+                  @click="closeFilterModal"
+              >сбросить</v-btn
+              >
+              <v-btn
+                  :tabindex="-1"
+                  :color="BASE_COLOR"
+                  class="btn"
+                  @click="
+                () => {
+                  getDataInventory();
+                  useFilterCanvasVisible().closeFilterCanvas();
+                }
+              "
+              >применить</v-btn
+              >
             </div>
-            <v-form class="d-flex w-100" @submit.prevent="">
-              <v-row class="w-100">
-                <v-col class="d-flex flex-column w-100 ga-4">
-                  <div class="d-flex flex-column ga-2 w-100">
-                    <custom-text-field label="От" type="date" min-width="508"  v-model="filterForm.startDate"/>
-                    <custom-text-field label="По" type="date" min-width="508"  v-model="filterForm.endDate"/>
-                    </div>
-                    <div class="d-flex ga-2">                
-                      <custom-autocomplete label="Статус" :items="statusOptions" v-model="filterForm.active"/>
-                      <custom-autocomplete label="Удалён" :items="deletionStatuses" v-model="filterForm.deleted"/>               
-                  </div>
-                  <div class="d-flex ga-2">
-                    <custom-autocomplete label="Склад-отправитель" :items="organizations"  v-model="filterForm.organization_id"/>
-                  <custom-autocomplete label="Склад-получатель" :items="storages" v-model="filterForm.storage_id"/>               
-                 </div>
-                  <div class="d-flex justify-end ga-2">
-                    <v-btn color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-                    <v-btn :color="BASE_COLOR" class="btn"  @click="getDataInvertor">применить</v-btn>
-                  </div>
-                </v-col>
-              </v-row>
-            </v-form>
-          </v-card>
-        </v-dialog>
-      </v-card>
+          </div>
+        </div>
+      </filter-canvas>
   </div>
 </template>
 
