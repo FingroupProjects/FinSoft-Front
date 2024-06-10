@@ -1,5 +1,5 @@
 <script setup>
-import { approveDocument, copyMessage, ErrorSelectMessage, removeMessage, selectOneItemMessage, documentAprove } from "../../../composables/constant/buttons.js";
+import { approveDocument, copyMessage, ErrorSelectMessage, removeMessage, restoreMessage, selectOneItemMessage, documentAprove } from "../../../composables/constant/buttons.js";
 import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
 import { BASE_COLOR, FIELD_OF_SEARCH, TITLE_COLOR } from "../../../composables/constant/colors.js";
 import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
@@ -11,6 +11,7 @@ import { useModalCreateBased } from "../../../store/modalCreateBased.js";
 import { useFilterCanvasVisible } from "../../../store/canvasVisible.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
+import getStatus from "../../../composables/displayed/getStatus.js";
 import getColor from "../../../composables/displayed/getColor.js";
 import copyDocument from "../../../api/documents/copyDocument.js";
 import CreateBase from "../../../components/modal/CreateBase.vue";
@@ -128,7 +129,7 @@ const headerButtons = ref([
   {
     name: "delete",
     function: () => {
-      massDel();
+      compute();
     },
   },
 ]);
@@ -161,6 +162,27 @@ function countFilter() {
 
   return count;
 }
+
+const compute = ({ page, itemsPerPage, sortBy, search } = {}) => {
+  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
+
+  if (markedItem.value.deleted_at) {
+    return massRestore({ page, itemsPerPage, sortBy });
+  } else {
+    return massDel({ page, itemsPerPage, sortBy, search });
+  }
+};
+
+const massRestore = async () => {
+  try {
+    const { status } = await saleApi.restore({ ids: markedID.value });
+    if (status === 200) {
+      showToast(restoreMessage);
+      await getSellingGoods({});
+      markedID.value = [];
+    }
+  } catch (e) {}
+};
 
 const massDel = async () => {
   try {
@@ -417,13 +439,9 @@ onMounted(() => {
                 class="w-100 d-flex justify-center"
                 :color="getColor(item.active, item.deleted_at)"
               >
-                <span class="padding: 5px;">{{
-                  item.active
-                    ? "Проведен"
-                    : item.deleted_at !== null
-                    ? "Удален"
-                    : "Не проведен"
-                }}</span>
+                <span class="padding: 5px;">
+                  {{ getStatus(item.active, item.deleted_at) }}
+                  </span>
               </v-chip>
             </td>
             <td>{{ item.counterparty.name }}</td>
@@ -440,7 +458,7 @@ onMounted(() => {
       <div v-if="isApproveError">
         <goodErrorCanvas :approveError="approveError"/>
       </div>
-      <div v-else class="d-flex flex-column w-100 ga-2">
+      <div v-else class="d-flex flex-column ga-2">
         <div class="d-flex flex-column ga-2">
           <custom-filter-text-field
             label="От"
