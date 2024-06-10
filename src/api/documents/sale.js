@@ -22,5 +22,8 @@ export default {
   },
   delete(data) {
     return api.post('/document/client/delete', data)
+  },
+  restore(data) {
+    return api.post('/document/client/restore', data)
   }
 };

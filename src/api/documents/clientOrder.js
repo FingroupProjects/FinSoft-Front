@@ -16,5 +16,17 @@ export default {
   },
   getStatuses() {
     return api.get('document/client/order/statuses')
-  }
+  },
+  remove(data) {
+    return api.post('/document/client/order/massDelete', data)
+  },
+  restore(data) {
+    return api.post('/document/client/order/massRestore', data)
+  },
+  approve(data) {
+    return api.post(`/document/client/order/approve/`, data)
+  },
+  unApprove(data) {
+    return api.post(`/document/client/order/unApprove/`, data)
+  },
 }
