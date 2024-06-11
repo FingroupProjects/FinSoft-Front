@@ -15,8 +15,8 @@ import formatDateTime from "../../../composables/date/formatDateTime.js";
 import formatNumber from "../../../composables/format/formatNumber.js";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";
 import getStatus from "../../../composables/displayed/getStatus.js";
-import procurementApi from "../../../api/documents/procurement.js";
 import organizationApi from "../../../api/list/organizations.js";
+import writeOffApi from "../../../api/documents/writeOff.js";
 import showToast from "../../../composables/toast/index.js";
 import Button from "../../../components/button/button.vue";
 import currencyApi from "../../../api/list/currency.js";
@@ -75,7 +75,7 @@ const headers = ref([
 
 const approve = async () => {
   try {
-    await procurementApi.approve({ ids: [route.params.id] });
+    await writeOffApi.approve({ ids: [route.params.id] });
     showToast(approveDocument);
     await getProcurementDetails();
     markedID.value = [];
@@ -86,7 +86,7 @@ const approve = async () => {
 
 const unApprove = async () => {
   try {
-    await procurementApi.unApprove({ ids: [route.params.id] });
+    await writeOffApi.unApprove({ ids: [route.params.id] });
     showToast(approveDocument);
     await getProcurementDetails();
     markedID.value = [];
@@ -97,7 +97,7 @@ const unApprove = async () => {
 
 const getProcurementDetails = async () => {
   try {
-    const { data } = await procurementApi.getById(route.params.id);
+    const { data } = await writeOffApi.getById(route.params.id);
     form.doc_number = data.result.doc_number;
     form.date = getDateTimeInShow(data.result.date, "-", true);
     form.organization = {
@@ -248,8 +248,8 @@ const updateProcurement = async () => {
           : form.organization,
       storage_id:
         typeof form.storage === "object" ? form.storage.id : form.storage,
-      saleInteger: Number(form.saleInteger),
-      salePercent: Number(form.salePercent),
+        status: "Списание",
+        author_id: author.value,
       currency_id:
         typeof form.currency === "object" ? form.currency.id : form.currency,
       comment: form.comment,
@@ -263,7 +263,7 @@ const updateProcurement = async () => {
     if(deletedGoods.value.length > 0){
       goodsDelete(deletedGoods.value)
     }
-    const res = await procurementApi.update(route.params.id, body);
+    const res = await writeOffApi.update(route.params.id, body);
     if (res.status === 200) {
       showToast(editMessage);
     }
@@ -345,7 +345,6 @@ onMounted(() => {
 
   Promise.all([
     getOrganizations(),
-    getCounterparties(),
     getStorages(),
     getCurrencies(),
   ]);

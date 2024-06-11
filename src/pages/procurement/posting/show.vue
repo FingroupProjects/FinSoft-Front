@@ -15,9 +15,9 @@ import formatDateTime from "../../../composables/date/formatDateTime.js";
 import formatNumber from "../../../composables/format/formatNumber.js";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";
 import getStatus from "../../../composables/displayed/getStatus.js";
-import procurementApi from "../../../api/documents/procurement.js";
 import organizationApi from "../../../api/list/organizations.js";
 import showToast from "../../../composables/toast/index.js";
+import postingApi from "../../../api/documents/posting.js";
 import Button from "../../../components/button/button.vue";
 import currencyApi from "../../../api/list/currency.js";
 import storageApi from "../../../api/list/storage.js";
@@ -75,7 +75,7 @@ const headers = ref([
 
 const approve = async () => {
   try {
-    await procurementApi.approve({ ids: [route.params.id] });
+    await postingApi.approve({ ids: [route.params.id] });
     showToast(approveDocument);
     await getProcurementDetails();
     markedID.value = [];
@@ -86,7 +86,7 @@ const approve = async () => {
 
 const unApprove = async () => {
   try {
-    await procurementApi.unApprove({ ids: [route.params.id] });
+    await postingApi.unApprove({ ids: [route.params.id] });
     showToast(approveDocument);
     await getProcurementDetails();
     markedID.value = [];
@@ -97,7 +97,7 @@ const unApprove = async () => {
 
 const getProcurementDetails = async () => {
   try {
-    const { data } = await procurementApi.getById(route.params.id);
+    const { data } = await postingApi.getById(route.params.id);
     form.doc_number = data.result.doc_number;
     form.date = getDateTimeInShow(data.result.date, "-", true);
     form.organization = {
@@ -263,7 +263,7 @@ const updateProcurement = async () => {
     if(deletedGoods.value.length > 0){
       goodsDelete(deletedGoods.value)
     }
-    const res = await procurementApi.update(route.params.id, body);
+    const res = await postingApi.update(route.params.id, body);
     if (res.status === 200) {
       showToast(editMessage);
     }

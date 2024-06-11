@@ -2,28 +2,29 @@ import { api, buildParams } from '../api.js'
 
 export default {
   get({page = 1, itemsPerPage = 25, sortBy}, search = "", filterData = {}) {
+    const type = "Списание";
     const params = buildParams(page, itemsPerPage, sortBy, search, filterData);
-    return api.get('/document/provider/purchaseList', { params });
+    return api.get(`/inventoryOperation/${type}`, { params });
   },
   add(data) {
-    return api.post('/document/provider/purchase', data)
+    return api.post('/inventoryOperation', data)
   },
   getById(id) {
-    return api.get(`/document/show/${id}`)
+    return api.get(`/inventoryOperation/show/${id}`)
   },
   update(id, data) {
-    return api.patch(`/document/client/update/${id}`, data)
+    return api.patch(`/inventoryOperation/${id}`, data)
   },
   approve(data) {
-    return api.post(`/document/purchase/approve/`, data)
+    return api.post(`/inventoryOperation/approve/`, data)
   },
   unApprove(data) {
-    return api.post(`/document/purchase/unApprove/`, data)
+    return api.post(`/inventoryOperation/unApprove/`, data)
   },
   remove(data) {
-    return api.post('/document/client/delete', data)
+    return api.post('/inventoryOperation/massDelete', data)
   },
   restore(data) {
-    return api.post('/document/client/restore', data)
+    return api.post('/inventoryOperation/massRestore', data)
   }
 }
