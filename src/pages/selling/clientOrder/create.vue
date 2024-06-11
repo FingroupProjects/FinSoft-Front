@@ -1,48 +1,32 @@
 <script setup>
-import {
-  computed,
-  defineEmits,
-  onMounted,
-  onUnmounted,
-  reactive,
-  ref,
-  watch,
-} from "vue";
-import Icons from "../../../composables/Icons/Icons.vue";
-import CustomTextField from "../../../components/formElements/CustomTextField.vue";
+import CustomSearchableSelect from "../../../components/formElements/CustomSearchableSelect.vue";
+import { BASE_COLOR, TITLE_COLOR, FIELD_GOODS } from "../../../composables/constant/colors.js";
+import { addMessage, selectOneItemMessage } from "../../../composables/constant/buttons.js";
+import { computed, defineEmits, onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
+import currentDateWithTime from "../../../composables/date/currentDateWithTime.js";
+import CustomTextField from "../../../components/formElements/CustomTextField.vue";
+import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
+import formatInputAmount from "../../../composables/format/formatInputAmount.js";
+import formatInputPrice from "../../../composables/format/formatInputPrice.js";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import showToast from "../../../composables/toast/index.js";
+import getDataBased from "../../../composables/otherQueries/getDataBased.js";
+import { useHasOneOrganization } from "../../../store/hasOneOrganization.js";
+import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
+import formatDateTime from "../../../composables/date/formatDateTime.js";
+import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
+import formatNumber from "../../../composables/format/formatNumber.js";
+import ButtonGoods from "../../../components/button/buttonGoods.vue";
 import currentDate from "../../../composables/date/currentDate.js";
-import validate from "./validate.js";
-import { useRoute, useRouter } from "vue-router";
+import clientOrderApi from "../../../api/documents/clientOrder.js";
 import organizationApi from "../../../api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
-import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
-import clientOrderApi from "../../../api/documents/clientOrder.js";
-import goodApi from "../../../api/list/goods.js";
-import {
-  addMessage,
-  selectOneItemMessage,
-} from "../../../composables/constant/buttons.js";
-import "../../../assets/css/procurement.css";
-import {
-  BASE_COLOR,
-  TITLE_COLOR,
-  FIELD_GOODS,
-} from "../../../composables/constant/colors.js";
-import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
-import { useHasOneOrganization } from "../../../store/hasOneOrganization.js";
-import currentDateWithTime from "../../../composables/date/currentDateWithTime.js";
-import formatDateTime from "../../../composables/date/formatDateTime.js";
+import showToast from "../../../composables/toast/index.js";
 import Button from "../../../components/button/button.vue";
-import formatNumber from "../../../composables/format/formatNumber.js";
-import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
-import ButtonGoods from "../../../components/button/buttonGoods.vue";
-import getDataBased from "../../../composables/otherQueries/getDataBased.js";
-import CustomSearchableSelect from "../../../components/formElements/CustomSearchableSelect.vue";
-import formatInputPrice from "../../../composables/format/formatInputPrice.js";
-import formatInputAmount from "../../../composables/format/formatInputAmount.js";
+import { useRoute, useRouter } from "vue-router";
+import goodApi from "../../../api/list/goods.js";
+import "../../../assets/css/procurement.css";
+import validate from "./validate.js";
 
 const useOrganization = ref(useHasOneOrganization());
 const router = useRouter();
@@ -62,7 +46,6 @@ const form = reactive({
   status: null,
 });
 
-const loading = ref(false);
 const author = ref(null);
 const markedID = ref([]);
 const goods = ref([
@@ -240,6 +223,10 @@ const addNewClientOrder = async () => {
     console.error(e);
   }
 };
+
+const totalCount = computed(() =>
+  goods.value.reduce((acc, item) => acc + Number(item.amount || 0), 0)
+);
 
 const isChanged = () => {
   const {
@@ -508,6 +495,12 @@ onMounted(() => {
             />
           </div>
           <div class="d-flex ga-6">
+            <custom-text-field
+              readonly
+              label="Количество"
+              v-model="totalCount"
+              min-width="130"
+            />
             <custom-text-field
               readonly
               :value="'Общая сумма: ' + totalPrice"
