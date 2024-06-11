@@ -409,7 +409,7 @@ onMounted(() => {
     </div>
     <v-card class="table calcWidth">
       <v-data-table-server
-        style="height: 78vh"
+        style="height: calc(100vh - 150px)"
         items-per-page-text="Элементов на странице:"
         loading-text="Загрузка"
         no-data-text="Нет данных"

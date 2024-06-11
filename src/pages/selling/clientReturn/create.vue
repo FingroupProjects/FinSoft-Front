@@ -374,7 +374,7 @@ onMounted(() => {
           <div class="d-flex ga-6">
             <custom-text-field
             readonly  
-            :value="'Сумма без скидки: ' + totalPrice" 
+            :value="'Общая сумма: ' + totalPrice"
             min-width="180" 
             max-width="110"
             />
