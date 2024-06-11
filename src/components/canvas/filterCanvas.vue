@@ -1,7 +1,7 @@
 <script setup>
 import {useFilterCanvasVisible} from "../../store/canvasVisible.js";
 const emits = defineEmits(['closeCanvas'])
-const props = defineProps(['isAproveError'])
+const props = defineProps(['isApproveError'])
 const canvasVisible = useFilterCanvasVisible()
 
 const closeApproveError = () =>{
@@ -15,7 +15,7 @@ const closeApproveError = () =>{
 <template>
     <div :class="['cartOffcanvas', 'offcanvas-end', { show: canvasVisible.isFilterCanvasVisible }]" tabindex="-1" id="cartOffcanvas" aria-labelledby="cartOffcanvasLabel">
       <div class="offcanvas-header mx-2">
-        <h3 class="offcanvas-title" id="cartOffcanvasLabel">{{ isAproveError ? 'Недостаток товаров' : 'Фильтр' }}</h3>
+        <h3 class="offcanvas-title" id="cartOffcanvasLabel">{{ props.isApproveError ? 'Недостаток товаров' : 'Фильтр' }}</h3>
         <i class="bi bi-x text-h4 cursor-pointer" @click="closeApproveError()"></i>
       </div>
       <div class="offcanvas-body" >

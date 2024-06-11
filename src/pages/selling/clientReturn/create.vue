@@ -51,8 +51,6 @@ const goods = ref([{
   id: 1,
   good_id: null,
   amount: "1",
-  auto_sale_percent: null,
-  auto_sale_sum: null,
   price: null,
 }])
 
@@ -66,8 +64,6 @@ const listGoods = ref([])
 const headers = ref([
   {title: 'Товары', key: 'goods', sortable: false},
   {title: 'Количество', key: 'currency.name', sortable: false},
-  {title: 'Скидка (процент)', key: 'currency.name', sortable: false},
-  {title: 'Скидка (сумма)', key: 'currency.name', sortable: false},
   {title: 'Цена', key: 'currency.name', sortable: false},
   {title: 'Сумма', key: 'currency.name', sortable: false},
 ])
@@ -127,7 +123,7 @@ const increaseCountOfGoods = () => {
   const missingData = goods.value.some(validateItem)
   if (missingData) return
 
-  goods.value.push({id: goods.value.length + 1, good_id: null, amount: 1, auto_sale_percent: null, auto_sale_sum: null, price: null })
+  goods.value.push({id: goods.value.length + 1, good_id: null, amount: 1,  price: null })
 }
 
 const validateItem = (item) => {
@@ -163,14 +159,10 @@ const addNewClientReturn = async () => {
     counterparty_id: typeof form.counterparty === "object" ? form.counterparty.id : form.counterparty,
     counterparty_agreement_id: typeof form.cpAgreement === "object" ? form.cpAgreement.id : form.cpAgreement,
     storage_id: form.storage ,
-    saleInteger: Number(form.saleInteger),
-    salePercent: Number(form.salePercent),
     currency_id: typeof form.currency === 'object' ? form.currency.id : form.currency,
     goods: goods.value.map((item) => ({
       good_id: Number(item.good_id),
       amount: Number(item.amount),
-      auto_sale_percent: Number(item.auto_sale_percent),
-      auto_sale_sum: Number(item.auto_sale_sum),
       price: Number(item.price),
     }))
  }
@@ -187,12 +179,12 @@ const addNewClientReturn = async () => {
 }
 
 const isChanged = () => {
-  const {date, counterparty, cpAgreement, comment, storage, saleInteger, salePercent, currency} = form;
+  const {date, counterparty, cpAgreement, comment, storage, currency} = form;
 
-  const goodsValues = goods.value.flatMap(good => [good.good_id, good.amount, good.price, good.price, good.auto_sale_percent, good.auto_sale_sum]);
+  const goodsValues = goods.value.flatMap(good => [good.good_id, good.amount, good.price, good.price,]);
   const cleanedGoodsValues = goodsValues.filter(val => val !== undefined)
 
-  const valuesToCheck = [date, counterparty, cpAgreement, comment, storage, saleInteger, salePercent, currency, ...cleanedGoodsValues];
+  const valuesToCheck = [date, counterparty, cpAgreement, comment, storage, currency, ...cleanedGoodsValues];
 
   return valuesToCheck.every(val => val === null || val === '' || val === currentDateWithTime() || val === "1");
 }
@@ -203,35 +195,6 @@ const totalPrice = computed(() => {
     sum += item.price * item.amount
   })
   return sum
-})
-
-const totalPriceWithSale = computed(() => {
-  let sum = 0
-  if (form.salePercent !== null) {
-      sum = totalPrice.value - (totalPrice.value * form.salePercent / 100)
-  } else {
-    goods.value.forEach(item => {
-      sum += (item.price * item.amount)
-    })
-    sum -= form.saleInteger
-  }
-
-  return sum
-})
-
-const isSaleIntegerDisabled = computed(() => !!form.salePercent);
-const isSalePercentDisabled = computed(() => !!form.saleInteger);
-
-watch(() => form.saleInteger, (newValue) => {
-  if (!newValue) {
-    form.salePercent = ''
-  }
-})
-
-watch(() => form.salePercent, (newValue) => {
-  if (!newValue) {
-    form.saleInteger = ''
-  }
 })
 
 watch(
@@ -312,8 +275,6 @@ onMounted(() => {
           <custom-autocomplete label="Клиент" :items="counterparties" v-model="form.counterparty"/>
           <custom-autocomplete :disabled="!form.counterparty" label="Договор" :items="cpAgreements" v-model="form.cpAgreement"/>
           <custom-autocomplete label="Склад" :items="storages" v-model="form.storage"/>
-          <custom-text-field label="Руч. скидка (сумма)" v-mask="'###'" v-model="form.saleInteger" :disabled="isSaleIntegerDisabled"/>
-          <custom-text-field label="Руч. скидка (процент)" v-mask="'###'" v-model="form.salePercent" :disabled="isSalePercentDisabled"/>
         </div>
       </v-col>
       <v-col>
@@ -368,22 +329,6 @@ onMounted(() => {
                   </td>
                   <td>
                     <custom-text-field 
-                    v-model="item.auto_sale_percent" 
-                    :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                    v-mask="'##########'" 
-                    min-width="80" 
-                    max-width="150"/>
-                  </td>
-                  <td>
-                    <custom-text-field 
-                    v-model="item.auto_sale_sum" 
-                    :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                    v-mask="'##########'" 
-                    min-width="80" 
-                    max-width="140"/>
-                  </td>
-                  <td>
-                    <custom-text-field 
                     v-model="item.price" 
                     :value="validateNumberInput(item.price)"
                     :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
@@ -427,12 +372,7 @@ onMounted(() => {
             />
           </div>
           <div class="d-flex ga-6">
-            <custom-text-field 
-            readonly 
-            :value="'Сумма со скидкой: ' + totalPriceWithSale" 
-            min-width="180" 
-            />
-            <custom-text-field 
+            <custom-text-field
             readonly  
             :value="'Сумма без скидки: ' + totalPrice" 
             min-width="180" 

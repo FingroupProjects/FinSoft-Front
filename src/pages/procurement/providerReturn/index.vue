@@ -38,6 +38,7 @@ import { onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import debounce from "lodash.debounce";
 import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
+import GoodErrorCanvas from "../../../components/Errors/goodErrorCanvas.vue";
 
 const router = useRouter();
 
@@ -46,7 +47,9 @@ const dialog = ref(false);
 const filterModal = ref(false);
 const hoveredRowIndex = ref(null);
 const modalCreateBased = useModalCreateBased();
+const isApproveError = ref(false);
 
+const approveError = ref([]);
 const markedID = ref([]);
 const markedItem = ref([]);
 const search = ref("");
@@ -193,7 +196,11 @@ const approve = async () => {
     await getProviderData({});
     markedID.value = [];
   } catch (e) {
-    console.error(e);
+    console.error(e)
+    if (e.response.status === 400) {
+      approveError.value = e.response.data.errors;
+      isApproveError.value = true;
+    }
   }
 };
 
@@ -246,17 +253,6 @@ const cleanFilterForm = () => {
   filterForm.value = {};
 };
 
-watch(markedID, (newVal) => {
-  markedItem.value = providerReturns.value.find((el) => el.id === newVal[0]);
-});
-
-watch(
-  search,
-  debounce((newValue) => {
-    debounceSearch.value = newValue;
-  }, 500)
-);
-
 const getAuthors = async () => {
   const { data } = await user.getAuthors();
 
@@ -308,9 +304,29 @@ const getCurrencies = async () => {
   currencies.value = data.result.data;
 };
 
+
+
 const show = (item) => {
   window.open(`/providerReturn/${item.id}`, "_blank");
 };
+
+
+watch(markedID, (newVal) => {
+  markedItem.value = providerReturns.value.find((el) => el.id === newVal[0]);
+});
+
+watch(
+    search,
+    debounce((newValue) => {
+      debounceSearch.value = newValue;
+    }, 500)
+);
+
+watch(isApproveError, (newVal) => {
+  if (newVal) {
+    useFilterCanvasVisible().toggleFilterCanvas();
+  }
+});
 
 onMounted(() => {
   getOrganizations();
@@ -441,98 +457,103 @@ onMounted(() => {
         </template>
       </v-data-table-server>
     </v-card>
-    <filter-canvas>
-      <div class="d-flex flex-column ga-4 w-100">
-        <custom-filter-text-field
-          label="От"
-          type="date"
-          class="date"
-          min-width="106"
-          v-model="filterForm.startDate"
-        />
-        <custom-filter-text-field
-          label="По"
-          type="date"
-          class="date"
-          min-width="106"
-          v-model="filterForm.endDate"
-        />
+    <filter-canvas @closeCanvas="isApproveError = false" :isApproveError="isApproveError">
+      <div v-if="isApproveError">
+        <goodErrorCanvas :approveError="approveError"/>
       </div>
-      <div class="d-flex ga-2">
-        <custom-filter-autocomplete
-          min-width="52"
-          label="Статус"
-          :items="statusOptions"
-          v-model="filterForm.active"
-        />
-        <custom-filter-autocomplete
-          min-width="52"
-          label="Удалён"
-          :items="markedForDeletion"
-          v-model="filterForm.deleted"
-        />
-      </div>
-      <div class="d-flex ga-2">
-        <custom-filter-autocomplete
-          min-width="52"
-          label="Организация"
-          :items="organizations"
-          v-model="filterForm.organization_id"
-        />
-        <custom-filter-autocomplete
-          min-width="52"
-          label="Поставщик"
-          :items="counterparties"
-          v-model="filterForm.counterparty_id"
-        />
-      </div>
-      <div class="d-flex ga-2">
-        <custom-filter-autocomplete
-          min-width="52"
-          label="Склад"
-          :items="storages"
-          v-model="filterForm.storage_id"
-        />
-        <custom-filter-autocomplete
-          min-width="52"
-          label="Валюта"
-          :items="currencies"
-          v-model="filterForm.currency_id"
-        />
-      </div>
-      <div class="d-flex ga-2">
-        <custom-filter-autocomplete
-          min-width="52"
-          label="Автор"
-          :items="authors"
-          v-model="filterForm.author_id"
-        />
-        <custom-filter-autocomplete
-          min-width="52"
-          label="Договор"
-          :items="counterpartyAgreements"
-          v-model="filterForm.counterparty_agreement_id"
-        />
-      </div>
-      <div class="d-flex justify-end ga-2">
-        <div class="d-flex ga-2" style="margin-right: -6%">
-          <v-btn tabindex="-1" color="red" class="btn" @click="closeFilterModal"
-            >сбросить</v-btn
-          >
-          <v-btn
-            tabindex="-1"
-            :color="BASE_COLOR"
-            class="btn"
-            @click="
-              () => {
-                getProviderData();
-                useFilterCanvasVisible().closeFilterCanvas();
-              }
-            "
-            >применить</v-btn
-          >
+       <div v-else class="d-flex flex-column ga-2">
+        <div class="d-flex flex-column ga-4 w-100">
+          <custom-filter-text-field
+            label="От"
+            type="date"
+            class="date"
+            min-width="106"
+            v-model="filterForm.startDate"
+          />
+          <custom-filter-text-field
+            label="По"
+            type="date"
+            class="date"
+            min-width="106"
+            v-model="filterForm.endDate"
+          />
         </div>
-      </div>
+        <div class="d-flex ga-2">
+          <custom-filter-autocomplete
+            min-width="52"
+            label="Статус"
+            :items="statusOptions"
+            v-model="filterForm.active"
+          />
+          <custom-filter-autocomplete
+            min-width="52"
+            label="Удалён"
+            :items="markedForDeletion"
+            v-model="filterForm.deleted"
+          />
+        </div>
+        <div class="d-flex ga-2">
+          <custom-filter-autocomplete
+            min-width="52"
+            label="Организация"
+            :items="organizations"
+            v-model="filterForm.organization_id"
+          />
+          <custom-filter-autocomplete
+            min-width="52"
+            label="Поставщик"
+            :items="counterparties"
+            v-model="filterForm.counterparty_id"
+          />
+        </div>
+        <div class="d-flex ga-2">
+          <custom-filter-autocomplete
+            min-width="52"
+            label="Склад"
+            :items="storages"
+            v-model="filterForm.storage_id"
+          />
+          <custom-filter-autocomplete
+            min-width="52"
+            label="Валюта"
+            :items="currencies"
+            v-model="filterForm.currency_id"
+          />
+        </div>
+        <div class="d-flex ga-2">
+          <custom-filter-autocomplete
+            min-width="52"
+            label="Автор"
+            :items="authors"
+            v-model="filterForm.author_id"
+          />
+          <custom-filter-autocomplete
+            min-width="52"
+            label="Договор"
+            :items="counterpartyAgreements"
+            v-model="filterForm.counterparty_agreement_id"
+          />
+        </div>
+        <div class="d-flex justify-end ga-2">
+          <div class="d-flex ga-2" style="margin-right: -6%">
+            <v-btn tabindex="-1" color="red" class="btn" @click="closeFilterModal"
+              >сбросить</v-btn
+            >
+            <v-btn
+              tabindex="-1"
+              :color="BASE_COLOR"
+              class="btn"
+              @click="
+                () => {
+                  getProviderData();
+                  useFilterCanvasVisible().closeFilterCanvas();
+                }
+              "
+              >применить</v-btn
+            >
+          </div>
+        </div>
+       </div>
     </filter-canvas>
   </div>
 </template>

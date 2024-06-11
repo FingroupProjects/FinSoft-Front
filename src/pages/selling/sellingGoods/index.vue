@@ -477,7 +477,6 @@ onMounted(() => {
             v-model="filterForm.endDate"
           />
         </div>
-
         <div class="d-flex flex-column ga-2">
           <custom-filter-autocomplete
             min-width="106"

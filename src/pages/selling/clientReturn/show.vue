@@ -43,15 +43,9 @@ const form = reactive({
   doc_number: null,
   date: null,
   organization: null,
-  organizations: [],
   counterparty: null,
-  counterparties: [],
   cpAgreement: null,
-  cpAgreements: [],
   storage: null,
-  storages: [],
-  saleInteger: null,
-  salePercent: null,
   comment: null,
   currency: null,
 })
@@ -74,8 +68,6 @@ const listGoods = ref([])
 const headers = ref([
   {title: 'Товары', key: 'goods', sortable: false},
   {title: 'Количество', key: 'currency.name', sortable: false},
-  {title: 'Скидка (процент)', key: 'currency.name', sortable: false},
-  {title: 'Скидка (сумма)', key: 'currency.name', sortable: false},
   {title: 'Цена', key: 'currency.name', sortable: false},
   {title: 'Сумма', key: 'currency.name', sortable: false},
 ])
@@ -103,8 +95,6 @@ const getClientReturnDetails = async () => {
     id: data.result.storage.id,
     name: data.result.storage.name
   }
-  form.saleInteger = data.result.saleInteger !== 0 ? data.result.saleInteger : null
-  form.salePercent = data.result.salePercent !== 0 ? data.result.salePercent : null
   form.comment = data.result.comment
   form.currency = data.result.currency
   form.active = data.result.active;
@@ -113,8 +103,6 @@ const getClientReturnDetails = async () => {
     id: item.id,
     good_id: item.good.id,
     amount: item.amount,
-    auto_sale_percent: item.auto_sale_percent,
-    auto_sale_sum: item.auto_sale_sum,
     price: item.price
   }))
 }
@@ -175,7 +163,7 @@ const increaseCountOfGoods = () => {
   const missingData = goods.value.some(validateItem)
   if (missingData) return
 
-  goods.value.push({id: goods.value.length + 1, good_id: null, amount: 1, auto_sale_percent: null, auto_sale_sum: null,  })
+  goods.value.push({id: goods.value.length + 1, good_id: null, amount: 1,  price: null })
 }
 
 const validateItem = (item) => {
@@ -206,15 +194,11 @@ const updateClientReturn = async () => {
     counterparty_id: typeof form.counterparty === 'object' ? form.counterparty.id : form.counterparty,
     counterparty_agreement_id: typeof form.cpAgreement === 'object' ? form.cpAgreement.id : form.cpAgreement,
     storage_id: typeof form.storage === 'object' ? form.storage.id : form.storage,
-    saleInteger: Number(form.saleInteger),
-    salePercent: Number(form.salePercent),
     currency_id: typeof form.currency === 'object' ? form.currency.id : form.currency,
     goods: goods.value.map((item) => ({
       id: item.id,
       good_id: Number(item.good_id),
       amount: Number(item.amount),
-      auto_sale_percent: Number(item.auto_sale_percent),
-      auto_sale_sum: Number(item.auto_sale_sum),
       price: Number(item.price),
     }))
  }
@@ -263,29 +247,12 @@ const totalPrice = computed(() => {
   return sum
 })
 
-const totalPriceWithSale = computed(() => {
-  let sum = 0
-  if (form.salePercent !== null) {
-      sum = totalPrice.value - (totalPrice.value * form.salePercent / 100)
-  } else {
-    goods.value.forEach(item => {
-      sum += (item.price * item.amount)
-    })
-    sum -= form.saleInteger
-  }
-
-  return sum
-})
-
-
 
 const closeWindow = () => {
   window.close()
 }
 const count = ref(10000)
 
-const isSaleIntegerDisabled = computed(() => !!form.salePercent);
-const isSalePercentDisabled = computed(() => !!form.saleInteger);
 
 watch(isApproveError, (newVal) => {
   if (newVal) {
@@ -313,19 +280,6 @@ watch(
     }
 );
 
-watch(() => form.saleInteger, (newValue) => {
-  if (!newValue) {
-    form.salePercent = ''
-  }
-})
-
-
-watch(() => form.salePercent, (newValue) => {
-  if (!newValue) {
-    form.saleInteger = ''
-  }
-})
-
 onMounted( () => {
   author.value = JSON.parse(localStorage.getItem('user')).name || null
 
@@ -338,7 +292,6 @@ onMounted( () => {
     getCurrencies(),
     getGoods(),
   ])
-
 })
 
 </script>
@@ -374,8 +327,6 @@ onMounted( () => {
           <custom-autocomplete label="Клиент" :items="counterparties" v-model="form.counterparty"/>
           <custom-autocomplete label="Договор" :items="cpAgreements" v-model="form.cpAgreement"/>
           <custom-autocomplete label="Склад" :items="storages" v-model="form.storage"/>
-          <custom-text-field label="Руч. скидка (сумма)" v-mask="'###'" v-model="form.saleInteger" :disabled="isSaleIntegerDisabled"/>
-          <custom-text-field label="Руч. скидка (процент)" v-mask="'###'" v-model="form.salePercent" :disabled="isSalePercentDisabled"/>
         </div>
       </v-col>
       <v-col>
@@ -437,26 +388,6 @@ onMounted( () => {
                   </td>
                   <td>
                     <custom-text-field 
-                    v-model="item.auto_sale_percent" 
-                    v-mask="'##########'" 
-                    :base-color="
-                        hoveredRowId === item.id ? FIELD_GOODS : '#fff'
-                      "
-                    min-width="80" 
-                    max-width="150"/>
-                  </td>
-                  <td>
-                    <custom-text-field 
-                    v-model="item.auto_sale_sum" 
-                    :base-color="
-                        hoveredRowId === item.id ? FIELD_GOODS : '#fff'
-                      "
-                    v-mask="'##########'" 
-                    min-width="80" 
-                    max-width="140"/>
-                  </td> 
-                  <td>
-                    <custom-text-field 
                      @input="validateNumberInput(item.price)"
                      :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'" 
                      v-mask="'##########'"
@@ -500,12 +431,7 @@ onMounted( () => {
             />
           </div>
           <div class="d-flex ga-6">
-            <custom-text-field 
-            readonly  
-            :value="'Сумма со скидкой: ' + totalPriceWithSale" 
-            min-width="180" 
-            />
-            <custom-text-field 
+            <custom-text-field
             readonly  
             :value="'Сумма без скидки: ' + totalPrice" 
             min-width="180" 

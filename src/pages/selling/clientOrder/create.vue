@@ -70,8 +70,6 @@ const goods = ref([
     id: 1,
     good_id: null,
     amount: "1",
-    auto_sale_percent: null,
-    auto_sale_sum: null,
     price: null,
   },
 ]);
@@ -87,8 +85,6 @@ const statuses = ref([]);
 const headers = ref([
   { title: "Товары", key: "goods", sortable: false },
   { title: "Количество", key: "currency.name", sortable: false },
-  { title: "Cумма без скидки", key: "currency.name", sortable: false },
-  { title: "Сумма со скидкой", key: "currency.name", sortable: false },
   { title: "Цена", key: "currency.name", sortable: false },
   { title: "Сумма", key: "currency.name", sortable: false },
 ]);
@@ -165,8 +161,6 @@ const increaseCountOfGoods = () => {
     id: goods.value.length + 1,
     good_id: null,
     amount: 1,
-    auto_sale_percent: null,
-    auto_sale_sum: null,
     price: null,
   });
 };
@@ -460,26 +454,6 @@ onMounted(() => {
                       "
                       :value="formatInputAmount(item.amount)"
                       min-width="50"
-                    />
-                  </td>
-                  <td>
-                    <custom-text-field
-                      v-model="item.auto_sale_percent"
-                      :base-color="
-                        hoveredRowId === item.id ? FIELD_GOODS : '#fff'
-                      "
-                      v-mask="'##########'"
-                      min-width="80"
-                    />
-                  </td>
-                  <td>
-                    <custom-text-field
-                      v-model="item.auto_sale_sum"
-                      :base-color="
-                        hoveredRowId === item.id ? FIELD_GOODS : '#fff'
-                      "
-                      v-mask="'##########'"
-                      min-width="80"
                     />
                   </td>
                   <td>
