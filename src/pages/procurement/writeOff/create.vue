@@ -14,7 +14,7 @@ import CustomAutocomplete from "../../../components/formElements/CustomAutocompl
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import organizationApi from "../../../api/list/organizations.js";
 import storageApi from "../../../api/list/storage.js";
-import procurementApi from "../../../api/documents/procurement.js";
+import writeOffApi from "../../../api/documents/writeOff.js";
 import formatInputPrice from "../../../composables/format/formatInputPrice.js";
 import goodApi from "../../../api/list/goods.js";
 import Button from "../../../components/button/button.vue";
@@ -186,8 +186,8 @@ const addNewProcurement = async () => {
     date: formatDateTime(form.date),
     organization_id: typeof form.organization === "object" ? form.organization.id : form.organization,
     storage_id: typeof form.storage === "object" ? form.storage.id : form.storage,
-    saleInteger: Number(form.saleInteger),
-    salePercent: Number(form.salePercent),
+    status: "Списание",
+    author_id: author.value,
     currency_id:
       typeof form.currency === "object" ? form.currency.id : form.currency,
     goods: goods.value.map(item => ({
@@ -197,7 +197,7 @@ const addNewProcurement = async () => {
     })),
   }
   try {
-    const res = await procurementApi.add(body);
+    const res = await writeOffApi.add(body);
     if (res.status === 201) {
       showToast(addMessage);
       window.open(`/writeOff/${res.data.result.id}`, "_blank");

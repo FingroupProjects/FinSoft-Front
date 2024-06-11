@@ -31,6 +31,7 @@ const loading = ref(true);
 const dialog = ref(false);
 const filterModal = ref(false);
 const hoveredRowIndex = ref(null);
+const doc_name = ref("Оприходование");
 
 const markedID = ref([]);
 const markedItem = ref([]);
@@ -80,13 +81,13 @@ const getProcurementData = async ({
   filterModal.value = false;
   loading.value = true;
   try {
-    const { data } = await postingApi.get(
+    const { data: { result } } = await postingApi.get(
       { page, itemsPerPage, sortBy },
       search,
       filterForm.value
     );
-    paginations.value = data.result.pagination;
-    procurements.value = data.result.data;
+    paginations.value = result.pagination;
+    procurements.value = result.data;
     loading.value = false;
   } catch (e) {
     console.error(e);
@@ -419,10 +420,10 @@ onMounted(() => {
                 }}</span>
               </v-chip>
             </td>
-            <td>{{ item.organization.name }}</td>
-            <td>{{ item.storage.name }}</td>
-            <td>{{ item.author.name }}</td>
-            <td>{{ item.currency.name }}</td>
+            <td>{{ item.organization?.name }}</td>
+            <td>{{ item.storage?.name }}</td>
+            <td>{{ item.author?.name }}</td>
+            <td>{{ item.currency?.name }}</td>
           </tr>
         </template>
       </v-data-table-server>

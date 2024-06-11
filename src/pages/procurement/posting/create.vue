@@ -14,7 +14,7 @@ import CustomAutocomplete from "../../../components/formElements/CustomAutocompl
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import organizationApi from "../../../api/list/organizations.js";
 import storageApi from "../../../api/list/storage.js";
-import procurementApi from "../../../api/documents/procurement.js";
+import postingApi from "../../../api/documents/posting.js";
 import formatInputPrice from "../../../composables/format/formatInputPrice.js";
 import goodApi from "../../../api/list/goods.js";
 import Button from "../../../components/button/button.vue";
@@ -186,10 +186,9 @@ const addNewProcurement = async () => {
     date: formatDateTime(form.date),
     organization_id: typeof form.organization === "object" ? form.organization.id : form.organization,
     storage_id: typeof form.storage === "object" ? form.storage.id : form.storage,
-    saleInteger: Number(form.saleInteger),
-    salePercent: Number(form.salePercent),
-    currency_id:
-      typeof form.currency === "object" ? form.currency.id : form.currency,
+    status: "Оприходование",
+    author_id: author.value,
+    currency_id: typeof form.currency === "object" ? form.currency.id : form.currency,
     goods: goods.value.map(item => ({
       good_id: Number(item.good_id),
       amount: Number(item.amount),
@@ -197,7 +196,7 @@ const addNewProcurement = async () => {
     })),
   }
   try {
-    const res = await procurementApi.add(body);
+    const res = await postingApi.add(body);
     if (res.status === 201) {
       showToast(addMessage);
       window.open(`/posting/${res.data.result.id}`, "_blank");

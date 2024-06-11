@@ -3,8 +3,6 @@ import showToast from "../../../composables/toast/index.js";
 export default function validate(
   date,
   organization,
-  counterparty,
-  cpAgreement,
   storage,
   currency,
   goods,
@@ -14,12 +12,6 @@ export default function validate(
   }
   if (!organization) {
     return showToast("Поле Организации не может быть пустым", "warning")
-  }
-  if (!counterparty) {
-    return showToast("Поле Поставщик не может быть пустым", "warning")
-  }
-  if (!cpAgreement) {
-    return showToast("Поле Договор не может быть пустым", "warning")
   }
   if (!storage) {
     return showToast("Поле Склад не может быть пустым", "warning")
