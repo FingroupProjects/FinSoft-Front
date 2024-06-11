@@ -8,14 +8,12 @@ import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import { useModalCreateBased } from "../../../store/modalCreateBased.js";
 import { useFilterCanvasVisible } from "../../../store/canvasVisible.js";
-import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
 import getStatus from "../../../composables/displayed/getStatus.js";
 import getColor from "../../../composables/displayed/getColor.js";
 import copyDocument from "../../../api/documents/copyDocument.js";
 import CreateBase from "../../../components/modal/CreateBase.vue";
 import organizationApi from "../../../api/list/organizations.js";
-import counterpartyApi from "../../../api/list/counterparty.js";
 import showToast from "../../../composables/toast/index.js";
 import Button from "../../../components/button/button.vue";
 import postingApi from "../../../api/documents/posting.js";
@@ -46,8 +44,6 @@ const organizations = ref([]);
 const storages = ref([]);
 const authors = ref([]);
 const currencies = ref([]);
-const counterparties = ref([]);
-const counterpartyAgreements = ref([]);
 const modalCreateBased = useModalCreateBased();
 
 const filterForm = ref({
@@ -57,8 +53,6 @@ const filterForm = ref({
   active: null,
   deleted: null,
   provider_id: null,
-  counterparty_id: null,
-  counterparty_agreement_id: null,
   organization_id: null,
   storage_id: null,
   author_id: null,
@@ -101,7 +95,7 @@ const getProcurementData = async ({
 const headerButtons = ref([
   {
     name: "create",
-    function: () => router.push({ name: "writeOffCreate" }),
+    function: () => router.push({ name: "postingCreate" }),
   },
   {
     name: "createBasedOn",
@@ -127,7 +121,7 @@ const headerButtons = ref([
         const res = await copyDocument.copy(markedID.value[0]);
         if (res.status === 200) {
           showToast(copyMessage);
-          window.open(`/writeOff/${res.data.result.id}`, "_blank");
+          window.open(`/posting/${res.data.result.id}`, "_blank");
         }
       } catch (e) {
         console.error(e);
@@ -288,23 +282,6 @@ const getStorages = async () => {
   });
   storages.value = data.result.data;
 };
-const getCounterparties = async () => {
-  const { data } = await counterpartyApi.get({
-    page: 1,
-    itemsPerPage: 100000,
-    sortBy: "name",
-  });
-  counterparties.value = data.result.data;
-};
-
-const getCpAgreements = async () => {
-  const { data } = await cpAgreementApi.get({
-    page: 1,
-    itemsPerPage: 100000,
-    sortBy: "name",
-  });
-  counterpartyAgreements.value = data.result.data;
-};
 
 const getCurrencies = async () => {
   const { data } = await currencyApi.get({
@@ -317,7 +294,7 @@ const getCurrencies = async () => {
 };
 
 const show = (item) => {
-  window.open(`/writeOff/${item.id}`, "_blank");
+  window.open(`/posting/${item.id}`, "_blank");
 };
 
 watch(markedID.value, (newVal) => {
@@ -333,8 +310,6 @@ watch(
 
 onMounted(() => {
   getOrganizations();
-  getCounterparties();
-  getCpAgreements();
   getStorages();
   getCurrencies();
   getAuthors();
@@ -481,23 +456,9 @@ onMounted(() => {
         />
         <custom-filter-autocomplete
           min-width="106"
-          label="Поставщик"
-          :items="counterparties"
-          v-model="filterForm.counterparty_id"
-        />
-      </div>
-      <div class="d-flex flex-column ga-2">
-        <custom-filter-autocomplete
-          min-width="106"
           label="Склад"
           :items="storages"
           v-model="filterForm.storage_id"
-        />
-        <custom-filter-autocomplete
-          min-width="106"
-          label="Договор"
-          :items="counterpartyAgreements"
-          v-model="filterForm.counterparty_agreement_id"
         />
       </div>
       <div class="d-flex ga-2">

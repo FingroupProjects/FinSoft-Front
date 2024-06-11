@@ -13,13 +13,12 @@ import CustomTextField from "../../../components/formElements/CustomTextField.vu
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import organizationApi from "../../../api/list/organizations.js";
-import counterpartyApi from "../../../api/list/counterparty.js";
 import storageApi from "../../../api/list/storage.js";
-import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import procurementApi from "../../../api/documents/procurement.js";
 import formatInputPrice from "../../../composables/format/formatInputPrice.js";
 import goodApi from "../../../api/list/goods.js";
 import Button from "../../../components/button/button.vue";
+import currencyApi from "../../../api/list/currency";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";
 import "../../../assets/css/procurement.css";
 import {useHasOneOrganization} from "../../../store/hasOneOrganization.js";
@@ -38,8 +37,6 @@ const route = useRoute()
 const form = reactive({
   date: null,
   organization: null,
-  counterparty: null,
-  cpAgreement: null,
   storage: null,
   saleInteger: null,
   salePercent: null,
@@ -59,8 +56,6 @@ const goods = ref([
 ]);
 
 const organizations = ref([]);
-const counterparties = ref([]);
-const cpAgreements = ref([]);
 const storages = ref([]);
 const currencies = ref([]);
 const listGoods = ref([]);
@@ -83,24 +78,6 @@ const getOrganizations = async () => {
   organizations.value = data.result.data;
 };
 
-const getCounterparties = async () => {
-  const { data } = await counterpartyApi.get({
-    page: 1,
-    itemsPerPage: 100000,
-    sortBy: "name",
-  });
-  counterparties.value = data.result.data;
-};
-
-const getCpAgreements = async (id) => {
-  cpAgreements.value = [];
-  const { data } = await cpAgreementApi.getCounterpartyById(id);
-  cpAgreements.value = data.result.data;
-  if (cpAgreements.value.length === 1) {
-    form.cpAgreement = cpAgreements.value[0];
-  }
-};
-
 const getStorages = async () => {
   const { data } = await storageApi.get({
     page: 1,
@@ -108,6 +85,15 @@ const getStorages = async () => {
     sortBy: "name",
   });
   storages.value = data.result.data;
+};
+
+const getCurrencies = async () => {
+  const { data } = await currencyApi.get({
+    page: 1,
+    itemsPerPage: 100000,
+    sortBy: "name",
+  });
+  currencies.value = data.result.data;
 };
 
 const getGoods = async (good_storage_id, good_organization_id) => {
@@ -183,8 +169,6 @@ const addNewProcurement = async () => {
     validate(
       form.date,
       form.organization,
-      form.counterparty,
-      form.cpAgreement,
       form.storage,
       form.currency,
       goods.value
@@ -200,20 +184,8 @@ const addNewProcurement = async () => {
   }
   const body = {
     date: formatDateTime(form.date),
-    organization_id:
-      typeof form.organization === "object"
-        ? form.organization.id
-        : form.organization,
-    counterparty_id:
-      typeof form.counterparty === "object"
-        ? form.counterparty.id
-        : form.counterparty,
-    counterparty_agreement_id:
-      typeof form.cpAgreement === "object"
-        ? form.cpAgreement.id
-        : form.cpAgreement,
-    storage_id:
-      typeof form.storage === "object" ? form.storage.id : form.storage,
+    organization_id: typeof form.organization === "object" ? form.organization.id : form.organization,
+    storage_id: typeof form.storage === "object" ? form.storage.id : form.storage,
     saleInteger: Number(form.saleInteger),
     salePercent: Number(form.salePercent),
     currency_id:
@@ -239,8 +211,6 @@ const isChanged = () => {
   const {
     saleInteger,
     salePercent,
-    counterparty,
-    cpAgreement,
     storage,
     currency,
     date,
@@ -256,8 +226,6 @@ const isChanged = () => {
   const valuesToCheck = [
     saleInteger,
     salePercent,
-    counterparty,
-    cpAgreement,
     storage,
     currency,
     date,
@@ -279,27 +247,6 @@ const totalPrice = computed(() => {
 
 const totalCount = computed(() =>
   goods.value.reduce((acc, item) => acc + Number(item.amount || 0), 0)
-);
-
-watch(
-  () => form.counterparty,
-  async (id) => {
-    form.cpAgreement = null;
-    const counterpartyId = typeof id === 'object' ? id.id : id;
-    await getCpAgreements(counterpartyId);
-  }
-);
-
-watch(
-  () => form.cpAgreement,
-  (newValue) => {
-    if (newValue !== null) {
-      const cpAgreement = cpAgreements.value.find((el) =>
-          (el.id === typeof newValue) === "object" ? newValue.id : newValue
-      );
-      form.currency = cpAgreement.currency_id;
-    }
-  }
 );
 
 watch(confirmDocument, () => {
@@ -337,10 +284,9 @@ onMounted(() => {
   form.organization = JSON.parse(localStorage.getItem("user")).organization || null;
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
 
+  getCurrencies()
   getDataBased(route.query.id, form, goods, route.query.isClient)
-
   getOrganizations()
-  getCounterparties()
   getStorages()
 })
 </script>
@@ -383,17 +329,6 @@ onMounted(() => {
             label="Организация"
             :items="organizations"
             v-model="form.organization"
-          />
-          <custom-autocomplete
-            label="Поставщик"
-            :items="counterparties"
-            v-model="form.counterparty"
-          />
-          <custom-autocomplete
-            :disabled="!form.counterparty"
-            label="Договор"
-            :items="cpAgreements"
-            v-model="form.cpAgreement"
           />
           <custom-autocomplete
             label="Склад"
@@ -513,7 +448,6 @@ onMounted(() => {
               max-width="110"
             />
             <custom-autocomplete
-              readonly
               v-model="form.currency"
               label="Валюта"
               :items="currencies"

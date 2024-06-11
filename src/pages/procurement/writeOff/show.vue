@@ -12,13 +12,11 @@ import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
 import formatInputPrice from "../../../composables/format/formatInputPrice.js";
 import goToPrint from "../../../composables/movementByPage/goToPrint.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
-import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import formatNumber from "../../../composables/format/formatNumber.js";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";
 import getStatus from "../../../composables/displayed/getStatus.js";
 import procurementApi from "../../../api/documents/procurement.js";
 import organizationApi from "../../../api/list/organizations.js";
-import counterpartyApi from "../../../api/list/counterparty.js";
 import showToast from "../../../composables/toast/index.js";
 import Button from "../../../components/button/button.vue";
 import currencyApi from "../../../api/list/currency.js";
@@ -44,8 +42,6 @@ const form = reactive({
   doc_number: null,
   date: null,
   organization: null,
-  counterparty: null,
-  cpAgreement: null,
   storage: null,
   saleInteger: null,
   salePercent: null,
@@ -63,8 +59,6 @@ const doc_name = ref("Списание");
 
 const deletedGoods = ref([]);
 const organizations = ref([]);
-const counterparties = ref([]);
-const cpAgreements = ref([]);
 const storages = ref([]);
 const currencies = ref([]);
 const listGoods = ref([]);
@@ -110,16 +104,6 @@ const getProcurementDetails = async () => {
       id: data.result.organization.id,
       name: data.result.organization.name,
     };
-    form.counterparty = {
-      id: data.result.counterparty.id,
-      name: data.result.counterparty.name,
-    };
-    setTimeout(() => {
-      form.cpAgreement = {
-        id: data.result.counterpartyAgreement.id,
-        name: data.result.counterpartyAgreement.name,
-      };
-    }, 700);
     form.storage = {
       id: data.result.storage.id,
       name: data.result.storage.name,
@@ -149,24 +133,6 @@ const getOrganizations = async () => {
     sortBy: "name",
   });
   organizations.value = data.result.data;
-};
-
-const getCounterparties = async () => {
-  const { data } = await counterpartyApi.get({
-    page: 1,
-    itemsPerPage: 100000,
-    sortBy: "name",
-  });
-  counterparties.value = data.result.data;
-};
-
-const getCpAgreements = async (id) => {
-  cpAgreements.value = [];
-  const { data } = await cpAgreementApi.getCounterpartyById(id);
-  cpAgreements.value = data.result.data;
-  if (cpAgreements.value.length === 1) {
-    form.cpAgreement = cpAgreements.value[0];
-  }
 };
 
 const getStorages = async () => {
@@ -263,8 +229,6 @@ const updateProcurement = async () => {
     validate(
       form.date,
       form.organization,
-      form.counterparty,
-      form.cpAgreement,
       form.storage,
       form.currency,
       goods.value.slice()
@@ -282,14 +246,6 @@ const updateProcurement = async () => {
         typeof form.organization === "object"
           ? form.organization.id
           : form.organization,
-      counterparty_id:
-        typeof form.counterparty === "object"
-          ? form.counterparty.id
-          : form.counterparty,
-      counterparty_agreement_id:
-        typeof form.cpAgreement === "object"
-          ? form.cpAgreement.id
-          : form.cpAgreement,
       storage_id:
         typeof form.storage === "object" ? form.storage.id : form.storage,
       saleInteger: Number(form.saleInteger),
@@ -373,32 +329,6 @@ watch(
   }
 );
 
-watch(
-  () => form.counterparty,
-  async (newValue) => {
-    if (newValue === null) return;
-    form.cpAgreement = null;
-    form.currency = null;
-    await getCpAgreements(
-      typeof newValue === "object" ? newValue.id : newValue
-    );
-  }
-);
-
-watch(
-  () => form.cpAgreement,
-  newValue => {
-    if (newValue !== null) {
-      setTimeout(() => {
-        const cpAgreement = cpAgreements.value.find((el) =>
-            (el.id === typeof newValue) === "object" ? newValue.id : newValue
-        );
-        form.currency = cpAgreement.currency_id;
-      }, 1000)
-    }
-  }
-);
-
 watch(confirmDocument, () => {
   if (confirmDocument.isUpdateOrCreateDocument) {
     updateProcurement();
@@ -459,17 +389,6 @@ onMounted(() => {
             label="Организация"
             :items="organizations"
             v-model="form.organization"
-          />
-          <custom-autocomplete
-            label="Поставщик"
-            :items="counterparties"
-            v-model="form.counterparty"
-          />
-          <custom-autocomplete
-            :disabled="!form.counterparty"
-            label="Договор"
-            :items="cpAgreements"
-            v-model="form.cpAgreement"
           />
           <custom-autocomplete
             label="Склад"
@@ -606,7 +525,6 @@ onMounted(() => {
               max-width="110"
             />
             <custom-autocomplete
-              readonly
               v-model="form.currency"
               label="Валюта"
               :items="currencies"
