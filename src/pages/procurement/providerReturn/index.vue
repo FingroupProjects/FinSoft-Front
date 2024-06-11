@@ -1,6 +1,6 @@
 <script setup>
 import {
-  approveDocument,
+  approveDocument, copyMessage,
   ErrorSelectMessage,
   removeMessage,
   restoreMessage,
@@ -39,6 +39,7 @@ import { useRouter } from "vue-router";
 import debounce from "lodash.debounce";
 import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
 import GoodErrorCanvas from "../../../components/Errors/goodErrorCanvas.vue";
+import copyDocument from "../../../api/documents/copyDocument.js";
 
 const router = useRouter();
 
@@ -120,6 +121,24 @@ const headerButtons = ref([
       }
 
       modalCreateBased.isModal();
+    },
+  },
+  {
+    name: 'copy',
+    function: async () => {
+      if (markedID.value.length !== 1) {
+        return showToast(selectOneItemMessage, "warning");
+      }
+
+      try {
+        const res = await copyDocument.copy(markedID.value[0]);
+        if (res.status === 200) {
+          showToast(copyMessage);
+          window.open(`/providerReturn/${res.data.result.id}`, "_blank");
+        }
+      } catch (e) {
+        console.error(e);
+      }
     },
   },
   {

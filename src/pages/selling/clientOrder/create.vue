@@ -225,8 +225,6 @@ const addNewClientOrder = async () => {
       good_id: Number(item.good_id),
       amount: Number(item.amount),
       price: Number(item.price),
-      auto_sale_percent: 10,
-      auto_sale_sum: 100.5,
     })),
   };
 
