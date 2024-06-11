@@ -27,8 +27,39 @@ const routes = [
   {
     path: "/procurementOfGoods/create",
     name: "procurementOfGoodsCreate",
+    component: () => import("../pages/procurement/procurementOfGoods/create.vue"),
+  },
+  {
+    path: "/writeOff",
+    name: "writeOff",
     component: () =>
-      import("../pages/procurement/procurementOfGoods/create.vue"),
+      import("../pages/procurement/writeOff/index.vue"),
+  },
+  {
+    path: "/writeOff/:id",
+    name: "writeOffShow",
+    component: () => import("../pages/procurement/writeOff/show.vue"),
+  },
+  {
+    path: "/writeOff/create",
+    name: "writeOffCreate",
+    component: () => import("../pages/procurement/writeOff/create.vue"),
+  },
+  {
+    path: "/posting",
+    name: "posting",
+    component: () =>
+      import("../pages/procurement/posting/index.vue"),
+  },
+  {
+    path: "/posting/:id",
+    name: "postingShow",
+    component: () => import("../pages/procurement/posting/show.vue"),
+  },
+  {
+    path: "/posting/create",
+    name: "postingCreate",
+    component: () => import("../pages/procurement/posting/create.vue"),
   },
   {
     path: "/providerReturn",
