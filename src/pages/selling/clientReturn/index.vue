@@ -45,7 +45,7 @@ import {markedForDeletion, statusOptions} from "../../../composables/constant/it
 const router = useRouter();
 const modalCreateBased = useModalCreateBased();
 const loading = ref(true);
-const isAproveError = ref(false);
+const isApproveError = ref(false);
 const filterModal = ref(false);
 const hoveredRowIndex = ref(null);
 
@@ -185,7 +185,7 @@ const approve = async () => {
     console.error(e);
     if (e.response.status === 400) {
       approveError.value = e.response.data.errors;
-      isAproveError.value = true;
+      isApproveError.value = true;
     }
 
   }
@@ -268,7 +268,7 @@ const closeFilterModal = async ({ page, itemsPerPage, sortBy, search }) => {
   filterModal.value = false;
   cleanFilterForm();
   await getClientReturnData({ page, itemsPerPage, sortBy, search });
-  isAproveError.value = false
+  isApproveError.value = false
 };
 
 const cleanFilterForm = () => {
@@ -333,7 +333,7 @@ watch(markedID, (newVal) => {
   markedItem.value = clientReturns.value.find((el) => el.id === newVal[0]);
 });
 
-watch(isAproveError, (newVal) => {
+watch(isApproveError, (newVal) => {
   if (newVal) {
     useFilterCanvasVisible().toggleFilterCanvas();
   }
@@ -471,8 +471,8 @@ onMounted(() => {
       </v-data-table-server>
     </v-card>
 
-    <filter-canvas @closeCanvas="isAproveError = false" :isAproveError="isAproveError">
-      <div v-if="isAproveError">
+    <filter-canvas @closeCanvas="isApproveError = false" :isApproveError="isApproveError">
+      <div v-if="isApproveError">
         <goodErrorCanvas :approveError="approveError"/>
       </div>
       <div v-else class="d-flex flex-column ga-2 w-100">

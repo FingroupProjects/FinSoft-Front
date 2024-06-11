@@ -78,8 +78,6 @@ const statuses = ref([]);
 const headers = ref([
   { title: "Товары", key: "goods", sortable: false },
   { title: "Количество", key: "currency.name", sortable: false },
-  { title: "Cумма без скидки", key: "currency.name", sortable: false },
-  { title: "Сумма со скидкой", key: "currency.name", sortable: false },
   { title: "Цена", key: "currency.name", sortable: false },
   { title: "Сумма", key: "currency.name", sortable: false },
 ]);
@@ -113,8 +111,6 @@ const getClientOrderDetails = async () => {
     id: item.id,
     good_id: item.good.id,
     amount: item.amount,
-    auto_sale_percent: item.auto_sale_percent,
-    auto_sale_sum: item.auto_sale_sum,
     price: item.price,
   }));
 };
@@ -223,8 +219,6 @@ const increaseCountOfGoods = () => {
     id: goods.value.length + 1,
     good_id: null,
     amount: 1,
-    auto_sale_percent: null,
-    auto_sale_sum: null,
     price: null,
   });
 };
@@ -465,28 +459,6 @@ watch(
                         hoveredRowId === item.id ? FIELD_GOODS : '#fff'
                       "
                       min-width="50"
-                    />
-                  </td>
-                  <td>
-                    <custom-text-field
-                      v-model="item.auto_sale_percent"
-                      :base-color="
-                        hoveredRowId === item.id ? FIELD_GOODS : '#fff'
-                      "
-                      v-mask="'##########'"
-                      min-width="80"
-                      max-width="110"
-                    />
-                  </td>
-                  <td>
-                    <custom-text-field
-                      v-model="item.auto_sale_sum"
-                      :base-color="
-                        hoveredRowId === item.id ? FIELD_GOODS : '#fff'
-                      "
-                      v-mask="'##########'"
-                      min-width="80"
-                      max-width="110"
                     />
                   </td>
                   <td>
