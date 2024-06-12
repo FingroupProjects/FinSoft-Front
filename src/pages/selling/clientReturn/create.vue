@@ -158,7 +158,7 @@ const addNewClientReturn = async () => {
     organization_id: typeof form.organization === "object" ? form.organization.id : form.organization,
     counterparty_id: typeof form.counterparty === "object" ? form.counterparty.id : form.counterparty,
     counterparty_agreement_id: typeof form.cpAgreement === "object" ? form.cpAgreement.id : form.cpAgreement,
-    storage_id: form.storage ,
+    storage_id: typeof form.storage === 'object' ? form.storage.id : form.storage,
     currency_id: typeof form.currency === 'object' ? form.currency.id : form.currency,
     goods: goods.value.map((item) => ({
       good_id: Number(item.good_id),

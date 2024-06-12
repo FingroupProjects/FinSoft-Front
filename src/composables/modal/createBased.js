@@ -13,6 +13,7 @@ export default function createBased(e, router, id) {
     'Перемещение между складами': 'moveOfGoodsCreate',
     'Инвентаризация склада': 'invertoryCreate',
     'Перемещение': 'moveOfGoodsCreate',
+    'Приход денег': 'moneyComingCreate',
   }
 
   const query = {
@@ -23,7 +24,8 @@ export default function createBased(e, router, id) {
     'Возврат от клиентов': true,
     'Заказ клиентов': true,
     'Перемещение между складами': false,
-    'Инвентаризация склада': false
+    'Инвентаризация склада': false,
+    'Приход денег': true
   }
 
   const routeName = routes[e.target.innerText];

@@ -10,6 +10,11 @@ const props = defineProps({
     type: String,
     required: true,
     default: ''
+  },
+  items: {
+    type: Array,
+    required: false,
+    default: DOCUMENT_ITEMS
   }
 })
 
@@ -22,11 +27,11 @@ const router = useRouter()
 <template>
   <div v-if="modalCreateBased.isModalCreateBased" @click.self="modalCreateBased.isModal()" class="modal_create_based">
     <v-card
-        style="margin-top: 15%; left: -10%"
-        max-width="300"
+      style="margin-top: 24%; left: -5%;"
+      max-width="350"
     >
       <v-list
-          :items="DOCUMENT_ITEMS"
+          :items="items"
           item-title="name"
           item-value="id"
           @click.item="createBased($event, router, props.markedID)"
