@@ -55,6 +55,39 @@ export const DOCUMENT_ITEMS = [
   // },
 ];
 
+export const CREATE_BASED_SELLING_GOODS = [
+  {
+    id: 1,
+    name: "Возврат от клиентов",
+  },
+  {
+    id: 2,
+    name: "Приход денег",
+  }
+];
+
+export const CREATE_BASED_CLIENT_RETURN = [
+  {
+    id: 1,
+    name: "Покупка товаров",
+  },
+  {
+    id: 2,
+    name: "Заказ клиентов",
+  },
+  {
+    id: 3,
+    name: "Приход денег",
+  }
+];
+
+export const CREATE_BASED_CLIENT_ORDER = [
+  {
+    id: 1,
+    name: "Продажа клиентам",
+  },
+];
+
 export const markedForDeletion = [
   {
     name: "Да",

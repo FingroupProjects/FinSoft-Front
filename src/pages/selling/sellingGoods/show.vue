@@ -328,13 +328,6 @@ const totalCount = computed(() =>
   goods.value.reduce((acc, item) => acc + Number(item.amount || 0), 0)
 );
 
-const getHistory = () => {
-  router.push({
-    name: "documentHistory",
-    params: route.params.id,
-  });
-};
-
 const closeWindow = () => {
   window.close();
 };
@@ -393,6 +386,7 @@ watch(
 onMounted(() => {
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
   getSellingGoodsDetail();
+
   Promise.all([
     getOrganizations(),
     getCounterparties(),
