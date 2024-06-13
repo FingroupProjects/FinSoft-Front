@@ -214,3 +214,7 @@ body{
   font-size: 10px;
   color: white;
 }
+
+.leaflet-touch .leaflet-control-layers, .leaflet-touch .leaflet-bar {
+  display: none;
+}
