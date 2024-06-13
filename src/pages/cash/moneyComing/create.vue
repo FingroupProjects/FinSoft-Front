@@ -1,7 +1,7 @@
 <script setup>
 import {
   BASE_COLOR,
-  FIELD_COLOR,
+  FIELD_COLOR, TITLE_COLOR,
 } from "../../../composables/constant/colors.js";
 import validate from "./validate.js";
 import {useRoute, useRouter} from "vue-router";
@@ -22,6 +22,7 @@ import { add, addMessage } from "../../../composables/constant/buttons.js";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import getDataBased from "../../../composables/otherQueries/getDataBased.js";
+import Button from "../../../components/button/button.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -46,6 +47,7 @@ const form = reactive({
   organization: null,
   organization_bill: null,
   typeOperation: null,
+  sender: null,
 });
 
 const employees = ref([]);
@@ -83,6 +85,7 @@ const resetFields = () => {
   form.sender_cash = null;
   form.cpAgreement = null;
   form.counterparty = null;
+  form.sender = null
 };
 
 const firstAccess = async () => {
@@ -104,6 +107,7 @@ const firstAccess = async () => {
     operation_type_id: form.typeOperation,
     comment: form.comment,
     type: "PKO",
+ sender: form.sender,
   };
   try {
     await clientPaymentApi.paymentFromClient(body);
@@ -131,6 +135,7 @@ const secondAccess = async () => {
     operation_type_id: form.typeOperation,
     comment: form.comment,
     type: "PKO",
+ sender: form.sender,
   };
   try {
     await clientPaymentApi.writeOff(body);
@@ -157,6 +162,7 @@ const thirdAccess = async () => {
     operation_type_id: form.typeOperation,
     comment: form.comment,
     type: "PKO",
+ sender: form.sender,
   };
   try {
     await clientPaymentApi.anotherCashRegister(body);
@@ -185,6 +191,7 @@ const fourthAccess = async () => {
     operation_type_id: form.typeOperation,
     comment: form.comment,
     type: "PKO",
+ sender: form.sender,
   };
   try {
     await clientPaymentApi.investment(body);
@@ -214,6 +221,7 @@ const fifthAccess = async () => {
     operation_type_id: form.typeOperation,
     comment: form.comment,
     type: "PKO",
+ sender: form.sender,
   };
   try {
     await clientPaymentApi.creditReceive(body);
@@ -243,6 +251,7 @@ const sixthAccess = async () => {
     operation_type_id: form.typeOperation,
     comment: form.comment,
     type: "PKO",
+ sender: form.sender,
   };
   try {
     await clientPaymentApi.providerRefund(body);
@@ -270,6 +279,7 @@ const seventhAccess = async () => {
     operation_type_id: form.typeOperation,
     comment: form.comment,
     type: "PKO",
+ sender: form.sender,
   };
   try {
     await clientPaymentApi.accountablePersonRefund(body);
@@ -297,6 +307,7 @@ const eighthAccess = async () => {
     operation_type_id: form.typeOperation,
     comment: form.comment,
     type: "PKO",
+ sender: form.sender,
   };
   try {
     await clientPaymentApi.otherExpenses(body);
@@ -325,6 +336,7 @@ const ninthAccess = async () => {
     operation_type_id: form.typeOperation,
     comment: form.comment,
     type: "PKO",
+    sender: form.sender,
   };
   try {
     await clientPaymentApi.otherIncomes(body);
@@ -487,6 +499,11 @@ const getEmployees = async () => {
   }
 };
 
+const selectTypeOperation = item => {
+  form.typeOperation = item.id;
+}
+
+
 onMounted(async () => {
   form.date = currentDateWithTime();
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
@@ -512,33 +529,31 @@ function validateNumberInput(event) {
 </script>
 
 <template>
-  <div>
-    <v-col>
-      <div class="d-flex justify-space-between text-uppercase">
-        <div class="d-flex align-center ga-2 ms-4">
-          <span>ПКО (создание)</span>
-        </div>
-        <v-card variant="text" class="d-flex align-center ga-2">
-          <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="getAccess" name="add" />
-              <Icons title="Скопировать" name="copy" />
-              <Icons title="Удалить" name="delete" />
-            </div>
-          </div>
-        </v-card>
+  <div class="document">
+    <div class="d-flex justify-space-between">
+      <div class="d-flex align-center ga-2 pe-2 ms-4">
+          <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">
+          ПКО (создание)
+        </span>
       </div>
-    </v-col>
+      <v-card variant="text" class="d-flex align-center ga-2 py-2">
+        <div class="d-flex w-100">
+          <div class="d-flex ga-2 mt-1 me-3">
+            <Button @click="getAccess" name="save1" />
+            <Button @click="router.push('/moneyComing')" name="close" />
+          </div>
+        </div>
+      </v-card>
+    </div>
     <v-divider />
-    <v-divider />
-    <div style="background: #fff">
-      <v-col class="d-flex flex-column ga-2 pb-0">
+    <div class="documentHeight documentCalcWidthPKO">
+      <v-col class="d-flex flex-column ga-2 pb-0 ">
         <div class="d-flex flex-wrap ga-4 mb-2">
           <custom-text-field
-            readonly
-            :value="'Номер'"
-            min-width="140"
-            max-width="110"
+              readonly
+              :value="'Номер'"
+              min-width="140"
+              max-width="110"
           />
           <v-text-field
             type="datetime-local"
@@ -569,26 +584,27 @@ function validateNumberInput(event) {
             @input="validateNumberInput"
             v-model="form.sum"
           />
+          <custom-text-field
+              label="Получатель"
+              v-model="form.sender"
+          />
         </div>
-
         <div class="d-flex ga-6">
           <div
             style="
-              width: 280px;
+              width: 300px;
               height: 420px;
-              border: 1px solid rgba(39, 77, 135, 0.45);
               border-radius: 4px;
-              box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.25);
-              padding: 8px;
             "
           >
-            <span>Тип операции: </span>
             <div>
-              <v-radio-group v-model="form.typeOperation">
+              <v-radio-group  v-model="form.typeOperation">
                 <v-radio
-                  class="text-black"
+                  style="margin: 3px 0;"
                   v-for="typeOperation in typeOperations"
-                  :color="BASE_COLOR"
+                  @click="selectTypeOperation(typeOperation)"
+                  :class="['title-item', {'active_type': form.typeOperation === typeOperation.id}]"
+                  color="#fff"
                   :key="typeOperation.id"
                   :label="typeOperation.title_ru"
                   :value="typeOperation.id"
@@ -596,7 +612,7 @@ function validateNumberInput(event) {
               </v-radio-group>
             </div>
           </div>
-          <div class="d-flex flex-column ga-4">
+          <div class="d-flex flex-column ga-4 mt-1">
             <div v-if="form.typeOperation === 2">
               <custom-autocomplete
                 label="Банковский счет"
@@ -660,7 +676,7 @@ function validateNumberInput(event) {
           </div>
         </div>
 
-        <div class="d-flex justify-space-between w-100 my-4">
+        <div class="d-flex justify-space-between w-100 my-16">
           <div class="d-flex ga-10">
             <custom-text-field
               readonly
@@ -680,4 +696,22 @@ function validateNumberInput(event) {
   </div>
 </template>
 
-<style></style>
+<style scoped>
+.title-item {
+  padding: 3px 16px;
+  background: rgb(82, 78, 216, 0.7);
+  color: #e4e1e1;
+  width: 100%;
+  border-radius: 18px;
+  cursor: pointer;
+}
+
+.title-item:hover {
+  transition: .3s;
+  background: rgb(82, 78, 216, 0.8);
+}
+
+.active_type {
+  background: rgb(82, 78, 216, 1);
+}
+</style>
