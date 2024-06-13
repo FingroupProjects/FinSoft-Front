@@ -19,6 +19,8 @@ import {
   ErrorSelectMessage,
   restoreMessage,
 } from "../../../composables/constant/buttons.js";
+import getStatus from "../../../composables/displayed/getStatus.js";
+import getColor from "../../../composables/displayed/getColor.js";
 import { useFilterCanvasVisible } from "../../../store/canvasVisible.js";
 import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
 import debounce from "lodash.debounce";
@@ -58,8 +60,8 @@ const cashRegisters = ref([]);
 
 const filterForm = ref({
   sum: null,
-  startDate: null,
   endDate: null,
+  startDate: null,
   author_id: null,
   currency_id: null,
   operationType: null,
@@ -86,6 +88,9 @@ const headerButtons = ref([
     function: () => router.push({ name: "moneyComingCreate" }),
   },
   {
+    name: "createBasedOn",
+  },
+  {
     name: "copy",
     function: async () => {
       if (markedID.value.length !== 1) {
@@ -96,11 +101,23 @@ const headerButtons = ref([
         const res = await copyDocument.copy(markedID.value[0]);
         if (res.status === 200) {
           showToast(copyMessage);
-          window.open(`/procurementOfGoods/${res.data.result.id}`, "_blank");
+          window.open(`/moneyComing/${res.data.result.id}`, "_blank");
         }
       } catch (e) {
         console.error(e);
       }
+    },
+  },
+  {
+    name: "approve",
+    function: () => {
+      approve();
+    },
+  },
+  {
+    name: "cancel",
+    function: () => {
+      unApprove();
     },
   },
   {
@@ -224,6 +241,10 @@ const closeFilterModal = async ({ page, itemsPerPage, sortBy, search }) => {
   useFilterCanvasVisible().closeFilterCanvas();
 };
 
+const show = (item) => {
+  window.open(`/moneyComingEdit/${item.id}`, "_blank");
+};
+
 const cleanFilterForm = () => {
   filterForm.value = {};
 };
@@ -298,7 +319,7 @@ onMounted(async () => {
 
 <template>
   <div class="pa-4">
-    <div class="d-flex justify-space-between">
+    <div class="d-flex justify-space-between calcWidth">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
         <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Пко</span>
       </div>
@@ -342,7 +363,7 @@ onMounted(async () => {
         </div>
       </div>
     </div>
-    <v-card class="table">
+    <v-card class="table calcWidth">
       <v-data-table-server
         style="height: calc(100vh - 150px)"
         items-per-page-text="Элементов на странице:"
@@ -371,33 +392,31 @@ onMounted(async () => {
           <tr
             @mouseenter="hoveredRowIndex = index"
             @mouseleave="hoveredRowIndex = null"
-            @dblclick="$router.push(`/moneyComingEdit/${item.id}`)"
+            @dblclick="show(item)"
             :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
           >
             <td>
-              <template
-                v-if="hoveredRowIndex === index || markedID.includes(item.id)"
+              <CustomCheckbox
+                v-model="markedID"
+                :checked="markedID.includes(item.id)"
+                @change="lineMarking(item)"
               >
-                <CustomCheckbox
-                  v-model="markedID"
-                  :checked="markedID.includes(item.id)"
-                  @change="lineMarking(item)"
-                >
-                  <span>{{ index + 1 }}</span>
-                </CustomCheckbox>
-              </template>
-              <template v-else>
-                <div class="d-flex align-center">
-                  <Icons
-                    style="margin-right: 10px; margin-top: 4px"
-                    :name="item.deleted_at === null ? 'valid' : 'inValid'"
-                  />
-                  <span>{{ index + 1 }}</span>
-                </div>
-              </template>
+                <span>{{ index + 1 }}</span>
+              </CustomCheckbox>
             </td>
             <td>{{ item.doc_number }}</td>
             <td>{{ showDate(item.date) }}</td>
+            <td>
+              <v-chip
+                style="height: 50px !important"
+                class="w-100 d-flex justify-center"
+                :color="getColor(item.active, item.deleted_at)"
+              >
+                <span class="padding: 5px;">{{
+                  getStatus(item.active, item.deleted_at)
+                }}</span>
+              </v-chip>
+            </td>
             <td>{{ item.cashRegister ? item.cashRegister.name : "" }}</td>
             <td>{{ item.organization.name }}</td>
             <td>{{ item.operationType.name }}</td>
@@ -409,6 +428,7 @@ onMounted(async () => {
         </template>
       </v-data-table-server>
     </v-card>
+
     <filter-canvas>
       <div class="d-flex flex-column ga-2 w-100">
         <custom-filter-text-field
