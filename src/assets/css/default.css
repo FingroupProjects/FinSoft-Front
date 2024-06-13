@@ -28,6 +28,28 @@ body{
   width:  calc(100vw - 55px);
 }
 
+.documentCalcWidthPKO {
+  width:  calc(100vw - 70px);
+}
+
+@media screen and (min-width: 1470px) {
+  .documentCalcWidthPKO {
+    width:  calc(100vw - 71px);
+  }
+}
+
+@media screen and (min-width: 1600px) {
+  .documentCalcWidthPKO {
+    width:  calc(100vw - 75px);
+  }
+}
+
+@media screen and (min-width: 1800px) {
+  .documentCalcWidthPKO {
+    width:  calc(100vw - 84px);
+  }
+}
+
 .table {
   background: white;
   padding: 5px;
@@ -185,6 +207,11 @@ body{
 .documentHeight {
   height: calc(100vh - 115px);
    background: #fff
+}
+
+.documentHeight {
+  height: calc(102vh - 55px);
+  background: #fff
 }
 
 .documentTable {

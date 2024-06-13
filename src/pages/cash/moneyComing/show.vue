@@ -1,13 +1,9 @@
 <script setup>
-import {
-  BASE_COLOR,
-  FIELD_COLOR,
-} from "../../../composables/constant/colors.js";
+import {BASE_COLOR, FIELD_COLOR, TITLE_COLOR,} from "../../../composables/constant/colors.js";
 import validate from "./validate.js";
-import { useRoute, useRouter } from "vue-router";
-import { ref, reactive, onMounted, watch } from "vue";
+import {useRoute, useRouter} from "vue-router";
+import {onMounted, reactive, ref, watch} from "vue";
 import employeeApi from "../../../api/list/employee.js";
-import Icons from "../../../composables/Icons/Icons.vue";
 import showToast from "../../../composables/toast/index.js";
 import incomeItemApi from "../../../api/list/incomeItem.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
@@ -17,12 +13,13 @@ import clientPaymentApi from "../../../api/documents/cashRegister.js";
 import organizationBillApi from "../../../api/list/organizationBill.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
-import { add, addMessage } from "../../../composables/constant/buttons.js";
+import {addMessage} from "../../../composables/constant/buttons.js";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
+import Button from "../../../components/button/button.vue";
 
-const route = useRoute();
 const router = useRouter();
+const route = useRoute();
 
 const author = ref("");
 
@@ -47,6 +44,7 @@ const form = reactive({
   organization: null,
   organization_bill: null,
   typeOperation: null,
+  sender: null,
 });
 
 const employees = ref([]);
@@ -88,6 +86,7 @@ const resetFields = () => {
   form.sender_cash = null;
   form.cpAgreement = null;
   form.counterparty = null;
+  form.sender = null;
 };
 
 const getTypes = async () => {
@@ -96,6 +95,7 @@ const getTypes = async () => {
       data: { result },
     } = await clientPaymentApi.getTypes("PKO");
     typeOperations.value = result;
+    console.log(result)
   } catch (e) {
     console.error(e);
   }
@@ -106,7 +106,7 @@ const getSellingGoods = async () => {
     const {
       data: { result },
     } = await clientPaymentApi.getById(route.params.id);
-    form.typeOperation = result.operationType;
+    form.typeOperation = result.operationType.id;
     (form.sum = result.sum), (author.value = result.author.name);
     (form.base = result.basis),
       (form.doc_number = result.doc_number),
@@ -120,6 +120,7 @@ const getSellingGoods = async () => {
       (form.organization = result.organization),
       (form.sender_cash = result.senderCashRegister),
       (form.organization_bill = result.organizationBill),
+      (form.sender = result.sender_text),
       setTimeout(() => {
         form.cpAgreement = result.counterpartyAgreement;
       },);
@@ -156,6 +157,7 @@ const firstAccess = async () => {
     comment: form.comment,
     operation_type_id: form.typeOperation,
     type: "PKO",
+    sender: form.sender,
   };
   try {
     const res = await clientPaymentApi.updatePaymentFromClient(id.value, body);
@@ -189,6 +191,7 @@ const secondAccess = async () => {
     comment: form.comment,
     operation_type_id: form.typeOperation,
     type: "PKO",
+    sender: form.sender,
   };
   try {
     const res = await clientPaymentApi.updateWriteOff(id.value, body);
@@ -221,6 +224,7 @@ const thirdAccess = async () => {
     comment: form.comment,
     operation_type_id: form.typeOperation,
     type: "PKO",
+    sender: form.sender,
   };
   try {
     const res = await clientPaymentApi.updateAnotherCashRegister(
@@ -261,6 +265,7 @@ const fourthAccess = async () => {
     comment: form.comment,
     operation_type_id: form.typeOperation,
     type: "PKO",
+    sender: form.sender,
   };
   try {
     const res = await clientPaymentApi.updateInvestment(id.value, body);
@@ -299,6 +304,7 @@ const fifthAccess = async () => {
     comment: form.comment,
     operation_type_id: form.typeOperation,
     type: "PKO",
+    sender: form.sender,
   };
   try {
     const res = await clientPaymentApi.updateCreditReceive(id.value, body);
@@ -337,6 +343,7 @@ const sixthAccess = async () => {
     comment: form.comment,
     operation_type_id: form.typeOperation,
     type: "PKO",
+    sender: form.sender,
   };
   try {
     const res = await clientPaymentApi.updateProviderRefund(id.value, body);
@@ -368,6 +375,7 @@ const seventhAccess = async () => {
     comment: form.comment,
     operation_type_id: form.typeOperation,
     type: "PKO",
+    sender: form.sender,
   };
   try {
     const res = await clientPaymentApi.updateAccountablePersonRefund(
@@ -404,6 +412,7 @@ const eighthAccess = async () => {
     comment: form.comment,
     operation_type_id: form.typeOperation,
     type: "PKO",
+    sender: form.sender,
   };
   try {
     const res = await clientPaymentApi.updateOtherExpenses(id.value, body);
@@ -438,6 +447,7 @@ const ninthAccess = async () => {
     comment: form.comment,
     operation_type_id: form.typeOperation,
     type: "PKO",
+    sender: form.sender,
   };
   try {
     const res = await clientPaymentApi.updateOtherIncomes(id.value, body);
@@ -449,32 +459,33 @@ const ninthAccess = async () => {
 };
 
 const getAccess = () => {
+  console.log(1)
   switch (form.typeOperation) {
-    case "Оплата от клиента":
+    case 1:
       firstAccess();
       break;
-    case "Снятие с P/C":
+    case 2:
       secondAccess();
       break;
-    case "Получение с другой кассы":
+    case 3:
       thirdAccess();
       break;
-    case "Вложение":
+    case 4:
       fourthAccess();
       break;
-    case "Получение кредита":
+    case 5:
       fifthAccess();
       break;
-    case "Возврат от поставщика":
+    case 6:
       sixthAccess();
       break;
-    case "Возврат от подотчетника":
+    case 7:
       seventhAccess();
       break;
-    case "Прочие доходы":
+    case 8:
       eighthAccess();
       break;
-    case "Прочие приходы":
+    case 9:
       ninthAccess();
       break;
   }
@@ -562,6 +573,14 @@ const getEmployees = async () => {
   employees.value = data.result.data;
 };
 
+const closeWindow = () => {
+  window.close()
+}
+
+const selectTypeOperation = item => {
+  form.typeOperation = item.id;
+}
+
 onMounted(async () => {
   id.value = route.params.id;
   await Promise.all([
@@ -584,166 +603,165 @@ function validateNumberInput(event) {
 </script>
 
 <template>
-  <div>
-    <v-col>
-      <div class="d-flex justify-space-between text-uppercase">
-        <div class="d-flex align-center ga-2 ms-4">
-          <span>ПКО (изменение)</span>
-        </div>
-        <v-card variant="text" class="d-flex align-center ga-2">
-          <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="getAccess" name="add" />
-              <Icons title="Скопировать" name="copy" />
-              <Icons title="Удалить" name="delete" />
-            </div>
-          </div>
-        </v-card>
+  <div class="document">
+    <div class="d-flex justify-space-between ">
+      <div class="d-flex align-center ga-2 pe-2 ms-4">
+          <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">
+          ПКО (изменение)
+        </span>
       </div>
-    </v-col>
+      <v-card variant="text" class="d-flex align-center ga-2 py-2">
+        <div class="d-flex w-100">
+          <div class="d-flex ga-2 mt-1 me-3">
+            <Button @click="getAccess" name="save1" />
+            <Button @click="closeWindow" name="close" />
+          </div>
+        </div>
+      </v-card>
+    </div>
     <v-divider />
-    <v-divider />
-    <div style="background: #fff">
-      <v-col class="d-flex flex-column ga-2 pb-0">
+    <div class="documentHeight documentCalcWidthPKO">
+      <v-col class="d-flex flex-column ga-2 pb-0 ">
         <div class="d-flex flex-wrap ga-4 mb-2">
           <custom-text-field
-            readonly
-            :value="form.doc_number"
-            min-width="140"
-            max-width="110"
+              readonly
+              :value="'Номер'"
+              min-width="140"
+              max-width="110"
           />
           <v-text-field
-            type="datetime-local"
-            rounded="lg"
-            hide-details
-            label="Дата"
-            density="compact"
-            v-model="form.date"
-            :color="BASE_COLOR"
-            clear-icon="close"
-            variant="outlined"
-            class="text-sm-body-1"
-            style="max-width: 220px; max-height: 40px !important"
-            :base-color="FIELD_COLOR"
+              type="datetime-local"
+              rounded="lg"
+              hide-details
+              label="Дата"
+              density="compact"
+              v-model="form.date"
+              :color="BASE_COLOR"
+              clear-icon="close"
+              variant="outlined"
+              class="text-sm-body-1"
+              style="max-width: 220px; max-height: 40px !important"
+              :base-color="FIELD_COLOR"
           />
           <custom-autocomplete
-            label="Организация"
-            :items="organizations"
-            v-model="form.organization"
+              label="Организация"
+              :items="organizations"
+              v-model="form.organization"
           />
           <custom-autocomplete
-            label="Касса"
-            :items="cashRegisters"
-            v-model="form.cash"
+              label="Касса"
+              :items="cashRegisters"
+              v-model="form.cash"
           />
           <custom-text-field
-            label="Сумма"
-            @input="validateNumberInput"
-            v-model="form.sum"
+              label="Сумма"
+              @input="validateNumberInput"
+              v-model="form.sum"
+          />
+          <custom-text-field
+              label="Получатель"
+              v-model="form.sender"
           />
         </div>
-
         <div class="d-flex ga-6">
           <div
-            style="
-              width: 280px;
+              style="
+              width: 300px;
               height: 420px;
-              border: 1px solid rgba(39, 77, 135, 0.45);
               border-radius: 4px;
-              box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
-              padding: 8px;
             "
           >
-            <span>Тип операции: </span>
             <div>
-              <v-radio-group v-model="form.typeOperation">
+              <v-radio-group  v-model="form.typeOperation">
                 <v-radio
-                  class="text-black"
-                  v-for="typeOperation in typeOperations"
-                  :color="BASE_COLOR"
-                  :key="typeOperation.id"
-                  :label="typeOperation.title_ru"
-                  :value="typeOperation.id"
+                    style="margin: 3px 0;"
+                    v-for="typeOperation in typeOperations"
+                    @click="selectTypeOperation(typeOperation)"
+                    :class="['title-item', {'active_type': form.typeOperation === typeOperation.id}]"
+                    color="#fff"
+                    :key="typeOperation.id"
+                    :label="typeOperation.title_ru"
+                    :value="typeOperation.id"
                 ></v-radio>
               </v-radio-group>
             </div>
           </div>
-          <div class="d-flex flex-column ga-4">
+          <div class="d-flex flex-column ga-4 mt-1">
             <div v-if="form.typeOperation === 2">
               <custom-autocomplete
-                label="Банковский счет"
-                :items="organizationBills"
-                v-model="form.organization_bill"
+                  label="Банковский счет"
+                  :items="organizationBills"
+                  v-model="form.organization_bill"
               />
             </div>
             <div v-else-if="form.typeOperation === 3">
               <custom-autocomplete
-                label="Касса отправителя"
-                :items="cashRegisters"
-                v-model="form.sender_cash"
+                  label="Касса отправителя"
+                  :items="cashRegisters"
+                  v-model="form.sender_cash"
               />
             </div>
             <div v-else-if="form.typeOperation === 7">
               <custom-autocomplete
-                label="Сотрудник"
-                :items="employees"
-                v-model="form.employee"
+                  label="Сотрудник"
+                  :items="employees"
+                  v-model="form.employee"
               />
             </div>
             <div v-else-if="form.typeOperation === 8">
               <custom-autocomplete
-                label="Статья дохода"
-                :items="incomeItems"
-                v-model="form.incomeItem"
+                  label="Статья дохода"
+                  :items="incomeItems"
+                  v-model="form.incomeItem"
               />
             </div>
             <div v-else-if="form.typeOperation === 9">
               <custom-autocomplete
-                label="Статья баланса"
-                :items="incomeItems"
-                v-model="form.balanceItem"
+                  label="Статья баланса"
+                  :items="incomeItems"
+                  v-model="form.balanceItem"
               />
             </div>
             <div v-else class="d-flex flex-column ga-4">
               <custom-autocomplete
-                label="Контрагент"
-                :items="counterparties"
-                v-model="form.counterparty"
+                  label="Контрагент"
+                  :items="counterparties"
+                  v-model="form.counterparty"
               />
               <custom-autocomplete
-                :disabled="form.counterparty !== null ? false : true"
-                label="Договор"
-                :items="cpAgreements"
-                v-model="form.cpAgreement"
+                  :disabled="form.counterparty === null"
+                  label="Договор"
+                  :items="cpAgreements"
+                  v-model="form.cpAgreement"
               />
             </div>
 
             <v-container fluid>
               <v-textarea
-                style="width: 450px"
-                :base-color="FIELD_COLOR"
-                v-model="form.base"
-                :color="BASE_COLOR"
-                variant="outlined"
-                label="Основание"
-                rounded="lg"
+                  style="width: 450px"
+                  :base-color="FIELD_COLOR"
+                  v-model="form.base"
+                  :color="BASE_COLOR"
+                  variant="outlined"
+                  label="Основание"
+                  rounded="lg"
               ></v-textarea>
             </v-container>
           </div>
         </div>
 
-        <div class="d-flex justify-space-between w-100 my-4">
+        <div class="d-flex justify-space-between w-100 my-16">
           <div class="d-flex ga-10">
             <custom-text-field
-              readonly
-              :value="author"
-              min-width="140"
-              max-width="110"
+                readonly
+                :value="author"
+                min-width="140"
+                max-width="110"
             />
             <custom-text-field
-              label="Комментарий"
-              v-model="form.comment"
-              min-width="310"
+                label="Комментарий"
+                v-model="form.comment"
+                min-width="310"
             />
           </div>
         </div>
@@ -752,4 +770,22 @@ function validateNumberInput(event) {
   </div>
 </template>
 
-<style></style>
+<style scoped>
+.title-item {
+  padding: 3px 16px;
+  background: rgb(82, 78, 216, 0.7);
+  color: #e4e1e1;
+  width: 100%;
+  border-radius: 18px;
+  cursor: pointer;
+}
+
+.title-item:hover {
+  transition: .3s;
+  background: rgb(82, 78, 216, 0.8);
+}
+
+.active_type {
+  background: rgb(82, 78, 216, 1);
+}
+</style>
