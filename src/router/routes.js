@@ -342,6 +342,11 @@ const routes = [
     component: () => import("../pages/list/counterparty/index.vue"),
   },
   {
+    path: "/list/counterparty/coordinates/:id",
+    name: "counterpartyCounterpartyMap",
+    component: () => import("../pages/list/counterparty/map.vue"),
+  },
+  {
     path: "/list/organizationBill",
     name: "organizationBill",
     component: () => import("../pages/list/organizationBill/index.vue"),

@@ -27,5 +27,11 @@ export default {
     return api.get('/counterparty/data/export',{
       responseType: 'blob'
     })
-  }
+  },
+  getLocation(id) {
+    return api.get(`counterparty/coordinates/${id}`)
+  },
+  createLocation(data) {
+    return api.post('counterpartyCoordinates', data)
+  },
 };

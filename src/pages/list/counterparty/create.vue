@@ -28,6 +28,10 @@ import {
   FIELD_COLOR,
   BASE_COLOR,
 } from "../../../composables/constant/colors.js";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+
 const props = defineProps([
   "isOpen",
   "isEdit",
@@ -715,6 +719,13 @@ const currencyProps = (item) => {
           }}</span>
           <div class="d-flex align-center justify-space-between">
             <div class="d-flex align-center mt-2 me-4">
+              <Icons 
+                @click="router.push({name: 'counterpartyCounterpartyMap', params: { id: props.item.id }})"
+                class="me-2"
+                name="location"
+                v-if="isEdit && !createOnBase"
+                title="Маршрут"
+              />
               <Icons
                 v-if="removeAccess('counterparty') && isEdit && !createOnBase"
                 class="me-4"
