@@ -7,8 +7,6 @@ import 'vuetify/styles'
 import './assets/css/default.css'
 import 'material-design-icons-iconfont/dist/material-design-icons.css'
 import { mask } from 'vue-the-mask'
-import 'leaflet/dist/leaflet.css';  // Импорт CSS файла Leaflet
-import L from 'leaflet';
 
 const app = createApp(App)
   app.use(vuetify)
