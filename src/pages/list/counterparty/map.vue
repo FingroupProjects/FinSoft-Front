@@ -1,6 +1,6 @@
 <script>
 import { ref, onMounted } from "vue";
-import { LMap, LTileLayer } from "../../../../node_modules/vue-leaflet/vue-leaflet";
+import { LMap, LTileLayer } from "@vue-leaflet/vue-leaflet";
 import "leaflet-routing-machine";
 import L from "leaflet";
 import counterpartyApi from "../../../api/list/counterparty";
