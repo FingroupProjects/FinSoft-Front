@@ -321,7 +321,7 @@ onMounted(async () => {
   <div class="pa-4">
     <div class="d-flex justify-space-between calcWidth">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
-        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Пко</span>
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">ПКО</span>
       </div>
       <div class="d-flex justify-end ga-2">
         <div class="d-flex w-100 justify-end mb-3">

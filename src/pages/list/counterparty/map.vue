@@ -93,7 +93,11 @@ export default {
 </script>
 
 <template>
+  
   <div style="position: relative;">
+    <div style="position: absolute;top:10px; left: 10px; z-index: 9999;">
+      <v-btn @click="$router.go(-1)">Назад</v-btn>
+    </div>
     <l-map
       ref="map"
       :zoom="zoom"
@@ -102,8 +106,6 @@ export default {
     >
       <l-tile-layer :url="tileUrl" :attribution="attribution"></l-tile-layer>
     </l-map>
-    <div style="position: absolute; z-index: 9999;">
-      <v-btn>qdegregf</v-btn>
-    </div>
+    
   </div>
 </template>
