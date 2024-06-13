@@ -40,7 +40,7 @@ import { useRouter } from "vue-router";
 import getColor from "../../../composables/displayed/getColor.js";
 import getStatus from "../../../composables/displayed/getStatus.js";
 import GoodErrorCanvas from "../../../components/Errors/goodErrorCanvas.vue";
-import {markedForDeletion, statusOptions} from "../../../composables/constant/items.js";
+import {CREATE_BASED_CLIENT_RETURN, markedForDeletion, statusOptions} from "../../../composables/constant/items.js";
 
 const router = useRouter();
 const modalCreateBased = useModalCreateBased();
@@ -373,7 +373,7 @@ onMounted(() => {
               :key="idx"
               @click="button.function"
             />
-            <create-base :marked-i-d="markedID[0]" />
+            <create-base :marked-i-d="markedID[0]" :items="CREATE_BASED_CLIENT_RETURN" />
           </div>
         </div>
         <div class="custom_search">

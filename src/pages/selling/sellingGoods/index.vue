@@ -3,7 +3,7 @@ import { approveDocument, copyMessage, ErrorSelectMessage, removeMessage, restor
 import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
 import { BASE_COLOR, FIELD_OF_SEARCH, TITLE_COLOR } from "../../../composables/constant/colors.js";
 import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
-import { markedForDeletion, statusOptions } from "../../../composables/constant/items.js";
+import {CREATE_BASED_SELLING_GOODS, markedForDeletion, statusOptions} from "../../../composables/constant/items.js";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import goodErrorCanvas from "../../../components/Errors/goodErrorCanvas.vue"
@@ -358,7 +358,7 @@ onMounted(() => {
               :key="idx"
               @click="button.function"
             />
-            <create-base :marked-i-d="markedID[0]" />
+            <create-base :marked-i-d="markedID[0]" :items="CREATE_BASED_SELLING_GOODS"/>
           </div>
         </div>
         <div class="custom_search">

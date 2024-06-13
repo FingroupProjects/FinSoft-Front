@@ -4,7 +4,7 @@ import {
   FIELD_COLOR,
 } from "../../../composables/constant/colors.js";
 import validate from "./validate.js";
-import { useRouter } from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 import { ref, reactive, onMounted, watch } from "vue";
 import employeeApi from "../../../api/list/employee.js";
 import Icons from "../../../composables/Icons/Icons.vue";
@@ -21,8 +21,10 @@ import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import { add, addMessage } from "../../../composables/constant/buttons.js";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
+import getDataBased from "../../../composables/otherQueries/getDataBased.js";
 
 const router = useRouter();
+const route = useRoute();
 
 const author = ref("");
 
@@ -62,12 +64,14 @@ watch(
 );
 
 watch(
-  () => form.counterparty,
-  (newValue) => {
-    form.cpAgreement = null;
-    cpAgreements.value = [];
-    getCpAgreements(form.counterparty);
-  }
+    () => form.counterparty,
+     (id) => {
+     setTimeout(async () => {
+       form.cpAgreement = null;
+       const counterpartyId = typeof id === 'object' ? id?.id : id;
+       await getCpAgreements(counterpartyId);
+     }, 800)
+    }
 );
 
 const resetFields = () => {
@@ -449,6 +453,9 @@ const getCpAgreements = async (id) => {
   try {
     const { data } = await cpAgreementApi.getCounterpartyById(id);
     cpAgreements.value = data.result.data;
+    if (cpAgreements.value.length === 1) {
+      form.cpAgreement = cpAgreements.value[0];
+    }
   } catch (e) {
     console.error(e);
   }
@@ -483,6 +490,9 @@ const getEmployees = async () => {
 onMounted(async () => {
   form.date = currentDateWithTime();
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
+
+  getDataBased(route.query.id, form, [], route.query.isClient);
+
   await Promise.all([
     getTypes(),
     getEmployees(),
@@ -568,7 +578,7 @@ function validateNumberInput(event) {
               height: 420px;
               border: 1px solid rgba(39, 77, 135, 0.45);
               border-radius: 4px;
-              box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+              box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.25);
               padding: 8px;
             "
           >
@@ -629,7 +639,7 @@ function validateNumberInput(event) {
                 v-model="form.counterparty"
               />
               <custom-autocomplete
-                :disabled="form.counterparty !== null ? false : true"
+                :disabled="form.counterparty === null"
                 label="Договор"
                 :items="cpAgreements"
                 v-model="form.cpAgreement"
