@@ -247,6 +247,16 @@ const routes = [
     component: () => import("../pages/hr/recruitment/index.vue"),
   },
   {
+    path: "/hr/recruitmentCreate",
+    name: "recruitmentCreate",
+    component: () => import("../pages/hr/recruitment/create.vue"),
+  },
+  {
+    path: "/hr/recruitment/:id",
+    name: "recruitmentShow",
+    component: () => import("../pages/hr/recruitment/show.vue"),
+  },
+  {
     path: "/hr/dismissal",
     name: "dismissal",
     component: () => import("../pages/hr/dismissal/index.vue"),
@@ -310,16 +320,6 @@ const routes = [
     path: "/hr/payingSalaries",
     name: "payingSalaries",
     component: () => import("../pages/hr/payingSalaries/index.vue"),
-  },
-  {
-    path: "/hr/recruitmentCreate",
-    name: "recruitmentCreate",
-    component: () => import("../pages/hr/recruitment/create.vue"),
-  },
-  {
-    path: "/hr/recruitment/:id",
-    name: "recruitmentShow",
-    component: () => import("../pages/hr/recruitment/show.vue"),
   },
   {
     path: "/hr/salaryInformation",
