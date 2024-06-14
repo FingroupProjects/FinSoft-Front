@@ -23,6 +23,8 @@ import CustomTextField from "../../../components/formElements/CustomTextField.vu
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import getDataBased from "../../../composables/otherQueries/getDataBased.js";
 import Button from "../../../components/button/button.vue";
+import formatInputPrice from "../../../composables/format/formatInputPrice.js";
+import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
 
 const router = useRouter();
 const route = useRoute();
@@ -110,9 +112,9 @@ const firstAccess = async () => {
  sender: form.sender,
   };
   try {
-    await clientPaymentApi.paymentFromClient(body);
+    const res = await clientPaymentApi.paymentFromClient(body);
     showToast(addMessage, "green");
-    router.push("/moneyComing");
+    window.open(`/moneyComingEdit/${res.data.result.id}`, "_blank");
   } catch (e) {
     console.error(e);
   }
@@ -138,9 +140,9 @@ const secondAccess = async () => {
  sender: form.sender,
   };
   try {
-    await clientPaymentApi.writeOff(body);
+    const res = await clientPaymentApi.writeOff(body);
     showToast(addMessage, "green");
-    router.push("/moneyComing");
+    window.open(`/moneyComingEdit/${res.data.result.id}`, "_blank");
   } catch (e) {
     console.error(e);
   }
@@ -165,9 +167,9 @@ const thirdAccess = async () => {
  sender: form.sender,
   };
   try {
-    await clientPaymentApi.anotherCashRegister(body);
+    const res = await clientPaymentApi.anotherCashRegister(body);
     showToast(addMessage, "green");
-    router.push("/moneyComing");
+    window.open(`/moneyComingEdit/${res.data.result.id}`, "_blank");
   } catch (e) {
     console.error(e);
   }
@@ -194,9 +196,9 @@ const fourthAccess = async () => {
  sender: form.sender,
   };
   try {
-    await clientPaymentApi.investment(body);
+    const res = await clientPaymentApi.investment(body);
     showToast(addMessage, "green");
-    router.push("/moneyComing");
+    window.open(`/moneyComingEdit/${res.data.result.id}`, "_blank");
   } catch (e) {
     console.error(e);
   }
@@ -224,9 +226,9 @@ const fifthAccess = async () => {
  sender: form.sender,
   };
   try {
-    await clientPaymentApi.creditReceive(body);
+    const res = await clientPaymentApi.creditReceive(body);
     showToast(addMessage, "green");
-    router.push("/moneyComing");
+    window.open(`/moneyComingEdit/${res.data.result.id}`, "_blank");
   } catch (e) {
     console.error(e);
   }
@@ -254,9 +256,9 @@ const sixthAccess = async () => {
  sender: form.sender,
   };
   try {
-    await clientPaymentApi.providerRefund(body);
+    const res = await clientPaymentApi.providerRefund(body);
     showToast(addMessage, "green");
-    router.push("/moneyComing");
+    window.open(`/moneyComingEdit/${res.data.result.id}`, "_blank");
   } catch (e) {
     console.error(e);
   }
@@ -282,9 +284,9 @@ const seventhAccess = async () => {
  sender: form.sender,
   };
   try {
-    await clientPaymentApi.accountablePersonRefund(body);
+    const res = await clientPaymentApi.accountablePersonRefund(body);
     showToast(addMessage, "green");
-    router.push("/moneyComing");
+    window.open(`/moneyComingEdit/${res.data.result.id}`, "_blank");
   } catch (e) {
     console.error(e);
   }
@@ -310,9 +312,9 @@ const eighthAccess = async () => {
  sender: form.sender,
   };
   try {
-    await clientPaymentApi.otherExpenses(body);
+    const res = await clientPaymentApi.otherExpenses(body);
     showToast(addMessage, "green");
-    router.push("/moneyComing");
+    window.open(`/moneyComingEdit/${res.data.result.id}`, "_blank");
   } catch (e) {
     console.error(e);
   }
@@ -322,9 +324,7 @@ const ninthAccess = async () => {
   if (
     !validate(form.sum, form.base, form.date, form.organization, form.cash) ||
     isValid(form.balanceItem, "Статья баланса") !== true
-  ) {
-    return;
-  }
+  ) return
 
   const body = {
     date: formatDateTime(form.date),
@@ -339,9 +339,9 @@ const ninthAccess = async () => {
     sender: form.sender,
   };
   try {
-    await clientPaymentApi.otherIncomes(body);
+    const res = await clientPaymentApi.otherIncomes(body);
     showToast(addMessage, "green");
-    router.push("/moneyComing");
+    window.open(`/moneyComingEdit/${res.data.result.id}`, "_blank");
   } catch (e) {
     console.error(e);
   }
@@ -387,14 +387,14 @@ const isValid = (
 ) => {
   if (!firstField) {
     showToast(`Поле ${firstFieldName} не может быть пустым`, "warning");
-    return false;
+    return false
   }
   if (secondField !== undefined && !secondField) {
     showToast(`Поле ${secondFieldName} не может быть пустым`, "warning");
-    return false;
+    return false
   }
-  return true;
-};
+  return true
+}
 
 const getOrganizations = async () => {
   try {
@@ -403,7 +403,7 @@ const getOrganizations = async () => {
       itemsPerPage: 100000,
       sortBy: "name",
     });
-    organizations.value = data.result.data;
+    organizations.value = data.result.data
   } catch (e) {
     console.error(e);
   }
@@ -428,7 +428,6 @@ const getTypes = async () => {
       data: { result },
     } = await clientPaymentApi.getTypes("PKO");
     typeOperations.value = result;
-    console.log(typeOperations.value);
     form.typeOperation = typeOperations.value[0].id;
   } catch (e) {
     console.error(e);
@@ -520,12 +519,6 @@ onMounted(async () => {
     getOrganizationBills(),
   ]);
 });
-
-function validateNumberInput(event) {
-  let inputValue = event.target.value;
-  inputValue = inputValue.replace(/[^0-9.]/g, "");
-  form.sum = inputValue;
-}
 </script>
 
 <template>
@@ -555,7 +548,7 @@ function validateNumberInput(event) {
               min-width="140"
               max-width="110"
           />
-          <v-text-field
+          <custom-text-field
             type="datetime-local"
             rounded="lg"
             hide-details
@@ -565,7 +558,7 @@ function validateNumberInput(event) {
             :color="BASE_COLOR"
             clear-icon="close"
             variant="outlined"
-            class="text-sm-body-1"
+            class="text-sm-body-1 date"
             style="max-width: 220px; max-height: 40px !important"
             :base-color="FIELD_COLOR"
           />
@@ -581,7 +574,8 @@ function validateNumberInput(event) {
           />
           <custom-text-field
             label="Сумма"
-            @input="validateNumberInput"
+            :value="validateNumberInput(form.sum)"
+            @input="formatInputPrice(form.sum, $event)"
             v-model="form.sum"
           />
           <custom-text-field

@@ -82,4 +82,7 @@ export default {
   updateOtherIncomes(id, data) {
     return api.patch(`cash-store/other-incomes/${id}`, data);
   },
+  updateSalaryPayment(id, data) {
+    return api.patch(`cash-store/salary-payment/${id}`, data);
+  },
 };

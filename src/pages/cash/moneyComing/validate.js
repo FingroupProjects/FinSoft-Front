@@ -5,6 +5,7 @@ export default function validate(
   date,
   organization,
   cash,
+  sender
 ) {
   if (!date) {
     return showToast("Поле Дата не может быть пустым", "warning");
@@ -20,6 +21,9 @@ export default function validate(
   }
   if (!base) {
     return showToast("Поле Основание не может быть пустым", "warning");
+  }
+  if (!sender) {
+    return showToast("Поле Получатель не может быть пустым", "warning");
   }
   return true;
 }
