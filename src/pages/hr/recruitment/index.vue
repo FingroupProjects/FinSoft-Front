@@ -377,6 +377,17 @@ onMounted(() => {
             </td>
             <td>{{ item.doc_number }}</td>
             <td>{{ getDateTimeInShow(item.date) }}</td>
+            <td>
+              <v-chip
+                style="height: 50px !important"
+                class="w-100 d-flex justify-center"
+                :color="getColor(item.active, item.deleted_at)"
+              >
+                <span class="padding: 5px;">{{
+                  getStatus(item.active, item.deleted_at)
+                }}</span>
+              </v-chip>
+            </td>
             <td>{{ getDateTimeInShow(item.hiring_date) }}</td>
             <td>{{ item.employee.name }}</td>
             <td>{{ item?.author?.name }}</td>
