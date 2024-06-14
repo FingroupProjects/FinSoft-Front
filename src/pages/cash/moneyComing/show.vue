@@ -17,6 +17,8 @@ import {addMessage} from "../../../composables/constant/buttons.js";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import Button from "../../../components/button/button.vue";
+import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
+import formatInputPrice from "../../../composables/format/formatInputPrice.js";
 
 const router = useRouter();
 const route = useRoute();
@@ -131,14 +133,14 @@ const getSellingGoods = async () => {
 
 const firstAccess = async () => {
   if (
-    !validate(form.sum, form.base, form.date, form.organization, form.cash) ||
+    !validate(form.sum, form.base, form.date, form.organization, form.cash, form.sender) ||
     isValid(form.counterparty, "Контрагент", form.cpAgreement, "Договор") !==
       true
   ) {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
@@ -162,7 +164,6 @@ const firstAccess = async () => {
   try {
     const res = await clientPaymentApi.updatePaymentFromClient(id.value, body);
     showToast(addMessage, "green");
-    router.push("/moneyComing");
   } catch (e) {
     console.error(e);
   }
@@ -170,13 +171,13 @@ const firstAccess = async () => {
 
 const secondAccess = async () => {
   if (
-    !validate(form.sum, form.base, form.date, form.organization, form.cash) ||
+    !validate(form.sum, form.base, form.date, form.organization, form.cash, form.sender) ||
     isValid(form.organization_bill, "Банковский счет") !== true
   ) {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
@@ -196,20 +197,19 @@ const secondAccess = async () => {
   try {
     const res = await clientPaymentApi.updateWriteOff(id.value, body);
     showToast(addMessage, "green");
-    router.push("/moneyComing");
   } catch (e) {
     console.error(e);
   }
 };
 const thirdAccess = async () => {
   if (
-    !validate(form.sum, form.base, form.date, form.organization, form.cash) ||
+    !validate(form.sum, form.base, form.date, form.organization, form.cash, form.sender) ||
     isValid(form.sender_cash, "Касса отправителя") !== true
   ) {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
@@ -232,21 +232,20 @@ const thirdAccess = async () => {
       body
     );
     showToast(addMessage, "green");
-    router.push("/moneyComing");
   } catch (e) {
     console.error(e);
   }
 };
 const fourthAccess = async () => {
   if (
-    !validate(form.sum, form.base, form.date, form.organization, form.cash) ||
+    !validate(form.sum, form.base, form.date, form.organization, form.cash, form.sender) ||
     isValid(form.counterparty, "Контрагент", form.cpAgreement, "Договор") !==
       true
   ) {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
@@ -270,7 +269,6 @@ const fourthAccess = async () => {
   try {
     const res = await clientPaymentApi.updateInvestment(id.value, body);
     showToast(addMessage, "green");
-    router.push("/moneyComing");
   } catch (e) {
     console.error(e);
   }
@@ -278,14 +276,14 @@ const fourthAccess = async () => {
 
 const fifthAccess = async () => {
   if (
-    !validate(form.sum, form.base, form.date, form.organization, form.cash) ||
+    !validate(form.sum, form.base, form.date, form.organization, form.cash, form.sender) ||
     isValid(form.counterparty, "Контрагент", form.cpAgreement, "Договор") !==
       true
   ) {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
@@ -309,7 +307,6 @@ const fifthAccess = async () => {
   try {
     const res = await clientPaymentApi.updateCreditReceive(id.value, body);
     showToast(addMessage, "green");
-    router.push("/moneyComing");
   } catch (e) {
     console.error(e);
   }
@@ -317,14 +314,14 @@ const fifthAccess = async () => {
 
 const sixthAccess = async () => {
   if (
-    !validate(form.sum, form.base, form.date, form.organization, form.cash) ||
+    !validate(form.sum, form.base, form.date, form.organization, form.cash, form.sender) ||
     isValid(form.counterparty, "Контрагент", form.cpAgreement, "Договор") !==
       true
   ) {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
@@ -348,7 +345,6 @@ const sixthAccess = async () => {
   try {
     const res = await clientPaymentApi.updateProviderRefund(id.value, body);
     showToast(addMessage, "green");
-    router.push("/moneyComing");
   } catch (e) {
     console.error(e);
   }
@@ -356,13 +352,13 @@ const sixthAccess = async () => {
 
 const seventhAccess = async () => {
   if (
-    !validate(form.sum, form.base, form.date, form.organization, form.cash) ||
+    !validate(form.sum, form.base, form.date, form.organization, form.cash, form.sender) ||
     isValid(form.employee, "Сотрудник") !== true
   ) {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
@@ -383,7 +379,6 @@ const seventhAccess = async () => {
       body
     );
     showToast(addMessage, "green");
-    router.push("/moneyComing");
   } catch (e) {
     console.error(e);
   }
@@ -391,13 +386,13 @@ const seventhAccess = async () => {
 
 const eighthAccess = async () => {
   if (
-    !validate(form.sum, form.base, form.date, form.organization, form.cash) ||
+    !validate(form.sum, form.base, form.date, form.organization, form.cash, form.sender) ||
     isValid(form.incomeItem, "Статья дохода") !== true
   ) {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
@@ -417,7 +412,6 @@ const eighthAccess = async () => {
   try {
     const res = await clientPaymentApi.updateOtherExpenses(id.value, body);
     showToast(addMessage, "green");
-    router.push("/moneyComing");
   } catch (e) {
     console.error(e);
   }
@@ -425,14 +419,14 @@ const eighthAccess = async () => {
 
 const ninthAccess = async () => {
   if (
-    !validate(form.sum, form.base, form.date, form.organization, form.cash) ||
+    !validate(form.sum, form.base, form.date, form.organization, form.cash, form.sender) ||
     isValid(form.balanceItem, "Статья баланса") !== true
   ) {
     return;
   }
 
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
@@ -452,7 +446,6 @@ const ninthAccess = async () => {
   try {
     const res = await clientPaymentApi.updateOtherIncomes(id.value, body);
     showToast(addMessage, "green");
-    router.push("/moneyComing");
   } catch (e) {
     console.error(e);
   }
@@ -594,12 +587,6 @@ onMounted(async () => {
     getOrganizationBills(),
   ]);
 });
-
-function validateNumberInput(event) {
-  let inputValue = event.target.value;
-  inputValue = inputValue.replace(/[^0-9.]/g, "");
-  form.sum = inputValue;
-}
 </script>
 
 <template>
@@ -629,7 +616,7 @@ function validateNumberInput(event) {
               min-width="140"
               max-width="110"
           />
-          <v-text-field
+          <custom-text-field
               type="datetime-local"
               rounded="lg"
               hide-details
@@ -639,7 +626,7 @@ function validateNumberInput(event) {
               :color="BASE_COLOR"
               clear-icon="close"
               variant="outlined"
-              class="text-sm-body-1"
+              class="text-sm-body-1 date"
               style="max-width: 220px; max-height: 40px !important"
               :base-color="FIELD_COLOR"
           />
@@ -655,7 +642,8 @@ function validateNumberInput(event) {
           />
           <custom-text-field
               label="Сумма"
-              @input="validateNumberInput"
+              :value="validateNumberInput(form.sum)"
+              @input="formatInputPrice(form.sum, $event)"
               v-model="form.sum"
           />
           <custom-text-field

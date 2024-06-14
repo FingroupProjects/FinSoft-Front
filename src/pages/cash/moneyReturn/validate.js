@@ -4,7 +4,8 @@ export default function validate(
   base,
   date,
   organization,
-  organization_bill,
+  cash,
+  recipient
 ) {
   if (!date) {
     return showToast("Поле Дата не может быть пустым", "warning");
@@ -12,14 +13,17 @@ export default function validate(
   if (!organization) {
     return showToast("Поле Организация не может быть пустым", "warning");
   }
-  if (!organization_bill) {
-    return showToast("Поле Рассчётный Счёт не может быть пустым", "warning");
+  if (!cash) {
+    return showToast("Поле Касса не может быть пустым", "warning");
   }
   if (!sum) {
     return showToast("Поле Сумма не может быть пустым", "warning");
   }
   if (!base) {
     return showToast("Поле Основание не может быть пустым", "warning");
+  }
+  if (!recipient) {
+    return showToast("Поле Отправитель не может быть пустым", "warning");
   }
   return true;
 }
