@@ -5,8 +5,6 @@ import showToast from "../../../composables/toast/index.js";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
 import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
-import CustomTextField from "../../../components/formElements/CustomTextField.vue";
-import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import {
   BASE_COLOR,
@@ -19,6 +17,9 @@ import {
   ErrorSelectMessage,
   restoreMessage,
 } from "../../../composables/constant/buttons.js";
+import copyDocument from "../../../api/documents/copyDocument.js";
+import getStatus from "../../../composables/displayed/getStatus.js";
+import getColor from "../../../composables/displayed/getColor.js";
 import { useFilterCanvasVisible } from "../../../store/canvasVisible.js";
 import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
 import debounce from "lodash.debounce";
@@ -27,8 +28,8 @@ import currencyApi from "../../../api/list/currency.js";
 import Button from "../../../components/button/button.vue";
 import organizationApi from "../../../api/list/organizations.js";
 import clientPaymentApi from "../../../api/documents/cashRegister.js";
-("../../../api/documents/sale.js");
-import showDate from "../../../composables/date/showDate.js";
+import saleApi from "../../../api/documents/sale.js";
+import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import cashRegisterApi from "../../../api/list/cashRegister.js";
 
 const router = useRouter();
@@ -71,6 +72,7 @@ const filterForm = ref({
 const headers = ref([
   { title: "Номер", key: "doc_number" },
   { title: "Дата", key: "date" },
+  { title: "Статус", key: "deleted_at" },
   { title: "Касса", key: "cashRegister.name" },
   { title: "Организация", key: "organization.name" },
   { title: "Операция", key: "storage.name" },
@@ -84,6 +86,9 @@ const headerButtons = ref([
   {
     name: "create",
     function: () => router.push({ name: "moneyReturnCreate" }),
+  },
+  {
+    name: "createBasedOn",
   },
   {
     name: "copy",
@@ -101,6 +106,18 @@ const headerButtons = ref([
       } catch (e) {
         console.error(e);
       }
+    },
+  },
+  {
+    name: "approve",
+    function: () => {
+      approve();
+    },
+  },
+  {
+    name: "cancel",
+    function: () => {
+      unApprove();
     },
   },
   {
@@ -299,7 +316,7 @@ onMounted(async () => {
 
 <template>
   <div class="pa-4">
-    <div class="d-flex justify-space-between">
+    <div class="d-flex justify-space-between calcWidth">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
         <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">РКО</span>
       </div>
@@ -343,7 +360,7 @@ onMounted(async () => {
         </div>
       </div>
     </div>
-    <v-card class="table">
+    <v-card class="table calcWidth">
       <v-data-table-server
         style="height: calc(100vh - 150px)"
         items-per-page-text="Элементов на странице:"
@@ -376,29 +393,26 @@ onMounted(async () => {
             :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
           >
             <td>
-              <template
-                v-if="hoveredRowIndex === index || markedID.includes(item.id)"
+              <CustomCheckbox
+                v-model="markedID"
+                :checked="markedID.includes(item.id)"
+                @change="lineMarking(item)"
               >
-                <CustomCheckbox
-                  v-model="markedID"
-                  :checked="markedID.includes(item.id)"
-                  @change="lineMarking(item)"
-                >
-                  <span>{{ index + 1 }}</span>
-                </CustomCheckbox>
-              </template>
-              <template v-else>
-                <div class="d-flex align-center">
-                  <Icons
-                    style="margin-right: 10px; margin-top: 4px"
-                    :name="item.deleted_at === null ? 'valid' : 'inValid'"
-                  />
-                  <span>{{ index + 1 }}</span>
-                </div>
-              </template>
+              </CustomCheckbox>
             </td>
             <td>{{ item.doc_number }}</td>
-            <td>{{ showDate(item.date) }}</td>
+            <td>{{ getDateTimeInShow(item.date) }}</td>
+            <td>
+              <v-chip
+                style="height: 50px !important"
+                class="w-100 d-flex justify-center"
+                :color="getColor(item.active, item.deleted_at)"
+              >
+                <span class="padding: 5px;">{{
+                  getStatus(item.active, item.deleted_at)
+                }}</span>
+              </v-chip>
+            </td>
             <td>{{ item.cashRegister ? item.cashRegister.name : "" }}</td>
             <td>{{ item.organization.name }}</td>
             <td>{{ item.operationType.name }}</td>
@@ -489,7 +503,6 @@ onMounted(async () => {
             </v-btn>
           </div>
         </div>
-        
       </div>
     </filter-canvas>
   </div>

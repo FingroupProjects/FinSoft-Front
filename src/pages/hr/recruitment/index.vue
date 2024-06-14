@@ -22,12 +22,15 @@ import {
   restoreMessage,
   warningMessage,
 } from "../../../composables/constant/buttons.js";
+import copyDocument from "../../../api/documents/copyDocument.js";
+import getStatus from "../../../composables/displayed/getStatus.js";
+import getColor from "../../../composables/displayed/getColor.js";
 import { useFilterCanvasVisible } from "../../../store/canvasVisible.js";
 import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
 import debounce from "lodash.debounce";
 import clientOrderApi from "../../../api/documents/clientOrder.js";
 import Button from "../../../components/button/button.vue";
-import showDate from "../../../composables/date/showDate.js";
+import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import recruitment from "../../../api/hr/recruitment.js";
 
 const router = useRouter();
@@ -63,16 +66,20 @@ const filterForm = ref({
 
 const headers = ref([
   { title: "Номер", key: "name" },
-  { title: "Дата", key: "currency.name" },
+  { title: "Дата", key: "date" },
+  { title: "Статус", key: "deleted_at" },
   { title: "Дата приёма", key: "currency.name" },
-  { title: "Сотрудник", key: "currency.name" },
-  { title: "Автор", key: "currency.name" },
+  { title: "Сотрудник", key: "employee.name" },
+  { title: "Автор", key: "author.name" },
 ]);
 
 const headerButtons = ref([
   {
     name: "create",
-    function: () => router.push({ name: "recruitment" }),
+    function: () => router.push({ name: "recruitmentCreate" }),
+  },
+  {
+    name: "createBasedOn",
   },
   {
     name: "copy",
@@ -93,16 +100,24 @@ const headerButtons = ref([
     },
   },
   {
+    name: "approve",
+    function: () => {
+      approve();
+    },
+  },
+  {
+    name: "cancel",
+    function: () => {
+      unApprove();
+    },
+  },
+  {
     name: "delete",
     function: () => {
       compute({});
     },
   },
 ]);
-
-const rules = {
-  required: (v) => !!v,
-};
 
 const getRecruitmentData = async ({
   page,
@@ -212,6 +227,10 @@ const closeFilterModal = async ({ page, itemsPerPage, sortBy, search }) => {
   useFilterCanvasVisible().closeFilterCanvas();
 };
 
+const show = (item) => {
+  window.open(`/hr/recruitment/${item.id}`, "_blank");
+};
+
 const cleanFilterForm = () => {
   filterForm.value = {};
 };
@@ -260,10 +279,6 @@ watch(
   }, 500)
 );
 
-const show = (item) => {
-  window.open(`/hr/recruitment/${item.id}`, "_blank");
-};
-
 onMounted(() => {
   getOrganizations();
   getCounterparties();
@@ -273,7 +288,7 @@ onMounted(() => {
 
 <template>
   <div class="pa-4">
-    <div class="d-flex justify-space-between">
+    <div class="d-flex justify-space-between calcWidth">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
         <span :style="{ color: TITLE_COLOR, fontSize: '22px' }"
           >Приём на работу</span
@@ -320,7 +335,7 @@ onMounted(() => {
         </div>
       </div>
     </div>
-    <v-card class="table">
+    <v-card class="table calcWidth">
       <v-data-table-server
         style="height: calc(100vh - 150px)"
         items-per-page-text="Элементов на странице:"
@@ -353,30 +368,27 @@ onMounted(() => {
             :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
           >
             <td>
-              <template
-                v-if="hoveredRowIndex === index || markedID.includes(item.id)"
+              <CustomCheckbox
+                v-model="markedID"
+                :checked="markedID.includes(item.id)"
+                @change="lineMarking(item)"
               >
-                <CustomCheckbox
-                  v-model="markedID"
-                  :checked="markedID.includes(item.id)"
-                  @change="lineMarking(item)"
-                >
-                  <span>{{ index + 1 }}</span>
-                </CustomCheckbox>
-              </template>
-              <template v-else>
-                <div class="d-flex align-center">
-                  <Icons
-                    style="margin-right: 10px; margin-top: 4px"
-                    :name="item.deleted_at === null ? 'valid' : 'inValid'"
-                  />
-                  <span>{{ index + 1 }}</span>
-                </div>
-              </template>
+              </CustomCheckbox>
             </td>
             <td>{{ item.doc_number }}</td>
-            <td>{{ showDate(item.date) }}</td>
-            <td>{{ showDate(item.hiring_date) }}</td>
+            <td>{{ getDateTimeInShow(item.date) }}</td>
+            <td>
+              <v-chip
+                style="height: 50px !important"
+                class="w-100 d-flex justify-center"
+                :color="getColor(item.active, item.deleted_at)"
+              >
+                <span class="padding: 5px;">{{
+                  getStatus(item.active, item.deleted_at)
+                }}</span>
+              </v-chip>
+            </td>
+            <td>{{ getDateTimeInShow(item.hiring_date) }}</td>
             <td>{{ item.employee.name }}</td>
             <td>{{ item?.author?.name }}</td>
           </tr>

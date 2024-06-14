@@ -4,7 +4,7 @@ import { LMap, LTileLayer } from "@vue-leaflet/vue-leaflet";
 import "leaflet-routing-machine";
 import L from "leaflet";
 import counterpartyApi from "../../../api/list/counterparty";
-import { useRoute } from 'vue-router';
+import { useRoute } from "vue-router";
 
 export default {
   name: "MapComponent",
@@ -23,7 +23,9 @@ export default {
 
     const getLocation = async () => {
       try {
-        const { data: { result } } = await counterpartyApi.getLocation(route.params.id);
+        const {
+          data: { result },
+        } = await counterpartyApi.getLocation(route.params.id);
         console.log(result);
         locations.value = result.map((location) => [
           location.location.lat,
@@ -69,12 +71,16 @@ export default {
           const marker = L.marker(waypoint.latLng, {
             draggable: false,
           });
-          marker.bindPopup(`Маршрут: ${i}`).openPopup();
+          marker.bindPopup(`Маршрут: ${i + 1}`).openPopup();
           return marker;
         },
         lineOptions: { styles: [{ color: "#6FA1EC", weight: 4 }] },
         show: false,
       }).addTo(mapInstance);
+    };
+
+    const closeWindow = () => {
+      window.close();
     };
 
     onMounted(() => {
@@ -87,16 +93,16 @@ export default {
       zoom,
       tileUrl,
       attribution,
+      closeWindow
     };
   },
 };
 </script>
 
 <template>
-  
-  <div style="position: relative;">
-    <div style="position: absolute;top:10px; left: 10px; z-index: 9999;">
-      <v-btn @click="$router.go(-1)">Назад</v-btn>
+  <div style="position: relative">
+    <div style="position: absolute; top: 10px; left: 10px; z-index: 9999">
+      <v-btn @click="closeWindow()">Назад</v-btn>
     </div>
     <l-map
       ref="map"
@@ -106,6 +112,5 @@ export default {
     >
       <l-tile-layer :url="tileUrl" :attribution="attribution"></l-tile-layer>
     </l-map>
-    
   </div>
 </template>

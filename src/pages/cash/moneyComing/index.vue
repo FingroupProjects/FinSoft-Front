@@ -19,6 +19,7 @@ import {
   ErrorSelectMessage,
   restoreMessage,
 } from "../../../composables/constant/buttons.js";
+import copyDocument from "../../../api/documents/copyDocument.js";
 import getStatus from "../../../composables/displayed/getStatus.js";
 import getColor from "../../../composables/displayed/getColor.js";
 import { useFilterCanvasVisible } from "../../../store/canvasVisible.js";
@@ -29,8 +30,8 @@ import currencyApi from "../../../api/list/currency.js";
 import Button from "../../../components/button/button.vue";
 import organizationApi from "../../../api/list/organizations.js";
 import clientPaymentApi from "../../../api/documents/cashRegister.js";
-("../../../api/documents/sale.js");
-import showDate from "../../../composables/date/showDate.js";
+import saleApi from  "../../../api/documents/sale.js"
+import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import cashRegisterApi from "../../../api/list/cashRegister.js";
 
 const router = useRouter();
@@ -73,6 +74,7 @@ const filterForm = ref({
 const headers = ref([
   { title: "Номер", key: "doc_number" },
   { title: "Дата", key: "date" },
+  { title: "Статус", key: "deleted_at" },
   { title: "Касса", key: "cashRegister.name" },
   { title: "Организация", key: "organization.name" },
   { title: "Операция", key: "operationType.name" },
@@ -401,11 +403,10 @@ onMounted(async () => {
                 :checked="markedID.includes(item.id)"
                 @change="lineMarking(item)"
               >
-                <span>{{ index + 1 }}</span>
               </CustomCheckbox>
             </td>
             <td>{{ item.doc_number }}</td>
-            <td>{{ showDate(item.date) }}</td>
+            <td>{{ getDateTimeInShow(item.date) }}</td>
             <td>
               <v-chip
                 style="height: 50px !important"
@@ -422,7 +423,7 @@ onMounted(async () => {
             <td>{{ item.operationType.name }}</td>
             <td>{{ item.counterparty ? item.counterparty.name : "" }}</td>
             <td>{{ item.sum }}</td>
-            <td>{{ item.currency }}</td>
+            <td>{{ item?.currency?.name }}</td>
             <td>{{ item.author.name }}</td>
           </tr>
         </template>

@@ -19,6 +19,9 @@ import {
   ErrorSelectMessage,
   restoreMessage,
 } from "../../../composables/constant/buttons.js";
+import copyDocument from "../../../api/documents/copyDocument.js";
+import getStatus from "../../../composables/displayed/getStatus.js";
+import getColor from "../../../composables/displayed/getColor.js";
 import { useFilterCanvasVisible } from "../../../store/canvasVisible.js";
 import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
 import debounce from "lodash.debounce";
@@ -29,7 +32,7 @@ import Button from "../../../components/button/button.vue";
 import organizationApi from "../../../api/list/organizations.js";
 import clientPaymentApi from "../../../api/documents/cashRegister.js";
 ("../../../api/documents/sale.js");
-import showDate from "../../../composables/date/showDate.js";
+import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import cashRegisterApi from "../../../api/list/cashRegister.js";
 
 const router = useRouter();
@@ -72,6 +75,7 @@ const filterForm = ref({
 const headers = ref([
   { title: "Номер", key: "doc_number" },
   { title: "Дата", key: "date" },
+  { title: "Статус", key: "deleted_at" },
   { title: "PC", key: "cashRegister.name" },
   { title: "Организация", key: "organization.name" },
   { title: "Операция", key: "storage.name" },
@@ -85,6 +89,9 @@ const headerButtons = ref([
   {
     name: "create",
     function: () => router.push({ name: "bankSpendCreate" }),
+  },
+  {
+    name: "createBasedOn",
   },
   {
     name: "copy",
@@ -102,6 +109,18 @@ const headerButtons = ref([
       } catch (e) {
         console.error(e);
       }
+    },
+  },
+  {
+    name: "approve",
+    function: () => {
+      approve();
+    },
+  },
+  {
+    name: "cancel",
+    function: () => {
+      unApprove();
     },
   },
   {
@@ -222,6 +241,10 @@ const closeFilterModal = async ({ page, itemsPerPage, sortBy, search }) => {
   useFilterCanvasVisible().closeFilterCanvas();
 };
 
+const show = (item) => {
+  window.open(`/bankSpendEdit/${item.id}`, "_blank");
+};
+
 const cleanFilterForm = () => {
   filterForm.value = {};
 };
@@ -296,7 +319,7 @@ onMounted(async () => {
 
 <template>
   <div class="pa-4">
-    <div class="d-flex justify-space-between">
+    <div class="d-flex justify-space-between calcWidth">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
         <span :style="{ color: TITLE_COLOR, fontSize: '22px' }"
           >Банк Расход</span
@@ -342,7 +365,7 @@ onMounted(async () => {
         </div>
       </div>
     </div>
-    <v-card class="table">
+    <v-card class="table calcWidth">
       <v-data-table-server
         style="height: calc(100vh - 150px)"
         items-per-page-text="Элементов на странице:"
@@ -371,33 +394,30 @@ onMounted(async () => {
           <tr
             @mouseenter="hoveredRowIndex = index"
             @mouseleave="hoveredRowIndex = null"
-            @dblclick="$router.push(`/bankSpendEdit/${item.id}`)"
+            @dblclick="show(item)"
             :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
           >
             <td>
-              <template
-                v-if="hoveredRowIndex === index || markedID.includes(item.id)"
+              <CustomCheckbox
+                v-model="markedID"
+                :checked="markedID.includes(item.id)"
+                @change="lineMarking(item)"
               >
-                <CustomCheckbox
-                  v-model="markedID"
-                  :checked="markedID.includes(item.id)"
-                  @change="lineMarking(item)"
-                >
-                  <span>{{ index + 1 }}</span>
-                </CustomCheckbox>
-              </template>
-              <template v-else>
-                <div class="d-flex align-center">
-                  <Icons
-                    style="margin-right: 10px; margin-top: 4px"
-                    :name="item.deleted_at === null ? 'valid' : 'inValid'"
-                  />
-                  <span>{{ index + 1 }}</span>
-                </div>
-              </template>
+              </CustomCheckbox>
             </td>
             <td>{{ item.doc_number }}</td>
-            <td>{{ showDate(item.date) }}</td>
+            <td>{{ getDateTimeInShow(item.date) }}</td>
+            <td>
+              <v-chip
+                style="height: 50px !important"
+                class="w-100 d-flex justify-center"
+                :color="getColor(item.active, item.deleted_at)"
+              >
+                <span class="padding: 5px;">{{
+                  getStatus(item.active, item.deleted_at)
+                }}</span>
+              </v-chip>
+            </td>
             <td>
               <!-- {{ item.cashRegister.name }} -->
             </td>
@@ -465,16 +485,16 @@ onMounted(async () => {
           v-model="filterForm.currency_id"
         />
         <div class="d-flex ga-2">
-        <custom-filter-text-field label="Сумма" v-model="filterForm.sum" />
+          <custom-filter-text-field label="Сумма" v-model="filterForm.sum" />
 
-        <custom-filter-autocomplete
-          label="Автор"
-          :items="authors"
-          v-model="filterForm.author_id"
-        />
-      </div>
+          <custom-filter-autocomplete
+            label="Автор"
+            :items="authors"
+            v-model="filterForm.author_id"
+          />
+        </div>
 
-      <div class="d-flex justify-end ga-2">
+        <div class="d-flex justify-end ga-2">
           <div class="d-flex ga-2" style="margin-right: -6%">
             <v-btn color="red" class="btn" @click="closeFilterModal"
               >сбросить</v-btn
@@ -492,7 +512,6 @@ onMounted(async () => {
             </v-btn>
           </div>
         </div>
-
       </div>
     </filter-canvas>
   </div>
