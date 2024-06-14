@@ -668,6 +668,10 @@ const updateCpAgreement = async () => {
   }
 };
 
+const showInMap = () => {
+  window.open(`/list/counterparty/coordinates/${props.item.id}`, "_blank")
+}
+
 const rules = {
   required: (v) => !!v,
   email: (v) => /.+@.+\..+/.test(v),
@@ -720,7 +724,7 @@ const currencyProps = (item) => {
           <div class="d-flex align-center justify-space-between">
             <div class="d-flex align-center mt-2 me-4">
               <Icons 
-                @click="router.push({name: 'counterpartyCounterpartyMap', params: { id: props.item.id }})"
+                @click="showInMap()"
                 class="me-2"
                 name="location"
                 v-if="isEdit && !createOnBase"

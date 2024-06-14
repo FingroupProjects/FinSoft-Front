@@ -73,6 +73,7 @@ const filterForm = ref({
 const headers = ref([
   { title: "Номер", key: "doc_number" },
   { title: "Дата", key: "date" },
+  { title: "Статус", key: "deleted_at" },
   { title: "Касса", key: "cashRegister.name" },
   { title: "Организация", key: "organization.name" },
   { title: "Операция", key: "operationType.name" },
@@ -422,7 +423,7 @@ onMounted(async () => {
             <td>{{ item.operationType.name }}</td>
             <td>{{ item.counterparty ? item.counterparty.name : "" }}</td>
             <td>{{ item.sum }}</td>
-            <td>{{ item.currency }}</td>
+            <td>{{ item?.currency?.name }}</td>
             <td>{{ item.author.name }}</td>
           </tr>
         </template>
