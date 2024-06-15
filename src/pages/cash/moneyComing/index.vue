@@ -5,8 +5,6 @@ import showToast from "../../../composables/toast/index.js";
 import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
 import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
 import Icons from "../../../composables/Icons/Icons.vue";
-import CustomTextField from "../../../components/formElements/CustomTextField.vue";
-import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import {
   BASE_COLOR,
@@ -14,6 +12,7 @@ import {
   TITLE_COLOR,
 } from "../../../composables/constant/colors.js";
 import {
+  approveDocument,
   removeMessage,
   warningMessage,
   ErrorSelectMessage,
@@ -30,7 +29,6 @@ import currencyApi from "../../../api/list/currency.js";
 import Button from "../../../components/button/button.vue";
 import organizationApi from "../../../api/list/organizations.js";
 import clientPaymentApi from "../../../api/documents/cashRegister.js";
-import saleApi from  "../../../api/documents/sale.js"
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import cashRegisterApi from "../../../api/list/cashRegister.js";
 
@@ -133,7 +131,6 @@ const headerButtons = ref([
 const getSellingGoods = async ({ page, itemsPerPage, sortBy, search }) => {
   count.value = 0;
   countFilter();
-  const filterData = filterForm.value;
   filterModal.value = false;
   loading.value = true;
   try {
@@ -141,9 +138,8 @@ const getSellingGoods = async ({ page, itemsPerPage, sortBy, search }) => {
       "PKO",
       { page, itemsPerPage, sortBy },
       search,
-      filterData
+      filterForm.value
     );
-    console.log(data);
 
     paginations.value = data.result.pagination;
     moneyComing.value = data.result.data;
@@ -172,9 +168,33 @@ function countFilter() {
   return count;
 }
 
+const approve = async () => {
+  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
+  try {
+    await clientPaymentApi.approve({ ids: markedID.value });
+    showToast(approveDocument);
+    await getSellingGoods({});
+    markedID.value = [];
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const unApprove = async () => {
+  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
+  try {
+    await clientPaymentApi.unApprove({ ids: markedID.value });
+    showToast(approveDocument);
+    await getSellingGoods({});
+    markedID.value = [];
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 const massDel = async () => {
   try {
-    const { status } = await saleApi.massDeletion({ ids: markedID.value });
+    const { status } = await clientPaymentApi.remove({ ids: markedID.value });
 
     if (status === 200) {
       showToast(removeMessage, "red");
@@ -187,7 +207,7 @@ const massDel = async () => {
 
 const massRestore = async () => {
   try {
-    const { status } = await saleApi.massRestore({ ids: markedID.value });
+    const { status } = await clientPaymentApi.restore({ ids: markedID.value });
 
     if (status === 200) {
       showToast(restoreMessage);
@@ -261,9 +281,9 @@ watch(dialog, (newVal) => {
   }
 });
 
-watch(markedID, (newVal) => {
-  markedItem.value = procurements.value.find((el) => el.id === newVal[0]);
-});
+// watch(markedID, (newVal) => {
+//   markedItem.value = procurements.value.find((el) => el.id === newVal[0]);
+// });
 
 watch(
   search,
