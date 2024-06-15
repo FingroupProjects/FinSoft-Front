@@ -422,7 +422,7 @@ onMounted(async () => {
               <!-- {{ item.cashRegister.name }} -->
             </td>
             <td>{{ item.organization.name }}</td>
-            <td>{{ item.operationType }}</td>
+            <td>{{ item.operationType.name }}</td>
             <td>
               <!-- {{ item.counterparty.name }} -->
             </td>

@@ -1,7 +1,7 @@
 <script setup>
 import {BASE_COLOR, FIELD_COLOR, TITLE_COLOR,} from "../../../composables/constant/colors.js";
 import {useRoute, useRouter} from "vue-router";
-import validate from "../moneyComing/validate.js";
+import validate from "./validate.js";
 import {onMounted, reactive, ref, watch} from "vue";
 import employeeApi from "../../../api/list/employee.js";
 import showToast from "../../../composables/toast/index.js";
@@ -12,13 +12,14 @@ import organizationApi from "../../../api/list/organizations.js";
 import clientPaymentApi from "../../../api/documents/cashRegister.js";
 import organizationBillApi from "../../../api/list/organizationBill.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
-import {addMessage} from "../../../composables/constant/buttons.js";
+import {addMessage, editMessage} from "../../../composables/constant/buttons.js";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
 import Button from "../../../components/button/button.vue";
 import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
 import formatInputPrice from "../../../composables/format/formatInputPrice.js";
+import monthApi from "../../../api/list/schedule.js";
 
 const route = useRoute();
 const router = useRouter();
@@ -128,10 +129,11 @@ const getSellingGoods = async () => {
       (form.employee = result.employee),
       (form.incomeItem = result.incomeItem),
       (form.balanceItem = result.balanceItem),
-      (form.sender_cash = result.sender_cash),
+      (form.sender_cash = result.senderCashRegister),
       (form.organization = result.organization),
       (form.organization_bill = result.organization_bill),
       form.recipient = result.sender_text
+      form.months_id = result.month
       setTimeout(() => {
         (form.counterparty = result.counterparty)
       });
@@ -171,10 +173,11 @@ const firstAccess = async () => {
     comment: form.comment,
     operation_type_id: form.typeOperation,
     type: "RKO",
+    recipient: form.recipient,
   };
   try {
     const res = await clientPaymentApi.updatePaymentFromClient(id.value, body);
-    showToast(addMessage, "green");
+    showToast(editMessage);
   } catch (e) {
     console.error(e);
   }
@@ -203,10 +206,11 @@ const secondAccess = async () => {
     comment: form.comment,
     operation_type_id: form.typeOperation,
     type: "RKO",
+    recipient: form.recipient,
   };
   try {
     const res = await clientPaymentApi.updateWriteOff(id.value, body);
-    showToast(addMessage, "green");
+    showToast(editMessage);
   } catch (e) {
     console.error(e);
   }
@@ -234,13 +238,14 @@ const thirdAccess = async () => {
     comment: form.comment,
     operation_type_id: form.typeOperation,
     type: "RKO",
+    recipient: form.recipient,
   };
   try {
     const res = await clientPaymentApi.updateAnotherCashRegister(
       id.value,
       body
     );
-    showToast(addMessage, "green");
+    showToast(editMessage);
   } catch (e) {
     console.error(e);
   }
@@ -273,10 +278,11 @@ const fourthAccess = async () => {
     comment: form.comment,
     operation_type_id: form.typeOperation,
     type: "RKO",
+    recipient: form.recipient,
   };
   try {
     const res = await clientPaymentApi.updateInvestment(id.value, body);
-    showToast(addMessage, "green");
+    showToast(editMessage);
   } catch (e) {
     console.error(e);
   }
@@ -310,10 +316,11 @@ const fifthAccess = async () => {
     comment: form.comment,
     operation_type_id: form.typeOperation,
     type: "RKO",
+    recipient: form.recipient,
   };
   try {
     const res = await clientPaymentApi.updateCreditReceive(id.value, body);
-    showToast(addMessage, "green");
+    showToast(editMessage);
   } catch (e) {
     console.error(e);
   }
@@ -347,10 +354,11 @@ const sixthAccess = async () => {
     comment: form.comment,
     operation_type_id: form.typeOperation,
     type: "RKO",
+    recipient: form.recipient,
   };
   try {
     const res = await clientPaymentApi.updateProviderRefund(id.value, body);
-    showToast(addMessage, "green");
+    showToast(editMessage);
   } catch (e) {
     console.error(e);
   }
@@ -377,13 +385,14 @@ const seventhAccess = async () => {
     comment: form.comment,
     operation_type_id: form.typeOperation,
     type: "RKO",
+    recipient: form.recipient,
   };
   try {
     const res = await clientPaymentApi.updateAccountablePersonRefund(
       id.value,
       body
     );
-    showToast(addMessage, "green");
+    showToast(editMessage);
   } catch (e) {
     console.error(e);
   }
@@ -412,10 +421,11 @@ const eighthAccess = async () => {
     comment: form.comment,
     operation_type_id: form.typeOperation,
     type: "RKO",
+    recipient: form.recipient,
   };
   try {
     const res = await clientPaymentApi.updateOtherExpenses(id.value, body);
-    showToast(addMessage, "green");
+    showToast(editMessage);
   } catch (e) {
     console.error(e);
   }
@@ -445,10 +455,11 @@ const ninthAccess = async () => {
     comment: form.comment,
     operation_type_id: form.typeOperation,
     type: "RKO",
+    recipient: form.recipient,
   };
   try {
     const res = await clientPaymentApi.updateOtherIncomes(id.value, body);
-    showToast(addMessage, "green");
+    showToast(editMessage);
   } catch (e) {
     console.error(e);
   }
@@ -473,10 +484,11 @@ const tenthAccess = async () => {
     comment: form.comment,
     operation_type_id: form.typeOperation,
     type: "RKO",
+    recipient: form.recipient,
   };
   try {
-    await clientPaymentApi.salaryPayment(body);
-    showToast(addMessage, "green");
+    await clientPaymentApi.updateSalaryPayment(id.value, body);
+    showToast(editMessage);
   } catch (e) {
     console.error(e);
   }
@@ -573,7 +585,10 @@ const getCounterparties = async () => {
 const getCpAgreements = async (id) => {
   try {
     const { data } = await cpAgreementApi.getCounterpartyById(id);
-    cpAgreements.value = data.result.counterparty_id.counterpartyAgreement;
+    cpAgreements.value = data.result.data;
+    if (cpAgreements.value.length === 1) {
+      form.cpAgreement = cpAgreements.value[0];
+    }
   } catch (e) {}
 };
 
@@ -597,6 +612,15 @@ const getEmployees = async () => {
   employees.value = data.result.data;
 };
 
+const getMonths = async () => {
+  try {
+    const { data } = await monthApi.month();
+    months.value = data.result.data;
+  } catch (e) {
+    console.error(e);
+  }
+}
+
 const closeWindow = () => {
   window.close()
 }
@@ -612,6 +636,7 @@ onMounted(async () => {
     getTypes(),
     getEmployees(),
     getIncomeItems(),
+    getMonths(),
     getCashregisters(),
     getOrganizations(),
     getCounterparties(),
@@ -679,8 +704,8 @@ onMounted(async () => {
               v-model="form.sum"
           />
           <custom-text-field
-              label="Получатель"
-              v-model="form.sender"
+              label="Отправитель"
+              v-model="form.recipient"
           />
         </div>
         <div class="d-flex ga-6">
@@ -707,39 +732,54 @@ onMounted(async () => {
             </div>
           </div>
           <div class="d-flex flex-column ga-4 mt-1">
-            <div v-if="form.typeOperation === 2">
+            <div v-if="form.typeOperation === 11">
               <custom-autocomplete
                   label="Банковский счет"
                   :items="organizationBills"
                   v-model="form.organization_bill"
               />
             </div>
-            <div v-else-if="form.typeOperation === 3">
+            <div v-else-if="form.typeOperation === 12">
               <custom-autocomplete
                   label="Касса отправителя"
                   :items="cashRegisters"
                   v-model="form.sender_cash"
               />
             </div>
-            <div v-else-if="form.typeOperation === 7">
+            <div v-else-if="form.typeOperation === 16">
               <custom-autocomplete
                   label="Сотрудник"
                   :items="employees"
                   v-model="form.employee"
               />
             </div>
-            <div v-else-if="form.typeOperation === 8">
+            <div v-else-if="form.typeOperation === 17">
               <custom-autocomplete
                   label="Статья дохода"
                   :items="incomeItems"
                   v-model="form.incomeItem"
               />
             </div>
-            <div v-else-if="form.typeOperation === 9">
+            <div v-else-if="form.typeOperation === 18">
               <custom-autocomplete
                   label="Статья баланса"
                   :items="incomeItems"
                   v-model="form.balanceItem"
+              />
+            </div>
+            <div
+                v-else-if="form.typeOperation === 19"
+                class="d-flex flex-column ga-4"
+            >
+              <custom-autocomplete
+                  label="Сотрудник"
+                  :items="employees"
+                  v-model="form.employee"
+              />
+              <custom-autocomplete
+                  label="Месяц"
+                  :items="months"
+                  v-model="form.months_id"
               />
             </div>
             <div v-else class="d-flex flex-column ga-4">
