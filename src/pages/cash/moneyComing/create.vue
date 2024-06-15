@@ -1,13 +1,9 @@
 <script setup>
-import {
-  BASE_COLOR,
-  FIELD_COLOR, TITLE_COLOR,
-} from "../../../composables/constant/colors.js";
+import { BASE_COLOR, FIELD_COLOR, TITLE_COLOR } from "../../../composables/constant/colors.js";
 import validate from "./validate.js";
 import {useRoute, useRouter} from "vue-router";
 import { ref, reactive, onMounted, watch } from "vue";
 import employeeApi from "../../../api/list/employee.js";
-import Icons from "../../../composables/Icons/Icons.vue";
 import showToast from "../../../composables/toast/index.js";
 import incomeItemApi from "../../../api/list/incomeItem.js";
 import counterpartyApi from "../../../api/list/counterparty.js";

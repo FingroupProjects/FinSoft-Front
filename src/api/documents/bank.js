@@ -82,4 +82,16 @@ export default {
   // update(id, data) {
   //   return api.patch(`/document/update/${id}`, data)
   // },
+  approve(data) {
+    return api.post(`/checking-account/approve/`, data)
+  },
+  unApprove(data) {
+    return api.post(`/checking-account/unApprove/`, data)
+  },
+  remove(data) {
+    return api.post('/checking-account/massDelete', data)
+  },
+  restore(data) {
+    return api.post('/checking-account/massRestore', data)
+  }
 };

@@ -14,6 +14,7 @@ import {
   TITLE_COLOR,
 } from "../../../composables/constant/colors.js";
 import {
+  approveDocument,
   removeMessage,
   warningMessage,
   ErrorSelectMessage,
@@ -143,6 +144,7 @@ const getBankSpend = async ({ page, itemsPerPage, sortBy, search } = {}) => {
       search,
       filterForm.value
     );
+    console.log(data);
     paginations.value = data.result.pagination;
     moneyComing.value = data.result.data;
     loading.value = false;
@@ -170,9 +172,33 @@ function countFilter() {
   return count;
 }
 
+const approve = async () => {
+  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
+  try {
+    const res = await bankApi.approve({ ids: markedID.value });
+    showToast(approveDocument);
+    await getBankSpend({});
+    markedID.value = [];
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const unApprove = async () => {
+  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
+  try {
+    await bankApi.unApprove({ ids: markedID.value });
+    showToast(approveDocument);
+    await getBankSpend({});
+    markedID.value = [];
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 const massDel = async () => {
   try {
-    const { status } = await saleApi.massDeletion({ ids: markedID.value });
+    const { status } = await bankApi.remove({ ids: markedID.value });
 
     if (status === 200) {
       showToast(removeMessage, "red");
@@ -185,7 +211,7 @@ const massDel = async () => {
 
 const massRestore = async () => {
   try {
-    const { status } = await saleApi.massRestore({ ids: markedID.value });
+    const { status } = await bankApi.restore({ ids: markedID.value });
 
     if (status === 200) {
       showToast(restoreMessage);
@@ -259,9 +285,9 @@ watch(dialog, (newVal) => {
   }
 });
 
-watch(markedID, (newVal) => {
-  markedItem.value = procurements.value.find((el) => el.id === newVal[0]);
-});
+// watch(markedID, (newVal) => {
+//   markedItem.value = procurements.value.find((el) => el.id === newVal[0]);
+// });
 
 watch(
   search,
@@ -421,8 +447,8 @@ onMounted(async () => {
             <td>
               <!-- {{ item.cashRegister.name }} -->
             </td>
-            <td>{{ item.organization.name }}</td>
-            <td>{{ item.operationType.name }}</td>
+            <td>{{ item.organization?.name }}</td>
+            <td>{{ item.operationType?.name }}</td>
             <td>
               <!-- {{ item.counterparty.name }} -->
             </td>

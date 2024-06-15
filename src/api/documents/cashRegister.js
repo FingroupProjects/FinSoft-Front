@@ -85,4 +85,17 @@ export default {
   updateSalaryPayment(id, data) {
     return api.patch(`cash-store/salary-payment/${id}`, data);
   },
+
+  approve(data) {
+    return api.post(`/cash-store/approve/`, data)
+  },
+  unApprove(data) {
+    return api.post(`/cash-store/unApprove/`, data)
+  },
+  remove(data) {
+    return api.post('/cash-store/massDelete', data)
+  },
+  restore(data) {
+    return api.post('/cash-store/massRestore', data)
+  }
 };

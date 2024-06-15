@@ -5,8 +5,6 @@ import showToast from "../../../composables/toast/index.js";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
 import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
-import CustomTextField from "../../../components/formElements/CustomTextField.vue";
-import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import {
   BASE_COLOR,
@@ -14,6 +12,7 @@ import {
   TITLE_COLOR,
 } from "../../../composables/constant/colors.js";
 import {
+  approveDocument,
   removeMessage,
   warningMessage,
   ErrorSelectMessage,
@@ -170,9 +169,33 @@ function countFilter() {
   return count;
 }
 
+const approve = async () => {
+  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
+  try {
+    const res = await bankApi.approve({ ids: markedID.value });
+    showToast(approveDocument);
+    await getSellingGoods({});
+    markedID.value = [];
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const unApprove = async () => {
+  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
+  try {
+    await bankApi.unApprove({ ids: markedID.value });
+    showToast(approveDocument);
+    await getSellingGoods({});
+    markedID.value = [];
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 const massDel = async () => {
   try {
-    const { status } = await saleApi.massDeletion({ ids: markedID.value });
+    const { status } = await bankApi.remove({ ids: markedID.value });
 
     if (status === 200) {
       showToast(removeMessage, "red");
@@ -185,7 +208,7 @@ const massDel = async () => {
 
 const massRestore = async () => {
   try {
-    const { status } = await saleApi.massRestore({ ids: markedID.value });
+    const { status } = await bankApi.restore({ ids: markedID.value });
 
     if (status === 200) {
       showToast(restoreMessage);
@@ -259,9 +282,9 @@ watch(dialog, (newVal) => {
   }
 });
 
-watch(markedID, (newVal) => {
-  markedItem.value = procurements.value.find((el) => el.id === newVal[0]);
-});
+// watch(markedID, (newVal) => {
+//   markedItem.value = procurements.value.find((el) => el.id === newVal[0]);
+// });
 
 watch(
   search,
