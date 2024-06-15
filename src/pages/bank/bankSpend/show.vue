@@ -1,7 +1,7 @@
 <script setup>
 import {
   BASE_COLOR,
-  FIELD_COLOR,
+  FIELD_COLOR, TITLE_COLOR,
 } from "../../../composables/constant/colors.js";
 import validate from "../bankComing/validate.js";
 import { useRoute, useRouter } from "vue-router";
@@ -21,6 +21,9 @@ import { add, addMessage } from "../../../composables/constant/buttons.js";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import showDate from "../../../composables/date/showDate.js";
+import Button from "../../../components/button/button.vue";
+import formatDateTime from "../../../composables/date/formatDateTime.js";
+import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 
 const route = useRoute();
 const router = useRouter();
@@ -107,11 +110,11 @@ const getBangComingDetail = async () => {
       data: { result },
     } = await bankApi.getById(route.params.id);
     console.log(result);
-    form.typeOperation = result.operationType;
+    form.typeOperation = result.operationType?.id;
     (form.sum = result.sum), (author.value = result.author.name);
     (form.base = result.basis),
       (form.doc_number = result.doc_number),
-      (form.date = showDate(result.created_at, "-", true)),
+      (form.date = getDateTimeInShow(result.created_at, "-", true)),
       (form.checkingAccount = result.cashRegister),
       (form.comment = result.comment),
       (form.employee = result.employee),
@@ -138,7 +141,7 @@ const firstAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
@@ -174,7 +177,7 @@ const secondAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
@@ -205,7 +208,7 @@ const thirdAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
@@ -240,7 +243,7 @@ const fourthAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
@@ -277,7 +280,7 @@ const fifthAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
@@ -314,7 +317,7 @@ const sixthAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
@@ -350,7 +353,7 @@ const seventhAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
@@ -383,7 +386,7 @@ const eighthAccess = async () => {
     return;
   }
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
@@ -416,7 +419,7 @@ const ninthAccess = async () => {
   }
 
   const body = {
-    date: form.date,
+    date: formatDateTime(form.date),
     organization_id:
       typeof form.organization === "object"
         ? form.organization.id
@@ -442,31 +445,31 @@ const ninthAccess = async () => {
 
 const getAccess = () => {
   switch (form.typeOperation) {
-    case "Возврат клиенту":
+    case 1:
       firstAccess();
       break;
-    case "Пополнение с Р/С":
+    case 2:
       secondAccess();
       break;
-    case "Отправка на другую кассу":
+    case 3:
       thirdAccess();
       break;
-    case "Возврат вложения":
+    case 4:
       fourthAccess();
       break;
-    case "Оплата кредита":
+    case 5:
       fifthAccess();
       break;
-    case "Возврат поставщику":
+    case 6:
       sixthAccess();
       break;
-    case "Оплата аванс подотчетнику":
+    case 7:
       seventhAccess();
       break;
-    case "Прочие расходы":
+    case 8:
       eighthAccess();
       break;
-    case "Прочие оплаты":
+    case 9:
       ninthAccess();
       break;
   }
@@ -520,7 +523,10 @@ const getCounterparties = async () => {
 const getCpAgreements = async (id) => {
   try {
     const { data } = await cpAgreementApi.getCounterpartyById(id);
-    cpAgreements.value = data.result.counterparty_id.counterpartyAgreement;
+    cpAgreements.value = data.result.data;
+    if (cpAgreements.value.length === 1) {
+      form.cpAgreement = cpAgreements.value[0];
+    }
   } catch (e) {}
 };
 
@@ -544,11 +550,16 @@ const getEmployees = async () => {
   employees.value = data.result.data;
 };
 
+const selectTypeOperation = item => {
+  form.typeOperation = item.id;
+}
+
 onMounted(async () => {
   id.value = route.params.id;
+
+  await getBangComingDetail()
   await Promise.all([
     getTypes(),
-    getBangComingDetail(),
     getEmployees(),
     getIncomeItems(),
     getOrganizations(),
@@ -565,26 +576,24 @@ function validateNumberInput(event) {
 </script>
 
 <template>
-  <div>
-    <v-col>
-      <div class="d-flex justify-space-between text-uppercase">
-        <div class="d-flex align-center ga-2 ms-4">
-          <span>БАНК РАСХОД (изменение)</span>
-        </div>
-        <v-card variant="text" class="d-flex align-center ga-2">
-          <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="getAccess" name="add" />
-              <Icons title="Скопировать" name="copy" />
-              <Icons title="Удалить" name="delete" />
-            </div>
-          </div>
-        </v-card>
+  <div class="document">
+    <div class="d-flex justify-space-between">
+      <div class="d-flex align-center ga-2 pe-2 ms-4">
+          <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">
+          Банк расход (изменение)
+        </span>
       </div>
-    </v-col>
+      <v-card variant="text" class="d-flex align-center ga-2 py-2">
+        <div class="d-flex w-100">
+          <div class="d-flex ga-2 mt-1 me-3">
+            <Button @click="getAccess" name="save1" />
+            <Button @click="router.push('/bankSpend')" name="close" />
+          </div>
+        </div>
+      </v-card>
+    </div>
     <v-divider />
-    <v-divider />
-    <div style="background: #fff">
+    <div class="documentHeight documentCalcWidthPKO">
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4 mb-2">
           <custom-text-field
@@ -593,8 +602,8 @@ function validateNumberInput(event) {
             min-width="140"
             max-width="110"
           />
-          <v-text-field
-            type="date"
+          <custom-text-field
+            type="datetime-local"
             rounded="lg"
             hide-details
             label="Дата"
@@ -603,7 +612,7 @@ function validateNumberInput(event) {
             :color="BASE_COLOR"
             clear-icon="close"
             variant="outlined"
-            class="text-sm-body-1"
+            class="text-sm-body-1 date"
             style="max-width: 145px; max-height: 40px !important"
             :base-color="FIELD_COLOR"
           />
@@ -626,59 +635,57 @@ function validateNumberInput(event) {
 
         <div class="d-flex ga-6">
           <div
-            style="
-              width: 250px;
+              style="
+              width: 300px;
               height: 420px;
-              border: 1px solid rgba(39, 77, 135, 0.45);
               border-radius: 4px;
-              box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
-              padding: 8px;
             "
           >
-            <span>Тип операции: </span>
             <div>
-              <v-radio-group v-model="form.typeOperation">
+              <v-radio-group  v-model="form.typeOperation">
                 <v-radio
-                  class="text-black"
-                  v-for="typeOperation in typeOperations"
-                  :color="BASE_COLOR"
-                  :key="typeOperation.id"
-                  :label="typeOperation.title_ru"
-                  :value="typeOperation.title_ru"
+                    style="margin: 3px 0;"
+                    v-for="typeOperation in typeOperations"
+                    @click="selectTypeOperation(typeOperation)"
+                    :class="['title-item', {'active_type': form.typeOperation === typeOperation.id}]"
+                    color="#fff"
+                    :key="typeOperation.id"
+                    :label="typeOperation.title_ru"
+                    :value="typeOperation.id"
                 ></v-radio>
               </v-radio-group>
             </div>
           </div>
           <div class="d-flex flex-column ga-4">
-            <div v-if="form.typeOperation === 'Снятие с P/C'">
+            <div v-if="form.typeOperation === 2">
               <custom-autocomplete
                 label="Банковский счет"
                 :items="organizationBills"
                 v-model="form.organization_bill"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Получение с другой кассы'">
+            <div v-else-if="form.typeOperation === 3">
               <custom-autocomplete
                 label="Касса отправителя"
                 :items="cashRegisters"
                 v-model="form.sender_cash"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Возврат от подотчетника'">
+            <div v-else-if="form.typeOperation === 7">
               <custom-autocomplete
                 label="Сотрудник"
                 :items="employees"
                 v-model="form.employee"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Прочие доходы'">
+            <div v-else-if="form.typeOperation === 8">
               <custom-autocomplete
                 label="Статья дохода"
                 :items="incomeItems"
                 v-model="form.incomeItem"
               />
             </div>
-            <div v-else-if="form.typeOperation === 'Прочие приходы'">
+            <div v-else-if="form.typeOperation === 9">
               <custom-autocomplete
                 label="Статья баланса"
                 :items="incomeItems"
@@ -692,7 +699,7 @@ function validateNumberInput(event) {
                 v-model="form.counterparty"
               />
               <custom-autocomplete
-                :disabled="form.counterparty !== null ? false : true"
+                :disabled="form.counterparty === null"
                 label="Договор"
                 :items="cpAgreements"
                 v-model="form.cpAgreement"
@@ -713,7 +720,7 @@ function validateNumberInput(event) {
           </div>
         </div>
 
-        <div class="d-flex justify-space-between w-100 my-4">
+        <div class="d-flex justify-space-between w-100" style="margin-top: 64px;">
           <div class="d-flex ga-10">
             <custom-text-field
               readonly
@@ -733,4 +740,22 @@ function validateNumberInput(event) {
   </div>
 </template>
 
-<style></style>
+<style scoped>
+.title-item {
+  padding: 3px 16px;
+  background: rgb(82, 78, 216, 0.7);
+  color: #e4e1e1;
+  width: 100%;
+  border-radius: 18px;
+  cursor: pointer;
+}
+
+.title-item:hover {
+  transition: .3s;
+  background: rgb(82, 78, 216, 0.8);
+}
+
+.active_type {
+  background: rgb(82, 78, 216, 1);
+}
+</style>

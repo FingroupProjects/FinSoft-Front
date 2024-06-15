@@ -642,39 +642,54 @@ onMounted(async () => {
             </div>
           </div>
           <div class="d-flex flex-column ga-4 mt-1">
-            <div v-if="form.typeOperation === 2">
+            <div v-if="form.typeOperation === 11">
               <custom-autocomplete
                   label="Банковский счет"
                   :items="organizationBills"
                   v-model="form.organization_bill"
               />
             </div>
-            <div v-else-if="form.typeOperation === 3">
+            <div v-else-if="form.typeOperation === 12">
               <custom-autocomplete
                   label="Касса отправителя"
                   :items="cashRegisters"
                   v-model="form.recipient_cash"
               />
             </div>
-            <div v-else-if="form.typeOperation === 7">
+            <div v-else-if="form.typeOperation === 16">
               <custom-autocomplete
                   label="Сотрудник"
                   :items="employees"
                   v-model="form.employee"
               />
             </div>
-            <div v-else-if="form.typeOperation === 8">
+            <div v-else-if="form.typeOperation === 17">
               <custom-autocomplete
                   label="Статья дохода"
                   :items="incomeItems"
                   v-model="form.incomeItem"
               />
             </div>
-            <div v-else-if="form.typeOperation === 9">
+            <div v-else-if="form.typeOperation === 18">
               <custom-autocomplete
                   label="Статья баланса"
                   :items="incomeItems"
                   v-model="form.balanceItem"
+              />
+            </div>
+            <div
+                v-else-if="form.typeOperation === 19"
+                class="d-flex flex-column ga-4"
+            >
+              <custom-autocomplete
+                  label="Сотрудник"
+                  :items="employees"
+                  v-model="form.employee"
+              />
+              <custom-autocomplete
+                  label="Месяц"
+                  :items="months"
+                  v-model="form.months_id"
               />
             </div>
             <div v-else class="d-flex flex-column ga-4">
@@ -705,7 +720,7 @@ onMounted(async () => {
           </div>
         </div>
 
-        <div class="d-flex justify-space-between w-100 " style="margin-top: 100px;">
+        <div class="d-flex justify-space-between w-100" style="margin-top: 100px;">
           <div class="d-flex ga-10">
             <custom-text-field
                 readonly
