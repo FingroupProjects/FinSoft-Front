@@ -88,7 +88,7 @@ const resetFields = () => {
 
 const firstAccess = async () => {
   if (
-    !validate(form.sum, form.base, form.date, form.organization, form.cash) ||
+    !validate(form.sum, form.base, form.date, form.organization, form.cash, form.sender) ||
     isValid(form.counterparty, "Контрагент", form.cpAgreement, "Договор") !==
       true
   ) {
@@ -96,16 +96,16 @@ const firstAccess = async () => {
   }
   const body = {
     date: formatDateTime(form.date),
-    organization_id: form.organization,
-    cash_register_id: form.cash,
+    organization_id: typeof form.organization === 'object' ? form.organization.id : form.organization,
+    cash_register_id: typeof form.cash === 'object' ? form.cash.id : form.cash,
     sum: form.sum,
-    counterparty_id: form.counterparty,
-    counterparty_agreement_id: form.cpAgreement,
+    counterparty_id: typeof form.counterparty === 'object' ? form.counterparty.id : form.counterparty,
+    counterparty_agreement_id: typeof form.cpAgreement === 'object' ? form.cpAgreement.id : form.cpAgreement,
     basis: form.base,
-    operation_type_id: form.typeOperation,
+    operation_type_id: typeof form.typeOperation === 'object' ? form.typeOperation.id : form.typeOperation,
     comment: form.comment,
     type: "PKO",
- sender: form.sender,
+    sender: form.sender,
   };
   try {
     const res = await clientPaymentApi.paymentFromClient(body);
@@ -133,7 +133,7 @@ const secondAccess = async () => {
     operation_type_id: form.typeOperation,
     comment: form.comment,
     type: "PKO",
- sender: form.sender,
+    sender: form.sender,
   };
   try {
     const res = await clientPaymentApi.writeOff(body);

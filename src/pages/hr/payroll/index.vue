@@ -76,7 +76,7 @@ const headers = ref([
 const headerButtons = ref([
   {
     name: "create",
-    function: () => router.push({ name: "personnelMovementCreate" }),
+    function: () => router.push({ name: "payrollCreate" }),
   },
   {
     name: "createBasedOn",
@@ -92,7 +92,7 @@ const headerButtons = ref([
         const res = await copyDocument.copy(markedID.value[0]);
         if (res.status === 200) {
           showToast(copyMessage);
-          window.open(`/hr/personnelMovement/${res.data.result.id}`, "_blank");
+          window.open(`/hr/payrollCreate/${res.data.result.id}`, "_blank");
         }
       } catch (e) {
         console.error(e);
