@@ -92,7 +92,7 @@ const addDismissal = async () => {
     const res = await dismissal.add(body);
     if (res.status === 201) {
       showDate(addMessage);
-      router.push("/hr/dismissal");
+      window.open(`/hr/dismissal/${res.data.result.id}`, "_blank");
     }
   } catch (e) {
     console.log(e);

@@ -142,10 +142,9 @@ const addRecruitment = async () => {
 
   try {
     const res = await recruitment.add(body);
-    console.log(res);
     if (res.status === 201) {
       showToast(addMessage);
-      router.push("/hr/recruitment");
+      window.open(`/hr/recruitment/${res.data.result.id}`, "_blank");
     }
   } catch (e) {
     console.log(e);
