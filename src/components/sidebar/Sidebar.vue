@@ -79,6 +79,7 @@ const procurementOfGoods = ref({
         { id: 3, title: "Заказ поставщику", link: "/providerOrder" },
         { id: 4, title: "Списание", link: "/writeOff" },
         { id: 5, title: "Оприходование", link: "/posting" },
+        { id: 6, title: "Комплектация", link: "/equipment" },
       ],
     },
   ],

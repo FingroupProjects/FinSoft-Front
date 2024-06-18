@@ -200,6 +200,12 @@ const headerButtons = ref([
     bgColor: "#524ED8",
     textColor: "#fff",
   },
+  {
+    title: "Заполнить",
+    key: "fill",
+    bgColor: "#524ED8",
+    textColor: "#fff",
+  },
 ])
 
 const filteredButtons = computed(() => {
@@ -212,8 +218,8 @@ const handleClick = () => {
 </script>
 
 <template>
-  <v-btn v-for="item in filteredButtons" :key="item.id" @click="handleClick" style="padding: 15px 20px !important; height: auto;" class="d-flex align-center text-none" :color="item.bgColor" rounded="lg">
-    <span v-if="item.icon" class="d-flex justify-center me-1" v-html="item.icon"></span>
+  <v-btn v-for="item in filteredButtons" :key="item.id" @click="handleClick" :style="['height: auto', item.key === 'fill' ? 'padding: 11px 20px !important' : 'padding: 15px 20px']" class="d-flex align-center text-none" :color="item.bgColor" rounded="lg">
+    <span v-if="item.icon" class="d-flex justify-center me-1" v-html="item.icon"  ></span>
     <span :style="[' font-size: 14px; letter-spacing: 0', {color: item.textColor}]">{{ item.title }}</span>
   </v-btn>
 </template>

@@ -1,43 +1,35 @@
 <script setup>
-import { onMounted, ref, watch } from "vue";
-import { useRouter } from "vue-router";
-import showToast from "../../../composables/toast/index.js";
-import Icons from "../../../composables/Icons/Icons.vue";
+import { approveDocument, copyMessage, ErrorSelectMessage, removeMessage, restoreMessage, selectOneItemMessage, warningMessage, documentAprove} from "../../../composables/constant/buttons.js";
 import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
+import { BASE_COLOR, FIELD_OF_SEARCH, TITLE_COLOR } from "../../../composables/constant/colors.js";
 import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
-import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import {
-  BASE_COLOR,
-  FIELD_OF_SEARCH,
-  TITLE_COLOR,
-} from "../../../composables/constant/colors.js";
-import {
-  ErrorSelectMessage,
-  removeMessage,
-  restoreMessage, selectOneItemMessage,
-  warningMessage,
-} from "../../../composables/constant/buttons.js";
-import copyDocument from "../../../api/documents/copyDocument.js";
-import getStatus from "../../../composables/displayed/getStatus.js";
-import getColor from "../../../composables/displayed/getColor.js";
-import { useFilterCanvasVisible } from "../../../store/canvasVisible.js";
-import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
-import Button from "../../../components/button/button.vue";
-import debounce from "lodash.debounce";
-import timeSheetApi from "../../../api/hr/timeSheet.js";
+import { markedForDeletion, statusOptions } from "../../../composables/constant/items.js"
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
+import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
+import { useModalCreateBased } from "../../../store/modalCreateBased.js";
+import { useFilterCanvasVisible } from "../../../store/canvasVisible.js";
+import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
+import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
+import getStatus from "../../../composables/displayed/getStatus.js";
+import equipmentApi from "../../../api/documents/equipment.js";
+import getColor from "../../../composables/displayed/getColor.js";
+import copyDocument from "../../../api/documents/copyDocument.js";
+import CreateBase from "../../../components/modal/CreateBase.vue";
 import organizationApi from "../../../api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
-import storageApi from "../../../api/list/storage.js";
-import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
+import showToast from "../../../composables/toast/index.js";
+import Button from "../../../components/button/button.vue";
+import Icons from "../../../composables/Icons/Icons.vue";
 import currencyApi from "../../../api/list/currency.js";
+import storageApi from "../../../api/list/storage.js";
 import user from "../../../api/list/user.js";
-import timeSheet from "../../../api/hr/timeSheet.js";
+import { onMounted, ref, watch } from "vue";
+import debounce from "lodash.debounce";
+import { useRouter } from "vue-router";
 
 const router = useRouter();
 
 const loading = ref(true);
-const loadingRate = ref(true);
 const dialog = ref(false);
 const filterModal = ref(false);
 const hoveredRowIndex = ref(null);
@@ -46,7 +38,7 @@ const markedID = ref([]);
 const markedItem = ref([]);
 const search = ref("");
 const debounceSearch = ref("");
-const timeSheets = ref([]);
+const equipments = ref([]);
 const paginations = ref([]);
 const counterFilter = ref(0);
 
@@ -56,10 +48,14 @@ const authors = ref([]);
 const currencies = ref([]);
 const counterparties = ref([]);
 const counterpartyAgreements = ref([]);
+const modalCreateBased = useModalCreateBased();
 
 const filterForm = ref({
-  endDate: null,
+  date: null,
   startDate: null,
+  endDate: null,
+  active: null,
+  deleted: null,
   provider_id: null,
   counterparty_id: null,
   counterparty_agreement_id: null,
@@ -72,16 +68,53 @@ const filterForm = ref({
 const headers = ref([
   { title: "Номер", key: "doc_number" },
   { title: "Дата", key: "date" },
-  { title: "Статус", key: "deleted_at" },
+  { title: "Статус", key: "active" },
+  { title: "Организация", key: "organization.name" },
+  { title: "Склад", key: "storage.name" },
+  { title: "Автор", key: "author.name" },
 ]);
 
+const getEquipmentData = async ({
+  page,
+  itemsPerPage,
+  sortBy,
+  search,
+} = {}) => {
+  counterFilter.value = 0;
+  countFilter();
+  filterModal.value = false;
+  loading.value = true;
+  try {
+    const { data } = await equipmentApi.get(
+      { page, itemsPerPage, sortBy },
+      search,
+      filterForm.value
+    );
+    paginations.value = data.result.pagination;
+    equipments.value = data.result.data;
+  } catch (e) {
+    console.error(e);
+  } finally {
+    loading.value = false;
+  }
+};
 const headerButtons = ref([
   {
     name: "create",
-    function: () => router.push({ name: "timeSheetCreate" }),
+    function: () => router.push({ name: "equipmentCreate" }),
   },
   {
     name: "createBasedOn",
+    function: async () => {
+      if (markedID.value.length !== 1) {
+        return showToast(selectOneItemMessage, "warning");
+      }
+      if (markedItem.value.active === false) {
+        return showToast(documentAprove, "warning");
+      }
+
+      modalCreateBased.isModal();
+    },
   },
   {
     name: "copy",
@@ -94,7 +127,7 @@ const headerButtons = ref([
         const res = await copyDocument.copy(markedID.value[0]);
         if (res.status === 200) {
           showToast(copyMessage);
-          window.open(`/hr/personnelMovement/${res.data.result.id}`, "_blank");
+          window.open(`/equipment/${res.data.result.id}`, "_blank");
         }
       } catch (e) {
         console.error(e);
@@ -116,35 +149,10 @@ const headerButtons = ref([
   {
     name: "delete",
     function: () => {
-      compute({});
+      compute();
     },
   },
 ]);
-
-const getTimeSheetData = async ({
-  page,
-  itemsPerPage,
-  sortBy,
-  search,
-} = {}) => {
-  counterFilter.value = 0;
-  countFilter();
-  const filterData = filterForm.value;
-  filterModal.value = false;
-  loading.value = true;
-  try {
-    const { data } = await timeSheet.get(
-      { page, itemsPerPage, sortBy },
-      search,
-      filterData
-    );
-    timeSheets.value = data.result.data;
-    paginations.value = data.result.pagination;
-    loading.value = false;
-  } catch (e) {
-    console.log(e);
-  }
-};
 
 const countFilter = () => {
   for (const key in filterForm.value) {
@@ -154,46 +162,50 @@ const countFilter = () => {
   }
 };
 
+const compute = () => {
+  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
+  if (markedItem.value.deleted_at) {
+    return massRestore();
+  } else {
+    return massDel();
+  }
+};
+
 const massDel = async () => {
   try {
-    const { status } = await timeSheetApi.massDeletion({ ids: markedID.value });
+    const { status } = await equipmentApi.remove({
+      ids: markedID.value,
+    });
     if (status === 200) {
       showToast(removeMessage, "red");
-      await getTimeSheetData({});
-      markedID.value = [];
-      dialog.value = false;
+      await getEquipmentData();
     }
   } catch (e) {
-    console.log(e);
+    console.error(e);
+  } finally {
+    markedID.value = [];
   }
 };
 
 const massRestore = async () => {
   try {
-    const { status } = await timeSheetApi.massRestore({ ids: markedID.value });
+    const { status } = await equipmentApi.restore({ ids: markedID.value });
 
     if (status === 200) {
       showToast(restoreMessage);
-      await getTimeSheetData({});
-      markedID.value = [];
+      await getEquipmentData();
       dialog.value = false;
     }
-  } catch (e) {}
-};
-
-const compute = ({ page, itemsPerPage, sortBy, search }) => {
-  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
-
-  if (markedItem.value.deleted_at) {
-    return massRestore({ page, itemsPerPage, sortBy });
-  } else {
-    return massDel({ page, itemsPerPage, sortBy, search });
+  } catch (e) {
+    console.error(e);
+  } finally {
+    markedID.value = [];
   }
 };
 
 const lineMarking = (item) => {
   if (markedID.value.length > 0) {
-    const firstMarkedItem = timeSheets.value.find(
+    const firstMarkedItem = equipments.value.find(
       (el) => el.id === markedID.value[0]
     );
     if (firstMarkedItem && firstMarkedItem.deleted_at) {
@@ -219,10 +231,35 @@ const lineMarking = (item) => {
   markedItem.value = item;
 };
 
+const approve = async () => {
+  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
+  try {
+    const res = await equipmentApi.approve({ ids: markedID.value });
+    showToast(approveDocument);
+    await getEquipmentData({});
+    markedID.value = [];
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const unApprove = async () => {
+  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
+  try {
+    await equipmentApi.unApprove({ ids: markedID.value });
+    showToast(approveDocument);
+    await getEquipmentData({});
+    markedID.value = [];
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 const closeFilterModal = async () => {
   filterModal.value = false;
   cleanFilterForm();
-  await getTimeSheetData();
+  await getEquipmentData();
+  useFilterCanvasVisible().closeFilterCanvas();
 };
 
 const cleanFilterForm = () => {
@@ -280,8 +317,19 @@ const getCurrencies = async () => {
 };
 
 const show = (item) => {
-  window.open(`/hr/timeSheet/${item.id}`, "_blank");
+  window.open(`/equipment/${item.id}`, "_blank");
 };
+
+watch(markedID.value, (newVal) => {
+  markedItem.value = equipments.value.find((el) => el.id === newVal[0]);
+});
+
+watch(
+  search,
+  debounce((newValue) => {
+    debounceSearch.value = newValue;
+  }, 500)
+);
 
 onMounted(() => {
   getOrganizations();
@@ -291,30 +339,13 @@ onMounted(() => {
   getCurrencies();
   getAuthors();
 });
-
-watch(dialog, (newVal) => {
-  if (newVal) {
-    markedID.value = [markedID.value[markedID.value.length - 1]];
-  }
-});
-
-watch(markedID, (newVal) => {
-  markedItem.value = timeSheets.value.find((el) => el.id === newVal[0]);
-});
-
-watch(
-  search,
-  debounce((newValue) => {
-    debounceSearch.value = newValue;
-  }, 500)
-);
 </script>
 
 <template>
   <div class="pa-4">
-    <div class="d-flex justify-space-between">
+    <div class="d-flex justify-space-between calcWidth">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
-        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Табель</span>
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Комплектация</span>
       </div>
       <div class="d-flex justify-end ga-2">
         <div class="d-flex w-100 justify-end mb-3">
@@ -325,31 +356,32 @@ watch(
               :key="idx"
               @click="button.function"
             />
+            <create-base :marked-i-d="markedID[0]" />
           </div>
         </div>
-          <div class="custom_search">
-            <v-text-field
-              style="width: 190px"
-              v-model="search"
-              prepend-inner-icon="search"
-              density="compact"
-              label="Поиск..."
-              variant="outlined"
-              :color="BASE_COLOR"
-              rounded="lg"
-              :base-color="FIELD_OF_SEARCH"
-              clear-icon="close"
-              hide-details
-              single-line
-              :append-inner-icon="search ? 'close' : ''"
-              @click:append-inner="search = ''"
-              flat
-            />
-          </div>
+        <div class="custom_search">
+          <v-text-field
+            style="width: 190px"
+            v-model="search"
+            prepend-inner-icon="search"
+            density="compact"
+            label="Поиск..."
+            variant="outlined"
+            :color="BASE_COLOR"
+            rounded="lg"
+            :base-color="FIELD_OF_SEARCH"
+            clear-icon="close"
+            hide-details
+            single-line
+            :append-inner-icon="search ? 'close' : ''"
+            @click:append-inner="search = ''"
+            flat
+          />
+        </div>
         <div class="mt-2 filterElement">
           <Icons
             name="filter"
-            title="фильтр"
+            title="Фильтр"
             @click="useFilterCanvasVisible().toggleFilterCanvas()"
           />
           <span v-if="counterFilter !== 0" class="countFilter">{{
@@ -368,11 +400,11 @@ watch(
         :loading="loading"
         :headers="headers"
         :items-length="paginations.total || 0"
-        :items="timeSheets"
+        :items="equipments"
         :item-value="headers.title"
         :search="debounceSearch"
         v-model="markedID"
-        @update:options="getTimeSheetData"
+        @update:options="getEquipmentData"
         page-text="{0}-{1} от {2}"
         :items-per-page-options="[
           { value: 25, title: '25' },
@@ -389,6 +421,7 @@ watch(
             @mouseleave="hoveredRowIndex = null"
             @dblclick="show(item)"
             :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
+            style="font-size: 12px"
           >
             <td>
               <CustomCheckbox
@@ -411,20 +444,22 @@ watch(
                 }}</span>
               </v-chip>
             </td>
+            <td>{{ item.organization.name }}</td>
+            <td>{{ item.storage.name }}</td>
+            <td>{{ item?.author?.name }}</td>
           </tr>
         </template>
       </v-data-table-server>
     </v-card>
-
     <filter-canvas>
       <div class="d-flex flex-column ga-2 w-100">
         <custom-filter-text-field
-          label="Дата"
-          min-width="106"
-          class="date"
-          clearable
+          label="От"
           type="datetime-local"
-          v-model="filterForm.date"
+          class="date"
+          min-width="106"
+          clearable
+          v-model="filterForm.startDate"
         />
         <custom-filter-text-field
           label="По"
@@ -434,53 +469,77 @@ watch(
           clearable
           v-model="filterForm.endDate"
         />
+      </div>
+      <div class="d-flex flex-column ga-2">
         <custom-filter-autocomplete
+          min-width="106"
+          clearable
           label="Организация"
           :items="organizations"
           v-model="filterForm.organization_id"
         />
         <custom-filter-autocomplete
+          min-width="106"
           label="Поставщик"
           :items="counterparties"
           v-model="filterForm.counterparty_id"
         />
+      </div>
+      <div class="d-flex flex-column ga-2">
         <custom-filter-autocomplete
+          min-width="106"
           label="Склад"
           :items="storages"
           v-model="filterForm.storage_id"
         />
         <custom-filter-autocomplete
-          label="Валюта"
-          :items="currencies"
-          v-model="filterForm.currency_id"
+          min-width="106"
+          label="Договор"
+          :items="counterpartyAgreements"
+          v-model="filterForm.counterparty_agreement_id"
         />
+      </div>
+      <div class="d-flex ga-2">
+        <custom-filter-autocomplete
+          label="Статус"
+          :items="statusOptions"
+          v-model="filterForm.active"
+        />
+        <custom-filter-autocomplete
+          label="Удален"
+          :items="markedForDeletion"
+          v-model="filterForm.deleted"
+        />
+      </div>
+      <div class="d-flex ga-2">
         <custom-filter-autocomplete
           label="Автор"
           :items="authors"
           v-model="filterForm.author_id"
         />
         <custom-filter-autocomplete
-          label="Договор"
-          :items="counterpartyAgreements"
-          v-model="filterForm.counterparty_agreement_id"
+          label="Валюта"
+          :items="currencies"
+          v-model="filterForm.currency_id"
         />
       </div>
-      <div class="d-flex justify-end ga-2">
+      <div class="d-flex justify-end">
         <div class="d-flex ga-2" style="margin-right: -6%">
-          <v-btn color="red" class="btn" @click="closeFilterModal"
+          <v-btn tabindex="-1" color="red" class="btn" @click="closeFilterModal"
             >сбросить</v-btn
           >
           <v-btn
+            tabindex="-1"
             :color="BASE_COLOR"
             class="btn"
             @click="
               () => {
-                getTimeSheetData();
+                getEquipmentData();
                 useFilterCanvasVisible().closeFilterCanvas();
               }
             "
-            >применить
-          </v-btn>
+            >применить</v-btn
+          >
         </div>
       </div>
     </filter-canvas>
