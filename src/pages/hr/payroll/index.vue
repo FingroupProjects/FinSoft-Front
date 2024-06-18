@@ -271,7 +271,7 @@ watch(
 
 <template>
   <div class="pa-4">
-    <div class="d-flex justify-space-between">
+    <div class="d-flex justify-space-between calcWidth">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
         <span :style="{ color: TITLE_COLOR, fontSize: '22px' }"
           >Начисление запрлаты</span
