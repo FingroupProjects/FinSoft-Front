@@ -9,13 +9,15 @@ import currentDate from "../../../composables/date/currentDate.js";
 import {useRouter} from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
 import {addMessage} from "../../../composables/constant/buttons.js";
-import {BASE_COLOR} from "../../../composables/constant/colors.js";
+import {BASE_COLOR, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import "../../../assets/css/procurement.css";
 import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
 import schedule from "../../../api/list/schedule.js";
 import payroll from "../../../api/hr/payroll.js";
 import validate from "../../../composables/validate/validate.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
+import Button from "../../../components/button/button.vue";
+import currentDateWithTime from "../../../composables/date/currentDateWithTime.js";
 
 const router = useRouter()
 const emits = defineEmits(['changed'])
@@ -64,6 +66,8 @@ const getMonths = async () => {
 }
 
 const reportCard = async () => {
+  console.log(1)
+  console.log(form.month)
   const body = {
     month_id: form.month,
     organization_id: typeof form.organization === 'object' ? form.organization.id : form.organization,
@@ -71,7 +75,7 @@ const reportCard = async () => {
 
   try {
     const { data } = await payroll.reportCard(body)
-
+    console.log(data.result.data)
     employees.value = data.result.data.map(item => {
       return {
         employee: {
@@ -164,7 +168,7 @@ watch([form, employees.value], () => {
 });
 
 onMounted(() => {
-  form.date = currentDate()
+  form.date = currentDateWithTime()
   author.value = JSON.parse(localStorage.getItem('user')).name || null
   form.organization = JSON.parse(localStorage.getItem('user')).organization || null
 
@@ -175,39 +179,37 @@ onMounted(() => {
 </script>
 <template>
   <div class="document">
-    <v-col>
-      <div class="d-flex justify-space-between text-uppercase ">
+      <div class="d-flex justify-space-between documentCalcWidth">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Начисление зарплаты (создание)</span>
+          <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Начисление зарплаты (создание)</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="addNewPayroll" name="add"/>
-              <Icons title="Скопировать" @click="" name="copy"/>
-              <Icons title="Удалить" @click="" name="delete"/>
+            <div class="d-flex ga-2 mt-1 me-3 py-2">
+              <Button @click="addNewPayroll" name="save1" />
+              <Button @click="router.push('/payroll')" name="close" />
             </div>
           </div>
         </v-card>
       </div>
-    </v-col>
     <v-divider/>
-    <v-divider/>
-    <div style="background: #fff;">
+    <div class="documentHeight documentCalcWidth">
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field disabled value="Номер" v-model="form.number" max-width="180" min-width="90"/>
-          <custom-text-field label="Дата" type="date" class="date" v-model="form.date" max-width="200" min-width="120"/>
+          <custom-text-field label="Дата" type="datetime-local" class="date" v-model="form.date" max-width="200" min-width="120"/>
           <custom-autocomplete label="Организация" :items="organizations" v-model="form.organization" max-width="180px" min-width="90"/>
           <custom-autocomplete label="Месяц" :items="months" v-model="form.month" max-width="180px" min-width="90"/>
-          <v-btn :color="BASE_COLOR" class="text-none" @click="reportCard">Заполнить</v-btn>
+          <span style="height: 10px;">
+            <Button name="fill" @click="reportCard()" />
+          </span>
         </div>
       </v-col>
       <v-col>
-        <div :style="`border: 1px solid ${BASE_COLOR}`" class="rounded">
+        <div class="rounded">
           <div class="d-flex flex-column w-100">
             <v-data-table
-                style="height: 50vh"
+                class="documentTable"
                 items-per-page-text="Элементов на странице:"
                 loading-text="Загрузка"
                 no-data-text="Нет данных"

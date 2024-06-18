@@ -16,7 +16,7 @@ import organizationApi from "../../../api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import storageApi from "../../../api/list/storage.js";
 import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
-import procurementApi from "../../../api/documents/procurement.js";
+import equipmentApi from "../../../api/documents/equipment.js";
 import formatInputPrice from "../../../composables/format/formatInputPrice.js";
 import goodApi from "../../../api/list/goods.js";
 import Button from "../../../components/button/button.vue";
@@ -45,6 +45,9 @@ const form = reactive({
   salePercent: null,
   comment: null,
   currency: null,
+  good: null,
+  amount: "1",
+  totalPrice: null,
 });
 
 const author = ref(null);
@@ -178,15 +181,12 @@ const validateItem = (item) => {
   return false;
 };
 
-const addNewProcurement = async () => {
+const addNewEquipment = async () => {
   if (
     validate(
       form.date,
       form.organization,
-      form.counterparty,
-      form.cpAgreement,
       form.storage,
-      form.currency,
       goods.value
     ) !== true
   )
@@ -214,21 +214,18 @@ const addNewProcurement = async () => {
         : form.cpAgreement,
     storage_id:
       typeof form.storage === "object" ? form.storage.id : form.storage,
-    saleInteger: Number(form.saleInteger),
-    salePercent: Number(form.salePercent),
-    currency_id:
-      typeof form.currency === "object" ? form.currency.id : form.currency,
     goods: goods.value.map(item => ({
       good_id: Number(item.good_id),
       amount: Number(item.amount),
       price: toDecimal(item.price),
+      sum: totalPrice.value
     })),
   }
   try {
-    const res = await procurementApi.add(body);
+    const res = await equipmentApi.add(body);
     if (res.status === 201) {
       showToast(addMessage);
-      window.open(`/procurementOfGoods/${res.data.result.id}`, "_blank");
+      window.open(`/equipment/${res.data.result.id}`, "_blank");
     }
   } catch (e) {
     console.error(e);
@@ -279,46 +276,13 @@ const totalPrice = computed(() => {
 
 const totalCount = computed(() =>
   goods.value.reduce((acc, item) => acc + Number(item.amount || 0), 0)
-);
-
-watch(
-  () => form.counterparty,
-  async (id) => {
-    form.cpAgreement = null;
-    const counterpartyId = typeof id === 'object' ? id.id : id;
-    await getCpAgreements(counterpartyId);
-  }
-);
-
-watch(
-  () => form.cpAgreement,
-  (newValue) => {
-    if (newValue !== null) {
-      const cpAgreement = cpAgreements.value.find((el) =>
-          (el.id === typeof newValue) === "object" ? newValue.id : newValue
-      );
-      form.currency = cpAgreement.currency_id;
-    }
-  }
-);
+)
 
 watch(confirmDocument, () => {
   if (confirmDocument.isUpdateOrCreateDocument) {
-    addNewProcurement();
+    addNewEquipment();
   }
 });
-
-watch(
-  () => [form.storage, form.organization],
-  (newValue) => {
-    if (newValue[0] !== null && newValue[1] !== null) {
-      const storage_id = typeof newValue[0] === "object" ? newValue[0].id : newValue[0];
-      const organization_id = typeof newValue[1] === "object" ? newValue[1].id : newValue[1];
-      getGoods(storage_id, organization_id);
-    }
-  }
-);
-
 
 watch([form, goods.value], () => {
   if (!isChanged()) {
@@ -342,21 +306,23 @@ onMounted(() => {
   getOrganizations()
   getCounterparties()
   getStorages()
+  getGoods()
 })
+
 </script>
 
 <template>
   <div class="document">
     <div class="d-flex justify-space-between documentCalcWidth">
       <div class="d-flex align-center ga-2 pe-2 ms-4" >
-        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Покупка (создание)</span>
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Комплектация (создание)</span>
       </div>
       <v-card variant="text" class="d-flex align-center ga-2">
         <div class="d-flex w-100">
           <div class="d-flex ga-2 mt-1 me-3 py-2">
-            <Button @click="addNewProcurement" name="save1" />
+            <Button @click="addNewEquipment" name="save1" />
             <Button
-              @click="router.push('/procurementOfGoods')"
+              @click="router.push('/equipment')"
               name="close"
             />
           </div>
@@ -385,20 +351,24 @@ onMounted(() => {
             v-model="form.organization"
           />
           <custom-autocomplete
-            label="Поставщик"
-            :items="counterparties"
-            v-model="form.counterparty"
-          />
-          <custom-autocomplete
-            :disabled="!form.counterparty"
-            label="Договор"
-            :items="cpAgreements"
-            v-model="form.cpAgreement"
-          />
-          <custom-autocomplete
             label="Склад"
             :items="storages"
             v-model="form.storage"
+          />
+          <custom-text-field
+            label="Количество"
+            v-model="form.amount"
+            :value="formatInputAmount(form.amount)"
+          />
+          <custom-autocomplete
+            label="Товар"
+            :items="listGoods"
+            v-model="form.good"
+          />
+
+          <custom-text-field
+              label="Цена"
+              v-model="form.totalPrice"
           />
         </div>
       </v-col>
@@ -510,14 +480,6 @@ onMounted(() => {
               v-model="totalPrice"
               min-width="180"
               max-width="110"
-            />
-            <custom-autocomplete
-              readonly
-              v-model="form.currency"
-              label="Валюта"
-              :items="currencies"
-              min-width="190"
-              maxWidth="190px"
             />
           </div>
         </div>

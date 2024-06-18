@@ -16,11 +16,13 @@ import procurementApi from "../../../api/documents/procurement.js";
 import goodApi from "../../../api/list/goods.js";
 import { editMessage } from "../../../composables/constant/buttons.js";
 import "../../../assets/css/procurement.css";
-import {BASE_COLOR} from "../../../composables/constant/colors.js";
+import {BASE_COLOR, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import showDate from "../../../composables/date/showDate.js";
 import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
 import timeSheet from "../../../api/hr/timeSheet.js";
-
+import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
+import formatDateTime from "../../../composables/date/formatDateTime.js";
+import Button from "../../../components/button/button.vue";
 
 const router = useRouter()
 const route = useRoute()
@@ -29,85 +31,40 @@ const emits = defineEmits(['changed'])
 const props = defineProps(['isUpdateOrCreateDocument'])
 const confirmDocument = useConfirmDocumentStore()
 
-const tempForm = ref({})
-
 const form = reactive({
   doc_number: null,
   date: null,
   organization: null,
-  counterparty: null,
-  cpAgreement: null,
-  storage: null,
-  saleInteger: null,
-  salePercent: null,
+  month: null,
   comment: null,
-  currency: null
 })
 
 const author = ref(null)
 const markedID = ref([])
-const goods = ref([])
-
+const employees = ref([])
 const organizations = ref([])
-const counterparties = ref([])
-const cpAgreements = ref([])
-const storages = ref([])
-const currencies = ref([])
-const listGoods = ref([])
-const prevForm = ref({})
-const prevGoods = ref([])
+const months = ref([])
 
 const headers = ref([
-  {title: 'Товары', key: 'goods', sortable: false},
-  {title: 'Количество', key: 'currency.name', sortable: false},
-  {title: 'Цена', key: 'currency.name', sortable: false},
-  {title: 'Сумма', key: 'currency.name', sortable: false},
+  {title: 'Сотрудники', key: 'goods', sortable: false},
+  {title: 'Кол-во часов по норме', key: 'currency.name', sortable: false},
+  {title: 'Кол-во часов по факту', key: 'currency.name', sortable: false},
 ])
 
-const getProcurementDetails = async () => {
+const getTimeSheetDetails = async () => {
   try {
     const { data } = await timeSheet.getById(route.params.id)
     console.log(data)
-
-    form.doc_number = data.result.doc_number
-    form.date = showDate(data.result.date, '-', true)
+    form.doc_number = data.data.doc_number
+    form.date = getDateTimeInShow(data.data.date, '-', true)
     form.organization = {
-      id: data.result.organization.id,
-      name: data.result.organization.name
+      id: data.data.organization.id,
+      name: data.data.organization.name
     }
-    form.counterparty = {
-      id: data.result.counterparty.id,
-      name: data.result.counterparty.name
-    }
-    setTimeout(() => {
-      form.cpAgreement = {
-        id: data.result.counterpartyAgreement.id,
-        name: data.result.counterpartyAgreement.name
-      }
-    }, 200)
-    form.storage = {
-      id: data.result.storage.id,
-      name: data.result.storage.name
-    }
-    form.saleInteger = data.result.saleInteger !== 0 ? data.result.saleInteger : null
-    form.salePercent = data.result.salePercent !== 0 ? data.result.salePercent : null
-    form.comment = data.result.comment
-    form.currency = data.result.currency
-    goods.value = data.result.goods.map(item => ({
-      id: item.id,
-      good_id: item.good.id,
-      amount: item.amount,
-      price: item.price
-    }))
-    prevForm.value = { ...form };
-    prevGoods.value = [...goods.value];
-    tempForm.value = Object.assign({}, form);
-
-
+    form.comment = data.data.comment
+    employees.value = data.data.employees
   } catch (e) {
-
-  } finally {
-
+    console.log(e)
   }
 
 }
@@ -117,33 +74,26 @@ const getOrganizations = async () => {
   organizations.value = data.result.data
 }
 
-const getCounterparties = async () => {
-  const { data } = await counterpartyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  counterparties.value = data.result.data
-}
+const reportCard = async () => {
+  const body = {
+    month_id: form.month,
+    organization_id: typeof form.organization === 'object' ? form.organization.id : form.organization,
+  }
 
-const getCpAgreements = async () => {
-  const { data } = await cpAgreementApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  cpAgreements.value = data.result.data
-}
+  try {
+    const { data } = await timeSheet.reportCard(body)
+    employees.value = data.result.map(item => ({
+      id: item.id,
+      name: item.name,
+      number_of_hours: item.number_of_hours,
+      number_of_hours_in_fact: item.number_of_hours,
+      schedule_id: item.schedule_id,
+      salary: item.salary
+    }))
 
-const getStorages = async () => {
-  const { data } = await storageApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  storages.value = data.result.data
-}
-
-const getCurrencies = async () => {
-  const { data } = await currencyApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  currencies.value = data.result.data
-}
-
-const getGoods = async () => {
-  const { data } = await goodApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  listGoods.value = data.result.data
-}
-
-const decreaseCountOfGoods = () => {
-  goods.value = goods.value.filter((item) => !markedID.value.includes(item.id))
+  } catch (e) {
+    console.error(e)
+  }
 }
 
 const lineMarking = (item) => {
@@ -155,13 +105,6 @@ const lineMarking = (item) => {
       markedID.value.push(item.id);
     }
   }
-}
-
-const increaseCountOfGoods = () => {
-  const missingData = goods.value.some(validateItem)
-  if (missingData) return
-
-  goods.value.push({id: goods.value.length + 1, good_id: null, amount: 1, price: null })
 }
 
 const validateItem = (item) => {
@@ -180,157 +123,42 @@ const validateItem = (item) => {
   return false
 }
 
-const updateProcurement = async () => {
-  if (validate(form.date, form.organization, form.counterparty, form.cpAgreement, form.storage, form.currency) !== true) return
-
-  const missingData = goods.value.some(validateItem)
-  if (missingData) return
+const updateTimeSheet = async () => {
+  if (validate(form.date, form.organization) !== true) return
 
  try {
    const body = {
-     date: form.date,
+     date: formatDateTime(form.date),
      organization_id: typeof form.organization === 'object' ? form.organization.id : form.organization,
-     counterparty_id: typeof form.counterparty === 'object' ? form.counterparty.id : form.counterparty,
-     counterparty_agreement_id: typeof form.cpAgreement === 'object' ? form.cpAgreement.id : form.cpAgreement,
-     storage_id: typeof form.storage === 'object' ? form.storage.id : form.storage,
-     saleInteger: Number(form.saleInteger),
-     salePercent: Number(form.salePercent),
-     currency_id: typeof form.currency === 'object' ? form.currency.id : form.currency,
      comment: form.comment,
-     goods: goods.value.map((item) => ({
-       id: item.id,
-       good_id: Number(item.good_id),
-       amount: Number(item.amount),
-       price: Number(item.price),
-     }))
    }
 
-   const res = await procurementApi.update(route.params.id, body)
+   const res = await timeSheet.update(route.params.id, body)
    if (res.status === 200) {
      showToast(editMessage)
-     router.push('/procurement')
+     router.push('/timeSheet')
    }
  } catch (e) {
    console.log(e)
  }
+
 }
 
-const totalPrice = computed(() => {
-  let sum = 0
-  goods.value.forEach(item => {
-    sum += item.price * item.amount
-  })
-  return sum
-})
-
-const totalPriceWithSale = computed(() => {
-  let sum = 0
-  if (form.salePercent !== null) {
-      sum = totalPrice.value - (totalPrice.value * form.salePercent / 100)
-  } else {
-    goods.value.forEach(item => {
-      sum += (item.price * item.amount)
-    })
-    sum -= form.saleInteger
-  }
-
-  return sum
-})
-
-
-const isSaleIntegerDisabled = computed(() => !!form.salePercent);
-const isSalePercentDisabled = computed(() => !!form.saleInteger);
-
-
-
-const arraysEqual = (arr1, arr2) => {
-  if (arr1.length !== arr2.length) {
-    return true;
-  }
-
-  for (let i = 0; i < arr1.length; i++) {
-    if (JSON.stringify(arr1[i]) !== JSON.stringify(arr2[i])) {
-      return true;
-    }
-  }
-
-  return false;
+const closeWindow = () => {
+  window.close()
 }
-
-const checkDataChanges = () => {
-  count.value++
-  const formDataChanged = JSON.stringify(tempForm.value) !== JSON.stringify(prevForm.value);
-  const isArraysEqual = arraysEqual(goods.value, prevGoods.value)
-  return formDataChanged || isArraysEqual
-};
-
-
-watch([goods.value], (newValue) => {
-  console.log(newValue)
-}, {deep: true})
-
-watch(form, () => {
-  if (count.value === 0) {
-    checkDataChanges()
-  } else {
-    if (checkDataChanges()) {
-      emits('changed', true)
-    } else {
-      emits('changed', false)
-    }
-  }
-})
-
-
-
-watch(() => form.counterparty, async (data) => {
-  form.cpAgreement = null
-
-  const id = typeof data === 'object' ? data.id : data
-
-  try {
-    const res = await cpAgreementApi.getById(id)
-    form.currency = {
-      id: res.data.result.currency_id.id,
-      name: res.data.result.currency_id.name
-    }
-
-    setTimeout(() => {
-      tempForm.value.currency = {
-        id: res.data.result.currency_id.id,
-        name: res.data.result.currency_id.name
-      }
-    }, 500)
-
-    const array = Object.prototype.toString.call(res.data.result) === '[object Array]'
-    const obj = Object.prototype.toString.call(res.data.result) === '[object Object]'
-
-    cpAgreements.value = array ? res.data.result : obj ? [res.data.result] : []
-
-  } catch (e) {
-    cpAgreements.value = []
-  }
-})
 
 watch(confirmDocument, () => {
   if (confirmDocument.isUpdateOrCreateDocument) {
-    updateProcurement()
+    updateTimeSheet()
   }
 })
 
 onMounted( () => {
   author.value = JSON.parse(localStorage.getItem('user')).name || null
-  getProcurementDetails()
-  Promise.all([
-    getOrganizations(),
-    getCounterparties(),
-    getCpAgreements(),
-    getStorages(),
-    getCurrencies(),
-    getGoods(),
+  getTimeSheetDetails()
 
-  ])
-
+  getOrganizations()
 })
 
 
@@ -338,46 +166,40 @@ onMounted( () => {
 </script>
 <template>
   <div class="document">
-    
-      <div class="d-flex justify-space-between text-uppercase pa-1">
-        <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Табель (просмотр)</span>
-        </div>
-        <v-card variant="text" class="d-flex align-center ga-2">
-          <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1 me-3">
-              <Icons title="Добавить" @click="updateProcurement" name="add"/>
-              <Icons title="Скопировать" @click="" name="copy"/>
-              <Icons title="Удалить" @click="" name="delete"/>
-            </div>
-          </div>
-        </v-card>
+    <div class="d-flex justify-space-between documentCalcWidth">
+      <div class="d-flex align-center ga-2 pe-2 ms-4" >
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Табель (просмотр)</span>
       </div>
-    
-    <v-divider/>
-    <v-divider/>
-    <div style="background: #fff;">
+      <v-card variant="text" class="d-flex align-center ga-2">
+        <div class="d-flex w-100">
+          <div class="d-flex ga-2 mt-1 me-3 py-2">
+            <Button @click="updateTimeSheet" name="save1" />
+            <Button @click="closeWindow" name="close" />
+          </div>
+        </div>
+      </v-card>
+    </div>
+    <v-divider />
+    <div class="documentHeight documentCalcWidth">
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
-          <custom-text-field readonly label="Номер"  :value="form.doc_number"/>
-          <custom-text-field label="Дата" type="date" v-model="form.date"/>
-          <custom-autocomplete label="Организация" :items="organizations"  v-model="form.organization"/>
+          <custom-text-field disabled value="Номер" v-model="form.number" max-width="180" min-width="90"/>
+          <custom-text-field label="Дата" type="datetime-local" class="date" v-model="form.date" max-width="180" min-width="90"/>
+          <custom-autocomplete label="Организация" :items="organizations" v-model="form.organization" max-width="180px" min-width="90"/>
+          <custom-autocomplete label="Месяц" :items="months" v-model="form.month" max-width="180px" min-width="90"/>
+          <Button name="fill" @click="reportCard" />
         </div>
       </v-col>
       <v-col>
-        <div :style="`border: 1px solid ${BASE_COLOR}`" class="rounded">
-          <div class="d-flex pa-1 ga-1">
-            <Icons name="add" title="Добавить поле" @click="increaseCountOfGoods"/>
-            <Icons name="delete" @click="decreaseCountOfGoods"/>
-          </div>
+        <div class="rounded">
           <div class="d-flex flex-column w-100">
             <v-data-table
-                style="height: 50vh"
+                class="documentTable"
                 items-per-page-text="Элементов на странице:"
                 loading-text="Загрузка"
                 no-data-text="Нет данных"
                 :headers="headers"
-                :items="goods"
+                :items="employees"
                 v-model="markedID"
                 item-value="id"
                 page-text='{0}-{1} от {2}'
@@ -393,24 +215,21 @@ onMounted( () => {
                 <tr :key="index">
                   <td>
                     <CustomCheckbox
-                      v-model="markedID"
-                      @change="lineMarking(item)"
-                      :checked="markedID.includes(item.id)"
+                        v-model="markedID"
+                        @change="lineMarking(item)"
+                        :checked="markedID.includes(item.id)"
                     >
-                      <span>{{ index + 1}}</span>
+                      <span>{{ index + 1 }}</span>
                     </CustomCheckbox>
                   </td>
                   <td style="width: 40%;">
-                    <custom-autocomplete v-model="item.good_id" :items="listGoods" min-width="150" max-width="100%"/>
+                    <custom-text-field readonly v-model="item.employee.name" min-width="150" max-width="100%"/>
                   </td>
                   <td>
-                    <custom-text-field v-model="item.amount" v-mask="'########'" min-width="50" />
+                    <custom-text-field readonly v-model="item.standart_hours" v-mask="'########'" min-width="50"/>
                   </td>
                   <td>
-                    <custom-text-field v-model="item.price" v-mask="'##########'" min-width="80"/>
-                  </td>
-                  <td>
-                    <custom-text-field readonly :value="item.amount * item.price"  min-width="100"/>
+                    <custom-text-field v-model="item.fast_hours" v-mask="'##########'" min-width="80"/>
                   </td>
                 </tr>
               </template>
@@ -421,11 +240,6 @@ onMounted( () => {
           <div class="d-flex ga-10">
             <custom-text-field readonly :value="author" min-width="140" max-width="110"/>
             <custom-text-field label="Комментарий" v-model="form.comment" min-width="310"/>
-          </div>
-          <div class="d-flex ga-6">
-            <custom-text-field readonly  :value="'Сумма со скидкой: ' + totalPriceWithSale" min-width="180" />
-            <custom-text-field readonly  :value="'Сумма без скидки: ' + totalPrice" min-width="180" max-width="110"/>
-            <custom-autocomplete v-model="form.currency" label="Валюта" :items="currencies" min-width="110" max-width="110" />
           </div>
         </div>
       </v-col>

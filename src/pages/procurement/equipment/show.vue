@@ -16,7 +16,7 @@ import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import formatNumber from "../../../composables/format/formatNumber.js";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";
 import getStatus from "../../../composables/displayed/getStatus.js";
-import procurementApi from "../../../api/documents/procurement.js";
+import equipmentApi from "../../../api/documents/equipment.js";
 import organizationApi from "../../../api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
 import showToast from "../../../composables/toast/index.js";
@@ -60,7 +60,7 @@ const itemsPerPage = ref(10000);
 const author = ref(null);
 const markedID = ref([]);
 const goods = ref([]);
-const doc_name = ref("Поступление");
+const doc_name = ref("Комплектация");
 
 const deletedGoods = ref([]);
 const organizations = ref([]);
@@ -82,9 +82,9 @@ const headers = ref([
 
 const approve = async () => {
   try {
-    await procurementApi.approve({ ids: [route.params.id] });
+    await equipmentApi.approve({ ids: [route.params.id] });
     showToast(approveDocument);
-    await getProcurementDetails();
+    await getEquipmentDetails();
     markedID.value = [];
   } catch (e) {
     console.error(e);
@@ -93,18 +93,18 @@ const approve = async () => {
 
 const unApprove = async () => {
   try {
-    await procurementApi.unApprove({ ids: [route.params.id] });
+    await equipmentApi.unApprove({ ids: [route.params.id] });
     showToast(approveDocument);
-    await getProcurementDetails();
+    await getEquipmentDetails();
     markedID.value = [];
   } catch (e) {
     console.error(e);
   }
 };
 
-const getProcurementDetails = async () => {
+const getEquipmentDetails = async () => {
   try {
-    const { data } = await procurementApi.getById(route.params.id);
+    const { data } = await equipmentApi.getById(route.params.id);
     form.doc_number = data.result.doc_number;
     form.date = getDateTimeInShow(data.result.date, "-", true);
     form.organization = {
@@ -236,7 +236,7 @@ const validateItem = (item) => {
   return false;
 };
 
-const updateProcurement = async () => {
+const updateEquipment = async () => {
   if (
     validate(
       form.date,
@@ -285,7 +285,7 @@ const updateProcurement = async () => {
     if(deletedGoods.value.length > 0){
       goodsDelete(deletedGoods.value)
     }
-    const res = await procurementApi.update(route.params.id, body);
+    const res = await equipmentApi.update(route.params.id, body);
     if (res.status === 200) {
       showToast(editMessage);
     }
@@ -379,7 +379,7 @@ watch(
 
 watch(confirmDocument, () => {
   if (confirmDocument.isUpdateOrCreateDocument) {
-    updateProcurement();
+    updateEquipment();
   }
 });
 
@@ -389,7 +389,7 @@ const closeWindow = () => {
 
 onMounted(() => {
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
-  getProcurementDetails();
+  getEquipmentDetails();
 
   Promise.all([
     getOrganizations(),
@@ -406,7 +406,7 @@ onMounted(() => {
     <div class="d-flex justify-space-between documentCalcWidth">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
         <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">
-          Покупка (просмотр) - {{ getStatus(form.active, form.deleted_at) }}
+          Комплектация (просмотр) - {{ getStatus(form.active, form.deleted_at) }}
         </span>
       </div>
       <v-card variant="text" class="d-flex align-center ga-2">
@@ -416,7 +416,7 @@ onMounted(() => {
             <Button name="approve" @click="approve" />
             <Button name="cancel" @click="unApprove" />
             <Button name="print" @click="goToPrint(router, route, doc_name)" />
-            <Button name="save" @click="updateProcurement" />
+            <Button name="save" @click="updateEquipment" />
             <Button name="close" @click="closeWindow" />
           </div>
         </div>
@@ -505,11 +505,11 @@ onMounted(() => {
                   <td>
                     <custom-text-field
                         v-model="item.amount"
-                        :value="formatInputAmount(item.amount)"
                         :base-color="
                            hoveredRowId === item.id ? FIELD_GOODS : '#fff'
                         "
                         min-width="50"
+                        :value="formatInputAmount(item.amount)"
                     />
                   </td>
                   <td>
@@ -598,4 +598,6 @@ onMounted(() => {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+
+</style>

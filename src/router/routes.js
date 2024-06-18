@@ -46,6 +46,21 @@ const routes = [
     component: () => import("../pages/procurement/writeOff/create.vue"),
   },
   {
+    path: "/equipment",
+    name: "equipment",
+    component: () => import("../pages/procurement/equipment/index.vue"),
+  },
+  {
+    path: "/equipment/:id",
+    name: "equipmentShow",
+    component: () => import("../pages/procurement/equipment/show.vue"),
+  },
+  {
+    path: "/equipment/create",
+    name: "equipmentCreate",
+    component: () => import("../pages/procurement/equipment/create.vue"),
+  },
+  {
     path: "/posting",
     name: "posting",
     component: () =>
