@@ -145,7 +145,7 @@ const addPersonalMovement = async () => {
     const res = await personnelMovement.add(body);
     if (res.status === 201) {
       showToast(addMessage);
-      router.push("/hr/personnelMovement");
+      window.open(`/hr/personnelMovement/${res.data.result.id}`, "_blank");
     }
   } catch (e) {
     console.log(e);
@@ -235,7 +235,7 @@ onMounted(() => {
       </v-card>
     </div>
     <v-divider />
-    <div style="height: 82.4vh; background: #fff">
+    <div class="documentHeight">
       <v-col style="height: 72vh" class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field disabled value="Номер" />

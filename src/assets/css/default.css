@@ -209,10 +209,10 @@ body{
    background: #fff
 }
 
-.documentHeight {
+/* .documentHeight {
   height: calc(102vh - 55px);
   background: #fff
-}
+} */
 
 .documentTable {
   height: calc(100vh - 250px) !important;

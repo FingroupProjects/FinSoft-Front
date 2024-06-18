@@ -2,20 +2,34 @@
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import Icons from "../../../composables/Icons/Icons.vue";
-import {BASE_COLOR, FIELD_COLOR} from "../../../composables/constant/colors.js";
-import {onMounted, reactive, ref} from "vue";
+import {
+  BASE_COLOR,
+  FIELD_COLOR,
+  TITLE_COLOR,
+} from "../../../composables/constant/colors.js";
+import { onMounted, reactive, ref } from "vue";
 import organizationApi from "../../../api/list/organizations.js";
 import employee from "../../../api/list/employee.js";
+import goToHistory from "../../../composables/movementByPage/goToHistory.js";
+import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
+import goToPrint from "../../../composables/movementByPage/goToPrint.js";
 import currentDate from "../../../composables/date/currentDate.js";
 import dismissal from "../../../api/hr/dismissal.js";
 import changeTheDateForSending from "../../../composables/date/changeTheDateForSending.js";
 import showDate from "../../../composables/date/showDate.js";
-import {addMessage, editMessage} from "../../../composables/constant/buttons.js";
-import {useRoute, useRouter} from "vue-router";
+import {
+  addMessage,
+  editMessage,
+} from "../../../composables/constant/buttons.js";
+import { useRoute, useRouter } from "vue-router";
 import validate from "../../../composables/validate/validate.js";
+import Button from "../../../components/button/button.vue";
+import schedule from "../../../api/list/schedule.js";
 
-const router = useRouter()
-const route = useRoute()
+const router = useRouter();
+const route = useRoute();
+
+const doc_name = ref("Увольнение кадра");
 
 const form = reactive({
   date: null,
@@ -28,137 +42,168 @@ const form = reactive({
   basis: null,
   comment: null,
   author: null,
-})
+});
 
-const organizations = ref([])
-const employees = ref([])
+const organizations = ref([]);
+const employees = ref([]);
 
 const getDismissalDetails = async () => {
   try {
-    const {data} = await dismissal.getById(route.params.id)
-    form.date = showDate(data.data.date, '-', true)
-    form.dateOfDismissal = showDate(data.data.firing_date, '-', true)
-    form.organization = data.data.organization
-    form.position = data.data.position
-    form.department = data.data.department
-    form.employee = data.data.employee
-    form.salary = data.data.salary
-    form.basis = data.data.basis
-    form.comment = data.data.comment
-    form.author = data.data.author.name
-
+    const { data } = await dismissal.getById(route.params.id);
+    form.date = showDate(data.data.date, "-", true);
+    form.dateOfDismissal = showDate(data.data.firing_date, "-", true);
+    form.organization = data.data.organization;
+    form.position = data.data.position;
+    form.department = data.data.department;
+    form.employee = data.data.employee;
+    form.salary = data.data.salary;
+    form.basis = data.data.basis;
+    form.comment = data.data.comment;
+    form.author = data.data.author.name;
   } catch (e) {
-    console.log(e)
+    console.log(e);
   }
-}
+};
 
 const getOrganizations = async () => {
-  const {data} = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  organizations.value = data.result.data
-}
+  const { data } = await organizationApi.get({
+    page: 1,
+    itemsPerPage: 100000,
+    sortBy: "name",
+  });
+  organizations.value = data.result.data;
+};
 
 const getEmployees = async () => {
-  const {data} = await employee.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  employees.value = data.result.data
-}
+  const { data } = await employee.get({
+    page: 1,
+    itemsPerPage: 100000,
+    sortBy: "name",
+  });
+  employees.value = data.result.data;
+};
 
 const updateDismissal = async () => {
-
   const validateValue = [
     {
-      "Дата": form.date
+      Дата: form.date,
     },
     {
-      "Дата увольнения": form.dateOfDismissal
+      "Дата увольнения": form.dateOfDismissal,
     },
     {
-      "Организация": form.organization
+      Организация: form.organization,
     },
     {
-      "Сотрудник": form.employee
+      Сотрудник: form.employee,
     },
     {
-      "Основание": form.basis
+      Основание: form.basis,
     },
-  ]
+  ];
 
-  if (validate(validateValue) !== true) return
+  if (validate(validateValue) !== true) return;
 
   try {
     const body = {
-      "date": changeTheDateForSending(form.date, '-'),
-      "firing_date": changeTheDateForSending(form.dateOfDismissal, '-'),
-      "organization_id": typeof form.organization === 'object' ? form.organization.id : form.organization,
-      "basis": form.basis,
-      "employee_id": typeof form.employee === 'object' ? form.employee.id : form.employee,
-      "comment": form.comment
-    }
-    const res = await dismissal.update(route.params.id, body)
+      date: changeTheDateForSending(form.date, "-"),
+      firing_date: changeTheDateForSending(form.dateOfDismissal, "-"),
+      organization_id:
+        typeof form.organization === "object"
+          ? form.organization.id
+          : form.organization,
+      basis: form.basis,
+      employee_id:
+        typeof form.employee === "object" ? form.employee.id : form.employee,
+      comment: form.comment,
+    };
+    const res = await dismissal.update(route.params.id, body);
     if (res.status === 200 || res.status === 201) {
-      showDate(editMessage)
-      router.push('/hr/dismissal')
+      showDate(editMessage);
+      router.push("/hr/dismissal");
     }
   } catch (e) {
-    console.log(e)
+    console.log(e);
   }
-}
+};
+
+const closeWindow = () => {
+  window.close();
+};
 
 onMounted(() => {
-  form.author = JSON.parse(localStorage.getItem('user')).name || null
+  form.author = JSON.parse(localStorage.getItem("user")).name || null;
 
-  getDismissalDetails()
-  getOrganizations()
-  getEmployees()
-})
+  getDismissalDetails();
+  getOrganizations();
+  getEmployees();
+});
 </script>
 
 <template>
   <div class="document">
-    <v-col>
-      <div class="d-flex justify-space-between text-uppercase ">
+      <div class="d-flex justify-space-between documentCalcWidth">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span>Увольнение кадра (Изменение)</span>
+          <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Увольнение кадра (Изменение)</span>
         </div>
         <v-card variant="text" class="d-flex align-center ga-2">
           <div class="d-flex w-100">
-            <div class="d-flex ga-2 mt-1">
-              <Icons title="Добавить" @click="updateDismissal" name="add"/>
+            <div class="d-flex ga-2 mt-1 me-3 py-2">
+              <Button name="history" @click="goToHistory(router, route)" />
+              <Button name="approve" />
+              <Button name="cancel" />
+              <Button name="print" @click="goToPrint(router, route, doc_name)" />
+              <Button name="save" @click="updateDismissal" />
+              <Button name="close" @click="closeWindow" />
             </div>
           </div>
         </v-card>
       </div>
-    </v-col>
-    <v-divider/>
-    <v-divider/>
-    <div style="height: 82.4vh; background: #fff;">
-      <v-col style="height: 72vh" class="d-flex flex-column ga-2 pb-0">
+    <v-divider />
+    <div class="documentHeight">
+      <v-col style="height: 72vh" class="d-flex flex-column ga-2">
         <div class="d-flex flex-wrap ga-4">
-          <custom-text-field disabled value="Номер"/>
-          <custom-text-field label="Дата" type="date" v-model="form.date"/>
-          <custom-autocomplete label="Организация" :items="organizations" v-model="form.organization"/>
-          <custom-autocomplete label="Сотрудник" :items="employees" v-model="form.employee"/>
-          <custom-text-field label="Дата увольнение" type="date" v-model="form.dateOfDismissal"/>
+          <custom-text-field disabled value="Номер" />
+          <custom-text-field label="Дата" type="date" v-model="form.date" />
+          <custom-autocomplete
+            label="Организация"
+            :items="organizations"
+            v-model="form.organization"
+          />
+          <custom-autocomplete
+            label="Сотрудник"
+            :items="employees"
+            v-model="form.employee"
+          />
+          <custom-text-field
+            label="Дата увольнение"
+            type="date"
+            v-model="form.dateOfDismissal"
+          />
         </div>
         <v-textarea
-            label="Описание"
-            :color="BASE_COLOR"
-            :base-color="FIELD_COLOR"
-            v-model="form.basis"
-            hide-details
-            rounded="lg"
-            variant="outlined"
-            class="w-auto text-sm-body-1"
-            density="compact"
+          label="Описание"
+          :color="BASE_COLOR"
+          :base-color="FIELD_COLOR"
+          v-model="form.basis"
+          hide-details
+          rounded="lg"
+          variant="outlined"
+          class="w-auto text-sm-body-1"
+          density="compact"
         />
       </v-col>
       <v-col class="d-flex ga-2">
-        <custom-text-field :value="form.author" readonly/>
-        <custom-text-field label="Комментарий" v-model="form.comment" min-width="500" max-width="200"/>
+        <custom-text-field :value="form.author" readonly />
+        <custom-text-field
+          label="Комментарий"
+          v-model="form.comment"
+          min-width="500"
+          max-width="200"
+        />
       </v-col>
     </div>
   </div>
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>

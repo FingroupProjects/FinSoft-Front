@@ -1,17 +1,17 @@
 <script setup>
-import {computed, defineEmits, onMounted, reactive, ref, watch} from "vue";
+import { computed, defineEmits, onMounted, reactive, ref, watch } from "vue";
 import Icons from "../../../composables/Icons/Icons.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import showToast from "../../../composables/toast/index.js";
 import currentDate from "../../../composables/date/currentDate.js";
-import {useRouter} from "vue-router";
+import { useRouter } from "vue-router";
 import organizationApi from "../../../api/list/organizations.js";
 import {addMessage} from "../../../composables/constant/buttons.js";
 import {BASE_COLOR, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import "../../../assets/css/procurement.css";
-import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
+import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
 import schedule from "../../../api/list/schedule.js";
 import payroll from "../../../api/hr/payroll.js";
 import validate from "../../../composables/validate/validate.js";
@@ -19,9 +19,9 @@ import formatDateTime from "../../../composables/date/formatDateTime.js";
 import Button from "../../../components/button/button.vue";
 import currentDateWithTime from "../../../composables/date/currentDateWithTime.js";
 
-const router = useRouter()
-const emits = defineEmits(['changed'])
-const confirmDocument = useConfirmDocumentStore()
+const router = useRouter();
+const emits = defineEmits(["changed"]);
+const confirmDocument = useConfirmDocumentStore();
 
 const form = reactive({
   date: null,
@@ -33,50 +33,61 @@ const form = reactive({
   employee_id: null,
   employee_name: null,
   fact_hours: null,
-})
+});
 
-const author = ref(null)
-const markedID = ref([])
-const organizations = ref([])
-const months = ref([])
-const cpAgreements = ref([])
-const storages = ref([])
-const currencies = ref([])
-const listGoods = ref([])
-const employees = ref([])
+const author = ref(null);
+const markedID = ref([]);
+const organizations = ref([]);
+const months = ref([]);
+const cpAgreements = ref([]);
+const storages = ref([]);
+const currencies = ref([]);
+const listGoods = ref([]);
+const employees = ref([]);
 
 const headers = ref([
-  {title: 'Сотрудники', key: 'goods', sortable: false},
-  {title: 'Оклад', key: 'currency.name', sortable: false},
-  {title: 'Рабочие часы', key: 'currency.name', sortable: false},
-  {title: 'Зарплата', key: 'currency.name', sortable: false},
-  {title: 'Другие оплаты', key: 'currency.name', sortable: false},
-  {title: 'Удержание от зарплаты', key: 'currency.name', sortable: false},
-  {title: 'Зарплата к оплате', key: 'currency.name', sortable: false},
-])
+  { title: "Сотрудники", key: "goods", sortable: false },
+  { title: "Оклад", key: "currency.name", sortable: false },
+  { title: "Рабочие часы", key: "currency.name", sortable: false },
+  { title: "Зарплата", key: "currency.name", sortable: false },
+  { title: "Другие оплаты", key: "currency.name", sortable: false },
+  { title: "Удержание от зарплаты", key: "currency.name", sortable: false },
+  { title: "Зарплата к оплате", key: "currency.name", sortable: false },
+]);
 
 const getOrganizations = async () => {
-  const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  organizations.value = data.result.data
-}
+  const { data } = await organizationApi.get({
+    page: 1,
+    itemsPerPage: 100000,
+    sortBy: "name",
+  });
+  organizations.value = data.result.data;
+};
 
 const getMonths = async () => {
-  const {data} = await schedule.month({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  months.value = data.result.data
-}
+  const { data } = await schedule.month({
+    page: 1,
+    itemsPerPage: 100000,
+    sortBy: "name",
+  });
+  months.value = data.result.data;
+};
 
 const reportCard = async () => {
   console.log(1)
   console.log(form.month)
   const body = {
     month_id: form.month,
-    organization_id: typeof form.organization === 'object' ? form.organization.id : form.organization,
-  }
+    organization_id:
+      typeof form.organization === "object"
+        ? form.organization.id
+        : form.organization,
+  };
 
   try {
-    const { data } = await payroll.reportCard(body)
-    console.log(data.result.data)
-    employees.value = data.result.data.map(item => {
+    const { data } = await payroll.reportCard(body);
+
+    employees.value = data.result.data.map((item) => {
       return {
         employee: {
           id: item.employee_id,
@@ -85,13 +96,13 @@ const reportCard = async () => {
         fact_salary: factSalary(item),
         other_payments: 0,
         salary_deduction: 0,
-        ...item
-      }
-    })
+        ...item,
+      };
+    });
   } catch (e) {
-    console.error(e)
+    console.error(e);
   }
-}
+};
 
 const lineMarking = (item) => {
   const index = markedID.value.indexOf(item.id);
@@ -102,68 +113,101 @@ const lineMarking = (item) => {
       markedID.value.push(item.id);
     }
   }
-}
-
+};
 
 const addNewPayroll = async () => {
-
-  console.log(form.date)
+  console.log(form.date);
   const body = {
     date: formatDateTime(form.date),
-    organization_id: typeof form.organization === 'object' ? form.organization.id : form.organization,
+    organization_id:
+      typeof form.organization === "object"
+        ? form.organization.id
+        : form.organization,
     month_id: form.month,
     comment: form.comment,
     data: employees.value.map((item) => ({
       employee_id: item.employee_id,
       oklad: Number(item.salary),
       salary: Number(item.fact_salary),
-      worked_hours:  Number(item.fact_hours),
+      worked_hours: Number(item.fact_hours),
       another_payments: Number(item.other_payments),
       takes_from_salary: Number(item.salary_deduction),
       payed_salary: totalPrice(item),
     })),
-  }
+  };
   try {
-    const res = await payroll.add(body)
+    const res = await payroll.add(body);
     if (res.status === 201) {
-      showToast(addMessage)
-      router.push('/hr/payroll')
+      showToast(addMessage);
+      window.open(`/hr/payroll/${res.data.result.id}`, "_blank");
     }
   } catch (e) {
-    console.error(e)
+    console.error(e);
   }
-}
+};
 
 const isChanged = () => {
-  const {saleInteger, salePercent, organization, month, cpAgreement, storage, currency, date} = form;
+  const {
+    saleInteger,
+    salePercent,
+    organization,
+    month,
+    cpAgreement,
+    storage,
+    currency,
+    date,
+  } = form;
 
-  const employeeValues = employees.value.flatMap(good => [good.name, good.number_of_hours, good.number_of_hours_in_fact]);
+  const employeeValues = employees.value.flatMap((good) => [
+    good.name,
+    good.number_of_hours,
+    good.number_of_hours_in_fact,
+  ]);
 
-  const cleanedGoodsValues = employeeValues.filter(val => val !== undefined);
-  const valuesToCheck = [saleInteger, salePercent, organization, month, cpAgreement, storage, currency, date, ...cleanedGoodsValues];
+  const cleanedGoodsValues = employeeValues.filter((val) => val !== undefined);
+  const valuesToCheck = [
+    saleInteger,
+    salePercent,
+    organization,
+    month,
+    cpAgreement,
+    storage,
+    currency,
+    date,
+    ...cleanedGoodsValues,
+  ];
 
-  return valuesToCheck.every(val => val === null || val === '' || val === currentDate() || val === "1");
-}
+  return valuesToCheck.every(
+    (val) => val === null || val === "" || val === currentDate() || val === "1"
+  );
+};
 
-const totalPrice = item => {
-  return Number(item.fact_salary) - Number(item.salary_deduction) + Number(item.other_payments)
-}
+const totalPrice = (item) => {
+  return (
+    Number(item.fact_salary) -
+    Number(item.salary_deduction) +
+    Number(item.other_payments)
+  );
+};
 
-const factSalary = item => {
-  return Number(item.salary) / 100 * ((100 / Number(item.fact_hours)) * Number(item.standart_hours))
-}
+const factSalary = (item) => {
+  return (
+    (Number(item.salary) / 100) *
+    ((100 / Number(item.fact_hours)) * Number(item.standart_hours))
+  );
+};
 
 watch(confirmDocument, () => {
   if (confirmDocument.isUpdateOrCreateDocument) {
-    addNewPayroll()
+    addNewPayroll();
   }
-})
+});
 
 watch([form, employees.value], () => {
   if (!isChanged()) {
-    emits('changed', true);
+    emits("changed", true);
   } else {
-    emits('changed', false);
+    emits("changed", false);
   }
 });
 
@@ -172,10 +216,9 @@ onMounted(() => {
   author.value = JSON.parse(localStorage.getItem('user')).name || null
   form.organization = JSON.parse(localStorage.getItem('user')).organization || null
 
-  getOrganizations()
-  getMonths()
-})
-
+  getOrganizations();
+  getMonths();
+});
 </script>
 <template>
   <div class="document">
@@ -187,7 +230,7 @@ onMounted(() => {
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3 py-2">
               <Button @click="addNewPayroll" name="save1" />
-              <Button @click="router.push('/payroll')" name="close" />
+              <Button @click="router.push('/hr/payroll')" name="close" />
             </div>
           </div>
         </v-card>
@@ -230,33 +273,60 @@ onMounted(() => {
                 <tr :key="index">
                   <td>
                     <CustomCheckbox
-                        v-model="markedID"
-                        @change="lineMarking(item)"
-                        :checked="markedID.includes(item.id)"
+                      v-model="markedID"
+                      @change="lineMarking(item)"
+                      :checked="markedID.includes(item.id)"
                     >
                       <span>{{ index + 1 }}</span>
                     </CustomCheckbox>
                   </td>
-                  <td style="width: 40%;">
-                    <custom-text-field readonly v-model="item.employee.name" min-width="100" max-width="100%"/>
+                  <td style="width: 40%">
+                    <custom-text-field
+                      readonly
+                      v-model="item.employee.name"
+                      min-width="100"
+                      max-width="100%"
+                    />
                   </td>
                   <td>
-                    <custom-text-field readonly v-model="item.salary" v-mask="'########'" min-width="80"/>
+                    <custom-text-field
+                      readonly
+                      v-model="item.salary"
+                      v-mask="'########'"
+                      min-width="80"
+                    />
                   </td>
                   <td>
-                    <custom-text-field v-model="item.standart_hours" v-mask="'##########'" min-width="80"/>
+                    <custom-text-field
+                      v-model="item.standart_hours"
+                      v-mask="'##########'"
+                      min-width="80"
+                    />
                   </td>
                   <td>
-                    <custom-text-field v-model="item.fact_salary"  min-width="80"/>
+                    <custom-text-field
+                      v-model="item.fact_salary"
+                      min-width="80"
+                    />
                   </td>
                   <td>
-                    <custom-text-field v-model="item.other_payments"  min-width="80"/>
+                    <custom-text-field
+                      v-model="item.other_payments"
+                      min-width="80"
+                    />
                   </td>
                   <td>
-                    <custom-text-field v-model="item.salary_deduction"  min-width="80"/>
+                    <custom-text-field
+                      v-model="item.salary_deduction"
+                      min-width="80"
+                    />
                   </td>
                   <td>
-                    <custom-text-field readonly :value="totalPrice(item)"  min-width="80"/>
+                    <custom-text-field
+                      readonly
+                      :value="totalPrice(item)"
+                      min-width="80"
+                    />
                   </td>
                 </tr>
               </template>
@@ -265,8 +335,12 @@ onMounted(() => {
         </div>
         <div class="d-flex justify-space-between w-100 mt-2 bottomField">
           <div class="d-flex ga-10">
-            <custom-text-field readonly :value="author" min-width="110"/>
-            <custom-text-field label="Комментарий" v-model="form.comment" min-width="310"/>
+            <custom-text-field readonly :value="author" min-width="110" />
+            <custom-text-field
+              label="Комментарий"
+              v-model="form.comment"
+              min-width="310"
+            />
           </div>
         </div>
       </v-col>
@@ -276,5 +350,4 @@ onMounted(() => {
 
 <style scoped>
 @import "../../../assets/css/procurement.css";
-
 </style>
