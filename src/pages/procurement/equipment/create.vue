@@ -204,14 +204,6 @@ const addNewEquipment = async () => {
       typeof form.organization === "object"
         ? form.organization.id
         : form.organization,
-    counterparty_id:
-      typeof form.counterparty === "object"
-        ? form.counterparty.id
-        : form.counterparty,
-    counterparty_agreement_id:
-      typeof form.cpAgreement === "object"
-        ? form.cpAgreement.id
-        : form.cpAgreement,
     storage_id:
       typeof form.storage === "object" ? form.storage.id : form.storage,
     goods: goods.value.map(item => ({
@@ -473,13 +465,6 @@ onMounted(() => {
               label="Количество"
               v-model="totalCount"
               min-width="130"
-            />
-            <custom-text-field
-              readonly
-              label="Общая сумма:"
-              v-model="totalPrice"
-              min-width="180"
-              max-width="110"
             />
           </div>
         </div>
