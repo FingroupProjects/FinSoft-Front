@@ -293,9 +293,9 @@ onMounted(() => {
             max-width="180px"
             min-width="90"
           />
-          <v-btn :color="BASE_COLOR" class="text-none" @click="reportCard"
-            >Заполнить</v-btn
-          >
+          <span style="height: 10px;">
+            <Button name="fill" @click="reportCard()" />
+          </span>
         </div>
       </v-col>
       <v-col>

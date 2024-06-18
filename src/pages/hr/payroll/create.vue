@@ -230,7 +230,7 @@ onMounted(() => {
           <div class="d-flex w-100">
             <div class="d-flex ga-2 mt-1 me-3 py-2">
               <Button @click="addNewPayroll" name="save1" />
-              <Button @click="router.push('/payroll')" name="close" />
+              <Button @click="router.push('/hr/payroll')" name="close" />
             </div>
           </div>
         </v-card>
