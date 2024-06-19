@@ -1,29 +1,26 @@
 <script setup>
-import { approveDocument, editMessage, selectOneItemMessage } from "../../../composables/constant/buttons.js";
-import { computed, defineEmits, defineProps, onMounted, reactive, ref, watch } from "vue";
+import {approveDocument, editMessage, selectOneItemMessage} from "../../../composables/constant/buttons.js";
+import {computed, defineEmits, defineProps, onMounted, reactive, ref, watch} from "vue";
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
-import { FIELD_GOODS, TITLE_COLOR } from "../../../composables/constant/colors.js";
+import {FIELD_GOODS, TITLE_COLOR} from "../../../composables/constant/colors.js";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import goToHistory from "../../../composables/movementByPage/goToHistory.js";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
-import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
+import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
 import formatInputPrice from "../../../composables/format/formatInputPrice.js";
 import goToPrint from "../../../composables/movementByPage/goToPrint.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
-import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import formatNumber from "../../../composables/format/formatNumber.js";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";
 import getStatus from "../../../composables/displayed/getStatus.js";
 import equipmentApi from "../../../api/documents/equipment.js";
 import organizationApi from "../../../api/list/organizations.js";
-import counterpartyApi from "../../../api/list/counterparty.js";
 import showToast from "../../../composables/toast/index.js";
 import Button from "../../../components/button/button.vue";
-import currencyApi from "../../../api/list/currency.js";
 import storageApi from "../../../api/list/storage.js";
-import { useRoute, useRouter } from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 import goodApi from "../../../api/list/goods.js";
 import "../../../assets/css/procurement.css";
 import validate from "./validate.js";
@@ -54,6 +51,8 @@ const form = reactive({
   currency: null,
   active: null,
   deleted_at: null,
+  totalPrice: 0,
+  good: null,
 });
 
 const itemsPerPage = ref(10000);
@@ -105,14 +104,28 @@ const unApprove = async () => {
 const getEquipmentDetails = async () => {
   try {
     const { data } = await equipmentApi.getById(route.params.id);
+    console.log(data)
     form.doc_number = data.result.doc_number;
     form.date = getDateTimeInShow(data.result.date, "-", true);
     form.organization = {
       id: data.result.organization.id,
       name: data.result.organization.name,
     };
+    form.storage = {
+      id: data.result.storage.id,
+      name: data.result.storage.name,
+    };
+    form.good = {
+      id: data.result.good.id,
+      name: data.result.good.name,
+    };
+    goods.value = data.result.goods.map((item) => ({
+      id: item.id,
+      good_id: item.good.id,
+      amount: item.amount,
+      price: item.price,
+    }));
     form.comment = data.result.comment;
-    form.currency = data.result.currency;
     form.active = data.result.active;
     form.deleted_at = data.result.deleted_at;
   } catch (e) {
@@ -129,23 +142,6 @@ const getOrganizations = async () => {
   organizations.value = data.result.data;
 };
 
-const getCounterparties = async () => {
-  const { data } = await counterpartyApi.get({
-    page: 1,
-    itemsPerPage: 100000,
-    sortBy: "name",
-  });
-  counterparties.value = data.result.data;
-};
-
-const getCpAgreements = async (id) => {
-  cpAgreements.value = [];
-  const { data } = await cpAgreementApi.getCounterpartyById(id);
-  cpAgreements.value = data.result.data;
-  if (cpAgreements.value.length === 1) {
-    form.cpAgreement = cpAgreements.value[0];
-  }
-};
 
 const getStorages = async () => {
   const { data } = await storageApi.get({
@@ -156,14 +152,6 @@ const getStorages = async () => {
   storages.value = data.result.data;
 };
 
-const getCurrencies = async () => {
-  const { data } = await currencyApi.get({
-    page: 1,
-    itemsPerPage: 100000,
-    sortBy: "name",
-  });
-  currencies.value = data.result.data;
-};
 
 const getGoods = async () => {
   const { data } = await goodApi.get({
@@ -171,9 +159,6 @@ const getGoods = async () => {
     itemsPerPage: 100000,
     sortBy: "name",
     search: '',
-    good_storage_id: form.storage,
-    good_organization_id: form.organization,
-    for_sale: 1
   });
   listGoods.value = data.result.data;
 };
@@ -204,9 +189,6 @@ const lineMarking = (item) => {
     markedID.value.push(id);
   }
 };
-
-
-
 
 const increaseCountOfGoods = () => {
   const missingData = goods.value.some(validateItem);
@@ -241,11 +223,10 @@ const updateEquipment = async () => {
     validate(
       form.date,
       form.organization,
-      form.counterparty,
-      form.cpAgreement,
       form.storage,
-      form.currency,
-      goods.value.slice()
+      form.good,
+      form.totalPrice,
+      goods.value
     ) !== true
   )
     return;
@@ -260,32 +241,27 @@ const updateEquipment = async () => {
         typeof form.organization === "object"
           ? form.organization.id
           : form.organization,
-      counterparty_id:
-        typeof form.counterparty === "object"
-          ? form.counterparty.id
-          : form.counterparty,
-      counterparty_agreement_id:
-        typeof form.cpAgreement === "object"
-          ? form.cpAgreement.id
-          : form.cpAgreement,
       storage_id:
         typeof form.storage === "object" ? form.storage.id : form.storage,
-      saleInteger: Number(form.saleInteger),
-      salePercent: Number(form.salePercent),
-      currency_id:
-        typeof form.currency === "object" ? form.currency.id : form.currency,
+      good_id:
+          typeof form.good === "object" ? form.good.id : form.good,
+      amount: 1,
+      sum: Number(form.totalPrice),
       comment: form.comment,
       goods: goods.value.map((item) => ({
         id: item.id,
         good_id: Number(item.good_id),
         amount: Number(item.amount),
         price: toDecimal(item.price),
+        sum: Number(item.price) * Number(item.amount),
       })),
-    };
+    }
+
     if(deletedGoods.value.length > 0){
       goodsDelete(deletedGoods.value)
     }
     const res = await equipmentApi.update(route.params.id, body);
+    console.log(res)
     if (res.status === 200) {
       showToast(editMessage);
     }
@@ -293,14 +269,6 @@ const updateEquipment = async () => {
     console.error(e);
   }
 };
-
-const totalPrice = computed(() => {
-  let sum = 0;
-  goods.value.forEach((item) => {
-    sum += item.price * item.amount;
-  });
-  return formatNumber(sum);
-});
 
 const totalCount = computed(() =>
   goods.value.reduce((acc, item) => acc + Number(item.amount || 0), 0)
@@ -340,43 +308,6 @@ watch(form, () => {
   }
 });
 
-watch(
-  () => [form.storage, form.organization],
-  (newValue) => {
-    if (newValue[0] !== null && newValue[1] !== null) {
-      const storage_id = typeof newValue[0] === "object" ? newValue[0].id : newValue[0];
-      const organization_id = typeof newValue[1] === "object" ? newValue[1].id : newValue[1];
-      getGoods(storage_id, organization_id);
-    }
-  }
-);
-
-watch(
-  () => form.counterparty,
-  async (newValue) => {
-    if (newValue === null) return;
-    form.cpAgreement = null;
-    form.currency = null;
-    await getCpAgreements(
-      typeof newValue === "object" ? newValue.id : newValue
-    );
-  }
-);
-
-watch(
-  () => form.cpAgreement,
-  newValue => {
-    if (newValue !== null) {
-      setTimeout(() => {
-        const cpAgreement = cpAgreements.value.find((el) =>
-            (el.id === typeof newValue) === "object" ? newValue.id : newValue
-        );
-        form.currency = cpAgreement.currency_id;
-      }, 1000)
-    }
-  }
-);
-
 watch(confirmDocument, () => {
   if (confirmDocument.isUpdateOrCreateDocument) {
     updateEquipment();
@@ -384,8 +315,8 @@ watch(confirmDocument, () => {
 });
 
 const closeWindow = () => {
-  window.close();
-};
+  window.close()
+}
 
 onMounted(() => {
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
@@ -393,12 +324,10 @@ onMounted(() => {
 
   Promise.all([
     getOrganizations(),
-    getCounterparties(),
     getStorages(),
-    getCurrencies(),
-  ]);
-});
-
+    getGoods()
+  ])
+})
 
 </script>
 <template>
@@ -439,20 +368,18 @@ onMounted(() => {
             v-model="form.organization"
           />
           <custom-autocomplete
-            label="Поставщик"
-            :items="counterparties"
-            v-model="form.counterparty"
-          />
-          <custom-autocomplete
-            :disabled="!form.counterparty"
-            label="Договор"
-            :items="cpAgreements"
-            v-model="form.cpAgreement"
-          />
-          <custom-autocomplete
             label="Склад"
             :items="storages"
             v-model="form.storage"
+          />
+          <custom-autocomplete
+            label="Товар"
+            :items="listGoods"
+            v-model="form.good"
+          />
+          <custom-text-field
+              label="Цена"
+              v-model="form.totalPrice"
           />
         </div>
       </v-col>
@@ -575,21 +502,6 @@ onMounted(() => {
               label="Количество"
               v-model="totalCount"
               min-width="130"
-            />
-            <custom-text-field
-              readonly
-              label="Общая сумма:"
-              v-model="totalPrice"
-              min-width="180"
-              max-width="110"
-            />
-            <custom-autocomplete
-              readonly
-              v-model="form.currency"
-              label="Валюта"
-              :items="currencies"
-              min-width="190"
-              maxWidth="190px"
             />
           </div>
         </div>

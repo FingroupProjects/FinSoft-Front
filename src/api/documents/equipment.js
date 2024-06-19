@@ -9,21 +9,21 @@ export default {
     return api.post('/document/equipment', data)
   },
   getById(id) {
-    return api.get(`/document/show/${id}`)
+    return api.get(`/document/equipment/${id}`)
   },
   update(id, data) {
-    return api.patch(`/document/client/update/${id}`, data)
+    return api.patch(`/document/equipment/${id}`, data)
   },
   approve(data) {
-    return api.post(`/document/purchase/approve/`, data)
+    return api.post(`/document/equipment/approve/`, data)
   },
   unApprove(data) {
     return api.post(`/document/purchase/unApprove/`, data)
   },
   remove(data) {
-    return api.post('/document/client/delete', data)
+    return api.post('/document/equipment/delete', data)
   },
   restore(data) {
-    return api.post('/document/client/restore', data)
+    return api.post('/document/equipment/restore', data)
   }
 }
