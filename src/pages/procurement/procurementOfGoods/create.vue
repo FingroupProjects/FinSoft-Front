@@ -1,9 +1,20 @@
 <script setup>
-import {computed, defineEmits, onMounted, onUnmounted, reactive, ref, watch,} from "vue";
-import {addMessage, selectOneItemMessage} from "../../../composables/constant/buttons.js";
-import {useConfirmDocumentStore} from "../../../store/confirmDocument.js";
-import {TITLE_COLOR} from "../../../composables/constant/colors.js";
-import {useRoute, useRouter} from "vue-router";
+import {
+  computed,
+  defineEmits,
+  onMounted,
+  onUnmounted,
+  reactive,
+  ref,
+  watch,
+} from "vue";
+import {
+  addMessage,
+  selectOneItemMessage,
+} from "../../../composables/constant/buttons.js";
+import { useConfirmDocumentStore } from "../../../store/confirmDocument.js";
+import { TITLE_COLOR } from "../../../composables/constant/colors.js";
+import { useRoute, useRouter } from "vue-router";
 import formatNumber from "../../../composables/format/formatNumber.js";
 import showToast from "../../../composables/toast/index.js";
 import validate from "./validate.js";
@@ -22,18 +33,18 @@ import goodApi from "../../../api/list/goods.js";
 import Button from "../../../components/button/button.vue";
 import ButtonGoods from "../../../components/button/buttonGoods.vue";
 import "../../../assets/css/procurement.css";
-import {useHasOneOrganization} from "../../../store/hasOneOrganization.js";
+import { useHasOneOrganization } from "../../../store/hasOneOrganization.js";
 import getDataBased from "../../../composables/otherQueries/getDataBased.js";
 import CustomSearchableSelect from "../../../components/formElements/CustomSearchableSelect.vue";
 import toDecimal from "../../../composables/format/toDecimal.js";
 import validateNumberInput from "../../../composables/mask/validateNumberInput.js";
 import formatInputAmount from "../../../composables/format/formatInputAmount.js";
 
-const useOrganization = ref(useHasOneOrganization())
+const useOrganization = ref(useHasOneOrganization());
 const router = useRouter();
 const emits = defineEmits(["changed"]);
 const confirmDocument = useConfirmDocumentStore();
-const route = useRoute()
+const route = useRoute();
 
 const form = reactive({
   date: null,
@@ -121,10 +132,10 @@ const getGoods = async (good_storage_id, good_organization_id) => {
     search,
     good_storage_id,
     good_organization_id,
-    1,
-  )
+    1
+  );
   listGoods.value = data.result.data;
-}
+};
 
 const decreaseCountOfGoods = () => {
   if (markedID.value.length === 0) {
@@ -132,7 +143,9 @@ const decreaseCountOfGoods = () => {
   }
   if (markedID.value.length === goods.value.length) {
     goods.value = [];
-    return goods.value.push([{ id: 1, good_id: null, amount: "1", price: null}])
+    return goods.value.push([
+      { id: 1, good_id: null, amount: "1", price: null },
+    ]);
   }
   goods.value = goods.value.filter((item) => !markedID.value.includes(item.id));
 };
@@ -218,16 +231,17 @@ const addNewProcurement = async () => {
     salePercent: Number(form.salePercent),
     currency_id:
       typeof form.currency === "object" ? form.currency.id : form.currency,
-    goods: goods.value.map(item => ({
+    goods: goods.value.map((item) => ({
       good_id: Number(item.good_id),
       amount: Number(item.amount),
       price: toDecimal(item.price),
     })),
-  }
+  };
   try {
     const res = await procurementApi.add(body);
     if (res.status === 201) {
       showToast(addMessage);
+      router.push("/procurementOfGoods");
       window.open(`/procurementOfGoods/${res.data.result.id}`, "_blank");
     }
   } catch (e) {
@@ -265,9 +279,10 @@ const isChanged = () => {
   ];
 
   return valuesToCheck.every(
-    (val) => val === null || val === "" || val === currentDateWithTime() || val === "1"
+    (val) =>
+      val === null || val === "" || val === currentDateWithTime() || val === "1"
   );
-}
+};
 
 const totalPrice = computed(() => {
   let sum = 0;
@@ -285,7 +300,7 @@ watch(
   () => form.counterparty,
   async (id) => {
     form.cpAgreement = null;
-    const counterpartyId = typeof id === 'object' ? id.id : id;
+    const counterpartyId = typeof id === "object" ? id.id : id;
     await getCpAgreements(counterpartyId);
   }
 );
@@ -295,7 +310,7 @@ watch(
   (newValue) => {
     if (newValue !== null) {
       const cpAgreement = cpAgreements.value.find((el) =>
-          (el.id === typeof newValue) === "object" ? newValue.id : newValue
+        (el.id === typeof newValue) === "object" ? newValue.id : newValue
       );
       form.currency = cpAgreement.currency_id;
     }
@@ -312,13 +327,14 @@ watch(
   () => [form.storage, form.organization],
   (newValue) => {
     if (newValue[0] !== null && newValue[1] !== null) {
-      const storage_id = typeof newValue[0] === "object" ? newValue[0].id : newValue[0];
-      const organization_id = typeof newValue[1] === "object" ? newValue[1].id : newValue[1];
+      const storage_id =
+        typeof newValue[0] === "object" ? newValue[0].id : newValue[0];
+      const organization_id =
+        typeof newValue[1] === "object" ? newValue[1].id : newValue[1];
       getGoods(storage_id, organization_id);
     }
   }
 );
-
 
 watch([form, goods.value], () => {
   if (!isChanged()) {
@@ -334,31 +350,31 @@ onUnmounted(() => {
 
 onMounted(() => {
   form.date = currentDateWithTime();
-  form.organization = JSON.parse(localStorage.getItem("user")).organization || null;
+  form.organization =
+    JSON.parse(localStorage.getItem("user")).organization || null;
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
 
-  getDataBased(route.query.id, form, goods, route.query.isClient)
+  getDataBased(route.query.id, form, goods, route.query.isClient);
 
-  getOrganizations()
-  getCounterparties()
-  getStorages()
-})
+  getOrganizations();
+  getCounterparties();
+  getStorages();
+});
 </script>
 
 <template>
   <div class="document">
     <div class="d-flex justify-space-between documentCalcWidth">
-      <div class="d-flex align-center ga-2 pe-2 ms-4" >
-        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Покупка (создание)</span>
+      <div class="d-flex align-center ga-2 pe-2 ms-4">
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }"
+          >Покупка (создание)</span
+        >
       </div>
       <v-card variant="text" class="d-flex align-center ga-2">
         <div class="d-flex w-100">
           <div class="d-flex ga-2 mt-1 me-3 py-2">
             <Button @click="addNewProcurement" name="save1" />
-            <Button
-              @click="router.push('/procurementOfGoods')"
-              name="close"
-            />
+            <Button @click="router.push('/procurementOfGoods')" name="close" />
           </div>
         </div>
       </v-card>
@@ -367,11 +383,7 @@ onMounted(() => {
     <div class="documentHeight documentCalcWidth">
       <v-col class="d-flex flex-column ga-2">
         <div class="d-flex flex-wrap ga-4">
-          <custom-text-field
-            disabled
-            value="Номер"
-            v-model="form.doc_number"
-          />
+          <custom-text-field disabled value="Номер" v-model="form.doc_number" />
           <custom-text-field
             class="date"
             label="Дата"
@@ -406,90 +418,106 @@ onMounted(() => {
         <div class="rounded">
           <div class="d-flex flex-column w-100">
             <v-data-table
-                class="documentTable"
-                items-per-page-text="Элементов на странице:"
-                loading-text="Загрузка"
-                no-data-text="Нет данных"
-                :headers="headers"
-                :items="goods"
-                v-model="markedID"
-                item-value="id"
-                page-text="{0}-{1} от {2}"
-                :items-per-page-options="[
+              class="documentTable"
+              items-per-page-text="Элементов на странице:"
+              loading-text="Загрузка"
+              no-data-text="Нет данных"
+              :headers="headers"
+              :items="goods"
+              v-model="markedID"
+              item-value="id"
+              page-text="{0}-{1} от {2}"
+              :items-per-page-options="[
                 { value: 25, title: '25' },
                 { value: 50, title: '50' },
                 { value: 100, title: '100' },
               ]"
-                show-select
-                fixed-header
+              show-select
+              fixed-header
             >
               <template v-slot:item="{ item, index }">
-                <tr :key="index" @mouseenter="hoveredRowId = item.id" @mouseleave="hoveredRowId = null">
+                <tr
+                  :key="index"
+                  @mouseenter="hoveredRowId = item.id"
+                  @mouseleave="hoveredRowId = null"
+                >
                   <td>
                     <CustomCheckbox
-                        v-model="markedID"
-                        @change="lineMarking(item)"
-                        :checked="markedID.includes(item.id)"
+                      v-model="markedID"
+                      @change="lineMarking(item)"
+                      :checked="markedID.includes(item.id)"
                     >
                       <span class="fz-12">{{ index + 1 }}</span>
                     </CustomCheckbox>
                   </td>
                   <td style="width: 40%">
                     <custom-searchable-select
-                        v-model="item.good_id"
-                        :items="listGoods"
-                        :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                        :organization="form.organization"
-                        :storage="form.storage"
+                      v-model="item.good_id"
+                      :items="listGoods"
+                      :base-color="
+                        hoveredRowId === item.id ? FIELD_GOODS : '#fff'
+                      "
+                      :organization="form.organization"
+                      :storage="form.storage"
                     />
                   </td>
                   <td>
                     <custom-text-field
-                        v-model="item.amount"
-                        :value="formatInputAmount(item.amount)"
-                        :base-color="
-                          hoveredRowId === item.id ? FIELD_GOODS : '#fff'
-                        "
-                        min-width="50"
+                      v-model="item.amount"
+                      :value="formatInputAmount(item.amount)"
+                      :base-color="
+                        hoveredRowId === item.id ? FIELD_GOODS : '#fff'
+                      "
+                      min-width="50"
                     />
                   </td>
                   <td>
                     <custom-text-field
-                        min-width="80"
-                        v-model="item.price"
-                        :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                        :value="validateNumberInput(item.price)"
-                        @input="formatInputPrice(item.price, $event)"
+                      min-width="80"
+                      v-model="item.price"
+                      :base-color="
+                        hoveredRowId === item.id ? FIELD_GOODS : '#fff'
+                      "
+                      :value="validateNumberInput(item.price)"
+                      @input="formatInputPrice(item.price, $event)"
                     />
                   </td>
                   <td>
                     <custom-text-field
-                        readonly
-                        v-model="item.summa"
-                        :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
-                        :value="formatNumber(item.amount * item.price)"
-                        min-width="100"
+                      readonly
+                      v-model="item.summa"
+                      :base-color="
+                        hoveredRowId === item.id ? FIELD_GOODS : '#fff'
+                      "
+                      :value="formatNumber(item.amount * item.price)"
+                      min-width="100"
                     />
                   </td>
                 </tr>
                 <tr v-if="index === goods.length - 1">
                   <td></td>
                   <td style="width: 150%" class="d-flex ga-2" colspan="10">
-                    <ButtonGoods name="add" @click="increaseCountOfGoods"/>
-                    <ButtonGoods v-if="goods.length !== 1" name="delete" @click="decreaseCountOfGoods"/>
+                    <ButtonGoods name="add" @click="increaseCountOfGoods" />
+                    <ButtonGoods
+                      v-if="goods.length !== 1"
+                      name="delete"
+                      @click="decreaseCountOfGoods"
+                    />
                   </td>
                 </tr>
               </template>
             </v-data-table>
           </div>
         </div>
-        <div class="d-flex flex-wrap ga-4 justify-space-between w-100 mt-2 bottomField">
+        <div
+          class="d-flex flex-wrap ga-4 justify-space-between w-100 mt-2 bottomField"
+        >
           <div class="d-flex ga-10">
             <custom-text-field
-                readonly
-                v-model="author"
-                label="Автор"
-                min-width="110"
+              readonly
+              v-model="author"
+              label="Автор"
+              min-width="110"
             />
             <custom-text-field
               label="Комментарий"
@@ -528,5 +556,4 @@ onMounted(() => {
 
 <style scoped>
 @import "../../../assets/css/procurement.css";
-
 </style>

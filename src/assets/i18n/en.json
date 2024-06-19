@@ -1,0 +1,22 @@
+{
+  "procurement": "Procurement",
+  "btns" : {
+    "create": "Сreate",
+    "group": "Greate group",
+    "save": "Save",
+    "save1": "Save",
+    "createBasedOn" : "Create On Base",
+    "copy": "Copy",
+    "print": "Print",
+    "approve": "Approve",
+    "cancel": "AnApprove",
+    "excel": "Excel",
+    "history": "History",
+    "delete": "Delete",
+    "close": "Close",
+    "img": "Image",
+    "fill": "Fill"
+  },
+  "search": "Search...",
+  "switchLang": "SwitchLang"
+}
