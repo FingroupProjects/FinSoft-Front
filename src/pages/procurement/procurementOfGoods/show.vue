@@ -111,10 +111,33 @@ const getProcurementDetails = async () => {
       id: data.result.organization.id,
       name: data.result.organization.name,
     };
+    form.counterparty = {
+      id: data.result.counterparty.id,
+      name: data.result.counterparty.name,
+    };
+    setTimeout(() => {
+      form.cpAgreement = {
+        id: data.result.counterpartyAgreement.id,
+        name: data.result.counterpartyAgreement.name,
+      };
+    }, 700);
+    form.storage = {
+      id: data.result.storage.id,
+      name: data.result.storage.name,
+    };
     form.comment = data.result.comment;
     form.currency = data.result.currency;
     form.active = data.result.active;
     form.deleted_at = data.result.deleted_at;
+    goods.value = data.result.goods.map((item) => ({
+      id: item.id,
+      good_id: item.good.id,
+      amount: item.amount,
+      price: item.price,
+    }));
+    prevForm.value = { ...form };
+    prevGoods.value = [...goods.value];
+    tempForm.value = Object.assign({}, form);
   } catch (e) {
     console.error(e);
   }
@@ -205,9 +228,6 @@ const lineMarking = (item) => {
   }
 };
 
-
-
-
 const increaseCountOfGoods = () => {
   const missingData = goods.value.some(validateItem);
   if (missingData) return;
@@ -281,14 +301,17 @@ const updateProcurement = async () => {
         amount: Number(item.amount),
         price: toDecimal(item.price),
       })),
-    };
+    }
+
     if(deletedGoods.value.length > 0){
       goodsDelete(deletedGoods.value)
     }
+
     const res = await procurementApi.update(route.params.id, body);
     if (res.status === 200) {
       showToast(editMessage);
     }
+
   } catch (e) {
     console.error(e);
   }

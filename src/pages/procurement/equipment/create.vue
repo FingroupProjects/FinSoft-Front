@@ -46,8 +46,7 @@ const form = reactive({
   comment: null,
   currency: null,
   good: null,
-  amount: "1",
-  totalPrice: null,
+  totalPrice: 0,
 });
 
 const author = ref(null);
@@ -187,6 +186,8 @@ const addNewEquipment = async () => {
       form.date,
       form.organization,
       form.storage,
+      form.good,
+      form.totalPrice,
       goods.value
     ) !== true
   )
@@ -206,11 +207,17 @@ const addNewEquipment = async () => {
         : form.organization,
     storage_id:
       typeof form.storage === "object" ? form.storage.id : form.storage,
+    good_id:
+        typeof form.good === "object" ? form.good.id : form.good,
+    amount: 1,
+    sum: Number(form.totalPrice),
+    comment: form.comment,
+
     goods: goods.value.map(item => ({
       good_id: Number(item.good_id),
       amount: Number(item.amount),
       price: toDecimal(item.price),
-      sum: totalPrice.value
+      sum: Number(item.price) * Number(item.amount),
     })),
   }
   try {
@@ -258,14 +265,6 @@ const isChanged = () => {
   );
 }
 
-const totalPrice = computed(() => {
-  let sum = 0;
-  goods.value.forEach((item) => {
-    sum += item.price * item.amount;
-  });
-  return formatNumber(sum);
-});
-
 const totalCount = computed(() =>
   goods.value.reduce((acc, item) => acc + Number(item.amount || 0), 0)
 )
@@ -300,6 +299,14 @@ onMounted(() => {
   getStorages()
   getGoods()
 })
+
+watch(goods, () => {
+  let goodPrice = 0
+  goods.value.forEach(item => {
+    form.totalPrice = Number(item.price) * Number(item.amount)
+  })
+
+}, {deep: true})
 
 </script>
 
@@ -347,17 +354,11 @@ onMounted(() => {
             :items="storages"
             v-model="form.storage"
           />
-          <custom-text-field
-            label="Количество"
-            v-model="form.amount"
-            :value="formatInputAmount(form.amount)"
-          />
           <custom-autocomplete
             label="Товар"
             :items="listGoods"
             v-model="form.good"
           />
-
           <custom-text-field
               label="Цена"
               v-model="form.totalPrice"
@@ -426,7 +427,6 @@ onMounted(() => {
                   </td>
                   <td>
                     <custom-text-field
-                        readonly
                         v-model="item.summa"
                         :base-color="hoveredRowId === item.id ? FIELD_GOODS : '#fff'"
                         :value="formatNumber(item.amount * item.price)"

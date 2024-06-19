@@ -9,6 +9,8 @@ export default function validate(
   date,
   organization,
   storage,
+  good,
+  totalPrice,
   goods,
 ) {
   if (!date) {
@@ -19,6 +21,12 @@ export default function validate(
   }
   if (!storage) {
     return showToast("Поле Склад не может быть пустым", "warning")
+  }
+  if (!good) {
+    return showToast("Поле Товар не может быть пустым", "warning")
+  }
+  if (totalPrice.length === 0) {
+    return showToast("Поле Цена не может быть пустым", "warning")
   }
   if (goods.length === 1 && goods[0][0]?.good_id === null || goods[0]?.good_id === null) {
     return showToast("Нельзя сохранить без товара", "warning")
