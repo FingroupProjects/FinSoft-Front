@@ -26,6 +26,9 @@ import user from "../../../api/list/user.js";
 import { onMounted, ref, watch } from "vue";
 import debounce from "lodash.debounce";
 import { useRouter } from "vue-router";
+import { useI18n } from "vue-i18n"
+
+const { t } = useI18n({useScope: 'global'})
 
 const router = useRouter();
 
@@ -346,7 +349,7 @@ onMounted(() => {
   <div class="pa-4">
     <div class="d-flex justify-space-between calcWidth">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
-        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Покупка</span>
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">{{ $t('procurement') }}</span>
       </div>
       <div class="d-flex justify-end ga-2">
         <div class="d-flex w-100 justify-end mb-3">
@@ -366,7 +369,7 @@ onMounted(() => {
             v-model="search"
             prepend-inner-icon="search"
             density="compact"
-            label="Поиск..."
+            :label="t('search')"
             variant="outlined"
             :color="BASE_COLOR"
             rounded="lg"

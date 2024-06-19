@@ -1,5 +1,8 @@
 <script setup>
 import {computed, defineProps, ref} from "vue";
+import { useI18n } from "vue-i18n"
+
+const { t } = useI18n({useScope: 'global'})
 
 const props = defineProps(["name"]);
 const emits = defineEmits(['click']);
@@ -220,6 +223,6 @@ const handleClick = () => {
 <template>
   <v-btn v-for="item in filteredButtons" :key="item.id" @click="handleClick" :style="['height: auto', item.key === 'fill' ? 'padding: 11px 20px !important' : 'padding: 15px 20px']" class="d-flex align-center text-none" :color="item.bgColor" rounded="lg">
     <span v-if="item.icon" class="d-flex justify-center me-1" v-html="item.icon"  ></span>
-    <span :style="[' font-size: 14px; letter-spacing: 0', {color: item.textColor}]">{{ item.title }}</span>
+    <span :style="[' font-size: 14px; letter-spacing: 0', {color: item.textColor}]">{{ t(`btns.${item.key}`) }}</span>
   </v-btn>
 </template>

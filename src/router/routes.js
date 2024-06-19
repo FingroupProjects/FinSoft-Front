@@ -417,6 +417,11 @@ const routes = [
     component: () => import("../pages/programSettings/index.vue"),
   },
   {
+    path: "/changeLanguage",
+    name: "changeLanguage",
+    component: () => import("../pages/programSettings/changeLanguage.vue"),
+  },
+  {
     path: "/list/nomenclature",
     name: "nomenclature",
     component: () => import("../pages/list/nomenclature/index.vue"),

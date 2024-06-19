@@ -30,6 +30,12 @@ const list = ref({
           link: "/programSettings",
           icon: "settings",
         },
+        {
+          id: 2,
+          title: "Смена языка",
+          link: "/changeLanguage",
+          icon: "settings",
+        },
       ],
     },
   ],
