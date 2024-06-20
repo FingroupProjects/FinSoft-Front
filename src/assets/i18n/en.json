@@ -22,6 +22,21 @@
     "date": "Date",
     "active": "Status"
   },
+  "menu": {
+    "dashboard": "Dashboard",
+    "procurement": "Procurement",
+    "selling": "Selling",
+    "accountingOfGoods": "Accounting Of Goods",
+    "money": "Money",
+    "salary": "Salary",
+    "settings": "Settings"
+  },
+  "admins": {
+    
+  },
+  "lists": {
+    
+  },
   "search": "Search...",
   "switchLang": "SwitchLang"
 }

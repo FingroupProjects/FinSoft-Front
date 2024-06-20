@@ -2,7 +2,9 @@
 import { ref, defineProps, onMounted } from "vue";
 import Icons from "../../composables/Icons/Icons.vue";
 import { useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
 
+const { t } = useI18n({ useScope: "global" });
 const props = defineProps(["rale", "admin"]);
 const emit = defineEmits([
   "toggleProcurementOfGoods",
@@ -84,8 +86,16 @@ const procurementOfGoods = ref({
       title: "Отчеты",
       link: "/return",
       child: [
-        { id: 1, title: "Взаимодействие с поставщиками", link: "/counterpartySettlement" },
-        { id: 2, title: "Акт сверки с поставщиками", link: "/reconciliationReport" },
+        {
+          id: 1,
+          title: "Взаимодействие с поставщиками",
+          link: "/counterpartySettlement",
+        },
+        {
+          id: 2,
+          title: "Акт сверки с поставщиками",
+          link: "/reconciliationReport",
+        },
         { id: 3, title: "Отчет покупки поставщиков", link: "" },
       ],
     },
@@ -189,7 +199,9 @@ const salary = ref({
       id: 1,
       title: "Отчеты",
       link: "/",
-      child: [{ id: 1, title: "Ведомость зарплаты", link: "/hr/salaryInformation" }],
+      child: [
+        { id: 1, title: "Ведомость зарплаты", link: "/hr/salaryInformation" },
+      ],
     },
   ],
   lists: [
@@ -219,29 +231,49 @@ const menu = ref([
     id: 1,
     title: "Дашборд",
     icon: "home",
-    link: "/planning"
+    link: "/planning",
+    key: "dashboard",
   },
   {
     id: 2,
     title: "Покупка",
     icon: "procurementOfGoods",
     link: "/procurementOfGoods",
+    key: "procurement",
   },
   {
     id: 3,
     title: "Продажа",
     icon: "sellingGoods",
     link: "/sellingGoods",
+    key: "selling",
   },
   {
     id: 4,
     title: "Учет товаров",
     icon: "financeAnalysis",
     link: "/warehouseAccounting",
+    key: "accountingOfGoods",
   },
-  { id: 5, title: "Деньги", icon: "cash", link: "/cash" },
-  { id: 6, title: "HR-Зарплата", icon: "salary", link: "/salary" },
-  { id: 7, title: "Настройки", icon: "adminPanel", link: "/adminPanel" },
+  { id: 5,
+    title: "Деньги", 
+    icon: "cash", 
+    link: "/cash", 
+    key: "money" },
+  {
+    id: 6,
+    title: "HR-Зарплата",
+    icon: "salary",
+    link: "/salary",
+    key: "salary",
+  },
+  {
+    id: 7,
+    title: "Настройки",
+    icon: "adminPanel",
+    link: "/adminPanel",
+    key: "settings",
+  },
 ]);
 
 onMounted(() => {
@@ -282,13 +314,18 @@ const push = (item) => {
           <v-list-item
             v-for="item in filteredLists"
             :key="item.id"
-            @click="item.id === activeItemId && props.admin ? $emit('closeAdmin') : push(item)"
+            @click="
+              item.id === activeItemId && props.admin
+                ? $emit('closeAdmin')
+                : push(item)
+            "
             :class="item.id === activeItemId ? 'activeBg' : ''"
           >
             <v-list-item-title>
-              <span :class="item.id === activeItemId ? 'active_sidebar' : 'title'">{{
-                item.title
-              }}</span></v-list-item-title
+              <span :class="item.id === activeItemId ? 'active_sidebar' : 'title'">
+                {{ $t(`menu.${item.key}`) }}
+              </span>
+            </v-list-item-title
             >
             <template v-slot:prepend>
               <Icons
@@ -333,7 +370,7 @@ const push = (item) => {
 }
 
 .title {
-  color: #E8D9D9;
+  color: #e8d9d9;
   font-family: "Inter", sans-serif;
   font-weight: 300;
 }

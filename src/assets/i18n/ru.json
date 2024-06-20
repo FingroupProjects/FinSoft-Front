@@ -22,6 +22,18 @@
     "date": "Date",
     "active": "Status"
   },
+  "menu": {
+    "dashboard": "Дашборд",
+    "procurement": "Покупка",
+    "selling": "Продажа",
+    "accountingOfGoods": "Учет товаров",
+    "money": "Деньги",
+    "salary": "HR-Зарплата",
+    "settings": "Настройки"
+  },
+  "admins": {
+    
+  },
   "search": "Поиск...",
   "switchLang": "Переключить язык"
 }
