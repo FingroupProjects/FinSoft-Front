@@ -13,9 +13,7 @@ import CustomTextField from "../../../components/formElements/CustomTextField.vu
 import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import organizationApi from "../../../api/list/organizations.js";
-import counterpartyApi from "../../../api/list/counterparty.js";
 import storageApi from "../../../api/list/storage.js";
-import cpAgreementApi from "../../../api/list/counterpartyAgreement.js";
 import equipmentApi from "../../../api/documents/equipment.js";
 import formatInputPrice from "../../../composables/format/formatInputPrice.js";
 import goodApi from "../../../api/list/goods.js";
@@ -71,9 +69,9 @@ const hoveredRowId = ref(null);
 
 const headers = ref([
   { title: "Товары", key: "goods", sortable: false },
-  { title: "Количество", key: "currency.name", sortable: false },
-  { title: "Цена", key: "currency.name", sortable: false },
-  { title: "Сумма", key: "currency.name", sortable: false },
+  { title: "Количество", key: "amount", sortable: false },
+  { title: "Цена", key: "price", sortable: false },
+  { title: "Сумма", key: "sum", sortable: false },
 ]);
 
 const getOrganizations = async () => {
@@ -83,24 +81,6 @@ const getOrganizations = async () => {
     sortBy: "name",
   });
   organizations.value = data.result.data;
-};
-
-const getCounterparties = async () => {
-  const { data } = await counterpartyApi.get({
-    page: 1,
-    itemsPerPage: 100000,
-    sortBy: "name",
-  });
-  counterparties.value = data.result.data;
-};
-
-const getCpAgreements = async (id) => {
-  cpAgreements.value = [];
-  const { data } = await cpAgreementApi.getCounterpartyById(id);
-  cpAgreements.value = data.result.data;
-  if (cpAgreements.value.length === 1) {
-    form.cpAgreement = cpAgreements.value[0];
-  }
 };
 
 const getStorages = async () => {
@@ -295,7 +275,6 @@ onMounted(() => {
   getDataBased(route.query.id, form, goods, route.query.isClient)
 
   getOrganizations()
-  getCounterparties()
   getStorages()
   getGoods()
 })
