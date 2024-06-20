@@ -17,6 +17,11 @@
     "img": "Фото",
     "fill": "Заполнить"
   },
+  "headers": {
+    "doc_number": "Doc number",
+    "date": "Date",
+    "active": "Status"
+  },
   "search": "Поиск...",
   "switchLang": "Переключить язык"
 }
