@@ -17,7 +17,6 @@ const switchLang = (langCode) => {
   localStorage.setItem('lang', locale.value);
 };
 
-// Watch for changes in selectedLang to update the locale
 watch(selectedLang, (newVal) => {
   const selectedLanguage = languages.value.find(lang => lang.id === newVal);
   if (selectedLanguage) {
@@ -25,7 +24,6 @@ watch(selectedLang, (newVal) => {
   }
 });
 
-// Set initial language from localStorage if available
 const initialLang = localStorage.getItem('lang');
 if (initialLang) {
   const initialLanguage = languages.value.find(lang => lang.code === initialLang);

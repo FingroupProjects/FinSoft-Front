@@ -1,9 +1,25 @@
 <script setup>
-import { approveDocument, copyMessage, ErrorSelectMessage, removeMessage, restoreMessage, selectOneItemMessage, warningMessage, documentAprove} from "../../../composables/constant/buttons.js";
+import {
+  approveDocument,
+  copyMessage,
+  ErrorSelectMessage,
+  removeMessage,
+  restoreMessage,
+  selectOneItemMessage,
+  warningMessage,
+  documentAprove,
+} from "../../../composables/constant/buttons.js";
 import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
-import { BASE_COLOR, FIELD_OF_SEARCH, TITLE_COLOR } from "../../../composables/constant/colors.js";
+import {
+  BASE_COLOR,
+  FIELD_OF_SEARCH,
+  TITLE_COLOR,
+} from "../../../composables/constant/colors.js";
 import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
-import { markedForDeletion, statusOptions } from "../../../composables/constant/items.js"
+import {
+  markedForDeletion,
+  statusOptions,
+} from "../../../composables/constant/items.js";
 import getDateTimeInShow from "../../../composables/date/getDateTimeInShow.js";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import { useModalCreateBased } from "../../../store/modalCreateBased.js";
@@ -26,9 +42,9 @@ import user from "../../../api/list/user.js";
 import { onMounted, ref, watch } from "vue";
 import debounce from "lodash.debounce";
 import { useRouter } from "vue-router";
-import { useI18n } from "vue-i18n"
+import { useI18n } from "vue-i18n";
 
-const { t } = useI18n({useScope: 'global'})
+const { t } = useI18n({ useScope: "global" });
 
 const router = useRouter();
 
@@ -349,7 +365,9 @@ onMounted(() => {
   <div class="pa-4">
     <div class="d-flex justify-space-between calcWidth">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
-        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">{{ $t('procurement') }}</span>
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">{{
+          $t("procurement")
+        }}</span>
       </div>
       <div class="d-flex justify-end ga-2">
         <div class="d-flex w-100 justify-end mb-3">
@@ -419,6 +437,14 @@ onMounted(() => {
         fixed-header
         hover
       >
+      <template v-slot:[`column.id-header`]="{ header }">
+          <v-tooltip bottom>
+          <template v-slot:activator="{ on, attrs }">
+            <span v-bind="attrs" v-on="on">{{ header }}</span>
+          </template>
+          <span>{{ header }} Tooltip</span>
+        </v-tooltip>
+        </template>
         <template v-slot:item="{ item, index }">
           <tr
             @mouseenter="hoveredRowIndex = index"
