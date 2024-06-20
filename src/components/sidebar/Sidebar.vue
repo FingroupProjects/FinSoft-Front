@@ -56,6 +56,21 @@ const list = ref({
   ],
 });
 
+const dashboards = ref({
+  lists: [
+    {
+      id: 1,
+      title: "План продаж",
+      link: "/",
+      child: [
+        { id: 1, title: "Товаров", link: "/planning/goods" },
+        { id: 2, title: "Магазинов", link: "" },
+        { id: 3, title: "Складов", link: "" },
+      ],
+    },
+  ],
+});
+
 const procurementOfGoods = ref({
   admins: [
     {
@@ -194,7 +209,12 @@ const salary = ref({
 });
 
 const menu = ref([
-  { id: 1, title: "Дашборд", icon: "home", link: "/planning" },
+  {
+    id: 1,
+    title: "Дашборд",
+    icon: "home",
+    link: "/planning"
+  },
   {
     id: 2,
     title: "Покупка",
@@ -228,7 +248,8 @@ onMounted(() => {
 
 const push = (item) => {
   activeItemId.value = item.id;
-  if (item.id === 2) emit("toggleAdmin", procurementOfGoods.value);
+  if (item.id === 1) emit("toggleAdmin", dashboards.value);
+  else if (item.id === 2) emit("toggleAdmin", procurementOfGoods.value);
   else if (item.id === 3) emit("toggleAdmin", saleOfGoods.value);
   else if (item.id === 4) emit("toggleAdmin", storage.value);
   else if (item.id === 5) emit("toggleAdmin", cash.value);

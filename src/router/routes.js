@@ -11,8 +11,25 @@ const routes = [
     path: '/dashboard',
     name: 'dashboard',
     component: () => import("../pages/homepage/index.vue"),
-  
   },
+
+  {
+    path: "/planning/goods",
+    name: "planningGoods",
+    component: () =>
+      import("../pages/dashboard/planning/goods/index.vue"),
+  },
+  {
+    path: "/planning/goods/:id",
+    name: "planningGoodsShow",
+    component: () => import("../pages/dashboard/planning/goods/show.vue"),
+  },
+  {
+    path: "/planning/goods/create",
+    name: "planningGoodsCreate",
+    component: () => import("../pages/dashboard/planning/goods/create.vue"),
+  },
+
   {
     path: "/procurementOfGoods",
     name: "procurementOfGoods",
@@ -29,6 +46,7 @@ const routes = [
     name: "procurementOfGoodsCreate",
     component: () => import("../pages/procurement/procurementOfGoods/create.vue"),
   },
+
   {
     path: "/writeOff",
     name: "writeOff",
