@@ -28,6 +28,7 @@ import CustomSearchableSelect from "../../../../components/formElements/CustomSe
 import toDecimal from "../../../../composables/format/toDecimal.js";
 import validateNumberInput from "../../../../composables/mask/validateNumberInput.js";
 import formatInputAmount from "../../../../composables/format/formatInputAmount.js";
+import monthApi from "../../../../api/list/schedule.js";
 
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter();
@@ -37,14 +38,9 @@ const route = useRoute()
 
 const form = reactive({
   date: null,
+  year: null,
   organization: null,
-  counterparty: null,
-  cpAgreement: null,
-  storage: null,
-  saleInteger: null,
-  salePercent: null,
   comment: null,
-  currency: null,
 });
 
 const author = ref(null);
@@ -59,20 +55,11 @@ const goods = ref([
 ]);
 
 const organizations = ref([]);
-const counterparties = ref([]);
-const cpAgreements = ref([]);
-const storages = ref([]);
-const currencies = ref([]);
 const listGoods = ref([]);
+const months = ref([]);
 const FIELD_GOODS = ref("#274D87");
 const hoveredRowId = ref(null);
 
-const headers = ref([
-  { title: "Товары", key: "goods", sortable: false },
-  { title: "Количество", key: "currency.name", sortable: false },
-  { title: "Цена", key: "currency.name", sortable: false },
-  { title: "Сумма", key: "currency.name", sortable: false },
-]);
 
 const getOrganizations = async () => {
   const { data } = await organizationApi.get({
@@ -83,32 +70,14 @@ const getOrganizations = async () => {
   organizations.value = data.result.data;
 };
 
-const getCounterparties = async () => {
-  const { data } = await counterpartyApi.get({
-    page: 1,
-    itemsPerPage: 100000,
-    sortBy: "name",
-  });
-  counterparties.value = data.result.data;
-};
-
-const getCpAgreements = async (id) => {
-  cpAgreements.value = [];
-  const { data } = await cpAgreementApi.getCounterpartyById(id);
-  cpAgreements.value = data.result.data;
-  if (cpAgreements.value.length === 1) {
-    form.cpAgreement = cpAgreements.value[0];
+const getMonths = async () => {
+  try {
+    const { data } = await monthApi.month();
+    months.value = data.result.data;
+  } catch (e) {
+    console.error(e);
   }
-};
-
-const getStorages = async () => {
-  const { data } = await storageApi.get({
-    page: 1,
-    itemsPerPage: 100000,
-    sortBy: "name",
-  });
-  storages.value = data.result.data;
-};
+}
 
 const getGoods = async (good_storage_id, good_organization_id) => {
   const search = "";
@@ -126,17 +95,6 @@ const getGoods = async (good_storage_id, good_organization_id) => {
   listGoods.value = data.result.data;
 }
 
-const decreaseCountOfGoods = () => {
-  if (markedID.value.length === 0) {
-    return showToast(selectOneItemMessage, "warning");
-  }
-  if (markedID.value.length === goods.value.length) {
-    goods.value = [];
-    return goods.value.push([{ id: 1, good_id: null, amount: "1", price: null}])
-  }
-  goods.value = goods.value.filter((item) => !markedID.value.includes(item.id));
-};
-
 const lineMarking = (item) => {
   const { id } = item;
   if (id === null || id === undefined) {
@@ -148,34 +106,6 @@ const lineMarking = (item) => {
   } else {
     markedID.value.push(id);
   }
-};
-
-const increaseCountOfGoods = () => {
-  const missingData = goods.value.some(validateItem);
-  if (missingData) return;
-
-  goods.value.push({
-    id: goods.value.length + 1,
-    good_id: null,
-    amount: "1",
-    price: null,
-  });
-};
-
-const validateItem = (item) => {
-  if (item.good_id === null) {
-    showToast("Поле Товар не может быть пустым", "warning");
-    return true;
-  }
-  if (item.amount === null) {
-    showToast("Поле Количество не может быть пустым", "warning");
-    return true;
-  }
-  if (item.price === null) {
-    showToast("Поле Цена не может быть пустым", "warning");
-    return true;
-  }
-  return false;
 };
 
 const addNewProcurement = async () => {
@@ -192,8 +122,6 @@ const addNewProcurement = async () => {
   )
     return;
 
-  const missingData = goods.value.some(validateItem);
-  if (missingData) return;
 
   if (useOrganization.value.getIsHasOneOrganization) {
     form.organization = useOrganization.value.getOrganization;
@@ -333,15 +261,13 @@ onUnmounted(() => {
 });
 
 onMounted(() => {
-  form.date = currentDateWithTime();
+  form.year = new Date().getFullYear();
   form.organization = JSON.parse(localStorage.getItem("user")).organization || null;
   author.value = JSON.parse(localStorage.getItem("user")).name || null;
 
   getDataBased(route.query.id, form, goods, route.query.isClient)
-
+  getMonths()
   getOrganizations()
-  getCounterparties()
-  getStorages()
 })
 </script>
 
@@ -349,7 +275,7 @@ onMounted(() => {
   <div class="document">
     <div class="d-flex justify-space-between documentCalcWidth">
       <div class="d-flex align-center ga-2 pe-2 ms-4" >
-        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Покупка (создание)</span>
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">План продаж товаров (создание)</span>
       </div>
       <v-card variant="text" class="d-flex align-center ga-2">
         <div class="d-flex w-100">
@@ -363,16 +289,66 @@ onMounted(() => {
         </div>
       </v-card>
     </div>
-    <v-divider />
     <div class="documentHeight documentCalcWidth">
       <v-col class="d-flex flex-column ga-2">
-
+        <div class="d-flex flex-wrap ga-4">
+          <custom-autocomplete
+              v-if="!useOrganization.getIsHasOneOrganization"
+              label="Организация"
+              :items="organizations"
+              v-model="form.organization"
+          />
+          <custom-text-field
+              label="Год"
+              type="number"
+              v-model="form.year"
+          />
+        </div>
+      </v-col>
+      <v-col>
+        <table class="table">
+          <thead>
+            <tr style="font-weight: 400 !important;">
+              <th>Товар</th>
+              <th colspan="12">Месяц</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td></td>
+              <td style="min-width: 80px; max-width: 90px !important;" v-for="{ id, name } in months" :key="id">{{ name }}</td>
+            </tr>
+            <tr v-for="{ id, name } in listGoods" :key="id">
+              <td class="fz-14">{{ name }}</td>
+              <td v-for="input in 12" :key="input">
+                <custom-text-field min-width="20" />
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </v-col>
     </div>
+    <v-divider />
   </div>
 </template>
 
 <style scoped>
 @import "../../../../assets/css/procurement.css";
 
+.table {
+  width: 100%;
+  margin-bottom: 20px;
+  border: 1px solid #dddddd;
+  border-collapse: collapse;
+}
+.table th {
+  font-weight: bold;
+  padding: 5px;
+  background: #efefef;
+  border: 1px solid #dddddd;
+}
+.table td {
+  border: 1px solid #dddddd;
+  padding: 5px;
+}
 </style>
