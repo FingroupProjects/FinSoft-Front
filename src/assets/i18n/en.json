@@ -37,7 +37,11 @@
     "sum": "Sum",
     "totalSum": "Total sum",
     "comment": "Comment",
-    "number": "Number"
+    "number": "Number",
+    "from": "From",
+    "to": "To",
+    "filter": "Filter",
+    "flawOfGoods": "Flaw of goods"
   },
   "menu": {
     "dashboard": "Dashboard",
@@ -109,7 +113,6 @@
     "nomenclature": "Nomenclature",
     "programTitle": "Program title",
     "changeLanguage": "Change language"
-
   },
   "statuses": {
     "approved": "Approved",
@@ -121,6 +124,8 @@
   "switchLang": "SwitchLang",
   "buttonGoods": {
     "add": "Add",
-    "delete": "Delete"
+    "delete": "Delete",
+    "reset": "Reset",
+    "apply": "Apply"
   }
 }

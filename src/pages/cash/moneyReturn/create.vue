@@ -503,9 +503,7 @@ const getIncomeItems = async () => {
 
 const getTypes = async () => {
   try {
-    const {
-      data: { result },
-    }  = await clientPaymentApi.getTypes("RKO");
+    const { data: { result } }  = await clientPaymentApi.getTypes("RKO");
     typeOperations.value = result;
     form.typeOperation = typeOperations.value[0].id;
   } catch (e) {

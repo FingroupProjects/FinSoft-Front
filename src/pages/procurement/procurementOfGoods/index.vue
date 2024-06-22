@@ -475,10 +475,11 @@ onMounted(() => {
         </template>
       </v-data-table-server>
     </v-card>
+
     <filter-canvas>
       <div class="d-flex flex-column ga-2 w-100">
         <custom-filter-text-field
-          label="От"
+          :label="t('headers.from')"
           type="datetime-local"
           class="date"
           min-width="106"
@@ -486,7 +487,7 @@ onMounted(() => {
           v-model="filterForm.startDate"
         />
         <custom-filter-text-field
-          label="По"
+          :label="t('headers.to')"
           type="datetime-local"
           class="date"
           min-width="106"
@@ -498,13 +499,13 @@ onMounted(() => {
         <custom-filter-autocomplete
           min-width="106"
           clearable
-          label="Организация"
+          :label="t('headers.organization')"
           :items="organizations"
           v-model="filterForm.organization_id"
         />
         <custom-filter-autocomplete
           min-width="106"
-          label="Поставщик"
+          :label="t('headers.counterparty')"
           :items="counterparties"
           v-model="filterForm.counterparty_id"
         />
@@ -512,37 +513,37 @@ onMounted(() => {
       <div class="d-flex flex-column ga-2">
         <custom-filter-autocomplete
           min-width="106"
-          label="Склад"
+          :label="t('headers.storage')"
           :items="storages"
           v-model="filterForm.storage_id"
         />
         <custom-filter-autocomplete
           min-width="106"
-          label="Договор"
+          :label="t('headers.cpAgreement')"
           :items="counterpartyAgreements"
           v-model="filterForm.counterparty_agreement_id"
         />
       </div>
       <div class="d-flex ga-2">
         <custom-filter-autocomplete
-          label="Статус"
+          :label="t('headers.active')"
           :items="statusOptions"
           v-model="filterForm.active"
         />
         <custom-filter-autocomplete
-          label="Удален"
+          :label="t('statuses.deleted')"
           :items="markedForDeletion"
           v-model="filterForm.deleted"
         />
       </div>
       <div class="d-flex ga-2">
         <custom-filter-autocomplete
-          label="Автор"
+          :label="t('headers.author')"
           :items="authors"
           v-model="filterForm.author_id"
         />
         <custom-filter-autocomplete
-          label="Валюта"
+          :label="t('headers.currency')"
           :items="currencies"
           v-model="filterForm.currency_id"
         />
@@ -550,7 +551,7 @@ onMounted(() => {
       <div class="d-flex justify-end">
         <div class="d-flex ga-2" style="margin-right: -6%">
           <v-btn tabindex="-1" color="red" class="btn" @click="closeFilterModal"
-            >сбросить</v-btn
+            >{{ $t('buttonGoods.reset') }}</v-btn
           >
           <v-btn
             tabindex="-1"
@@ -562,11 +563,12 @@ onMounted(() => {
                 useFilterCanvasVisible().closeFilterCanvas();
               }
             "
-            >применить</v-btn
+            >{{ $t('buttonGoods.apply') }}</v-btn
           >
         </div>
       </div>
     </filter-canvas>
+    
   </div>
 </template>
 

@@ -37,7 +37,11 @@
     "sum": "Сумма",
     "totalSum": "Общая сумма",
     "comment": "Комментарий",
-    "number": "Номер"
+    "number": "Номер",
+    "from": "От",
+    "to": "Пo",
+    "filter": "Фильтр",
+    "flawOfGoods": "Недостаток товаров"
   },
   "menu": {
     "dashboard": "Дашборд",
@@ -117,5 +121,9 @@
   },
   "search": "Поиск...",
   "searchableSelect": "Поиск по id, наименовании, штрих-коду", 
-  "switchLang": "Переключить язык"
+  "switchLang": "Переключить язык",
+  "buttonGoods": {
+    "add": "Добавить",
+    "delete": "Удалить"
+  }
 }
