@@ -2,6 +2,9 @@
 import {computed, defineProps, defineEmits, ref} from "vue";
 const props = defineProps(["name"]);
 const emits = defineEmits(["click"]);
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n({ useScope: "global" });
 
 const headerButtons = ref([
   {
@@ -34,7 +37,7 @@ const filteredButtons = computed(() => {
   <v-btn v-for="item in filteredButtons" :key="item.key" rounded @click="emits('click')" class="d-flex w-25 text-none" style="letter-spacing: 0" :color="item.bgColor">
     <span v-html="item.icon"></span>
     <span :style="`color: ${item.textColor}`">
-      {{ item.title }}
+      {{ t(`buttonGoods.${item.key}`) }}
     </span>
   </v-btn>
 </template>

@@ -1,5 +1,9 @@
 {
-  "procurement": "Покупка",
+  "titles": {
+    "procurement": "Покупка",
+    "procurementCreate": "Покупка (создание)",
+    "procurementShow": "Покупка (просмотр)"
+  },
   "btns" : {
     "create": "Создать",
     "group": "Создать группу",
@@ -18,22 +22,100 @@
     "fill": "Заполнить"
   },
   "headers": {
-    "doc_number": "Doc number",
-    "date": "Date",
-    "active": "Status"
+    "doc_number": "Номер",
+    "date": "Дата",
+    "active": "Статус",
+    "counterparty": "Поставщик",
+    "cpAgreement": "Counterparty agreement",
+    "organization": "Организация",
+    "storage": "Склад",
+    "author": "Автор",
+    "currency": "Валюта",
+    "goods": "Товары",
+    "count": "Количество",
+    "price": "Цена",
+    "sum": "Сумма",
+    "totalSum": "Общая сумма",
+    "comment": "Комментарий",
+    "number": "Номер"
   },
   "menu": {
     "dashboard": "Дашборд",
+    "planning":"План продаж",
+    "planingGoods": "Товаров", 
+    "planningMarket" : "Магазинов",
+    "planningStorage" : "Складов",
+
     "procurement": "Покупка",
+    "reports": "Отчеты",
+    "counterpartySettlement": "Взаимодействие с поставщиками",
+    "reconciliationReport": "Акт сверки с поставщиками",
+    "supplyProcurementReport": "Отчет покупки поставщиков",
+    "procurementOfGoods": "Покупка товаров",
+    "providerReturn": "Возврат постащику",
+    "providerOrder": "Заказ поставщику",
+    "writeOff": "Списание",
+    "posting": "Оприходование",
+    "equipment": "Комплектация",
+
     "selling": "Продажа",
+    "mutualSettlementsWithClients": "Взаиморасчет с клиентами",
+    "ABC_analysis": "АВС анализ",
+    "reconciliationReportWithClients": "Акт сверки с клиентами",
+    "customerPurchaseReport": "Отчет покупки киентов",
+    "sellingGoods": "Продажа клиентам",
+    "clientReturn": "Возврат от клиентов",
+    "clientOrder": "Заказ клиентов",
+
     "accountingOfGoods": "Учет товаров",
+    "storageMovement": "Движение склада",
+    "remainderOfGoods": "Остаток товаров",
+    "inventoryControl": "Складской учет",
+    "moveOfGoods": "Перемещение между складами",
+    "invertory": "Инвентаризация склада",
+
     "money": "Деньги",
+    "moneyMovement": "Движение денег",
+    "remainderOfMoney": "Остаток денег",
+    "moneyComing": "Приход деньги",
+    "moneyReturn": "Расход деньги",
+    "bankComing": "Приход рас. счета",
+    "bankSpend": "Расход рас. счета",
+
     "salary": "HR-Зарплата",
-    "settings": "Настройки"
+    "salaryInformation": "Ведомость зарплаты",
+    "personnel": "Кадр",
+    "recruitment": "Прием на работу",
+    "personnelMovement": "Кадровое перемещение",
+    "dismissal": "Увольнение",
+    "payroll": "Начисление зарплаты",
+    "payingSalaries": "Оплата зарплаты",
+    "timeSheet": "Табель",
+
+    "settings": "Настройки",
+    "lists": "Справочники",
+    "unit": "Единицы измерения",
+    "organizationBill": "Банковские счета",
+    "schedule": "Графики работ",
+    "user": "Пользователи",
+    "counterparty": "Контрагенты",
+    "organization": "Организации",
+    "employee": "Сотрудники",
+    "position": "Должности",
+    "priceType": "Виды цен",
+    "currency": "Валюты",
+    "storage": "Склады",
+    "cashRegister": "Кассы",
+    "nomenclature": "Товары",
+    "programTitle": "Заголовок программы",
+    "changeLanguage": "Смена языка"
   },
-  "admins": {
-    
+  "statuses": {
+    "approved": "Проведен",
+    "anApproved": "Не проведен",
+    "deleted" : "Удален"
   },
   "search": "Поиск...",
+  "searchableSelect": "Поиск по id, наименовании, штрих-коду", 
   "switchLang": "Переключить язык"
 }

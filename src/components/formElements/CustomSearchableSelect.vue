@@ -2,7 +2,9 @@
 import {defineEmits, defineProps, onMounted, ref, watch} from "vue";
 import hexToRgba from "../../composables/format/hexToRgba.js";
 import goodApi from "../../api/list/goods.js";
+import { useI18n } from "vue-i18n";
 
+const { t } = useI18n({ useScope: "global" });
 const props = defineProps({
   modelValue: [String, Number],
   items: {
@@ -140,7 +142,7 @@ const selectItem = (item) => {
           `outline: 1px solid ${hexToRgba(props.baseColor, 0.5)}`,
         ]"
         class="dropdown-input position-absolute"
-        placeholder="Поиск по id, наименовании, штрих-коду"
+        :placeholder="t('searchableSelect')"
         ref="input"
         @input="search($event)"
         :value="displayValue"

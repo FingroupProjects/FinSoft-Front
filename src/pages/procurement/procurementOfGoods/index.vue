@@ -84,16 +84,16 @@ const filterForm = ref({
   currency_id: null,
 });
 
-const headers = ref([
-  { title: "Номер", key: "doc_number" },
-  { title: "Дата", key: "date" },
-  { title: "Статус", key: "active" },
-  { title: "Поставщик", key: "counterparty.name" },
-  { title: "Организация", key: "organization.name" },
-  { title: "Склад", key: "storage.name" },
-  { title: "Автор", key: "author.name" },
-  { title: "Валюта", key: "currency.name" },
-]);
+  const headers = ref([
+    { title: t('headers.doc_number'), key: "doc_number" },
+    { title: t('headers.date'), key: "date" },
+    { title: t('headers.active'), key: "active" },
+    { title: t('headers.counterparty'), key: "counterparty.name" },
+    { title: t('headers.organization'), key: "organization.name" },
+    { title: t('headers.storage'), key: "storage.name" },
+    { title: t('headers.author'), key: "author.name" },
+    { title: t('headers.currency'), key: "currency.name" },
+  ]);
 
 const getProcurementData = async ({
   page,
@@ -365,9 +365,9 @@ onMounted(() => {
   <div class="pa-4">
     <div class="d-flex justify-space-between calcWidth">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
-        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">{{
-          $t("procurement")
-        }}</span>
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">
+          {{ $t("titles.procurement") }}
+        </span>
       </div>
       <div class="d-flex justify-end ga-2">
         <div class="d-flex w-100 justify-end mb-3">
@@ -429,7 +429,7 @@ onMounted(() => {
         @update:options="getProcurementData"
         page-text="{0}-{1} от {2}"
         :items-per-page-options="[
-          { value: 25, title: '25' },
+          { value: 25, title: '25' }, 
           { value: 50, title: '50' },
           { value: 100, title: '100' },
         ]"
@@ -437,14 +437,6 @@ onMounted(() => {
         fixed-header
         hover
       >
-      <template v-slot:[`column.id-header`]="{ header }">
-          <v-tooltip bottom>
-          <template v-slot:activator="{ on, attrs }">
-            <span v-bind="attrs" v-on="on">{{ header }}</span>
-          </template>
-          <span>{{ header }} Tooltip</span>
-        </v-tooltip>
-        </template>
         <template v-slot:item="{ item, index }">
           <tr
             @mouseenter="hoveredRowIndex = index"

@@ -3,7 +3,9 @@ import { ref, defineProps, onMounted, watch, onBeforeUnmount } from "vue";
 import { useRouter } from "vue-router";
 import Icons from "../../composables/Icons/Icons.vue";
 import { useConfirmDocumentStore } from "../../store/confirmDocument.js";
+import { useI18n } from "vue-i18n";
 
+const { t } = useI18n({ useScope: "global" });
 const props = defineProps(["admin", "admins", "lists", "isChangedDocument"]);
 const emit = defineEmits(["toggle", "changedDocument"]);
 const router = useRouter();
@@ -71,7 +73,7 @@ onMounted(() => {
       <div v-for="list in props.lists" :key="list.id">
         <ul class="list">
           <span class="span text-uppercase text-black font-weight-regular">
-            {{ list.title }}
+            {{ $t(`menu.${list.key}`) }}
           </span>
           <li
               @click="push(child)"
@@ -81,7 +83,7 @@ onMounted(() => {
               :key="child.id"
           >
             <span class="cursor-pointer">
-              {{ child.title }}
+              {{ $t(`menu.${child.key}`) }}
             </span>
           </li>
         </ul>
@@ -90,7 +92,7 @@ onMounted(() => {
         <div v-for="list in props.admins" :key="list.id">
           <ul class="list">
             <span class="span text-uppercase text-black font-weight-regular">
-              {{ list.title }}
+              {{ $t(`menu.${list.key}`) }}
             </span>
             <li
                 @click="push(child)"
@@ -99,7 +101,7 @@ onMounted(() => {
                 :key="child.id"
             >
               <span class="cursor-pointer">
-                {{ child.title }}
+                {{ $t(`menu.${child.key}`) }}
               </span>
             </li>
           </ul>

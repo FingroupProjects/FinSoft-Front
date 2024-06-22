@@ -1,9 +1,13 @@
+import { useI18n } from "vue-i18n";
+
 export default function getStatus(active, deleted_at) {
+  const { t } = useI18n({ useScope: "global" });
+
   if (active) {
-    return "Проведен";
+    return t('statuses.approved');
   } else if (deleted_at !== null) {
-    return "Удален";
+    return t('statuses.deleted');
   } else {
-    return "Не проведен";
+    return t('statuses.anApproved');
   }
 }

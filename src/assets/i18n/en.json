@@ -1,5 +1,9 @@
-{
-  "procurement": "Procurement",
+{ 
+  "titles": {
+    "procurement": "Procurement",
+    "procurementCreate": "Procurement (create)",
+    "procurementShow": "Procurement (show)"
+  },
   "btns" : {
     "create": "Сreate",
     "group": "Greate group",
@@ -20,23 +24,103 @@
   "headers": {
     "doc_number": "Doc number",
     "date": "Date",
-    "active": "Status"
+    "active": "Status",
+    "counterparty": "Counterparty",
+    "cpAgreement": "Counterparty agreement",
+    "organization": "Organization",
+    "storage": "Storage",
+    "author": "Author",
+    "currency": "Currency",
+    "goods": "Goods",
+    "count": "Count",
+    "price": "Price",
+    "sum": "Sum",
+    "totalSum": "Total sum",
+    "comment": "Comment",
+    "number": "Number"
   },
   "menu": {
     "dashboard": "Dashboard",
+    "planning":"Planning",
+    "planingGoods": "Goods", 
+    "planningMarket" : "Market",
+    "planningStorage" : "Storage",
+
     "procurement": "Procurement",
+    "reports": "Reports",
+    "counterpartySettlement": "Counterparty settlement",
+    "reconciliationReport": "Reconciliation report",
+    "supplyProcurementReport": "Supply procurement report",
+    "procurementOfGoods": "Procuremen of goods",
+    "providerReturn": "Provider return",
+    "providerOrder": "Provider order",
+    "writeOff": "Write off",
+    "posting": "Posting",
+    "equipment": "Equipment",
+
     "selling": "Selling",
+    "mutualSettlementsWithClients": "Mutual settlements with clients",
+    "ABC_analysis": "ABC Analysis",
+    "reconciliationReportWithClients": "Reconciliation report with clients",
+    "customerPurchaseReport": "Customer purchase report",
+    "sellingGoods": "Selling goods",
+    "clientReturn": "Client return",
+    "clientOrder": "Client order",
+
     "accountingOfGoods": "Accounting Of Goods",
+    "storageMovement": "Storage movement",
+    "remainderOfGoods": "Remainder of goods",
+    "inventoryControl": "Inventory control",
+    "moveOfGoods": "Move of goods",
+    "invertory": "Invertory",
+
     "money": "Money",
+    "moneyMovement": "Money movement",
+    "remainderOfMoney": "remainderOfMoney",
+    "moneyComing": "Money coming",
+    "moneyReturn": "Money return",
+    "bankComing": "Bank coming",
+    "bankSpend": "Bank spend",
+
     "salary": "Salary",
-    "settings": "Settings"
+    "salaryInformation": "Salary information",
+    "personnel": "Personnel",
+    "recruitment": "Recruitment",
+    "personnelMovement": "Personnel movement",
+    "dismissal": "Dismissal",
+    "payroll": "Payroll",
+    "payingSalaries": "PayingSalaries",
+    "timeSheet": "TimeSheet",
+
+    "settings": "Settings",
+    "lists": "Lists",
+    "unit": "Unit",
+    "organizationBill": "Organization bill",
+    "schedule": "Schedule",
+    "user": "User",
+    "counterparty": "Counterparty",
+    "organization": "Organization",
+    "employee": "Employee",
+    "position": "Position",
+    "priceType": "PriceType",
+    "currency": "Currency",
+    "storage": "Storage",
+    "cashRegister": "CashRegister",
+    "nomenclature": "Nomenclature",
+    "programTitle": "Program title",
+    "changeLanguage": "Change language"
+
   },
-  "admins": {
-    
-  },
-  "lists": {
-    
+  "statuses": {
+    "approved": "Approved",
+    "anApproved": "An approved",
+    "deleted" : "Deleted"
   },
   "search": "Search...",
-  "switchLang": "SwitchLang"
+  "searchableSelect": "Search by id, name, barcode", 
+  "switchLang": "SwitchLang",
+  "buttonGoods": {
+    "add": "Add",
+    "delete": "Delete"
+  }
 }
