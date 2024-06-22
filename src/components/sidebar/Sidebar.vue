@@ -24,6 +24,7 @@ const list = ref({
       id: 1,
       title: "Настройки",
       link: "/programSettings",
+      key: "settings",
       icon: "settings",
       child: [
         {
@@ -31,12 +32,14 @@ const list = ref({
           title: "Заголовок программы",
           link: "/programSettings",
           icon: "settings",
+          key: "programTitle"
         },
         {
           id: 2,
           title: "Смена языка",
           link: "/changeLanguage",
           icon: "settings",
+          key: "changeLanguage"
         },
       ],
     },
@@ -45,20 +48,21 @@ const list = ref({
     {
       id: 1,
       title: "Справочники",
+      key: "lists",
       child: [
-        { id: 1, title: "Единицы измерения", link: "/list/unit" },
-        { id: 2, title: "Банковские счета", link: "/list/organizationBill" },
-        { id: 3, title: "Графики работ", link: "/list/schedule" },
-        { id: 5, title: "Пользователи", link: "/list/user" },
-        { id: 7, title: "Контрагенты", link: "/list/counterparty" },
-        { id: 8, title: "Организации", link: "/list/organization" },
-        { id: 9, title: "Сотрудники", link: "/list/employee" },
-        { id: 10, title: "Должности", link: "/list/position" },
-        { id: 11, title: "Виды цен", link: "/list/priceType" },
-        { id: 12, title: "Валюты", link: "/list/currency" },
-        { id: 13, title: "Склады", link: "/list/storage" },
-        { id: 14, title: "Кассы", link: "/list/cashRegister" },
-        { id: 4, title: "Товары", link: "/list/nomenclature" },
+        { id: 1, title: "Единицы измерения", link: "/list/unit", key: "unit" },
+        { id: 2, title: "Банковские счета", link: "/list/organizationBill", key: "organizationBill" },
+        { id: 3, title: "Графики работ", link: "/list/schedule", key: "schedule" },
+        { id: 5, title: "Пользователи", link: "/list/user", key: "user" },
+        { id: 7, title: "Контрагенты", link: "/list/counterparty", key: "counterparty" },
+        { id: 8, title: "Организации", link: "/list/organization", key: "organization" },
+        { id: 9, title: "Сотрудники", link: "/list/employee", key: "employee" },
+        { id: 10, title: "Должности", link: "/list/position", key: "position" },
+        { id: 11, title: "Виды цен", link: "/list/priceType", key: "priceType" },
+        { id: 12, title: "Валюты", link: "/list/currency", key: "currency" },
+        { id: 13, title: "Склады", link: "/list/storage", key: "storage" },
+        { id: 14, title: "Кассы", link: "/list/cashRegister", key: "cashRegister" },
+        { id: 4, title: "Товары", link: "/list/nomenclature", key: "nomenclature" },
       ],
     },
   ],
@@ -69,11 +73,12 @@ const dashboards = ref({
     {
       id: 1,
       title: "План продаж",
+      key: "planning",
       link: "/",
       child: [
-        { id: 1, title: "Товаров", link: "/planning/goods" },
-        { id: 2, title: "Магазинов", link: "" },
-        { id: 3, title: "Складов", link: "" },
+        { id: 1, title: "Товаров", link: "/planning/goods", key: "planingGoods" },
+        { id: 2, title: "Магазинов", link: "", key: "planningMarket" },
+        { id: 3, title: "Складов", link: "", key: "planningStorage" },
       ],
     },
   ],
@@ -84,19 +89,22 @@ const procurementOfGoods = ref({
     {
       id: 1,
       title: "Отчеты",
+      key: "reports",
       link: "/return",
       child: [
         {
           id: 1,
           title: "Взаимодействие с поставщиками",
           link: "/counterpartySettlement",
+          key: "counterpartySettlement"
         },
         {
           id: 2,
           title: "Акт сверки с поставщиками",
           link: "/reconciliationReport",
+          key: "reconciliationReport",
         },
-        { id: 3, title: "Отчет покупки поставщиков", link: "" },
+        { id: 3, title: "Отчет покупки поставщиков", link: "", key: "supplyProcurementReport" },
       ],
     },
   ],
@@ -104,13 +112,14 @@ const procurementOfGoods = ref({
     {
       id: 1,
       title: "Покупка",
+      key: "procurement",
       child: [
-        { id: 1, title: "Покупка товаров", link: "/procurementOfGoods" },
-        { id: 2, title: "Возврат постащику", link: "/providerReturn" },
-        { id: 3, title: "Заказ поставщику", link: "/providerOrder" },
-        { id: 4, title: "Списание", link: "/writeOff" },
-        { id: 5, title: "Оприходование", link: "/posting" },
-        { id: 6, title: "Комплектация", link: "/equipment" },
+        { id: 1, title: "Покупка товаров", link: "/procurementOfGoods", key: "procurementOfGoods" },
+        { id: 2, title: "Возврат постащику", link: "/providerReturn", key: "providerReturn" },
+        { id: 3, title: "Заказ поставщику", link: "/providerOrder", key: "providerOrder" },
+        { id: 4, title: "Списание", link: "/writeOff", key: "writeOff" },
+        { id: 5, title: "Оприходование", link: "/posting", key: "posting" },
+        { id: 6, title: "Комплектация", link: "/equipment", key: "equipment" },
       ],
     },
   ],
@@ -121,12 +130,13 @@ const saleOfGoods = ref({
     {
       id: 1,
       title: "Отчеты",
+      key: "reports",
       link: "/",
       child: [
-        { id: 1, title: "Взаиморасчет с клиентами", link: "" },
-        { id: 2, title: "АВС анализ", link: "" },
-        { id: 3, title: "Акт сверки с клиентами", link: "" },
-        { id: 4, title: "Отчет покупки киентов", link: "" },
+        { id: 1, title: "Взаиморасчет с клиентами", link: "", key: "mutualSettlementsWithClients" },
+        { id: 2, title: "АВС анализ", link: "", key: "ABC_analysis" },
+        { id: 3, title: "Акт сверки с клиентами", link: "", key: "reconciliationReportWithClients" },
+        { id: 4, title: "Отчет покупки киентов", link: "", key: "customerPurchaseReport" },
       ],
     },
   ],
@@ -134,10 +144,11 @@ const saleOfGoods = ref({
     {
       id: 1,
       title: "Продажа",
+      key: "selling",
       child: [
-        { id: 1, title: "Продажа клиентам", link: "/sellingGoods" },
-        { id: 2, title: "Возврат от клиентов", link: "/clientReturn" },
-        { id: 3, title: "Заказ клиентов", link: "/clientOrder" },
+        { id: 1, title: "Продажа клиентам", link: "/sellingGoods", key: "sellingGoods" },
+        { id: 2, title: "Возврат от клиентов", link: "/clientReturn", key: "clientReturn" },
+        { id: 3, title: "Заказ клиентов", link: "/clientOrder", key: "clientOrder" },
       ],
     },
   ],
@@ -148,10 +159,11 @@ const storage = ref({
     {
       id: 1,
       title: "Отчеты",
+      key: "reports",
       link: "/",
       child: [
-        { id: 1, title: "Движение склада", link: "/remainderOfGoods" },
-        { id: 2, title: "Остаток товаров", link: "" },
+        { id: 1, title: "Движение склада", link: "/remainderOfGoods", key: "storageMovement" },
+        { id: 2, title: "Остаток товаров", link: "", key: "remainderOfGoods"},
       ],
     },
   ],
@@ -159,9 +171,10 @@ const storage = ref({
     {
       id: 1,
       title: "Складской учет",
+      key: "inventoryControl",
       child: [
-        { id: 1, title: "Перемещение между складами", link: "/moveOfGoods" },
-        { id: 2, title: "Инвентаризация склада", link: "/invertory" },
+        { id: 1, title: "Перемещение между складами", link: "/moveOfGoods", key:"moveOfGoods" },
+        { id: 2, title: "Инвентаризация склада", link: "/invertory", key: "invertory" },
       ],
     },
   ],
@@ -172,10 +185,11 @@ const cash = ref({
     {
       id: 1,
       title: "Отчеты",
+      key: "reports",
       link: "/",
       child: [
-        { id: 1, title: "Движение деньги", link: "" },
-        { id: 2, title: "Остаток деньги", link: "" },
+        { id: 1, title: "Движение денег", link: "", key: "moneyMovement" },
+        { id: 2, title: "Остаток денег", link: "", key: "remainderOfMoney" },
       ],
     },
   ],
@@ -183,11 +197,12 @@ const cash = ref({
     {
       id: 1,
       title: "Деньги",
+      key: "money",
       child: [
-        { id: 1, title: "Приход деньги", link: "/moneyComing" },
-        { id: 2, title: "Расход деньги", link: "/moneyReturn" },
-        { id: 3, title: "Приход рас. счета", link: "/bankComing" },
-        { id: 4, title: "Расход рас. счета", link: "/bankSpend" },
+        { id: 1, title: "Приход деньги", link: "/moneyComing", key: "moneyComing" },
+        { id: 2, title: "Расход деньги", link: "/moneyReturn", key: "moneyReturn" },
+        { id: 3, title: "Приход рас. счета", link: "/bankComing", key: "bankComing" },
+        { id: 4, title: "Расход рас. счета", link: "/bankSpend", key: "bankSpend" },
       ],
     },
   ],
@@ -198,9 +213,10 @@ const salary = ref({
     {
       id: 1,
       title: "Отчеты",
+      key: "reports",
       link: "/",
       child: [
-        { id: 1, title: "Ведомость зарплаты", link: "/hr/salaryInformation" },
+        { id: 1, title: "Ведомость зарплаты", link: "/hr/salaryInformation", key: "salaryInformation" },
       ],
     },
   ],
@@ -208,19 +224,21 @@ const salary = ref({
     {
       id: 1,
       title: "Кадр",
+      key: "personnel",
       child: [
-        { id: 1, title: "Прием на работу", link: "/hr/recruitment" },
-        { id: 2, title: "Кадровое перемещение", link: "/hr/personnelMovement" },
-        { id: 2, title: "Увольнение", link: "/hr/dismissal" },
+        { id: 1, title: "Прием на работу", link: "/hr/recruitment", key: "recruitment" },
+        { id: 2, title: "Кадровое перемещение", link: "/hr/personnelMovement", key: "personnelMovement" },
+        { id: 2, title: "Увольнение", link: "/hr/dismissal", key: "dismissal" },
       ],
     },
     {
       id: 2,
       title: "Зарплата",
+      key: "salary",
       child: [
-        { id: 1, title: "Начисление зарплаты", link: "/hr/payroll" },
-        { id: 2, title: "Оплата зарплаты", link: "/hr/payingSalaries" },
-        { id: 3, title: "Табель", link: "/hr/timeSheet" },
+        { id: 1, title: "Начисление зарплаты", link: "/hr/payroll", key: "payroll" },
+        { id: 2, title: "Оплата зарплаты", link: "/hr/payingSalaries", key: "payingSalaries" },
+        { id: 3, title: "Табель", link: "/hr/timeSheet", key: "timeSheet" },
       ],
     },
   ],
@@ -314,12 +332,8 @@ const push = (item) => {
           <v-list-item
             v-for="item in filteredLists"
             :key="item.id"
-            @click="
-              item.id === activeItemId && props.admin
-                ? $emit('closeAdmin')
-                : push(item)
-            "
-            :class="item.id === activeItemId ? 'activeBg' : ''"
+            @click="item.id === activeItemId && props.admin ? $emit('closeAdmin') : push(item)"
+            :class="item.id === activeItemId ? 'activeBg' : '' "
           >
             <v-list-item-title>
               <span :class="item.id === activeItemId ? 'active_sidebar' : 'title'">

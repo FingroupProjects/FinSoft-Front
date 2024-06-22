@@ -31,7 +31,9 @@ import goodsDelete from "../../../composables/goods/goodsDel"
 import CustomSearchableSelect from "../../../components/formElements/CustomSearchableSelect.vue";
 import toDecimal from "../../../composables/format/toDecimal.js";
 import formatInputAmount from "../../../composables/format/formatInputAmount.js";
+import { useI18n } from "vue-i18n";
 
+const { t } = useI18n({ useScope: "global" });
 const router = useRouter();
 const route = useRoute();
 const count = ref(0);
@@ -74,10 +76,10 @@ const prevGoods = ref([]);
 const hoveredRowId = ref(null);
 
 const headers = ref([
-  { title: "Товары", key: "goods", sortable: false },
-  { title: "Количество", key: "currency.name", sortable: false },
-  { title: "Цена", key: "currency.name", sortable: false },
-  { title: "Сумма", key: "currency.name", sortable: false },
+  { title: t('headers.goods'), key: "goods", sortable: false },
+  { title: t('headers.count'), key: "currency.name", sortable: false },
+  { title: t('headers.price'), key: "currency.name", sortable: false },
+  { title: t('headers.sum'), key: "currency.name", sortable: false },
 ]);
 
 const approve = async () => {
@@ -429,7 +431,7 @@ onMounted(() => {
     <div class="d-flex justify-space-between documentCalcWidth">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
         <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">
-          Покупка (просмотр) - {{ getStatus(form.active, form.deleted_at) }}
+          {{ $t("titles.procurementShow") }} - {{ getStatus(form.active, form.deleted_at) }}
         </span>
       </div>
       <v-card variant="text" class="d-flex align-center ga-2">
@@ -449,31 +451,31 @@ onMounted(() => {
     <div class="documentHeight documentCalcWidth">
       <v-col class="d-flex flex-column ga-2">
         <div class="d-flex flex-wrap ga-4">
-          <custom-text-field label="Номер" readonly v-model="form.doc_number" />
+          <custom-text-field :label="t('headers.number')" readonly v-model="form.doc_number" />
           <custom-text-field
             class="date"
-            label="Дата"
+            :label="t('headers.date')"
             type="datetime-local"
             v-model="form.date"
           />
           <custom-autocomplete
-            label="Организация"
+            :label="t('headers.organization')"
             :items="organizations"
             v-model="form.organization"
           />
           <custom-autocomplete
-            label="Поставщик"
+            :label="t('headers.counterparty')"
             :items="counterparties"
             v-model="form.counterparty"
           />
           <custom-autocomplete
             :disabled="!form.counterparty"
-            label="Договор"
+            :label="t('headers.cpAgreement')"
             :items="cpAgreements"
             v-model="form.cpAgreement"
           />
           <custom-autocomplete
-            label="Склад"
+            :label="t('headers.storage')"
             :items="storages"
             v-model="form.storage"
           />
@@ -583,11 +585,11 @@ onMounted(() => {
             <custom-text-field
               readonly
               v-model="author"
-              label="Автор"
+              :label="t('headers.author')"
               min-width="110"
             />
             <custom-text-field
-              label="Комментарий"
+              :label="t('headers.comment')"
               v-model="form.comment"
               min-width="310"
             />
@@ -595,13 +597,13 @@ onMounted(() => {
           <div class="d-flex ga-6">
             <custom-text-field
               readonly
-              label="Количество"
+              :label="t('headers.count')"
               v-model="totalCount"
               min-width="130"
             />
             <custom-text-field
               readonly
-              label="Общая сумма:"
+              :label="t('headers.totalSum')"
               v-model="totalPrice"
               min-width="180"
               max-width="110"
@@ -609,7 +611,7 @@ onMounted(() => {
             <custom-autocomplete
               readonly
               v-model="form.currency"
-              label="Валюта"
+              :label="t('headers.currency')"
               :items="currencies"
               min-width="190"
               maxWidth="190px"
