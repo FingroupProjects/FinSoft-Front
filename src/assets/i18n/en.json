@@ -2,7 +2,8 @@
   "titles": {
     "procurement": "Procurement",
     "procurementCreate": "Procurement (create)",
-    "procurementShow": "Procurement (show)"
+    "procurementShow": "Procurement (show)",
+    "settingProces": "Setting proces"
   },
   "btns" : {
     "create": "Сreate",
@@ -41,7 +42,8 @@
     "from": "From",
     "to": "To",
     "filter": "Filter",
-    "flawOfGoods": "Flaw of goods"
+    "flawOfGoods": "Flaw of goods",
+    "setting": "Setting"
   },
   "menu": {
     "dashboard": "Dashboard",
@@ -112,7 +114,8 @@
     "cashRegister": "CashRegister",
     "nomenclature": "Nomenclature",
     "programTitle": "Program title",
-    "changeLanguage": "Change language"
+    "changeLanguage": "Change language",
+    "settingPrices": "Setting prices"
   },
   "statuses": {
     "approved": "Approved",

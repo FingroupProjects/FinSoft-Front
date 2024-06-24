@@ -2,7 +2,8 @@
   "titles": {
     "procurement": "Покупка",
     "procurementCreate": "Покупка (создание)",
-    "procurementShow": "Покупка (просмотр)"
+    "procurementShow": "Покупка (просмотр)",
+    "settingProces": "Установка цен товаров"
   },
   "btns" : {
     "create": "Создать",
@@ -41,7 +42,8 @@
     "from": "От",
     "to": "Пo",
     "filter": "Фильтр",
-    "flawOfGoods": "Недостаток товаров"
+    "flawOfGoods": "Недостаток товаров",
+    "setting": "Настройка"
   },
   "menu": {
     "dashboard": "Дашборд",
@@ -112,7 +114,8 @@
     "cashRegister": "Кассы",
     "nomenclature": "Товары",
     "programTitle": "Заголовок программы",
-    "changeLanguage": "Смена языка"
+    "changeLanguage": "Смена языка",
+    "settingPrices": "Установка цен"
   },
   "statuses": {
     "approved": "Проведен",
@@ -124,6 +127,8 @@
   "switchLang": "Переключить язык",
   "buttonGoods": {
     "add": "Добавить",
-    "delete": "Удалить"
+    "delete": "Удалить",
+    "reset": "Сбросить",
+    "apply": "Применить"
   }
 }

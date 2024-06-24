@@ -440,6 +440,21 @@ const routes = [
     component: () => import("../pages/programSettings/changeLanguage.vue"),
   },
   {
+    path: "/settingPrices",
+    name: "settingPrices",
+    component: () => import("../pages/programSettings/settingPrices/index.vue")
+  },
+  {
+    path: "/settingUpPricesOfGoods",
+    name: "settingUpPricesOfGoods",
+    component: () => import("../pages/programSettings/settingPrices/settingUpPricesOfGoods.vue")
+  },
+  {
+    path: "/settingProcesCreate",
+    name: "settingProcesCreate",
+    component: () => import("../pages/programSettings/settingPrices/create.vue")
+  },
+  {
     path: "/list/nomenclature",
     name: "nomenclature",
     component: () => import("../pages/list/nomenclature/index.vue"),
