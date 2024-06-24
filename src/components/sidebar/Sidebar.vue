@@ -31,15 +31,19 @@ const list = ref({
           id: 1,
           title: "Заголовок программы",
           link: "/programSettings",
-          icon: "settings",
           key: "programTitle"
         },
         {
           id: 2,
           title: "Смена языка",
           link: "/changeLanguage",
-          icon: "settings",
           key: "changeLanguage"
+        },
+        {
+          id: 3,
+          title: "Установка цен",
+          link: "/settingPrices",
+          key: "settingPrices"
         },
       ],
     },
