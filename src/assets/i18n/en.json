@@ -43,7 +43,8 @@
     "to": "To",
     "filter": "Filter",
     "flawOfGoods": "Flaw of goods",
-    "setting": "Setting"
+    "setting": "Setting",
+    "base" : "Base"
   },
   "menu": {
     "dashboard": "Dashboard",

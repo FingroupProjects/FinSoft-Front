@@ -27,5 +27,8 @@ export default {
     return api.get(`/priceType/data/export`, {
       responseType: 'blob'
     })
+  },
+  getByCurrencyId(id) {
+    return api.get(`/currency/get-price-type/${id}`)
   }
 }
