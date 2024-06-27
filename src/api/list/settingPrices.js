@@ -7,4 +7,7 @@ export default {
   create(data) {
     return api.post("/price-set-up", data  );
   },
+  getData() {
+    return api.get("/price-set-up");
+  }
 };
