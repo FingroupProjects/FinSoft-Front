@@ -3,10 +3,7 @@ import CustomFilterAutocomplete from "../../../components/formElements/CustomFil
 import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
 import currentDateWithTime from "../../../composables/date/currentDateWithTime.js";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
-import {
-  BASE_COLOR,
-  TITLE_COLOR,
-} from "../../../composables/constant/colors.js";
+import { BASE_COLOR, TITLE_COLOR } from "../../../composables/constant/colors.js";
 import formatInputPrice from "../../../composables/format/formatInputPrice.js";
 import { useFilterCanvasVisible } from "../../../store/canvasVisible.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
@@ -20,11 +17,12 @@ import { onMounted, reactive, ref, watch } from "vue";
 import groupApi from "../../../api/list/goodGroup.js";
 import currencyApi from "../../../api/list/currency";
 import showToast from "../../../composables/toast";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n({ useScope: "global" });
 
+const route = useRoute()
 const router = useRouter()
 
 const form = reactive({
@@ -85,6 +83,16 @@ const getOrganizations = async () => {
   }
 };
 
+const getDetail = async(id) =>{
+  try {
+    const { data: { result } } = await settingPricesApi.show(id)
+    goods.value = result.setupGoods 
+    console.log(result);
+  }catch(e) {
+    console.error(e);
+  }
+}
+
 const getGoodsGroup = async (id) => {
   try {
     const {
@@ -115,7 +123,7 @@ const getGood = async () => {
   }
 };
 
-const create = async () => {
+const update = async () => {
   try {
     const body = {
       date: form.date,
@@ -132,7 +140,7 @@ const create = async () => {
         })),
       })),
     };
-    const res = await settingPricesApi.create(body);
+    const res = await settingPricesApi.update(body);
     if (res.status === 201) {
       showToast(addMessage);
       router.push("/settingPrices");
@@ -141,6 +149,10 @@ const create = async () => {
   } catch (e) {
     console.error(e);
   }
+};
+
+const closeWindow = () => {
+  window.close();
 };
 
 watch(
@@ -183,11 +195,11 @@ const priceDifference = (item) => {
 };
 
 onMounted(async () => {
+  await getDetail(route.params.id)
   await getOrganizations();
   await getCurrencies();
   await getGoodsGroup();
   form.date = currentDateWithTime();
-  form.author = JSON.parse(localStorage.getItem("user")).name || null;
 });
 </script>
 <template>
@@ -207,8 +219,8 @@ onMounted(async () => {
             >
               {{ $t("headers.setting") }}
             </button>
-            <Button @click="create()" name="save" />
-            <Button @click="$router.push('/settingPrices')" name="close" />
+            <Button @click="update()" name="save" />
+            <Button @click="closeWindow()" name="close" />
           </div>
         </div>
       </v-card>
@@ -262,22 +274,22 @@ onMounted(async () => {
           </div>
           <div v-for="(item) in goods" :key="item.id" class="d-flex">
             <div style="min-width: 200px" class="br">
-              {{ item.prices?.name }}
+              {{ item.good.name }}
             </div>
             <div v-for="(item) in goods" :key="item.id" class="d-flex">
               <div style="min-width: 100px" class="br">
-                {{ parseFloat(item.prices?.oldPrice) }}
+                {{ parseFloat(item.oldPrice) }}
               </div>
               <div style="min-width: 100px" class="br">
                 <input
                   class="input"
-                  v-model.number="item.prices.newPrice"
+                  v-model="item.newPrice"
                   @input="computePrices(item, $event)"
                   type="text"
                 />
               </div>
               <div style="min-width: 50px" class="br">
-                <div :class="computePrices(item) ? 'green-dot' : 'red-dot'" />
+                <div class="green-dot" />
               </div>
             </div>
           </div>
