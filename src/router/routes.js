@@ -445,9 +445,9 @@ const routes = [
     component: () => import("../pages/programSettings/settingPrices/index.vue")
   },
   {
-    path: "/settingUpPricesOfGoods",
-    name: "settingUpPricesOfGoods",
-    component: () => import("../pages/programSettings/settingPrices/settingUpPricesOfGoods.vue")
+    path: "/settingPrices/:id",
+    name: "settingPricesShow",
+    component: () => import("../pages/programSettings/settingPrices/show.vue")
   },
   {
     path: "/settingProcesCreate",
