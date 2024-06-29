@@ -172,9 +172,9 @@ const closeFilterModal = () => {
 
 const computePrices = (item, event = "") => {
   if (event !== "") {
-    formatInputPrice(item.prices.newPrice, event);
+    formatInputPrice(item.prices?.newPrice, event);
   }
-  return parseFloat(item.prices.newPrice) < parseFloat(item.prices.oldPrice);
+  return parseFloat(item.prices?.newPrice) < parseFloat(item.prices?.oldPrice);
 };
 
 const priceDifference = (item) => {
@@ -264,14 +264,14 @@ onMounted(async () => {
             <div style="min-width: 200px" class="br">
               {{ item.prices?.name }}
             </div>
-            <div v-for="(item) in goods" :key="item.id" class="d-flex">
+            <div v-for="(item, index) in goods" :key="index" class="d-flex">
               <div style="min-width: 100px" class="br">
                 {{ parseFloat(item.prices?.oldPrice) }}
               </div>
               <div style="min-width: 100px" class="br">
                 <input
                   class="input"
-                  v-model.number="item.prices.newPrice"
+                  v-model.number="goods[index].prices.newPrice"
                   @input="computePrices(item, $event)"
                   type="text"
                 />
