@@ -3,7 +3,9 @@
     "procurement": "Покупка",
     "procurementCreate": "Покупка (создание)",
     "procurementShow": "Покупка (просмотр)",
-    "settingProces": "Установка цен товаров"
+    "settingProces": "Установка цен товаров",
+    "providerReturn": "Возврат постащику",
+    "providerReturnCreate": "Возврат поставщику (создание)"
   },
   "btns" : {
     "create": "Создать",
@@ -20,7 +22,9 @@
     "delete": "Удалить",
     "close": "Закрыть",
     "img": "Фото",
-    "fill": "Заполнить"
+    "fill": "Заполнить",
+    "sendMessage": "Отправить сообщение",
+    "send":"Отправить"
   },
   "headers": {
     "doc_number": "Номер",
@@ -44,7 +48,8 @@
     "filter": "Фильтр",
     "flawOfGoods": "Недостаток товаров",
     "setting": "Настройка",
-    "base" : "Основание"
+    "base" : "Основание",
+    "agreement": "Договор"
   },
   "menu": {
     "dashboard": "Дашборд",

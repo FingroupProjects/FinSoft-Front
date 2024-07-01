@@ -40,6 +40,9 @@ import debounce from "lodash.debounce";
 import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
 import GoodErrorCanvas from "../../../components/Errors/goodErrorCanvas.vue";
 import copyDocument from "../../../api/documents/copyDocument.js";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n({ useScope: "global" });
 
 const router = useRouter();
 
@@ -81,15 +84,15 @@ const filterForm = ref({
 });
 
 const headers = ref([
-  { title: "Номер", key: "name" },
-  { title: "Дата", key: "currency.name" },
-  { title: "Статус", key: "status" },
-  { title: "Поставщик", key: "currency.name" },
-  { title: "Организация", key: "currency.name" },
-  { title: "Склад", key: "currency.name" },
-  { title: "Автор", key: "currency.name" },
-  { title: "Валюта", key: "currency.name" },
-]);
+    { title: t('headers.doc_number'), key: "doc_number" },
+    { title: t('headers.date'), key: "date" },
+    { title: t('headers.active'), key: "active" },
+    { title: t('headers.counterparty'), key: "counterparty.name" },
+    { title: t('headers.organization'), key: "organization.name" },
+    { title: t('headers.storage'), key: "storage.name" },
+    { title: t('headers.author'), key: "author.name" },
+    { title: t('headers.currency'), key: "currency.name" },
+  ]);
 
 const getProviderData = async ({ page, itemsPerPage, sortBy, search }) => {
   count.value = 0;
@@ -361,9 +364,9 @@ onMounted(() => {
   <div class="pa-4">
     <div class="d-flex justify-space-between calcWidth">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
-        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }"
-          >Возврат поставщику</span
-        >
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">
+          {{ $t("titles.providerReturn") }}
+          </span>
       </div>
       <div class="d-flex justify-end ga-2">
         <div class="d-flex w-100 justify-end mb-3">
@@ -383,7 +386,7 @@ onMounted(() => {
             v-model="search"
             prepend-inner-icon="search"
             density="compact"
-            label="Поиск..."
+            :label="t('search')"
             variant="outlined"
             :color="BASE_COLOR"
             rounded="lg"
@@ -483,14 +486,14 @@ onMounted(() => {
        <div v-else class="d-flex flex-column ga-2">
         <div class="d-flex flex-column ga-4 w-100">
           <custom-filter-text-field
-            label="От"
+            :label="t('headers.from')"
             type="date"
             class="date"
             min-width="106"
             v-model="filterForm.startDate"
           />
           <custom-filter-text-field
-            label="По"
+            :label="t('headers.to')"
             type="date"
             class="date"
             min-width="106"
@@ -500,13 +503,13 @@ onMounted(() => {
         <div class="d-flex ga-2">
           <custom-filter-autocomplete
             min-width="52"
-            label="Статус"
+            :label="t('headers.active')"
             :items="statusOptions"
             v-model="filterForm.active"
           />
           <custom-filter-autocomplete
             min-width="52"
-            label="Удалён"
+            :label="t('statuses.deleted')"
             :items="markedForDeletion"
             v-model="filterForm.deleted"
           />
@@ -514,13 +517,13 @@ onMounted(() => {
         <div class="d-flex ga-2">
           <custom-filter-autocomplete
             min-width="52"
-            label="Организация"
+            :label="t('headers.organization')"
             :items="organizations"
             v-model="filterForm.organization_id"
           />
           <custom-filter-autocomplete
             min-width="52"
-            label="Поставщик"
+            :label="t('headers.counterparty')"
             :items="counterparties"
             v-model="filterForm.counterparty_id"
           />
@@ -528,13 +531,13 @@ onMounted(() => {
         <div class="d-flex ga-2">
           <custom-filter-autocomplete
             min-width="52"
-            label="Склад"
+            :label="t('headers.active')"
             :items="storages"
             v-model="filterForm.storage_id"
           />
           <custom-filter-autocomplete
             min-width="52"
-            label="Валюта"
+            :label="t('headers.currency')"
             :items="currencies"
             v-model="filterForm.currency_id"
           />
@@ -542,13 +545,13 @@ onMounted(() => {
         <div class="d-flex ga-2">
           <custom-filter-autocomplete
             min-width="52"
-            label="Автор"
+            :label="t('headers.author')"
             :items="authors"
             v-model="filterForm.author_id"
           />
           <custom-filter-autocomplete
             min-width="52"
-            label="Договор"
+            :label="t('headers.agreement')"
             :items="counterpartyAgreements"
             v-model="filterForm.counterparty_agreement_id"
           />
@@ -556,7 +559,7 @@ onMounted(() => {
         <div class="d-flex justify-end ga-2">
           <div class="d-flex ga-2" style="margin-right: -6%">
             <v-btn tabindex="-1" color="red" class="btn" @click="closeFilterModal"
-              >сбросить</v-btn
+              >{{ $t('buttonGoods.reset') }}</v-btn
             >
             <v-btn
               tabindex="-1"
@@ -568,7 +571,7 @@ onMounted(() => {
                   useFilterCanvasVisible().closeFilterCanvas();
                 }
               "
-              >применить</v-btn
+              >{{ $t('buttonGoods.apply') }}  </v-btn
             >
           </div>
         </div>
