@@ -8,24 +8,21 @@ import getDateTimeInShow from "../../../../composables/date/getDateTimeInShow.js
 import CustomCheckbox from "../../../../components/checkbox/CustomCheckbox.vue";
 import { useModalCreateBased } from "../../../../store/modalCreateBased.js";
 import { useFilterCanvasVisible } from "../../../../store/canvasVisible.js";
-import cpAgreementApi from "../../../../api/list/counterpartyAgreement.js";
 import FilterCanvas from "../../../../components/canvas/filterCanvas.vue";
 import getStatus from "../../../../composables/displayed/getStatus.js";
-import procurementApi from "../../../../api/documents/procurement.js";
+import plan from "../../../../api/plans/goods.js"
+import organizationApi from "../../../../api/list/organizations";
 import getColor from "../../../../composables/displayed/getColor.js";
-import copyDocument from "../../../../api/documents/copyDocument.js";
-import CreateBase from "../../../../components/modal/CreateBase.vue";
-import organizationApi from "../../../../api/list/organizations.js";
-import counterpartyApi from "../../../../api/list/counterparty.js";
 import showToast from "../../../../composables/toast/index.js";
 import Button from "../../../../components/button/button.vue";
 import Icons from "../../../../composables/Icons/Icons.vue";
-import currencyApi from "../../../../api/list/currency.js";
-import storageApi from "../../../../api/list/storage.js";
 import user from "../../../../api/list/user.js";
 import { onMounted, ref, watch } from "vue";
 import debounce from "lodash.debounce";
 import { useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n({ useScope: "global" });
 
 const router = useRouter();
 
@@ -34,6 +31,7 @@ const dialog = ref(false);
 const filterModal = ref(false);
 const hoveredRowIndex = ref(null);
 
+const plans = ref([])
 const markedID = ref([]);
 const markedItem = ref([]);
 const search = ref("");
@@ -51,54 +49,43 @@ const counterpartyAgreements = ref([]);
 const modalCreateBased = useModalCreateBased();
 
 const filterForm = ref({
-  date: null,
-  startDate: null,
-  endDate: null,
-  active: null,
-  deleted: null,
-  provider_id: null,
-  counterparty_id: null,
-  counterparty_agreement_id: null,
-  organization_id: null,
-  storage_id: null,
   author_id: null,
-  currency_id: null,
-});
+  organization_id: null,
+  year: null
+})
+
 
 const headers = ref([
-  { title: "Номер", key: "doc_number" },
   { title: "Дата", key: "date" },
-  { title: "Статус", key: "active" },
-  { title: "Поставщик", key: "counterparty.name" },
   { title: "Организация", key: "organization.name" },
-  { title: "Склад", key: "storage.name" },
-  { title: "Автор", key: "author.name" },
-  { title: "Валюта", key: "currency.name" },
+  { title: "Год", key: "year" }
 ]);
 
-const getProcurementData = async ({
+const getPlan = async({
   page,
   itemsPerPage,
   sortBy,
-  search,
-} = {}) => {
+  search
+  }= {}) => {
   counterFilter.value = 0;
   countFilter();
   filterModal.value = false;
-  loading.value = true;
+  loading.value = false;
   try {
-    const { data } = await procurementApi.get(
-      { page, itemsPerPage, sortBy },
+    const { data } = await plan.get(
+      {page, itemsPerPage, sortBy},
       search,
       filterForm.value
     );
     paginations.value = data.result.pagination;
-    procurements.value = data.result.data;
+    plans.value = data.result.data
     loading.value = false;
-  } catch (e) {
-    console.error(e);
+  } catch (error) {
+    console.log(error)
   }
-};
+}
+
+
 const headerButtons = ref([
   {
     name: "create",
@@ -143,191 +130,43 @@ const headerButtons = ref([
   },
 ]);
 
-const countFilter = () => {
+const getOrganizations = async () => {
+  const { data } = await organizationApi.get({
+    page: 1,
+    itemsPerPage: 10000,
+    sortBy: "name"
+  });
+  organizations.value = data.result.data
+};
+
+const getAuthors = async () => {
+  const { data } = await user.getAuthors()
+      authors.value = data.result.data
+};
+
+
+const countFilter = () =>{
   for (const key in filterForm.value) {
     if (filterForm.value[key] !== null) {
       counterFilter.value++;
     }
   }
-};
-
-const compute = () => {
-  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
-  if (markedItem.value.deleted_at) {
-    return massRestore();
-  } else {
-    return massDel();
-  }
-};
-
-const massDel = async () => {
-  try {
-    const { status } = await procurementApi.remove({
-      ids: markedID.value,
-    });
-    if (status === 200) {
-      showToast(removeMessage, "red");
-      await getProcurementData();
-    }
-  } catch (e) {
-    console.error(e);
-  } finally {
-    markedID.value = [];
-  }
-};
-
-const massRestore = async () => {
-  try {
-    const { status } = await procurementApi.restore({ ids: markedID.value });
-
-    if (status === 200) {
-      showToast(restoreMessage);
-      await getProcurementData();
-      dialog.value = false;
-    }
-  } catch (e) {
-    console.error(e);
-  } finally {
-    markedID.value = [];
-  }
-};
-
-const lineMarking = (item) => {
-  if (markedID.value.length > 0) {
-    const firstMarkedItem = procurements.value.find(
-      (el) => el.id === markedID.value[0]
-    );
-    if (firstMarkedItem && firstMarkedItem.deleted_at) {
-      if (item.deleted_at === null) {
-        showToast(ErrorSelectMessage, "warning");
-        return;
-      }
-    }
-    if (firstMarkedItem && firstMarkedItem.deleted_at === null) {
-      if (item.deleted_at !== null) {
-        showToast(ErrorSelectMessage, "warning");
-        return;
-      }
-    }
-  }
-
-  const index = markedID.value.indexOf(item.id);
-  if (index !== -1) {
-    markedID.value.splice(index, 1);
-  } else {
-    markedID.value.push(item.id);
-  }
-  markedItem.value = item;
-};
-
-const approve = async () => {
-  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
-  try {
-    const res = await procurementApi.approve({ ids: markedID.value });
-    showToast(approveDocument);
-    await getProcurementData({});
-    markedID.value = [];
-  } catch (e) {
-    console.error(e);
-  }
-};
-
-const unApprove = async () => {
-  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
-  try {
-    await procurementApi.unApprove({ ids: markedID.value });
-    showToast(approveDocument);
-    await getProcurementData({});
-    markedID.value = [];
-  } catch (e) {
-    console.error(e);
-  }
-};
-
+}
+const cleanFilterForm = () => {
+  filterForm.value = {}
+}
 const closeFilterModal = async () => {
   filterModal.value = false;
   cleanFilterForm();
-  await getProcurementData();
+  await getPlan();
   useFilterCanvasVisible().closeFilterCanvas();
 };
 
-const cleanFilterForm = () => {
-  filterForm.value = {};
-};
+onMounted(()=>{
+  getOrganizations()
+  getAuthors()
+})
 
-const getAuthors = async () => {
-  const { data } = await user.getAuthors();
-  authors.value = data.result.data;
-};
-
-const getOrganizations = async () => {
-  const { data } = await organizationApi.get({
-    page: 1,
-    itemsPerPage: 100000,
-    sortBy: "name",
-  });
-  organizations.value = data.result.data;
-};
-
-const getStorages = async () => {
-  const { data } = await storageApi.get({
-    page: 1,
-    itemsPerPage: 100000,
-    sortBy: "name",
-  });
-  storages.value = data.result.data;
-};
-const getCounterparties = async () => {
-  const { data } = await counterpartyApi.get({
-    page: 1,
-    itemsPerPage: 100000,
-    sortBy: "name",
-  });
-  counterparties.value = data.result.data;
-};
-
-const getCpAgreements = async () => {
-  const { data } = await cpAgreementApi.get({
-    page: 1,
-    itemsPerPage: 100000,
-    sortBy: "name",
-  });
-  counterpartyAgreements.value = data.result.data;
-};
-
-const getCurrencies = async () => {
-  const { data } = await currencyApi.get({
-    page: 1,
-    itemsPerPage: 100000,
-    sortBy: "name",
-  });
-
-  currencies.value = data.result.data;
-};
-
-const show = (item) => {
-  window.open(`/procurementOfGoods/${item.id}`, "_blank");
-};
-
-watch(markedID.value, (newVal) => {
-  markedItem.value = procurements.value.find((el) => el.id === newVal[0]);
-});
-
-watch(
-  search,
-  debounce((newValue) => {
-    debounceSearch.value = newValue;
-  }, 500)
-);
-
-onMounted(() => {
-  getOrganizations();
-  getCounterparties();
-  getCpAgreements();
-  getStorages();
-  getCurrencies();
-  getAuthors();
-});
 </script>
 
 <template>
@@ -345,7 +184,7 @@ onMounted(() => {
               :key="idx"
               @click="button.function"
             />
-            <create-base :marked-i-d="markedID[0]" />
+           
           </div>
         </div>
         <div class="custom_search">
@@ -373,9 +212,7 @@ onMounted(() => {
             title="Фильтр"
             @click="useFilterCanvasVisible().toggleFilterCanvas()"
           />
-          <span v-if="counterFilter !== 0" class="countFilter">{{
-            counterFilter
-          }}</span>
+          <span v-if="counterFilter !== 0" class="countFilter">5</span>
         </div>
       </div>
     </div>
@@ -389,11 +226,11 @@ onMounted(() => {
         :loading="loading"
         :headers="headers"
         :items-length="paginations.total || 0"
-        :items="procurements"
+        :items="plans"
         :item-value="headers.title"
         :search="debounceSearch"
         v-model="markedID"
-        @update:options="getProcurementData"
+        @update:options="getPlan"
         page-text="{0}-{1} от {2}"
         :items-per-page-options="[
           { value: 25, title: '25' },
@@ -420,104 +257,45 @@ onMounted(() => {
               >
               </CustomCheckbox>
             </td>
-            <td>{{ item.doc_number }}</td>
-            <td>{{ getDateTimeInShow(item.date) }}</td>
-            <td>
-              <v-chip
-                style="height: 50px !important"
-                class="w-100 d-flex justify-center"
-                :color="getColor(item.active, item.deleted_at)"
-              >
-                <span class="padding: 5px;">{{
-                  getStatus(item.active, item.deleted_at)
-                }}</span>
-              </v-chip>
-            </td>
-            <td>{{ item.counterparty.name }}</td>
-            <td>{{ item.organization.name }}</td>
-            <td>{{ item.storage.name }}</td>
-            <td>{{ item.author.name }}</td>
-            <td>{{ item.currency.name }}</td>
+            <td>{{ getDateTimeInShow(item.created_at) }}</td>
+            
+            <td>{{ item.organization.name }}</td> 
+            <td>{{ item.year}}</td>
           </tr>
         </template>
       </v-data-table-server>
     </v-card>
     <filter-canvas>
       <div class="d-flex flex-column ga-2 w-100">
-        <custom-filter-text-field
-          label="От"
-          type="datetime-local"
-          class="date"
-          min-width="106"
-          clearable
-          v-model="filterForm.startDate"
-        />
-        <custom-filter-text-field
-          label="По"
-          type="datetime-local"
-          class="date"
-          min-width="106"
-          clearable
-          v-model="filterForm.endDate"
-        />
-      </div>
-      <div class="d-flex flex-column ga-2">
-        <custom-filter-autocomplete
-          min-width="106"
-          clearable
-          label="Организация"
-          :items="organizations"
-          v-model="filterForm.organization_id"
-        />
-        <custom-filter-autocomplete
-          min-width="106"
-          label="Поставщик"
-          :items="counterparties"
-          v-model="filterForm.counterparty_id"
-        />
-      </div>
-      <div class="d-flex flex-column ga-2">
-        <custom-filter-autocomplete
-          min-width="106"
-          label="Склад"
-          :items="storages"
-          v-model="filterForm.storage_id"
-        />
-        <custom-filter-autocomplete
-          min-width="106"
-          label="Договор"
-          :items="counterpartyAgreements"
-          v-model="filterForm.counterparty_agreement_id"
-        />
-      </div>
-      <div class="d-flex ga-2">
-        <custom-filter-autocomplete
-          label="Статус"
-          :items="statusOptions"
-          v-model="filterForm.active"
-        />
-        <custom-filter-autocomplete
-          label="Удален"
-          :items="markedForDeletion"
-          v-model="filterForm.deleted"
-        />
-      </div>
-      <div class="d-flex ga-2">
         <custom-filter-autocomplete
           label="Автор"
+          type="text"
+          class="date"
+          min-width="106"
+          clearable
           :items="authors"
           v-model="filterForm.author_id"
         />
         <custom-filter-autocomplete
-          label="Валюта"
-          :items="currencies"
-          v-model="filterForm.currency_id"
+          min-width="106"
+          clearable
+          :label="t('headers.organization')"
+          :items="organizations"
+          v-model="filterForm.organization_id"
         />
+        <custom-filter-text-field
+        min-width="106"
+        clearable
+        type="number"
+        :label="t('headers.year')"
+        v-model="filterForm.year"
+        />
+        
       </div>
       <div class="d-flex justify-end">
         <div class="d-flex ga-2" style="margin-right: -6%">
           <v-btn tabindex="-1" color="red" class="btn" @click="closeFilterModal"
-            >сбросить</v-btn
+            >{{ $t('buttonGoods.reset') }}</v-btn
           >
           <v-btn
             tabindex="-1"
@@ -525,11 +303,11 @@ onMounted(() => {
             class="btn"
             @click="
               () => {
-                getProcurementData();
+                getPlan();
                 useFilterCanvasVisible().closeFilterCanvas();
               }
             "
-            >применить</v-btn
+            >{{ $t('buttonGoods.apply') }}</v-btn
           >
         </div>
       </div>

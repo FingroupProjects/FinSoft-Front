@@ -248,9 +248,11 @@ const salary = ref({
   ],
 });
 
+
+
 const menu = ref([
   {
-    id: 1,
+    id: 8,
     title: "Дашборд",
     icon: "home",
     link: "/planning",
@@ -295,6 +297,13 @@ const menu = ref([
     icon: "adminPanel",
     link: "/adminPanel",
     key: "settings",
+  },
+  {
+    id: 1,
+    title: "Планы",
+    icon: "plan",
+    link: "/planning",
+    key: "plans",
   },
 ]);
 

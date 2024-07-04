@@ -182,6 +182,12 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
   }
 };
 
+const send =()=> {
+  if (markedID.value.length === 0)
+    return showToast(selectOneItemMessage, "warning");
+  isSend.value = true;
+}
+
 watch(markedID, (newVal) => {
   markedItem.value = counterparties.value.find((el) => el.id === newVal[0]);
 });
@@ -342,7 +348,7 @@ onMounted(async () => {
           <Button name="create" v-if="createAccess('counterparty')" @click="isCreate = true;" />
           <Button name="copy" v-if="createAccess('counterparty')" @click="createBase()" />
           <Button name="delete" v-if="removeAccess('counterparty')" @click="compute({})" />
-          <Button name="sendMessage" @click="isSend = true;"  :count="markedID.length" />
+          <Button name="sendMessage" @click="send()"  :count="markedID.length" />
           <Button name="excel" @click="getExcel(counterpartyApi, 'Контрагенты')" />
         </div>
         <div class="custom_search">

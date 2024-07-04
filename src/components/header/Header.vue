@@ -67,7 +67,7 @@ onUnmounted(() => {
     </template>
 
     <v-app-bar-title>
-      <span  @click="$router.push('/planning')" class="title cursor-pointer">SOHIBKOR / {{ organizationName }}</span>
+      <span  @click="$router.push('/mainpage')" class="title cursor-pointer">SOHIBKOR / {{ organizationName }}</span>
     </v-app-bar-title>
 
     <template v-slot:append>
