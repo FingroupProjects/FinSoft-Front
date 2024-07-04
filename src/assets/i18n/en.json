@@ -3,7 +3,8 @@
     "procurement": "Procurement",
     "procurementCreate": "Procurement (create)",
     "procurementShow": "Procurement (show)",
-    "settingProces": "Setting proces"
+    "settingProces": "Setting proces",
+    "providerReturn": "Provider return"
   },
   "btns" : {
     "create": "Сreate",
@@ -20,7 +21,9 @@
     "delete": "Delete",
     "close": "Close",
     "img": "Image",
-    "fill": "Fill"
+    "fill": "Fill",
+    "sendMessage": "Send message",
+    "send":"Send"
   },
   "headers": {
     "doc_number": "Doc number",
@@ -44,7 +47,8 @@
     "filter": "Filter",
     "flawOfGoods": "Flaw of goods",
     "setting": "Setting",
-    "base" : "Base"
+    "base" : "Base",
+    "agreement": "Agreement"
   },
   "menu": {
     "dashboard": "Dashboard",

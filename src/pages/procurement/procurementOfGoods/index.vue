@@ -84,7 +84,7 @@ const getProcurementData = async ({
   itemsPerPage,
   sortBy,
   search,
-} = {}) => {
+  } = {}) => {
   counterFilter.value = 0;
   countFilter();
   filterModal.value = false;
@@ -552,7 +552,6 @@ onMounted(() => {
         </div>
       </div>
     </filter-canvas>
-    
   </div>
 </template>
 

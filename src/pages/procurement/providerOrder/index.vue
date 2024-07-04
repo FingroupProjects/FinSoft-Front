@@ -34,8 +34,10 @@ import {useFilterCanvasVisible} from "../../../store/canvasVisible.js";
 import copyDocument from "../../../api/documents/copyDocument.js";
 import getColor from "../../../composables/displayed/getColor.js";
 import getStatus from "../../../composables/displayed/getStatus.js";
+import { useI18n } from "vue-i18n";
 
 const router = useRouter()
+const { t } = useI18n({ useScope: "global" });
 
 const loading = ref(true)
 const loadingRate = ref(true)
@@ -82,14 +84,14 @@ const filterForm = ref({
 
 
 const headers = ref([
-  {title: 'Номер', key: 'doc_number'},
-  {title: 'Дата', key: 'date'},
-  { title: "Статус", key: "active" },
-  {title: 'Поставщик', key: 'counterparty.name'},
-  {title: 'Организация', key: 'organization.name'},
-  {title: 'Автор', key: 'author.name'},
-  {title: 'Валюта', key: 'currency.name'},
-])
+    { title: t('headers.doc_number'), key: "doc_number" },
+    { title: t('headers.date'), key: "date" },
+    { title: t('headers.active'), key: "active" },
+    { title: t('headers.counterparty'), key: "counterparty.name" },
+    { title: t('headers.organization'), key: "organization.name" },
+    { title: t('headers.author'), key: "author.name" },
+    { title: t('headers.currency'), key: "currency.name" },
+  ]);
   
 const getProviderOrderData = async ({page, itemsPerPage, sortBy, search} = {}) => {
   count.value = 0;
@@ -347,10 +349,10 @@ watch(search, debounce((newValue) => {
   <div class="pa-4">
       <div class="d-flex justify-space-between calcWidth">
         <div class="d-flex align-center ga-2 pe-2 ms-4">
-          <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Заказ поставщику</span>
+          <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">{{ $t("menu.providerOrder")}} </span>
         </div>
         <div class="d-flex justify-end ga-2">
-          <div class="d-flex w-100 justify-end mb-3">
+          <div class="d-flex w-100 justify-end mb-3"> 
           <div class="d-flex ga-2 position-relative">
             <Button
               v-for="(button, idx) in headerButtons"
@@ -368,7 +370,7 @@ watch(search, debounce((newValue) => {
             v-model="search"
             prepend-inner-icon="search"
             density="compact"
-            label="Поиск..."
+            :label="t('search')"
             variant="outlined"
             :color="BASE_COLOR"
             rounded="lg"
@@ -460,31 +462,31 @@ watch(search, debounce((newValue) => {
 
       <filter-canvas>
         <div class="d-flex flex-column ga-2 w-100">
-          <custom-filter-text-field label="Дата от" class="date" type="date" min-width="106"  v-model="filterForm.startDate"/>
-          <custom-filter-text-field label="Дата до" class="date" type="date" min-width="106"  v-model="filterForm.endDate"/>
+          <custom-filter-text-field :label="t('headers.from')" class="date" type="date" min-width="106"  v-model="filterForm.startDate"/>
+          <custom-filter-text-field :label="t('headers.to')" class="date" type="date" min-width="106"  v-model="filterForm.endDate"/>
         </div>
         <div class="d-flex ga-2">
-          <custom-filter-autocomplete label="Статус" :items="statusOptions" v-model="filterForm.active"/>
-          <custom-filter-autocomplete label="Удалён" :items="markedForDeletion" v-model="filterForm.deleted"/>
+          <custom-filter-autocomplete :label="t('headers.active')" :items="statusOptions" v-model="filterForm.active"/>
+          <custom-filter-autocomplete :label="t('statuses.deleted')" :items="markedForDeletion" v-model="filterForm.deleted"/>
         </div>
         <div class="d-flex ga-2">
-          <custom-filter-autocomplete label="Организация" :items="organizations"  v-model="filterForm.organization_id"/>
-          <custom-filter-autocomplete label="Поставщик" :items="counterparties" v-model="filterForm.counterparty_id"/>
+          <custom-filter-autocomplete :label="t('headers.organization')" :items="organizations"  v-model="filterForm.organization_id"/>
+          <custom-filter-autocomplete :label="t('headers.counterparty')" :items="counterparties" v-model="filterForm.counterparty_id"/>
         </div>
         <div class="d-flex ga-2">
-          <custom-filter-autocomplete label="Склад" :items="storages" v-model="filterForm.storage_id"/>
-          <custom-filter-autocomplete label="Валюта" :items="currencies" v-model="filterForm.currency_id"/>
+          <custom-filter-autocomplete :label="t('headers.storage')" :items="storages" v-model="filterForm.storage_id"/>
+          <custom-filter-autocomplete :label="t('headers.currency')" :items="currencies" v-model="filterForm.currency_id"/>
         </div>
         <div class="d-flex ga-2">
-          <custom-filter-autocomplete label="Автор" :items="authors" v-model="filterForm.author_id"/>
-          <custom-filter-autocomplete label="Договор" :items="counterpartyAgreements" v-model="filterForm.counterparty_agreement_id"/>
+          <custom-filter-autocomplete :label="t('headers.author')" :items="authors" v-model="filterForm.author_id"/>
+          <custom-filter-autocomplete :label="t('headers.agreement')" :items="counterpartyAgreements" v-model="filterForm.counterparty_agreement_id"/>
         </div>
         <div class="d-flex justify-end ga-2">
           <div class="d-flex ga-2" style="margin-right: -6%;">
-            <v-btn tabindex="-1" color="red" class="btn" @click="closeFilterModal">сбросить</v-btn>
-            <v-btn tabindex="-1" :color="BASE_COLOR" class="btn"  @click="() => {getProviderOrderData(); useFilterCanvasVisible().closeFilterCanvas()}">применить</v-btn>
+            <v-btn tabindex="-1" color="red" class="btn" @click="closeFilterModal">{{$t('buttonGoods.reset')}}</v-btn>
+            <v-btn tabindex="-1" :color="BASE_COLOR" class="btn"  @click="() => {getProviderOrderData(); useFilterCanvasVisible().closeFilterCanvas()}">{{ $t('buttonGoods.apply') }} </v-btn>
           </div>
-        </div>
+        </div> 
       </filter-canvas>
   </div>
 

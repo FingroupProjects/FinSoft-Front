@@ -27,7 +27,10 @@ import {useModalCreateBased} from "../../../store/modalCreateBased.js";
 import getDataBased from "../../../composables/otherQueries/getDataBased.js";
 import formatInputPrice from "../../../composables/format/formatInputPrice.js";
 import CustomSearchableSelect from "../../../components/formElements/CustomSearchableSelect.vue";
+import { useI18n } from "vue-i18n";
 
+
+const { t } = useI18n({ useScope: "global" });
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter()
 const route = useRoute()
@@ -66,11 +69,11 @@ const currencies = ref([])
 const listGoods = ref([])
 
 const headers = ref([
-  {title: 'Товары', key: 'goods', sortable: false},
-  {title: 'Количество', key: 'currency.name', sortable: false},
-  {title: 'Цена', key: 'currency.name', sortable: false},
-  {title: 'Сумма', key: 'currency.name', sortable: false},
-])
+  { title: t('headers.goods'), key: "goods", sortable: false },
+  { title: t('headers.count'), key: "currency.name", sortable: false },
+  { title: t('headers.price'), key: "currency.name", sortable: false },
+  { title: t('headers.sum'), key: "currency.name", sortable: false },
+]);
 
 const getOrganizations = async () => {
   const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
@@ -286,8 +289,8 @@ onMounted(() => {
   <div class="document">
     <div class="d-flex justify-space-between documentCalcWidth">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
-        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">Возврат поставщику (создание)</span>
-      </div>
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }"> {{ $t("titles.providerReturnCreate") }}</span>
+      </div>  
       <v-card variant="text" class="d-flex align-center ga-2">
         <div class="d-flex w-100">
           <div class="d-flex ga-2 mt-1 me-3 py-2">
@@ -304,12 +307,12 @@ onMounted(() => {
     <div class="documentHeight documentCalcWidth">
       <v-col class="d-flex flex-column ga-2 pb-0">
         <div class="d-flex flex-wrap ga-4">
-          <custom-text-field disabled value="Номер" v-model="form.number"/>
+          <custom-text-field disabled :value="t('headers.number')" v-model="form.number"/>
           <custom-text-field label="Дата" type="datetime-local" class="date" v-model="form.date"/>
-          <custom-autocomplete v-if="!useOrganization.getIsHasOneOrganization" label="Организация" :items="organizations"  v-model="form.organization"/>
-          <custom-autocomplete label="Поставщик" :items="counterparties" v-model="form.counterparty"/>
-          <custom-autocomplete label="Договор" :disabled="!form.counterparty" :items="cpAgreements" v-model="form.cpAgreement"/>
-          <custom-autocomplete label="Склад" :items="storages" v-model="form.storage"/>
+          <custom-autocomplete v-if="!useOrganization.getIsHasOneOrganization" :label="t('headers.organization')" :items="organizations"  v-model="form.organization"/>
+          <custom-autocomplete :label="t('headers.counterparty')" :items="counterparties" v-model="form.counterparty"/>
+          <custom-autocomplete :label="t('headers.agreement')" :disabled="!form.counterparty" :items="cpAgreements" v-model="form.cpAgreement"/>
+            <custom-autocomplete :label="t('headers.storage')" :items="storages" v-model="form.storage"/>
         </div>
       </v-col>
       <v-col>
@@ -397,12 +400,12 @@ onMounted(() => {
             <custom-text-field
                 readonly
                 v-model="author"
-                label="Автор"
+                :label="t('headers.author')"
                 min-width="140"
                 max-width="110"
             />
             <custom-text-field
-                label="Комментарий"
+                :label="t('headers.comment')"
                 v-model="form.comment"
                 min-width="310"
             />
@@ -410,20 +413,21 @@ onMounted(() => {
           <div class="d-flex ga-6">
             <custom-text-field
                 readonly
-                label="Количество"
+                :label="t('headers.count')"
                 v-model="totalCount"
                 min-width="130"
             />
             <custom-text-field
-                readonly
-                :value="'Общая сумма: ' + totalPrice"
-                min-width="180"
-               max-width="110"
+              readonly
+              :label="t('headers.totalSum')"
+              v-model="totalPrice"
+              min-width="180"
+              max-width="110"
             />
             <custom-autocomplete
                 readonly
                 v-model="form.currency"
-                label="Валюта"
+                :label="t('headers.currency')"
                 :items="currencies"
                 min-width="190"
                 maxWidth="190px"

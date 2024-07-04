@@ -1,3 +1,4 @@
+import SendMessage from "../../pages/list/counterparty/sendMessage.vue";
 import { api, buildParams } from "../api.js";
 
 export default {
@@ -34,4 +35,8 @@ export default {
   createLocation(data) {
     return api.post('counterpartyCoordinates', data)
   },
+  sendMessage(data) {
+    return api.post('counterparty/send-sms', data)
+  }
+  
 };

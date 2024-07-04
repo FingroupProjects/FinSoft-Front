@@ -3,7 +3,9 @@
     "procurement": "Sotib olish",
     "procurementCreate": "Sotib olish (yaratish)",
     "procurementShow": "Sotib olish (ko'rish)",
-    "settingProces": "Mahsulot narxlarini belgilash"
+    "settingProces": "Mahsulot narxlarini belgilash",
+    "providerReturn": "Yetkazuvchiga qaytarish",
+    "providerReturnCreate": "Yetkazuvchiga qaytarish(Yaratish)"
   },
   "btns" : {
     "create": "Yaratish",
@@ -20,13 +22,15 @@
     "delete": "O'chirish",
     "close": "Yopish",
     "img": "Rasm",
-    "fill": "To'ldirish"
+    "fill": "To'ldirish",
+    "sendMessage": "Xabar yuborish",
+    "send":"Yuborish"
   },
   "headers": {
     "doc_number": "Raqam",
     "date": "Sana",
     "active": "Holat",
-    "counterparty": "Yetkazib beruvchi",
+    "counterparty": "Yetkazuvchi",
     "cpAgreement": "Hamkorlik shartnomasi",
     "organization": "Tashkilot",
     "storage": "Ombor",
@@ -43,7 +47,8 @@
     "to": "Tugash sanasi",
     "filter": "Filtr",
     "flawOfGoods": "Tovarlarning etishmasligi",
-    "setting": "Sozlamalar"
+    "setting": "Sozlamalar",
+    "agreement": "Kelishuv"
   },
   "menu": {
     "dashboard": "Boshqaruv paneli",
@@ -54,12 +59,12 @@
 
     "procurement": "Sotib olish",
     "reports": "Hisobotlar",
-    "counterpartySettlement": "Yetkazib beruvchilar bilan muloqot",
-    "reconciliationReport": "Yetkazib beruvchilar hisoboti",
-    "supplyProcurementReport": "Yetkazib beruvchining xarid hisoboti",
+    "counterpartySettlement": "Yetkazuvchilar bilan muloqot",
+    "reconciliationReport": "Yetkazuvchilar hisoboti",
+    "supplyProcurementReport": "Yetkazuvchining xarid hisoboti",
     "procurementOfGoods": "Tovarlarni sotib olish",
-    "providerReturn": "Yetkazib beruvchiga qaytarish",
-    "providerOrder": "Yetkazib beruvchiga buyurtma berish",
+    "providerReturn": "Yetkazuvchiga qaytarish",
+    "providerOrder": "Yetkazuvchiga buyurtma  ",
     "writeOff": "Chiqarish",
     "posting": "Qabul qilish",
     "equipment": "Uskunalar",

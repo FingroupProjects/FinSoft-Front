@@ -14,6 +14,7 @@ import showDate from "../../../composables/date/showDate";
 import Icons from "../../../composables/Icons/Icons.vue";
 import showToast from "../../../composables/toast";
 import createCounterparty from "./create.vue";
+import sendMessage from "./sendMessage.vue"
 import debounce from "lodash.debounce";
 import { onMounted, ref, watch } from "vue";
 import {
@@ -35,8 +36,11 @@ import {
   warningMessage,
 } from "../../../composables/constant/buttons.js";
 
+
+
 const loading = ref(true);
 const isCreate = ref(false);
+const isSend = ref(false);
 const isEdit = ref(false);
 const createOnBase = ref(false);
 const hoveredRowIndex = ref(null);
@@ -161,6 +165,7 @@ function countFilter() {
 
 const toggleModal = () => {
   isCreate.value = false;
+  isSend.value = false;
   createOnBase.value = false;
   setTimeout(() => {
     isEdit.value = false;
@@ -176,6 +181,12 @@ const compute = ({ page, itemsPerPage, sortBy, search }) => {
     return massDel({ page, itemsPerPage, sortBy, search });
   }
 };
+
+const send =()=> {
+  if (markedID.value.length === 0)
+    return showToast(selectOneItemMessage, "warning");
+  isSend.value = true;
+}
 
 watch(markedID, (newVal) => {
   markedItem.value = counterparties.value.find((el) => el.id === newVal[0]);
@@ -337,6 +348,7 @@ onMounted(async () => {
           <Button name="create" v-if="createAccess('counterparty')" @click="isCreate = true;" />
           <Button name="copy" v-if="createAccess('counterparty')" @click="createBase()" />
           <Button name="delete" v-if="removeAccess('counterparty')" @click="compute({})" />
+          <Button name="sendMessage" @click="send()"  :count="markedID.length" />
           <Button name="excel" @click="getExcel(counterpartyApi, 'Контрагенты')" />
         </div>
         <div class="custom_search">
@@ -447,7 +459,19 @@ onMounted(async () => {
         compute({ page, itemsPerPage, sortBy, search });
         toggleModal();
       "
+    /> 
+
+
+    <send-message
+      :isOpen="isSend"
+      @toggleIsOpen="toggleModal()"
+      :markedID="markedID"
+      @computeCounterparty="
+        compute({ page, itemsPerPage, sortBy, search });
+        toggleModal();
+      "
     />
+    
 
     <filterCanvas>
       <div>
