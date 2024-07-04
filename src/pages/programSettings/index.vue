@@ -2,7 +2,7 @@
 import { onMounted, ref } from "vue";
 import programSettingsApi from "../../api/list/programSettingsApi.js";
 import { FIELD_COLOR , BASE_COLOR } from "../../composables/constant/colors";
-import debounce from 'lodash/debounce';
+import debounce from './../lodash/debounce';
 import showToast from "../../composables/toast";
 import {
   editMessage
