@@ -24,7 +24,8 @@
     "img": "Rasm",
     "fill": "To'ldirish",
     "sendMessage": "Xabar yuborish",
-    "send":"Yuborish"
+    "send":"Yuborish",
+    "add": "Qo'shish"
   },
   "headers": {
     "doc_number": "Raqam",
@@ -134,6 +135,9 @@
     "add": "Qo'shish",
     "delete": "O'chirish",
     "reset": "Qayta o'rnatish",
-    "apply": "Qo'llash"
+    "apply": "Qo'llash",
+    "thirdteen": "+30",
+    "fifteen": "+50",
+    "ten": "+10"
   }
 }

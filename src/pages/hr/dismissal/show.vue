@@ -153,7 +153,7 @@ onMounted(() => {
               <Button name="approve" />
               <Button name="cancel" />
               <Button name="print" @click="goToPrint(router, route, doc_name)" />
-              <Button name="save" @click="updateDismissal" />
+              <Button name="save1" @click="updateDismissal" />
               <Button name="close" @click="closeWindow" />
             </div>
           </div>

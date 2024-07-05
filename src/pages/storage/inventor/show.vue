@@ -285,7 +285,7 @@ onMounted(() => {
             <Button name="approve" @click="approve" />
             <Button name="cancel" @click="unApprove" />
             <Button name="print" @click="goToPrint(router, route, doc_name)" />
-            <Button name="save" @click="updateInventory" />
+            <Button name="save1" @click="updateInventory" />
             <Button name="close" @click="closeWindow" />
           </div>
         </div>
