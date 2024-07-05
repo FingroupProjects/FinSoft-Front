@@ -747,7 +747,7 @@ onMounted(async () => {
         </template>
         <template v-slot:item="{ item, index }">
           <tr
-            v-if="item.users.length !== 0"
+            :v-if="item.users.length !== 0"
             v-for="user in item.users" :key="user.id"
             :class="{'bg-grey-lighten-2': item.id === groupIdRef }"
             @mouseenter="hoveredRowIndex = index + 100000"
@@ -778,7 +778,7 @@ onMounted(async () => {
             </td>
             <td>{{ user?.name }}</td>
           </tr>
-          <tr v-else-if="selectedBlock === 'По группам'">
+          <tr :v-else-if="selectedBlock === 'По группам'">
             <td></td>
             <td>Нету данных!</td>
             <td></td>
@@ -800,8 +800,8 @@ onMounted(async () => {
                 <span v-show="isExistsUser" class="mt-1 ms-2 text-blue-darken-4 cursor-pointer"
                       @click="$router.push({name: 'userAccess',params: {id: idUser}})">Доступ</span>
                 <Icons v-if="removeAccess('user') && isExistsUser" @click="compute" name="delete"/>
-                <Icons title="Сохранить" v-if="createAccess('user') && !isExistsUser" @click="addUser" name="save"/>
-                <Icons title="Сохранить" v-if="updateAccess('user') && isExistsUser" @click="update" name="save"/>
+                <Icons title="Сохранить" v-if="createAccess('user') && !isExistsUser" @click="addUser" name="save1"/>
+                <Icons title="Сохранить" v-if="updateAccess('user') && isExistsUser" @click="update" name="save1"/>
                 <Icons name="close" @click="isExistsUser ? checkUpdate() : checkAndClose()" title="Закрыть"/>
               </div>
             </div>

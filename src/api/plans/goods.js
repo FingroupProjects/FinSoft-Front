@@ -9,4 +9,13 @@ export default{
         return api.get('/plan/goods', { params });
       },
 
+      getGoodsByGroupId(data){
+          return api.get('goods/goods-by-group-ids', {
+            params: {
+              ids: data.ids
+            }
+          });
+        
+      }
+
 }

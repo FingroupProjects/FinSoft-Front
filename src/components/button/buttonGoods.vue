@@ -25,6 +25,24 @@ const headerButtons = ref([
     bgColor: "#ecdbde",
     textColor: "#da432c",
   },
+  {
+    title: "30",
+    key: "thirdteen",
+    bgColor: "#524ED8",
+    textColor: "#fff",
+  },
+  {
+    title: "10",
+    key: "ten",
+    bgColor: "#524ED8",
+    textColor: "#fff",
+  },
+  {
+    title: "50",
+    key: "fifteen",
+    bgColor: "#524ED8",
+    textColor: "#fff",
+  },
 ])
 
 const filteredButtons = computed(() => {

@@ -23,7 +23,8 @@
     "img": "Image",
     "fill": "Fill",
     "sendMessage": "Send message",
-    "send":"Send"
+    "send":"Send",
+    "add": "Add"
   },
   "headers": {
     "doc_number": "Doc number",
@@ -134,6 +135,9 @@
     "add": "Add",
     "delete": "Delete",
     "reset": "Reset",
-    "apply": "Apply"
+    "apply": "Apply",
+    "thirdteen": "+30",
+    "fifteen": "+50",
+    "ten": "+10"
   }
 }

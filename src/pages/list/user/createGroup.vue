@@ -125,7 +125,7 @@ onMounted(() => {
             <div class="d-flex align-center justify-space-between">
               <div class="d-flex ga-3 align-center mt-2">
                 <Icons v-if="props.isEdit"  @click="compute" name="delete"/>
-                <Icons @click="props.isEdit ? update() : createGroup()" name="save" />
+                <Icons @click="props.isEdit ? update() : createGroup()" name="save1" />
                 <Icons name="close" @click="$emit('toggleDialog')"/>
               </div>
             </div>

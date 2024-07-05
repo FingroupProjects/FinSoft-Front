@@ -68,7 +68,7 @@ const rules = {
           <span>Изменить пароль</span>
           <div class="d-flex align-center justify-space-between">
             <div class="d-flex ga-3 align-center mt-2 me-4">
-              <Icons @click="change()" name="save"/>
+              <Icons @click="change()" name="save1"/>
             </div>
             <v-btn @click="$emit('toggleDialogPassword')" variant="text" :size="32" class="pt-2 pl-1">
               <Icons name="close"/>
