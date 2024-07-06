@@ -27,20 +27,6 @@ const { t } = useI18n({ useScope: "global" });
 
 const router = useRouter()
 
-const form = reactive({
-  sum: null,
-  base: null,
-  date: null,
-  author: null,
-  percent: null,
-  comment: null,
-  currency: null,
-  newPrice: null,
-  price_type: [],
-  good_group: [],
-  doc_number: null,
-  organization: null,
-});
 
 const goods = ref([]);
 const currencies = ref([]);
