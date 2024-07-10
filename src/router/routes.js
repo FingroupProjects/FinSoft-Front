@@ -1,4 +1,4 @@
-
+import {component} from  "vue";
 
 const routes = [
   {
