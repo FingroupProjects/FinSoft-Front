@@ -81,7 +81,7 @@ const dashboards = ref({
       link: "/",
       child: [
         { id: 1, title: "Товаров", link: "/planning/goods", key: "planingGoods" },
-        { id: 2, title: "Магазинов", link: "/planning/shops", key: "planningMarket" },
+        { id: 2, title: "Магазинов", link: "", key: "planningMarket" },
         { id: 3, title: "Складов", link: "", key: "planningStorage" },
       ],
     },
