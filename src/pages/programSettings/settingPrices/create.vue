@@ -1,39 +1,32 @@
 <script setup>
 import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
 import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
-import CustomAutocomplete from "../../../components/formElements/CustomAutocomplete.vue";
 import currentDateWithTime from "../../../composables/date/currentDateWithTime.js";
 import CustomTextField from "../../../components/formElements/CustomTextField.vue";
 import {
   BASE_COLOR,
   TITLE_COLOR,
 } from "../../../composables/constant/colors.js";
+import formatInputPrice from "../../../composables/format/formatInputPrice.js";
 import { useFilterCanvasVisible } from "../../../store/canvasVisible.js";
 import formatDateTime from "../../../composables/date/formatDateTime.js";
 import FilterCanvas from "../../../components/canvas/filterCanvas.vue";
+import { addMessage } from "../../../composables/constant/buttons";
 import settingPricesApi from "../../../api/list/settingPrices";
 import organizationsApi from "../../../api/list/organizations";
+import Button from "../../../components/button/button.vue";
 import priceTypesApi from "../../../api/list/priceType";
 import { onMounted, reactive, ref, watch } from "vue";
 import groupApi from "../../../api/list/goodGroup.js";
 import currencyApi from "../../../api/list/currency";
+import showToast from "../../../composables/toast";
+import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n({ useScope: "global" });
 
-const form = reactive({
-  sum: null,
-  base: null,
-  date: null,
-  author: null,
-  percent: null,
-  comment: null,
-  currency: null,
-  price_type: [],
-  good_group: [],
-  doc_number: null,
-  organization: null,
-});
+const router = useRouter()
+
 
 const goods = ref([]);
 const currencies = ref([]);
@@ -78,7 +71,7 @@ const getOrganizations = async () => {
   }
 };
 
-const getGoods = async (id) => {
+const getGoodsGroup = async (id) => {
   try {
     const {
       data: {
@@ -94,16 +87,15 @@ const getGoods = async (id) => {
 const getGood = async () => {
   try {
     const body = {
-      goodGroupIds: form.good_group,
-      priceTypeIds: form.price_type,
+      goodGroupIds: [2, 1],
+      priceTypeIds: [1, 2],
       changeBySum: form.sum,
       organization_id: 1,
-      date: formatDateTime(form.date),
+      date: "2024-06-27T12:12",
     };
-    console.log(body);
     const { data } = await settingPricesApi.get(body);
+    console.log(data);
     goods.value = data.result;
-    console.log(goods.value);
   } catch (e) {
     console.error(e);
   }
@@ -117,11 +109,21 @@ const create = async () => {
       start_date: form.date,
       comment: form.comment,
       basis: form.base,
-      goods: goods.value
+      goods: goods.value.map((item) => ({
+        good_id: item.prices.good_id,
+        prices: [item.prices].map((price) => ({
+          price_type_id: price.id,
+          oldPrice: price.oldPrice,
+          newPrice: price.newPrice,
+        })),
+      })),
     };
-   console.log(' body',body )
     const res = await settingPricesApi.create(body);
-    console.log(res);
+    if (res.status === 201) {
+      showToast(addMessage);
+      router.push("/settingPrices");
+      window.open(`/settingPrices/${res.data.result.id}`, "_blank");
+    }
   } catch (e) {
     console.error(e);
   }
@@ -154,28 +156,51 @@ const closeFilterModal = () => {
   useFilterCanvasVisible.closeFilterCanvas();
 };
 
+const computePrices = (item, event = "") => {
+  if (event !== "") {
+    formatInputPrice(item.prices?.newPrice, event);
+  }
+  return parseFloat(item.prices?.newPrice) < parseFloat(item.prices?.oldPrice);
+};
+
 const priceDifference = (item) => {
-  const res = Number(item.prices?.old_price) - Number(item.prices?.newPrice);
+  const res = Number(item.prices?.oldPrice) - Number(item.prices?.newPrice);
   return Math.abs(res);
 };
 
 onMounted(async () => {
   await getOrganizations();
   await getCurrencies();
-  await getGoods();
+  await getGoodsGroup();
   form.date = currentDateWithTime();
+  form.author = JSON.parse(localStorage.getItem("user")).name || null;
 });
 </script>
 <template>
-  <div class="pa-4 bg-white">
+  <div class="document">
     <div class="d-flex justify-space-between calcWidth">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
         <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">
           {{ $t("titles.settingProces") }}
         </span>
       </div>
+      <v-card variant="text" class="d-flex align-center ga-2">
+        <div class="d-flex w-100">
+          <div class="d-flex ga-2 mt-1 me-3 py-2">
+            <button
+              class="btn"
+              @click="useFilterCanvasVisible().toggleFilterCanvas()"
+            >
+              {{ $t("headers.setting") }}
+            </button>
+            <Button @click="create()" name="save" />
+            <Button @click="$router.push('/settingPrices')" name="close" />
+          </div>
+        </div>
+      </v-card>
     </div>
-    <div>
+    <v-divider />
+    <div class="documentHeight documentCalcWidth">
       <v-col class="d-flex flex-column ga-2">
         <div class="d-flex flex-wrap ga-4">
           <custom-text-field
@@ -189,21 +214,11 @@ onMounted(async () => {
             type="datetime-local"
             v-model="form.date"
           />
-          <button
-            class="btn"
-            @click="useFilterCanvasVisible().toggleFilterCanvas()"
-          >
-            {{ $t("headers.setting") }}
-          </button>
-          <button
-            class="btn"
-            @click="create()"
-          >
-            {{ 'Сохранить' }}
-          </button>
         </div>
       </v-col>
-      <div style="height: 65vh; overflow: auto">
+      <div
+        style="height: calc(95vh - 220px); overflow: auto; margin-left: 12px"
+      >
         <div v-if="goods.length > 0">
           <div class="d-flex">
             <div
@@ -213,7 +228,7 @@ onMounted(async () => {
                 justify-content: center;
                 align-items: center;
               "
-              class="br"
+              class="br bold"
             >
               Товары
             </div>
@@ -223,42 +238,37 @@ onMounted(async () => {
               style="min-width: 250px"
               class="d-flex flex-column"
             >
-              <div class="br">{{ item.name }}</div>
+              <div class="br bold">{{ item.name }}</div>
               <div class="d-flex">
-                <div style="min-width: 100px" class="br">Старая</div>
-                <div style="min-width: 100px" class="br">Новая</div>
-                <div style="min-width: 50px" class="br">+-</div>
+                <div style="min-width: 100px" class="br bold">Старая</div>
+                <div style="min-width: 100px" class="br bold">Новая</div>
+                <div style="min-width: 50px" class="br bold">+-</div>
               </div>
             </div>
           </div>
-          <div v-for="(item, index) in goods" :key="index" class="d-flex">
+          <div v-for="(item) in goods" :key="item.id" class="d-flex">
             <div style="min-width: 200px" class="br">
               {{ item.prices?.name }}
             </div>
             <div v-for="(item, index) in goods" :key="index" class="d-flex">
               <div style="min-width: 100px" class="br">
-                {{ parseFloat(item.prices?.old_price) }}
+                {{ parseFloat(item.prices?.oldPrice) }}
               </div>
               <div style="min-width: 100px" class="br">
                 <input
                   class="input"
-                  :v-model="goods[index].prices ? goods[index].prices.newPrice : ''"
+                  v-model.number="goods[index].prices.newPrice"
+                  @input="computePrices(item, $event)"
                   type="text"
                 />
               </div>
               <div style="min-width: 50px" class="br">
-                <div
-                  :class="
-                    item.prices?.newPrice > item.prices?.old_price
-                      ? 'green-dot'
-                      : 'red-dot'
-                  "
-                />
+                <div :class="computePrices(item) ? 'green-dot' : 'red-dot'" />
               </div>
             </div>
           </div>
           <div class="d-flex">
-            <div style="min-width: 200px" class="br">Итого</div>
+            <div style="min-width: 200px" class="br bold">Итого</div>
             <div v-for="(item, index) in goods" :key="index" class="d-flex">
               <div style="min-width: 100px" class="br">{{ goods.length }}</div>
               <div style="min-width: 100px" class="br">
@@ -269,7 +279,7 @@ onMounted(async () => {
           </div>
         </div>
       </div>
-      <div class="d-flex ga-10 mt-4">
+      <div class="d-flex ga-10 mt-4 ml-4">
         <custom-text-field
           readonly
           v-model="form.author"
@@ -410,5 +420,8 @@ th {
 .input {
   outline: none;
   max-width: 80px;
+}
+.bold {
+  font-weight: 600;
 }
 </style>
