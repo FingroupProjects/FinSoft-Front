@@ -1,4 +1,5 @@
 <script setup>
+import { toInteger } from "lodash";
 import {BASE_COLOR, FIELD_COLOR} from "../../composables/constant/colors.js"
 
 defineProps({
@@ -13,7 +14,6 @@ defineProps({
     required: false
   }
 })
-
 </script>
 
 <template>

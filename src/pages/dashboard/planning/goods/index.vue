@@ -145,6 +145,7 @@ const getAuthors = async () => {
 };
 
 
+
 const countFilter = () =>{
   for (const key in filterForm.value) {
     if (filterForm.value[key] !== null) {
@@ -245,7 +246,7 @@ onMounted(()=>{
           <tr
             @mouseenter="hoveredRowIndex = index"
             @mouseleave="hoveredRowIndex = null"
-            @dblclick="show(item)"
+            @dblclick="show(router.push({name:'planningGoodsShow', params:{id:item.id}}))"
             :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
             style="font-size: 12px"
           >

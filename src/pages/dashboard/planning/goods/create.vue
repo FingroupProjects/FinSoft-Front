@@ -1,12 +1,7 @@
 <script setup>
 import {computed, defineEmits, onMounted, onUnmounted, reactive, ref, watch,} from "vue";
 import {useConfirmDocumentStore} from "../../../../store/confirmDocument.js";
-import {
-  FIELD_COLOR,
-  FIELD_OF_SEARCH,
-  BASE_COLOR,
-  TITLE_COLOR,
-} from "../../../../composables/constant/colors.js";
+import {FIELD_COLOR, FIELD_OF_SEARCH, BASE_COLOR, TITLE_COLOR } from "../../../../composables/constant/colors.js";
 import {useRoute, useRouter} from "vue-router";
 import CustomTextField from "../../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../../components/formElements/CustomAutocomplete.vue";
@@ -31,18 +26,15 @@ const organizations = ref([]);
 const listCategoryGoods = ref([]);
 const listOfGoods = ref([]);
 const months = ref([]);
-const readyData = ref([]); 
 const selected_groups = ref([]);
 const viewAdd = ref(false)
 const selectedGoods = ref(null)
 const addedGoods = ref([])
-const quantityOf = ([])
 const form = reactive({
   year: null,
   organization: null,
 });
 
-const selectedValue = ref([])
 const author = ref(null)
 const goods = ref([
   {
@@ -50,13 +42,9 @@ const goods = ref([
     month_id: null,
     quantity: null, 
   }
-]);
+]); 
 
-const isAdded = () =>{
-  viewAdd.value = true
-  console.log(goods.value)
-  
-}
+
 
   const addToArray = (selectedItem) => {
   
@@ -69,23 +57,28 @@ const isAdded = () =>{
   };
 
   const valueCustom = (valueBtn) => {
-      if (valueBtn === 'ten') {
-        selectedValue.value +=10
-      } else if(valueBtn === 'thirdteen'){
-        selectedValue.value += 30 
-      }else if(valueBtn === 'fifteen'){
-        selectedValue.value += 50 
+        if (valueBtn === 'ten') {
+          goods.quantity += 10;
+        } else if(valueBtn === 'thirdteen'){
+          goods.quantity += 30;
+        } else if(valueBtn === 'fifteen'){
+          goods.quantity += 50;
       }
     };
 
 const getOrganizations = async () => {
   const { data } = await organizationApi.get({
     page: 1,
-    itemsPerPage: 100000,
+    itemsPerPage: 100,
     sortBy: "name",
   });
   organizations.value = data.result.data;
 };
+
+const isAdded = () =>{
+  viewAdd.value = true
+  console.log(form.organization)
+}
 
 const getMonths = async () => {
   try {
@@ -98,7 +91,7 @@ const getMonths = async () => {
 
 
 const getGoods = async (good_storage_id, good_organization_id) => {
-  const { data } = await goodApi.get({ page: 1, itemsPerPage: 100000 });
+  const { data } = await goodApi.get({ page: 1, itemsPerPage: 100 });
   listOfGoods.value = data.result.data.map((item) => ({
     id:item.id,
     name: item.name
@@ -140,21 +133,29 @@ const handleInput = (goodId, monthId, event) => {
   if (index !== -1) {
     goods.value[index].quantity = value;
   } else {
-    goods.value.push({
+      goods.value.push({
       good_id: goodId,
       month_id: monthId,
-      quantity: value,
-    });
+      quantity: value,  
+    });    
   }
 };
   
 const createPlan = async () => {
   try {
-    const payload = {
+    const updatedGoods = goods.value
+      .filter(item => item.good_id !== null && item.month_id !== null && item.quantity !== null)
+      .map(item => ({
+        good_id: item.good_id,
+        month_id: item.month_id,
+        quantity: item.quantity
+      }));
+
+      const payload = {
       year: form.year,
-      organization_id: form.organization.id,
-      goods: readyData.value
-    };
+      organization_id: form.organization,
+      goods: updatedGoods      
+    };    
 
     const response = await plan.add(payload);
     console.log(response.data); 
@@ -226,24 +227,6 @@ onMounted(() => {
               name="add"
               @click="isAdded()"
             />
-            <div>
-              <button-goods
-                name="ten"
-                @click="valueCustom('ten')"
-              />
-            </div>
-            <div>
-              <button-goods
-              name="thirdteen"
-              @click="valueCustom('thirdteen')"
-            />
-            </div>
-            <div>
-              <button-goods
-              name="fifteen"
-              @click="valueCustom('fifteen')"
-            />
-            </div>
         </div>
       </v-col>
       <v-col>

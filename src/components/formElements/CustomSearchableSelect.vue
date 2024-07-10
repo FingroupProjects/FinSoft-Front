@@ -108,6 +108,7 @@ const getGood = async (good) => {
     filterData = {
       storage_id: typeof props.storage === "object" ? props.storage.id : props.storage,
       organization_id: typeof props.organization === "object" ? props.organization.id : props.organization,
+    
     }
   }
 
