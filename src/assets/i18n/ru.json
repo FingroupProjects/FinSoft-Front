@@ -50,13 +50,14 @@
     "flawOfGoods": "Недостаток товаров",
     "setting": "Настройка",
     "base" : "Основание",
-    "agreement": "Договор"
+    "agreement": "Договор",
+    "year": "Год"
   },
   "menu": {
     "dashboard": "Дашборд",
     "planning":"План продаж",
     "planingGoods": "Товаров", 
-    "planningMarket" : "Магазинов",
+    "planningShops" : "Магазинов",
     "planningStorage" : "Складов",
     "plans": "Планы",
 
