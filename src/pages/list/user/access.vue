@@ -48,6 +48,7 @@ const documentHeaders = ref([
   { title: "Обновление", key: "update", align: "start" },
   { title: "Удаление", key: "delete", align: "start" },
   { title: "Проведение", key: "approve", align: "start" },
+  { title: "Отмена", key: "reject", align: "start" },
 ]);
 
 
@@ -669,6 +670,17 @@ onMounted(() => {
                       "
                   ></CustomCheckbox>
                 </td>
+                <td>
+                  <CustomCheckbox
+                      @change="lineMarking(item, 'reject')"
+                      :checked="
+                        loading
+                          ? false
+                          : isAllChecked('reject', 2) ||
+                            item.access.includes('reject')
+                      "
+                  ></CustomCheckbox>
+                </td>
               </tr>
               </tbody>
             </template>
@@ -831,6 +843,18 @@ onMounted(() => {
                       "
                   ></CustomCheckbox>
                 </td>
+                <td>
+                  <CustomCheckbox
+                      @change="lineMarking(item, 'reject')"
+                      :checked="
+                        loading
+                          ? false
+                          : isAllChecked('reject', 5) ||
+                            item.access.includes('reject')
+                      "
+                  ></CustomCheckbox>
+                </td>
+
               </tr>
               </tbody>
             </template>
