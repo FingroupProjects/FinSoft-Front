@@ -132,7 +132,7 @@ const getProviderDetails = async () => {
 
 const getOrganizations = async () => {
   const { data } = await organizationApi.get({page: 1, itemsPerPage: 100000, sortBy: 'name'});
-  organizations.value = data.result.data
+  organizations.value = data.result.data  
 }
 
 const getCounterparties = async () => {

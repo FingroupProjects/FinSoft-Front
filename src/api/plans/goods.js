@@ -16,6 +16,11 @@ export default{
             }
           });
         
+      },
+      getById(id) {
+        return api.get(`/plan/goods/${id}`);
+      },
+      update(id, body) {
+        return api.patch(`/plan/goods/${id}`, body)
       }
-
 }

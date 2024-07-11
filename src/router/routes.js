@@ -29,7 +29,6 @@ const routes = [
     name: "planningGoodsCreate",
     component: () => import("../pages/dashboard/planning/goods/create.vue"),
   },
-
   {
     path: "/procurementOfGoods",
     name: "procurementOfGoods",
