@@ -16,6 +16,7 @@ import monthApi from "../../../../api/list/schedule.js";
 import plan from "../../../../api/plans/goods.js"
 import groupApi from "../../../../api/list/goodGroup.js";
 import { forIn } from "lodash";
+import showToast from "../../../../composables/toast/index.js";
 
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter();
@@ -159,8 +160,10 @@ const createPlan = async () => {
 
     const response = await plan.add(payload);
     console.log(response.data); 
+    showToast("Успешно добавлено", 'green')
   } catch (error) {
     console.error('Error creating plan:', error);
+    showToast("Ошибка при создании плана:", 'red')
     if (error.response) {
       console.error('Response data:', error.response.data); 
     }

@@ -47,7 +47,6 @@ const goods = ref([
 
 
   const addToArray = (selectedItem) => {
-  
     if (selectedItem && !addedGoods.value.some(item => item.name === selectedItem)) {
     const newItem = listOfGoods.value.find(item => item.name === selectedItem);
       if (newItem) {
@@ -201,7 +200,7 @@ const updatePlan = async () => {
           });
         });
         return goods;
-      }).flat() // Сглаживание массива в один массив goods
+      }).flat() 
     };
 
     const response = await plan.update(id, payload)
@@ -295,7 +294,7 @@ onMounted(() => {
             />
             </div>
         </div>
-      </v-col>
+      </v-col>          
       <v-col>
         <table class="table">
           <thead>

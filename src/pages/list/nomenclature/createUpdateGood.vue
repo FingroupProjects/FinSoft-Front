@@ -352,7 +352,7 @@ onMounted(async () => {
                 : createAccess('nomenclature')
             "
             @click="isEdit && !isCreateOnBase ? updateGood() : createGood()"
-            name="save"
+            name="save1"
           />
           <Button
             @click="
