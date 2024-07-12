@@ -30,6 +30,21 @@ const routes = [
     component: () => import("../pages/dashboard/planning/goods/create.vue"),
   },
   {
+    path: "/planning/shops",
+    name: "planningShops",
+    component: () => import("../pages/dashboard/planning/shops/index.vue"),
+  },
+  {
+    path: "/planning/shops/:id",
+    name: "planningShopsShow",
+    component: () => import("../pages/dashboard/planning/shops/show.vue"),
+  },
+  {
+    path: "/planning/shops/create",
+    name: "planningShopsCreate",
+    component: () => import("../pages/dashboard/planning/shops/create.vue"),
+  },
+  {
     path: "/procurementOfGoods",
     name: "procurementOfGoods",
     component: () =>

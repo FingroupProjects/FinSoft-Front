@@ -49,13 +49,14 @@
     "filter": "Filtr",
     "flawOfGoods": "Tovarlarning etishmasligi",
     "setting": "Sozlamalar",
-    "agreement": "Kelishuv"
+    "agreement": "Kelishuv",
+    "year": "Yil"
   },
   "menu": {
     "dashboard": "Boshqaruv paneli",
     "planning":"Savdo rejasi",
     "planingGoods": "Tovarlar", 
-    "planningMarket" : "Do'konlar",
+    "planningShops" : "Do'konlar",
     "planningStorage" : "Omborlar",
 
     "procurement": "Sotib olish",

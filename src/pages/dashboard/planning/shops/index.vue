@@ -9,8 +9,10 @@ import CustomCheckbox from "../../../../components/checkbox/CustomCheckbox.vue";
 import { useModalCreateBased } from "../../../../store/modalCreateBased.js";
 import { useFilterCanvasVisible } from "../../../../store/canvasVisible.js";
 import FilterCanvas from "../../../../components/canvas/filterCanvas.vue";
-import plan from "../../../../api/plans/goods.js"
+import getStatus from "../../../../composables/displayed/getStatus.js";
 import organizationApi from "../../../../api/list/organizations";
+import getColor from "../../../../composables/displayed/getColor.js";
+import plan from "../../../../api/plans/shops.js"
 import showToast from "../../../../composables/toast/index.js";
 import Button from "../../../../components/button/button.vue";
 import Icons from "../../../../composables/Icons/Icons.vue";
@@ -21,24 +23,22 @@ import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n({ useScope: "global" });
+const modalCreateBased = useModalCreateBased();
 
 const router = useRouter();
-
-const loading = ref(true);
-const filterModal = ref(false);
-const hoveredRowIndex = ref(null);
-
-const plans = ref([])
 const markedID = ref([]);
+const plans = ref([])
 const markedItem = ref([]);
 const search = ref("");
 const debounceSearch = ref("");
 const paginations = ref([]);
 const counterFilter = ref(0);
+const loading = ref(true);
+const filterModal = ref(false);
+const hoveredRowIndex = ref(null);
 
 const organizations = ref([]);
 const authors = ref([]);
-const modalCreateBased = useModalCreateBased();
 
 const filterForm = ref({
   author_id: null,
@@ -53,50 +53,26 @@ const headers = ref([
   { title: "Год", key: "year" }
 ]);
 
-const getPlan = async({
-  page,
-  itemsPerPage,
-  sortBy,
-  search
-  }= {}) => {
-  counterFilter.value = 0;
-  countFilter();
-  filterModal.value = false;
-  loading.value = false;
-  try {
-    const { data } = await plan.get(
-      {page, itemsPerPage, sortBy},
-      search,
-      filterForm.value
-    );
-    paginations.value = data.result.pagination;
-    plans.value = data.result.data
-    loading.value = false;
-  } catch (error) {
-    console.log(error)
-  }
-}
-
 
 const headerButtons = ref([
-  {
-    name: "create",
-    function: () => router.push({ name: "planningGoodsCreate" }),
-  },
-  {
-    name: "createBasedOn",
-    function: async () => {
-      if (markedID.value.length !== 1) {
-        return showToast(selectOneItemMessage, "warning");
-      }
-      if (markedItem.value.active === false) {
-        return showToast(documentAprove, "warning");
-      }
-
-      modalCreateBased.isModal();
+    {
+        name: "create",
+        function: () => router.push({name: "planningShopsCreate"}),
     },
-  },
-  {
+    {
+        name: "createBasedOn",
+        function: async () =>{
+            if (markedID.value.length !== 1) {
+                return showToast(selectOneItemMessage, "warning")
+            }
+            if (markedID.value.active === false) {
+                return showToast(documentAprove, "warning")
+            }
+
+            modalCreateBased.isModal();
+        },
+    },
+    {
     name: "copy",
     function: async () => {
       if (markedID.value.length !== 1) {
@@ -122,6 +98,39 @@ const headerButtons = ref([
   },
 ]);
 
+
+
+const getPlan = async({
+    page,
+    itemsPerPage,
+    sortBy,
+    search
+}={})=>{
+    counterFilter.value = 0
+    countFilter();
+    filterModal.value = false
+    loading.value = false
+    try{
+        const {data} = await plan.get( 
+        {page, itemsPerPage, sortBy},
+        search,
+      filterForm.value);
+      paginations.value = data.result.pagination;
+      plans.value = data.result.data
+      loading.value = false;
+    } catch (error) {
+    console.log(error)
+  }
+}
+
+const countFilter = () =>{
+  for (const key in filterForm.value) {
+    if (filterForm.value[key] !== null) {
+      counterFilter.value++;
+    }
+  }
+}
+
 const getOrganizations = async () => {
   const { data } = await organizationApi.get({
     page: 1,
@@ -136,18 +145,10 @@ const getAuthors = async () => {
       authors.value = data.result.data
 };
 
-
-
-const countFilter = () =>{
-  for (const key in filterForm.value) {
-    if (filterForm.value[key] !== null) {
-      counterFilter.value++;
-    }
-  }
-}
 const cleanFilterForm = () => {
   filterForm.value = {}
 }
+
 const closeFilterModal = async () => {
   filterModal.value = false;
   cleanFilterForm();
@@ -161,25 +162,23 @@ onMounted(()=>{
 })
 
 </script>
-
 <template>
-  <div class="pa-4">
-    <div class="d-flex justify-space-between calcWidth">
-      <div class="d-flex align-center ga-2 pe-2 ms-4">
-        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">План продаж (товар)</span>
-      </div>
-      <div class="d-flex justify-end ga-2">
-        <div class="d-flex w-100 justify-end mb-3">
-          <div class="d-flex ga-2 position-relative">
-            <Button
-              v-for="(button, idx) in headerButtons"
-              :name="button.name"
-              :key="idx"
-              @click="button.function"
-            />
-           
-          </div>
-        </div>
+    <div class="pa-4">
+        <div class="d-flex justify-space-between calcWidth">
+            <div class="d-flex align-center ga-2 pe-2 ms-4">
+                <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">План продаж (магазин)</span>
+            </div>
+        <div class="d-flex justify-end ga-2">
+            <div class="d-flex w-100 justify-end mb-3">
+                <div class="d-flex ga-2 position-relative">
+                    <Button
+                    v-for="(button, idx) in headerButtons"
+                    :name="button.name"
+                    :key="idx"
+                    @click="button.function"
+                    />
+                </div>
+            </div>
         <div class="custom_search">
           <v-text-field
             style="width: 190px"
@@ -238,7 +237,7 @@ onMounted(()=>{
           <tr
             @mouseenter="hoveredRowIndex = index"
             @mouseleave="hoveredRowIndex = null"
-            @dblclick="show(router.push({name:'planningGoodsShow', params:{id:item.id}}))"
+            @dblclick="show(router.push({name:'planningShopsShow', params:{id:item.id}}))"
             :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
             style="font-size: 12px"
           >
@@ -252,7 +251,7 @@ onMounted(()=>{
             </td>
             <td>{{ getDateTimeInShow(item.created_at) }}</td>
             
-            <td>{{ item.organization.name }}</td> 
+            <td>{{ item.organization_id.name }}</td> 
             <td>{{ item.year}}</td>
           </tr>
         </template>
@@ -305,25 +304,6 @@ onMounted(()=>{
         </div>
       </div>
     </filter-canvas>
-  </div>
-</template>
 
-<style scoped>
-.filterElement {
-  position: relative;
-}
-.countFilter {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  width: 16px;
-  height: 16px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #82abf6;
-  border-radius: 50%;
-  font-size: 10px;
-  color: white;
-}
-</style>
+</div>
+</template>

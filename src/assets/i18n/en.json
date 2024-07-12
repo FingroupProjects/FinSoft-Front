@@ -49,13 +49,14 @@
     "flawOfGoods": "Flaw of goods",
     "setting": "Setting",
     "base" : "Base",
-    "agreement": "Agreement"
+    "agreement": "Agreement",
+    "year": "Year"
   },
   "menu": {
     "dashboard": "Dashboard",
     "planning":"Planning",
     "planingGoods": "Goods", 
-    "planningMarket" : "Market",
+    "planningShops" : "Market",
     "planningStorage" : "Storage",
 
     "procurement": "Procurement",
