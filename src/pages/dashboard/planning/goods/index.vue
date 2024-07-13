@@ -29,8 +29,8 @@ import { onMounted, ref, watch } from "vue";
 import debounce from "lodash.debounce";
 import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
-import getListColor from "@/composables/displayed/getListColor.js";
-import getListStatus from "@/composables/displayed/getListStatus.js";
+import getListColor from "../../../../composables/displayed/getListColor.js";
+import getListStatus from "../../../../composables/displayed/getListStatus.js";
 import validate from "@/pages/list/unit/validate.js";
 import unit from "@/api/list/units.js";
 
