@@ -1,6 +1,6 @@
 <script setup>
 import CustomFilterAutocomplete from "../../../components/formElements/CustomFilterAutocomplete.vue";
-import CustomFilterTextField from "@/components/formElements/CustomFilterTextField.vue";
+import CustomFilterTextField from "../../../components/formElements/CustomFilterTextField.vue";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import getListColor from "../../../composables/displayed/getListColor.js";
 import getListStatus from "../../../composables/displayed/getListStatus";

@@ -15,8 +15,8 @@ import Button from "../../../components/button/button.vue";
 import { onMounted, ref, watch, computed } from "vue";
 import currency from "../../../api/list/currency.js";
 import employee from "../../../api/list/employee.js";
-import Icons from "@/composables/Icons/Icons.vue";
-import showToast from "@/composables/toast";
+import Icons from "../../../composables/Icons/Icons.vue";
+import showToast from "../../../composables/toast";
 import { useRouter } from "vue-router";
 import debounce from "lodash.debounce";
 import validate from "./validate.js";
@@ -38,7 +38,7 @@ import {
   warningMessage,
   ErrorSelectMessage,
   selectOneItemMessage,
-} from "@/composables/constant/buttons.js";
+} from "../../../composables/constant/buttons.js";
 import getExcel from "../../../composables/otherQueries/getExcel.js";
 
 const router = useRouter();

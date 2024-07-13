@@ -1,10 +1,10 @@
 <script setup>
 import { ref, defineProps, defineEmits, watch, computed } from "vue";
 import showToast from "../../../composables/toast";
-import Icons from "@/composables/Icons/Icons.vue";
-import CustomCheckbox from "@/components/checkbox/CustomCheckbox.vue";
-import counterpartyAgreement from "@/api/list/counterpartyAgreement.js";
-import showDate from "@/composables/date/showDate.js";
+import Icons from "../../../composables/Icons/Icons.vue";
+import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
+import counterpartyAgreement from "../../../api/list/counterpartyAgreement.js";
+import showDate from "../../../composables/date/showDate.js";
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
 import {
   createAccess,
@@ -16,12 +16,12 @@ import {
   removeMessage,
   restoreMessage,
   warningMessage,
-} from "@/composables/constant/buttons.js";
+} from "../../../composables/constant/buttons.js";
 import getListColor from "../../../composables/displayed/getListColor.js";
 import currencyApi from "../../../api/list/currency.js";
-import organizationApi from "@/api/list/organizations.js";
+import organizationApi from "../../../api/list/organizations.js";
 import counterpartyApi from "../../../api/list/counterparty.js";
-import priceTypeApi from "@/api/list/priceType.js";
+import priceTypeApi from "../../../api/list/priceType.js";
 import validate from "./validate.js";
 import englishSymbols from "../../../composables/format/onlyEnglishSymbols.js";
 import {

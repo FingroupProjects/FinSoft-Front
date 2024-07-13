@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, ref, watch, computed } from "vue";
 import { useRouter } from "vue-router";
-import showToast from "@/composables/toast";
+import showToast from "../../../composables/toast";
 import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import storage from "../../../api/list/storage.js";
 import employee from "../../../api/list/employee.js";
@@ -21,8 +21,8 @@ import {
   warningMessage,
   ErrorSelectMessage,
   selectOneItemMessage,
-} from "@/composables/constant/buttons.js";
-import Icons from "@/composables/Icons/Icons.vue";
+} from "../../../composables/constant/buttons.js";
+import Icons from "../../../composables/Icons/Icons.vue";
 
 import { restoreMessage } from "../../../composables/constant/buttons.js";
 import storageGroup from "../../../api/list/storageGroup.js";

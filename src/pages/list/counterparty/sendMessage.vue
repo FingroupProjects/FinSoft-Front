@@ -2,7 +2,7 @@
 import { FIELD_COLOR, BASE_COLOR,} from "../../../composables/constant/colors.js";
 import { ref, defineProps, defineEmits, watch, computed } from "vue";
 import showToast from "../../../composables/toast";
-import Icons from "@/composables/Icons/Icons.vue";
+import Icons from "../../../composables/Icons/Icons.vue";
 import Button from "../../../components/button/button.vue";
 import counterparty from "../../../api/list/counterparty.js";
 
