@@ -45,6 +45,21 @@ const routes = [
     component: () => import("../pages/dashboard/planning/shops/create.vue"),
   },
   {
+    path: "/planning/employees",
+    name: "planningEmployees",
+    component: () => import("../pages/dashboard/planning/employees/index.vue"),
+  },
+  {
+    path: "/planning/employees/create",
+    name: "planningEmployeeCreate",
+    component: () => import("../pages/dashboard/planning/employees/create.vue"),
+  },
+  {
+    path: "/planning/employees/:id",
+    name: "planningEmployeeShow",
+    component: () => import("../pages/dashboard/planning/employees/show.vue"),
+  },
+  {
     path: "/procurementOfGoods",
     name: "procurementOfGoods",
     component: () =>

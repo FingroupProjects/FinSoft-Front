@@ -137,15 +137,7 @@ const getGoodsById = async () => {
   console.log(getListGood.value);
 };
 
-const addToQuantity = (incValue) => {
-  getListGood.value.forEach(item => {
-    Object.keys(item.months).forEach(monthId => {
-      if (item.months[monthId] !== null) {
-        item.months[monthId] += incValue;
-      }
-    });
-  });
-};
+
 
 
 const isAdded = () =>{
@@ -168,6 +160,15 @@ const getCategotyGoods = async (id) => {
   }
 };
 
+const addToQuantity = (incValue) => {
+  getListGood.value.forEach(item => {
+    Object.keys(item.months).forEach(monthId => {
+      if (item.months[monthId] !== null) {
+        item.months[monthId] += incValue;
+      }
+    });
+  });
+};
 
 const handleInput = (id, monthId, event) => {
   const value = parseInt(event.target.value);

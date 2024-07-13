@@ -58,6 +58,8 @@
     "planingGoods": "Goods", 
     "planningShops" : "Market",
     "planningStorage" : "Storage",
+    "plans": "Plans",
+    "planningEmployees": "Employees",
 
     "procurement": "Procurement",
     "reports": "Reports",

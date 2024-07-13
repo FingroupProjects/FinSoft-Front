@@ -1,7 +1,6 @@
 <script setup>
-import {computed, defineEmits, onMounted, onUnmounted, reactive, ref, watch,} from "vue";
-import {useConfirmDocumentStore} from "../../../../store/confirmDocument.js";
-import {FIELD_COLOR, FIELD_OF_SEARCH, BASE_COLOR, TITLE_COLOR } from "../../../../composables/constant/colors.js";
+import {defineEmits, onMounted, onUnmounted, reactive, ref,} from "vue";
+import {BASE_COLOR, FIELD_COLOR, TITLE_COLOR} from "../../../../composables/constant/colors.js";
 import {useRoute, useRouter} from "vue-router";
 import CustomTextField from "../../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../../components/formElements/CustomAutocomplete.vue";
@@ -15,7 +14,6 @@ import getDataBased from "../../../../composables/otherQueries/getDataBased.js";
 import monthApi from "../../../../api/list/schedule.js";
 import plan from "../../../../api/plans/goods.js"
 import groupApi from "../../../../api/list/goodGroup.js";
-import { forIn } from "lodash";
 import showToast from "../../../../composables/toast/index.js";
 
 const useOrganization = ref(useHasOneOrganization())
@@ -43,7 +41,7 @@ const goods = ref([
     month_id: null,
     quantity: null, 
   }
-]); 
+]);
 
 
 
@@ -57,15 +55,6 @@ const goods = ref([
     }
   };
 
-  const valueCustom = (valueBtn) => {
-        if (valueBtn === 'ten') {
-          goods.quantity += 10;
-        } else if(valueBtn === 'thirdteen'){
-          goods.quantity += 30;
-        } else if(valueBtn === 'fifteen'){
-          goods.quantity += 50;
-      }
-    };
 
 const getOrganizations = async () => {
   const { data } = await organizationApi.get({
@@ -125,8 +114,16 @@ const getCategotyGoods = async (id) => {
   }
 };
 
+const addToQuantity = (incValue) => {
+  goods.value.forEach(item => {
+    item.quantity += parseInt(incValue) ;
+    console.log(item.quantity)
+  })
+};
+
 
 const handleInput = (goodId, monthId, event) => {
+
   const value = event.target.value;
   const index = goods.value.findIndex(
     (item) => item.good_id === goodId && item.month_id === monthId
@@ -138,7 +135,7 @@ const handleInput = (goodId, monthId, event) => {
       good_id: goodId,
       month_id: monthId,
       quantity: value,  
-    });    
+    });
   }
 };
   
@@ -156,7 +153,7 @@ const createPlan = async () => {
       year: form.year,
       organization_id: form.organization,
       goods: updatedGoods      
-    };    
+    };
 
     const response = await plan.add(payload);
     console.log(response.data); 
@@ -230,6 +227,24 @@ onMounted(() => {
               name="add"
               @click="isAdded()"
             />
+          <div>
+            <button-goods
+                name="ten"
+                @click="addToQuantity(10)"
+            />
+          </div>
+          <div>
+            <button-goods
+                name="thirdteen"
+                @click="addToQuantity(30)"
+            />
+          </div>
+          <div>
+            <button-goods
+                name="fifteen"
+                @click="addToQuantity(50)"
+            />
+          </div>
         </div>
       </v-col>
       <v-col>
@@ -242,8 +257,8 @@ onMounted(() => {
           </thead>
           <tbody>
               <tr v-for="{ id: goodId, name: goodName } in listCategoryGoods" :key="goodId">
-                <td class="fz-14">{{ goodName }}</td> 
-                <td v-for="{ id: monthId } in months" :key="monthId">
+                <td class="fz-14">{{ goodName }}</td>
+                <td v-for="{ monthId } in months" :key="monthId">
                   <custom-text-field
                     min-width="20"
                     @input="handleInput(goodId, monthId, $event)"
@@ -254,7 +269,7 @@ onMounted(() => {
           </table>
           <div  v-if="viewAdd === true">
             <v-autocomplete
-            style="max-width: 12%; min-width: 12%; border-radius: 12px"
+            style="max-width: 99%; min-width: 12%; border-radius: 12px"
             :color="BASE_COLOR"
             :base-color="FIELD_COLOR"
             :items="listOfGoods"

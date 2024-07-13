@@ -80,7 +80,7 @@ export const VAutocomplete = genericComponent()({
       get: () => _menu.value,
       set: v => {
         if (_menu.value && !v && vMenuRef.value?.ΨopenChildren) return;
-        _menu.value = v;
+       _menu.value = v;
       }
     });
     const selectionIndex = shallowRef(-1);

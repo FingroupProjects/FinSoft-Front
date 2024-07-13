@@ -1,6 +1,6 @@
 <script setup>
 import {
-  approveDocument, copyMessage,
+  approveDocument, copyMessage, documentAprove,
   ErrorSelectMessage,
   removeMessage,
   restoreMessage,
@@ -121,6 +121,9 @@ const headerButtons = ref([
     function: async () => {
       if (markedID.value.length !== 1) {
         return showToast(selectOneItemMessage, "warning");
+      }
+      if (markedItem.value.active === false) {
+        return showToast(documentAprove, "warning");
       }
 
       modalCreateBased.isModal();
