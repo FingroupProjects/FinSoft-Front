@@ -28,6 +28,7 @@ const months = ref([]);
 const selected_groups = ref([]);
 const viewAdd = ref(false)
 const selectedGoods = ref(null)
+const addQuantity = ref()
 const addedGoods = ref([])
 const form = reactive({
   year: null,
@@ -46,7 +47,6 @@ const goods = ref([
 
 
   const addToArray = (selectedItem) => {
-  
     if (selectedItem && !addedGoods.value.some(item => item.name === selectedItem)) {
     const newItem = listOfGoods.value.find(item => item.name === selectedItem);
       if (newItem) {
@@ -115,10 +115,7 @@ const getCategotyGoods = async (id) => {
 };
 
 const addToQuantity = (incValue) => {
-  goods.value.forEach(item => {
-    item.quantity += parseInt(incValue) ;
-    console.log(item.quantity)
-  })
+
 };
 
 
@@ -157,10 +154,10 @@ const createPlan = async () => {
 
     const response = await plan.add(payload);
     console.log(response.data); 
-    showToast("Успешно добавлено", 'green')
+    showToast("Успешно добавлено!", 'green')
   } catch (error) {
     console.error('Error creating plan:', error);
-    showToast("Ошибка при создании плана:", 'red')
+    showToast("Ошибка при создании плана!", 'red')
     if (error.response) {
       console.error('Response data:', error.response.data); 
     }
@@ -258,9 +255,10 @@ onMounted(() => {
           <tbody>
               <tr v-for="{ id: goodId, name: goodName } in listCategoryGoods" :key="goodId">
                 <td class="fz-14">{{ goodName }}</td>
-                <td v-for="{ monthId } in months" :key="monthId">
+                <td v-for="{ id:monthId } in months" :key="monthId">
                   <custom-text-field
                     min-width="20"
+                    v-model="addQuantity"
                     @input="handleInput(goodId, monthId, $event)"
                   />
                 </td>

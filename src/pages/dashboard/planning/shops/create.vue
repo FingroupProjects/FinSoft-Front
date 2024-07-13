@@ -161,7 +161,7 @@ onMounted(()=>{
                 <tbody>
                     <tr v-for="{ id: storageId, name: name } in listStorages" :key="storageId">
                         <td class="fz-14">{{ name }}</td> 
-                        <td v-for="{ id: monthId } in months" :key="monthId">
+                        <td v-for="{ id:monthId } in months" :key="monthId">
                         <custom-text-field
                             min-width="20"
                             @input="handleInput(storageId, monthId, $event)"

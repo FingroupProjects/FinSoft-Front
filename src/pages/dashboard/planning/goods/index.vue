@@ -29,7 +29,6 @@ import { onMounted, ref, watch } from "vue";
 import debounce from "lodash.debounce";
 import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
-import getColor from "@/composables/displayed/getColor.js";
 import getListColor from "@/composables/displayed/getListColor.js";
 import getListStatus from "@/composables/displayed/getListStatus.js";
 import validate from "@/pages/list/unit/validate.js";
@@ -264,7 +263,6 @@ onMounted(()=>{
               :key="idx"
               @click="button.function"
             />
-           
           </div>
         </div>
         <div class="custom_search">
