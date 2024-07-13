@@ -13,7 +13,6 @@ import {
 import CustomFilterAutocomplete from "../../../../components/formElements/CustomFilterAutocomplete.vue";
 import { BASE_COLOR, FIELD_OF_SEARCH, TITLE_COLOR } from "../../../../composables/constant/colors.js";
 import CustomFilterTextField from "../../../../components/formElements/CustomFilterTextField.vue";
-import { markedForDeletion, statusOptions } from "../../../../composables/constant/items.js"
 import getDateTimeInShow from "../../../../composables/date/getDateTimeInShow.js";
 import CustomCheckbox from "../../../../components/checkbox/CustomCheckbox.vue";
 import { useModalCreateBased } from "../../../../store/modalCreateBased.js";
@@ -31,8 +30,7 @@ import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import getListColor from "../../../../composables/displayed/getListColor.js";
 import getListStatus from "../../../../composables/displayed/getListStatus.js";
-import validate from "@/pages/list/unit/validate.js";
-import unit from "@/api/list/units.js";
+
 
 const { t } = useI18n({ useScope: "global" });
 
