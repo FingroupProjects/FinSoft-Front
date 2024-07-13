@@ -1,14 +1,14 @@
 <script setup>
 import {defineEmits, onMounted, onUnmounted, reactive, ref,} from "vue";
-import {TITLE_COLOR } from "@/composables/constant/colors.js";
+import {TITLE_COLOR } from "../../../../composables/constant/colors.js";
 import {useRoute, useRouter} from "vue-router";
 import CustomTextField from "../../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../../components/formElements/CustomAutocomplete.vue";
 import organizationApi from "../../../../api/list/organizations.js";
 import Button from "../../../../components/button/button.vue";
-import {useHasOneOrganization} from "@/store/hasOneOrganization.js";
+import {useHasOneOrganization} from "../../../../store/hasOneOrganization.js";
 import monthApi from "../../../../api/list/schedule.js";
-import plan from "@/api/plans/employees.js"
+import plan from "../../../../api/plans/employees.js"
 import showToast from "../../../../composables/toast/index.js";
 import employeeApi from "../../../../api/list/employee.js"
 

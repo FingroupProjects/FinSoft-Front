@@ -8,9 +8,9 @@ import Button from "../../../../components/button/button.vue";
 import {useHasOneOrganization} from "../../../../store/hasOneOrganization.js";
 import monthApi from "../../../../api/list/schedule.js";
 import employeeApi from "../../../../api/list/employee.js"
-import {TITLE_COLOR} from "@/composables/constant/colors.js";
+import {TITLE_COLOR} from "../../../../composables/constant/colors.js";
 import plan from "../../../../api/plans/employees.js"
-import showToast from "@/composables/toast/index.js";
+import showToast from "../../../../composables/toast/index.js";
 
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter();
