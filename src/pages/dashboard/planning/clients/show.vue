@@ -8,7 +8,7 @@ import organizationApi from "../../../../api/list/organizations.js";
 import Button from "../../../../components/button/button.vue";
 import {useHasOneOrganization} from "../../../../store/hasOneOrganization.js";
 import monthApi from "../../../../api/list/schedule.js";
-import plan from "../../../../api/plans/employees.js"
+import plan from "../../../../api/plans/client.js"
 import showToast from "../../../../composables/toast/index.js";
 
 const router = useRouter();
@@ -16,37 +16,51 @@ const useOrganization = ref(useHasOneOrganization())
 const emits = defineEmits(["changed"]);
 const route = useRoute()
 const organizations = ref([]);
-const getEmployeeList = ref([])
 const months = ref([]);
+const getClietList = ref([])
 const form = reactive({
   year: null,
   organization: null,
 });
+const listClients = ref([
+  {
+    id: 1,
+    name: "Новые клиенты",
+    type: "new"
+  },
+  {
+    id: 2,
+    name: "Повторные клиенты",
+    type: "old"
+  }
 
-const getEmployeeById = async () => {
+]);
+
+const getClientById = async () => {
   const {data} = await plan.getById(route.params.id);
   form.organization = data.result.organization;
   form.year = data.result.year;
 
-  const employeesMap = new Map()
-  data.result.employees.forEach(item => {
-    const employeeId = item.employee.id;
+  const clientMap = new Map();
+  data.result.clients.forEach(item => {
+    const clientType = item.type
     const monthId = item.month.id;
-
-    if(!employeesMap.has(employeeId)) {
-      employeesMap.set(employeeId, {
-        id: item.id,
-        name: item.employee.name,
-        months: {}
-      })
-     for (let i = 1; i <= 12; i++) {
-       employeesMap.get(employeeId).months[i] = null;
-     }
+    console.log(item)
+    console.log(item.name)
+    if(!clientMap.has(clientType)) {
+      clientMap.set(clientType, {
+        type: clientType,
+        name: item.name,
+        months:{}
+      });
+      for (let i = 1; i <= 12; i++) {
+        clientMap.get(clientType).months[i] = null;
+      }
     }
-    const employeeItem = employeesMap.get(employeeId);
-    employeeItem.months[monthId] = item.sum || null
-  });
-  getEmployeeList.value = Array.from(employeesMap.values()).map(item => {
+    const clientItem = clientMap.get(clientType);
+    clientItem.months[monthId] = item.sum || null
+  })
+  getClietList.value = Array.from(clientMap.values()).map(item => {
     const months = {}
     Object.keys(item.months).forEach(monthId => {
       months[monthId] = item.months[monthId] || 0;
@@ -56,19 +70,19 @@ const getEmployeeById = async () => {
       months
     }
   })
-};
-
-const handleInput = (id, monthId, event) =>{
+}
+const handleInput = (type, monthId, event) =>{
   const value = parseInt(event.target.value);
-  const index = getEmployeeList.value.findIndex(
-      (item) => item.id === id && monthId in item.months
+  const index = getClietList.value.findIndex(
+      (item) => item.type === type && monthId in item.months
   )
   if(index !== -1){
-    getEmployeeList.value[index].months[monthId] = value;
+    getClietList.value[index].months[monthId] = value;
   }else{
-    console.error(`Item with id ${id} not found in getEmployeeList.value`);
+    console.error(`Item with id ${type} not found in getClietList.value`);
   }
 }
+
 const updatePlan = async () =>{
   try {
     const id = route.params.id;
@@ -76,17 +90,17 @@ const updatePlan = async () =>{
     const payload = {
       year: form.year,
       organization_id: form.organization,
-      employees: getEmployeeList.value.map(item=>{
-        const employees = []
+      operationTypes: getClietList.value.map(item=>{
+        const clients = []
 
         Object.keys(item.months).forEach(monthId => {
-          employees.push({
-            employee_id: item.id,
+          clients.push({
+            type: item.type,
             month_id: monthId,
-            sum: item.months[monthId]
+            amount: item.months[monthId]
           });
         });
-        return employees;
+        return clients;
       }).flat()
     }
     showToast("Успешно обновлено", 'green')
@@ -106,7 +120,7 @@ const getOrganization = async () => {
     page: 1,
     itemsPerPage: 100,
     sortBy: "name",
-  })
+  });
   organizations.value = data.result.data;
 }
 
@@ -123,7 +137,8 @@ const getMonth = async () => {
 onMounted(()=>{
   getMonth()
   getOrganization()
-  getEmployeeById()
+  getClientById()
+
 })
 
 </script>
@@ -132,7 +147,7 @@ onMounted(()=>{
   <div class="document">
     <div class="d-flex justify-space-between documentCalcWidth">
       <div class="d-flex align-center ga-2 pe-2 ms-4" >
-        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">План продаж сотрудников (просмотр)</span>
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">План новых и повторных клиентов (просмотр)</span>
       </div>
       <v-card variant="text" class="d-flex align-center ga-2">
         <div class="d-flex w-100">
@@ -165,7 +180,7 @@ onMounted(()=>{
         <table class="table">
           <thead>
           <tr style="font-weight: 400 !important;">
-            <th>Сотрудник</th>
+            <th>Клиенты</th>
             <th
                 v-for="{ id, name } in months" :key="id">
               {{ name }}
@@ -173,13 +188,12 @@ onMounted(()=>{
           </tr>
           </thead>
           <tbody>
-          <tr v-for="{ id, name, months } in getEmployeeList" :key="id">
+          <tr v-for="{ id: operationId, name: name, type: type} in getClietList" :key="operationId">
             <td class="fz-14">{{ name }}</td>
-            <td v-for="(sum, monthId) in months" :key="monthId">
+            <td v-for="{ id: monthId } in months" :key="monthId">
               <custom-text-field
                   min-width="20"
-                  v-model="months[monthId]"
-                  @input="handleInput(id, monthId, $event)"
+                  @input="handleInput(monthId,type, $event)"
               />
             </td>
           </tr>

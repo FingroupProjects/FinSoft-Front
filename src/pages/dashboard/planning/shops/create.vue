@@ -42,7 +42,7 @@ const getMonths = async () => {
 }
 
 const getStorage = async () =>{
-    const {data} = await storages.get({page: 1, itemsPerPage: 100});
+    const {data} = await storages.get({page: 1, itemsPerPage: 50});
     listStorages.value = data.result.data.map(item =>({
         id:item.id,
         name: item.name
@@ -54,7 +54,7 @@ const getStorage = async () =>{
 const getOrganizations = async () => {
   const { data } = await organizationApi.get({
     page: 1,
-    itemsPerPage: 100,
+    itemsPerPage: 50,
     sortBy: "name",
   });
   organizations.value = data.result.data;

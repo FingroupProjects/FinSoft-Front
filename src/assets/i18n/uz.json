@@ -60,6 +60,11 @@
     "planningStorage" : "Omborlar",
     "plans": "Reja",
     "planningEmployees": "Xodimlar",
+    "planningInstallment": "Bo'lib to'lash rejasi",
+    "planningConsumption": "Xarajatlar rejasi",
+    "planningNewAndRepeatClients": "Yangi va takroriy mijozlar rejasi",
+    "operationTypes": "Dds rejasi",
+
 
     "procurement": "Sotib olish",
     "reports": "Hisobotlar",

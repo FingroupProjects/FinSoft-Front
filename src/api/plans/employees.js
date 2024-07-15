@@ -12,6 +12,12 @@ export default {
     },
     update(id, body){
         return api.patch(`/plan/employees/${id}`, body)
+    },
+    remove(data){
+        return api.post('/plan/employees/massDelete', data)
+    },
+    restore(data){
+        return api.post('/plan/employees/massRestore', data)
     }
 
 }

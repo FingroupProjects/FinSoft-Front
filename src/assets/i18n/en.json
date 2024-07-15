@@ -60,6 +60,10 @@
     "planningStorage" : "Storage",
     "plans": "Plans",
     "planningEmployees": "Employees",
+    "planningInstallment": "Installment sales plan",
+    "planningConsumption": "Planning Consumption",
+    "planningNewAndRepeatClients": "Planning new and repeat clients",
+    "operationTypes": "Planning Dds",
 
     "procurement": "Procurement",
     "reports": "Reports",

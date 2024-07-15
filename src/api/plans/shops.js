@@ -1,4 +1,5 @@
 import { api, buildParams } from '../api.js'
+import {id} from "vuetify/locale";
 
 export default{
     add(data){
@@ -13,5 +14,11 @@ export default{
     },
     update(id, body){
         return api.patch(`/plan/storages/${id}`, body);
+    },
+    remove(data){
+        return api.post('/plan/storages/massDelete', data)
+    },
+    restore(data) {
+        return api.post('plan/storages/massRestore', data)
     }
 }

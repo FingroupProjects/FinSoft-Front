@@ -59,8 +59,12 @@
     "planingGoods": "Товаров", 
     "planningShops" : "Магазинов",
     "planningStorage" : "Складов",
-    "plans": "Планы",
+    "plans": "Планирование",
     "planningEmployees": "Сотрудники",
+    "planningInstallment": "План продаж в рассрочку",
+    "planningConsumption": "План расход",
+    "planningNewAndRepeatClients": "План новых и повторных клиентов",
+    "operationTypes": "План ддс",
 
     "procurement": "Покупка",
     "reports": "Отчеты",

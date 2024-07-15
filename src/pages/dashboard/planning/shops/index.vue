@@ -1,17 +1,14 @@
 <script setup>
-import { approveDocument, copyMessage, ErrorSelectMessage, removeMessage, restoreMessage, selectOneItemMessage, warningMessage, documentAprove} from "../../../../composables/constant/buttons.js";
+import { copyMessage, ErrorSelectMessage, removeMessage, restoreMessage, selectOneItemMessage, warningMessage, documentAprove} from "../../../../composables/constant/buttons.js";
 import CustomFilterAutocomplete from "../../../../components/formElements/CustomFilterAutocomplete.vue";
 import { BASE_COLOR, FIELD_OF_SEARCH, TITLE_COLOR } from "../../../../composables/constant/colors.js";
 import CustomFilterTextField from "../../../../components/formElements/CustomFilterTextField.vue";
-import { markedForDeletion, statusOptions } from "../../../../composables/constant/items.js"
 import getDateTimeInShow from "../../../../composables/date/getDateTimeInShow.js";
 import CustomCheckbox from "../../../../components/checkbox/CustomCheckbox.vue";
 import { useModalCreateBased } from "../../../../store/modalCreateBased.js";
 import { useFilterCanvasVisible } from "../../../../store/canvasVisible.js";
 import FilterCanvas from "../../../../components/canvas/filterCanvas.vue";
-import getStatus from "../../../../composables/displayed/getStatus.js";
 import organizationApi from "../../../../api/list/organizations";
-import getColor from "../../../../composables/displayed/getColor.js";
 import plan from "../../../../api/plans/shops.js"
 import showToast from "../../../../composables/toast/index.js";
 import Button from "../../../../components/button/button.vue";
@@ -21,6 +18,8 @@ import { onMounted, ref, watch } from "vue";
 import debounce from "lodash.debounce";
 import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
+import getListColor from "@/composables/displayed/getListColor.js";
+import getListStatus from "@/composables/displayed/getListStatus.js";
 
 const { t } = useI18n({ useScope: "global" });
 const modalCreateBased = useModalCreateBased();
@@ -50,7 +49,8 @@ const filterForm = ref({
 const headers = ref([
   { title: "Дата", key: "date" },
   { title: "Организация", key: "organization.name" },
-  { title: "Год", key: "year" }
+  { title: "Год", key: "year" },
+  {title: "Статус", key: "deleted_at"}
 ]);
 
 
@@ -65,7 +65,7 @@ const headerButtons = ref([
             if (markedID.value.length !== 1) {
                 return showToast(selectOneItemMessage, "warning")
             }
-            if (markedID.value.active === false) {
+            if (markedItem.value.active === false) {
                 return showToast(documentAprove, "warning")
             }
 
@@ -97,6 +97,73 @@ const headerButtons = ref([
     },
   },
 ]);
+
+
+const massDel = async () => {
+  try {
+    const {status} = await plan.remove({ids: markedID.value});
+    if(status === 200) {
+      showToast("Успешно удалено!", "red");
+      await getPlan({})
+      markedID.value = [];
+    }
+  }catch (e) {
+    console.log(e)
+  }
+}
+
+const massRestore = async () => {
+  try {
+    const {status} = await plan.restore({ids:markedID.value})
+    if(status === 200) {
+      showToast(restoreMessage);
+      await getPlan({})
+      markedID.value = [];
+    }
+  }catch (e) {
+    console.log(e)
+  }
+}
+
+const compute = () => {
+  if (markedID.value.length === 0) return showToast(warningMessage, "warning");
+
+  if (markedItem.value.deleted_at) {
+    return massRestore();
+  } else {
+    return massDel();
+  }
+};
+
+const lineMarking = (item) => {
+  if (markedID.value.length > 0) {
+    const firstMarkedItem = plans.value.find(
+        (el) => el.id === markedID.value[0]
+    );
+    if (firstMarkedItem && firstMarkedItem.deleted_at) {
+      if (item.deleted_at === null) {
+        showToast(ErrorSelectMessage, "warning");
+        return;
+      }
+    }
+    if (firstMarkedItem && firstMarkedItem.deleted_at === null) {
+      if (item.deleted_at !== null) {
+        showToast(ErrorSelectMessage, "warning");
+        return;
+      }
+    }
+  }
+
+  const index = markedID.value.indexOf(item.id);
+  if (index !== -1) {
+    markedID.value.splice(index, 1);
+  } else {
+    if (item.id !== null) {
+      markedID.value.push(item.id);
+    }
+  }
+  markedItem.value = item;
+};
 
 
 
@@ -134,7 +201,7 @@ const countFilter = () =>{
 const getOrganizations = async () => {
   const { data } = await organizationApi.get({
     page: 1,
-    itemsPerPage: 10000,
+    itemsPerPage: 100,
     sortBy: "name"
   });
   organizations.value = data.result.data
@@ -251,8 +318,19 @@ onMounted(()=>{
             </td>
             <td>{{ getDateTimeInShow(item.created_at) }}</td>
             
-            <td>{{ item.organization_id.name }}</td> 
+            <td>{{ item.organization.name }}</td>
             <td>{{ item.year}}</td>
+            <td>
+              <v-chip
+                  style="height: 50px !important; max-width: 200px"
+                  class="d-flex justify-center"
+                  :color="getListColor(item.deleted_at)"
+              >
+                <span class="padding: 5px;">{{
+                    getListStatus(item.deleted_at)
+                  }}</span>
+              </v-chip>
+            </td>
           </tr>
         </template>
       </v-data-table-server>

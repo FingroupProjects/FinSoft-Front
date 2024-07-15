@@ -1,29 +1,25 @@
 <script setup>
-import {
-  copyMessage,
-  documentAprove, ErrorSelectMessage,
-  restoreMessage,
-  selectOneItemMessage, warningMessage
-} from "../../../../composables/constant/buttons.js";
+import {copyMessage, ErrorSelectMessage, restoreMessage, selectOneItemMessage, warningMessage, } from "../../../../composables/constant/buttons.js";
 import CustomFilterAutocomplete from "../../../../components/formElements/CustomFilterAutocomplete.vue";
-import {BASE_COLOR, FIELD_OF_SEARCH, TITLE_COLOR} from "../../../../composables/constant/colors.js";
+import { BASE_COLOR, FIELD_OF_SEARCH, TITLE_COLOR } from "../../../../composables/constant/colors.js";
 import CustomFilterTextField from "../../../../components/formElements/CustomFilterTextField.vue";
 import getDateTimeInShow from "../../../../composables/date/getDateTimeInShow.js";
 import CustomCheckbox from "../../../../components/checkbox/CustomCheckbox.vue";
-import {useModalCreateBased} from "../../../../store/modalCreateBased.js";
-import {useFilterCanvasVisible} from "../../../../store/canvasVisible.js";
+import { useModalCreateBased } from "../../../../store/modalCreateBased.js";
+import { useFilterCanvasVisible } from "../../../../store/canvasVisible.js";
 import FilterCanvas from "../../../../components/canvas/filterCanvas.vue";
-import plan from "../../../../api/plans/employees.js"
+import plan from "../../../../api/plans/client.js";
 import organizationApi from "../../../../api/list/organizations";
 import showToast from "../../../../composables/toast/index.js";
 import Button from "../../../../components/button/button.vue";
 import Icons from "../../../../composables/Icons/Icons.vue";
-import user from "../../../../api/list/user.js";
-import {onMounted, ref} from "vue";
-import {useRouter} from "vue-router";
-import {useI18n} from "vue-i18n";
-import getListColor from "@/composables/displayed/getListColor.js";
-import getListStatus from "@/composables/displayed/getListStatus.js";
+import { onMounted, ref, watch } from "vue";
+import debounce from "lodash.debounce";
+import { useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
+import getListColor from "../../../../composables/displayed/getListColor.js";
+import getListStatus from "../../../../composables/displayed/getListStatus.js";
+import user from "@/api/list/user.js";
 
 const { t } = useI18n({ useScope: "global" });
 
@@ -32,31 +28,31 @@ const router = useRouter();
 const loading = ref(true);
 const filterModal = ref(false);
 const hoveredRowIndex = ref(null);
-const organizations = ref([])
 
 const plans = ref([])
 const markedID = ref([]);
 const markedItem = ref([]);
 const search = ref("");
 const debounceSearch = ref("");
-const counterFilter = ref(0);
 const paginations = ref([]);
-const modalCreateBased = useModalCreateBased();
+const counterFilter = ref(0);
+
+const organizations = ref([]);
 const authors = ref([]);
+const modalCreateBased = useModalCreateBased();
+
 const filterForm = ref({
   author_id: null,
-  organization: null,
+  organization_id: null,
   year: null
 })
 
 const headers = ref([
   { title: "Дата", key: "date" },
-  { title: "Организация", key: "organization.name" },
+  { title: "Организация", key: "organization" },
   { title: "Год", key: "year" },
   {title: "Статус", key: "deleted_at"}
 ]);
-
-
 const getPlan = async({
   page,
   itemsPerPage,
@@ -68,19 +64,62 @@ const getPlan = async({
   filterModal.value = false;
   loading.value = false;
   try {
-    const { data } = await plan.get(
-        {page, itemsPerPage, sortBy},
+    const { data } = await plan.get({page, itemsPerPage, sortBy},
         search,
         filterForm.value
     );
     paginations.value = data.result.pagination;
     plans.value = data.result.data
     loading.value = false;
+    console.log()
   } catch (error) {
     console.log(error)
   }
 }
 
+const headerButtons = ref([
+  {
+    name: "create",
+    function: () => router.push({ name: "planningClientCreate" }),
+  },
+  {
+    name: "createBasedOn",
+    function: async () => {
+      if (markedID.value.length !== 1) {
+        return showToast(selectOneItemMessage, "warning");
+      }
+      if (markedItem.value.active === false) {
+        return showToast(documentAprove, "warning");
+      }
+
+      modalCreateBased.isModal();
+    },
+  },
+  {
+    name: "copy",
+    function: async () => {
+      if (markedID.value.length !== 1) {
+        return showToast(selectOneItemMessage, "warning");
+      }
+
+      try {
+        const res = await copyDocument.copy(markedID.value[0]);
+        if (res.status === 200) {
+          showToast(copyMessage);
+          window.open(`/procurementOfGoods/${res.data.result.id}`, "_blank");
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    },
+  },
+  {
+    name: "delete",
+    function: () => {
+      compute({ page: 1, itemsPerPage: 25 });
+    },
+  },
+]);
 
 const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
   const body = {
@@ -156,57 +195,14 @@ const lineMarking = (item) => {
   markedItem.value = item;
 };
 
-
-const headerButtons = ref([
-  {
-    name: "create",
-    function: () => router.push({ name: "planningEmployeeCreate" }),
-  },
-  {
-    name: "createBasedOn",
-    function: async () => {
-      if (markedID.value.length !== 1) {
-        return showToast(selectOneItemMessage, "warning");
-      }
-      if (markedItem.value.active === false) {
-        return showToast(documentAprove, "warning");
-      }
-      modalCreateBased.isModal();
-    },
-  },
-  {
-    name: "copy",
-    function: async () => {
-      if (markedID.value.length !== 1) {
-        return showToast(selectOneItemMessage, "warning");
-      }
-      try {
-        const res = await copyDocument.copy(markedID.value[0]);
-        if (res.status === 200) {
-          showToast(copyMessage);
-          window.open(`/procurementOfGoods/${res.data.result.id}`, "_blank");
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    },
-  },
-  {
-    name: "delete",
-    function: () => {
-      compute({ page: 1, itemsPerPage: 25 });
-    },
-  },
-]);
-
-const getOrganizations = async () =>{
-  const {data} =  await organizationApi.get({
+const getOrganizations = async () => {
+  const { data } = await organizationApi.get({
     page: 1,
     itemsPerPage: 10000,
     sortBy: "name"
   });
-  organizations.value = data.result.data;
-}
+  organizations.value = data.result.data
+};
 
 const getAuthors = async () => {
   const { data } = await user.getAuthors()
@@ -215,8 +211,8 @@ const getAuthors = async () => {
 
 const countFilter = () =>{
   for (const key in filterForm.value) {
-    if (filterForm.value[key] !== null){
-      counterFilter.value++
+    if (filterForm.value[key] !== null) {
+      counterFilter.value++;
     }
   }
 }
@@ -230,22 +226,20 @@ const closeFilterModal = async () => {
   useFilterCanvasVisible().closeFilterCanvas();
 };
 
-
 onMounted(()=>{
-  getOrganizations();
-  getAuthors();
-  getPlan()
+  getOrganizations()
+  getAuthors()
 })
-
 
 
 </script>
 
 <template>
   <div class="pa-4">
+
     <div class="d-flex justify-space-between calcWidth">
       <div class="d-flex align-center ga-2 pe-2 ms-4">
-        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">План продаж (сотруники)</span>
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">План новых и повторных клиентов</span>
       </div>
       <div class="d-flex justify-end ga-2">
         <div class="d-flex w-100 justify-end mb-3">
@@ -256,7 +250,6 @@ onMounted(()=>{
                 :key="idx"
                 @click="button.function"
             />
-
           </div>
         </div>
         <div class="custom_search">
@@ -317,7 +310,7 @@ onMounted(()=>{
           <tr
               @mouseenter="hoveredRowIndex = index"
               @mouseleave="hoveredRowIndex = null"
-              @dblclick="show(router.push({name:'planningEmployeeShow', params:{id:item.id}}))"
+              @dblclick="router.push({name:'planningClientShow', params:{id:item.id}})"
               :class="{ 'bg-grey-lighten-2': markedID.includes(item.id) }"
               style="font-size: 12px"
           >
@@ -330,7 +323,8 @@ onMounted(()=>{
               </CustomCheckbox>
             </td>
             <td>{{ getDateTimeInShow(item.created_at) }}</td>
-            <td>{{ item.organization.name}}</td>
+
+            <td>{{ item.organization_id.name }}</td>
             <td>{{ item.year}}</td>
             <td>
               <v-chip
@@ -363,7 +357,7 @@ onMounted(()=>{
             clearable
             :label="t('headers.organization')"
             :items="organizations"
-            v-model="filterForm.organization"
+            v-model="filterForm.organization_id"
         />
         <custom-filter-text-field
             min-width="106"
@@ -395,7 +389,6 @@ onMounted(()=>{
       </div>
     </filter-canvas>
   </div>
-
 </template>
 
 <style scoped>

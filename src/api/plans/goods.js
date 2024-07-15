@@ -1,7 +1,7 @@
 import { api, buildParams } from '../api.js'
 
 export default{
-    add(data) {
+      add(data) {
         return api.post('/plan/goods', data)
       },
       get({page = 1, itemsPerPage = 25, sortBy}, search = "", filterData = {}) {
@@ -22,10 +22,10 @@ export default{
         return api.patch(`/plan/goods/${id}`, body)
       },
       remove(data) {
-        return api.post('plan/goods/massDelete', data)
+        return api.post('/plan/goods/massDelete', data)
       },
       restore(data) {
-        return api.post('plan/goods/massRestore', data)
+        return api.post('/plan/goods/massRestore', data)
       }
 
 }

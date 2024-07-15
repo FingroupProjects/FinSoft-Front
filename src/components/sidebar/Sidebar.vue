@@ -83,6 +83,10 @@ const dashboards = ref({
         { id: 1, title: "Товаров", link: "/planning/goods", key: "planingGoods" },
         { id: 2, title: "Магазинов", link: "/planning/shops", key: "planningShops" },
         { id: 3, title: "Сотрудников", link: "/planning/employees", key: "planningEmployees" },
+        {id: 4, title: "План продаж в рассрочку", link: "/planning/installment", key: "planningInstallment" },
+        {id: 5, title: "План расход", link:"/planning/consumption", key:"planningConsumption"},
+        {id:6, title:"План новых и повторных клиентов", link:"/planning/clients", key:"planningClients"},
+        {id:7, title:"План ддс", link:"/planning/operationTypes", key:"operationTypes"}
       ],
     },
   ],

@@ -1,15 +1,5 @@
 <script setup>
-import {
-  approveDocument,
-  copyMessage,
-  ErrorSelectMessage,
-  removeMessage,
-  restoreMessage,
-  selectOneItemMessage,
-  warningMessage,
-  documentAprove,
-  addMessage
-} from "../../../../composables/constant/buttons.js";
+import {copyMessage, ErrorSelectMessage, restoreMessage, selectOneItemMessage, warningMessage, } from "../../../../composables/constant/buttons.js";
 import CustomFilterAutocomplete from "../../../../components/formElements/CustomFilterAutocomplete.vue";
 import { BASE_COLOR, FIELD_OF_SEARCH, TITLE_COLOR } from "../../../../composables/constant/colors.js";
 import CustomFilterTextField from "../../../../components/formElements/CustomFilterTextField.vue";
@@ -31,7 +21,6 @@ import { useI18n } from "vue-i18n";
 import getListColor from "../../../../composables/displayed/getListColor.js";
 import getListStatus from "../../../../composables/displayed/getListStatus.js";
 
-
 const { t } = useI18n({ useScope: "global" });
 
 const router = useRouter();
@@ -39,8 +28,6 @@ const router = useRouter();
 const loading = ref(true);
 const filterModal = ref(false);
 const hoveredRowIndex = ref(null);
-
-
 
 const plans = ref([])
 const markedID = ref([]);
@@ -59,7 +46,6 @@ const filterForm = ref({
   organization_id: null,
   year: null
 })
-
 
 const headers = ref([
   { title: "Дата", key: "date" },
@@ -92,7 +78,6 @@ const getPlan = async({
     console.log(error)
   }
 }
-
 
 const headerButtons = ref([
   {
@@ -133,17 +118,20 @@ const headerButtons = ref([
   {
     name: "delete",
     function: () => {
-      compute();
+      compute({ page: 1, itemsPerPage: 25 });
     },
   },
 ]);
 
-const massDel = async () => {
+const massDel = async ({ page, itemsPerPage, sortBy, search }) => {
+  const body = {
+    ids: markedID.value,
+  };
   try {
-    const {status} = await plan.remove({ids: markedID.value});
+    const {status} = await plan.remove(body);
     if(status === 200) {
       showToast("Успешно удалено!", "red");
-      await getPlan({})
+      await getPlan({page, itemsPerPage, sortBy, search})
       markedID.value = [];
     }
   }catch (e) {
@@ -151,12 +139,15 @@ const massDel = async () => {
   }
 }
 
-const massRestore = async () => {
+const massRestore = async ({page, itemsPerPage, sortBy}) => {
   try {
-    const {status} = await plan.restore({ids:markedID.value})
+    const body = {
+      ids: markedID.value,
+    };
+    const {status} = await plan.restore(body)
     if(status === 200) {
       showToast(restoreMessage);
-      await getPlan({})
+      await getPlan({page, itemsPerPage, sortBy})
       markedID.value = [];
     }
   }catch (e) {
@@ -167,10 +158,10 @@ const massRestore = async () => {
 const compute = () => {
   if (markedID.value.length === 0) return showToast(warningMessage, "warning");
 
-  if (markedItem.value.deleted_at) {
-    return massRestore();
+  if (markedItem.value?.deleted_at) {
+    return massRestore({});
   } else {
-    return massDel();
+    return massDel({});
   }
 };
 
@@ -179,17 +170,19 @@ const lineMarking = (item) => {
     const firstMarkedItem = plans.value.find(
         (el) => el.id === markedID.value[0]
     );
-    if (firstMarkedItem && firstMarkedItem.deleted_at) {
-      if (item.deleted_at === null) {
+    if (firstMarkedItem &&
+        firstMarkedItem.deleted_at &&
+        item.deleted_at === null
+    ) {
         showToast(ErrorSelectMessage, "warning");
         return;
-      }
     }
-      if (firstMarkedItem && firstMarkedItem.deleted_at === null) {
-      if (item.deleted_at !== null) {
+      if (firstMarkedItem &&
+          firstMarkedItem.deleted_at === null &&
+          item.deleted_at !== null
+      ) {
         showToast(ErrorSelectMessage, "warning");
         return;
-      }
     }
   }
 
@@ -218,8 +211,6 @@ const getAuthors = async () => {
       authors.value = data.result.data
 };
 
-
-
 const countFilter = () =>{
   for (const key in filterForm.value) {
     if (filterForm.value[key] !== null) {
@@ -236,8 +227,6 @@ const closeFilterModal = async () => {
   await getPlan();
   useFilterCanvasVisible().closeFilterCanvas();
 };
-
-
 
 onMounted(()=>{
   getOrganizations()
