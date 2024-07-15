@@ -31,7 +31,7 @@ defineProps({
     :style="[
       `max-width: ${maxWidth}`,
       `min-width: ${minWidth}px`,
-      'max-height: 40px !important',
+      'max-height: 10px !important',
     ]"
     variant="outlined"
     :color="BASE_COLOR"

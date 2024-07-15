@@ -1,20 +1,17 @@
 <script setup>
-import {defineEmits, onMounted, onUnmounted, reactive, ref,} from "vue";
-import {useConfirmDocumentStore} from "../../../../store/confirmDocument.js";
-import {FIELD_COLOR, FIELD_OF_SEARCH, BASE_COLOR, TITLE_COLOR } from "../../../../composables/constant/colors.js";
+import {defineEmits, onMounted, reactive, ref,} from "vue";
+import {TITLE_COLOR} from "../../../../composables/constant/colors.js";
 import {useRoute, useRouter} from "vue-router";
 import CustomTextField from "../../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../../components/formElements/CustomAutocomplete.vue";
 import organizationApi from "../../../../api/list/organizations.js";
 import Button from "../../../../components/button/button.vue";
-import ButtonGoods from "../../../../components/button/buttonGoods.vue"
 import "../../../../assets/css/procurement.css";
 import {useHasOneOrganization} from "../../../../store/hasOneOrganization.js";
-import getDataBased from "../../../../composables/otherQueries/getDataBased.js";
 import monthApi from "../../../../api/list/schedule.js";
 import plan from "../../../../api/plans/shops.js"
+import showToast from "../../../../composables/toast/index.js";
 import storages from "../../../../api/list/storage.js"
-import { forIn } from "lodash";
 
 const router = useRouter();
 const useOrganization = ref(useHasOneOrganization())
@@ -58,16 +55,12 @@ const getStorage = async () =>{
     
     for (const item of listStorages.value) {
         listNameStorages.value.push(item)
-        console.log('items',item);
     }
-    console.log(listNameStorages.value);
-    console.log(listStorages.value);
-    console.log(form.organization)
 }
 
 const getShopById = async () =>{
     const {data} = await plan.getById(route.params.id)
-    form.organization = data.result.organization_id.name,
+    form.organization = data.result.organization_id.id
     form.year = data.result.year
     const shopsMap = new Map()
 
@@ -100,7 +93,6 @@ const getShopById = async () =>{
         months
         };
     })
-    console.log(getStorageList.value)
 };
 
 const handleInput = (id, monthId, event) => {
@@ -135,12 +127,14 @@ const updatePlan = async () =>{
                 return storages
             }).flat()
         }
+        showToast("Успешно обновлено", 'green')
         const response = await plan.update(id, payload)
         console.log( response.data);
         
         
     } catch (error) {
         console.error('Error updating plan:', error);
+        showToast("Ошибка при обновлении плана:", 'red')
     if (error.response) {
       console.error('Response data:', error.response.data);
     }

@@ -7,7 +7,7 @@ import CustomCheckbox from "../../../components/checkbox/CustomCheckbox.vue";
 import CreateGroup from "./createGroup.vue"
 import Button from "../../../components/button/button.vue"
 import ConfirmModal from "../../../components/confirm/ConfirmModal.vue";
-import {createAccess, removeAccess, updateAccess} from "@/composables/access/access.js";
+import {createAccess, removeAccess, updateAccess} from "../../../composables/access/access.js";
 import {
   addMessage,
   editMessage,

@@ -1,22 +1,16 @@
 <script setup>
-import {computed, defineEmits, onMounted, onUnmounted, reactive, ref, watch,} from "vue";
-import {useConfirmDocumentStore} from "../../../../store/confirmDocument.js";
-import {FIELD_COLOR, FIELD_OF_SEARCH, BASE_COLOR, TITLE_COLOR } from "../../../../composables/constant/colors.js";
-import {useRoute, useRouter} from "vue-router";
+import {defineEmits, onMounted, reactive, ref,} from "vue";
+import {TITLE_COLOR} from "../../../../composables/constant/colors.js";
+import {useRouter} from "vue-router";
 import CustomTextField from "../../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../../components/formElements/CustomAutocomplete.vue";
 import organizationApi from "../../../../api/list/organizations.js";
 import Button from "../../../../components/button/button.vue";
-import ButtonGoods from "../../../../components/button/buttonGoods.vue"
-import "../../../../assets/css/procurement.css";
 import {useHasOneOrganization} from "../../../../store/hasOneOrganization.js";
-import getDataBased from "../../../../composables/otherQueries/getDataBased.js";
 import monthApi from "../../../../api/list/schedule.js";
 import plan from "../../../../api/plans/shops.js"
 import storages from "../../../../api/list/storage.js"
-import { forIn } from "lodash";
 import showToast from "../../../../composables/toast/index.js";
-import formatInputPrice from "../../../../composables/format/formatInputPrice.js";
 
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter();
@@ -25,11 +19,11 @@ const organizations = ref([]);
 const months = ref([]);
 const listStorages = ref([])
 const storage = ref([
-    {
-        storage_id: null,
-        month_id: null,
-        quantity: null
-    }
+{
+    storage_id: null,
+    month_id: null,
+    quantity: null
+}
 ])
 
 const form = reactive({
@@ -48,7 +42,7 @@ const getMonths = async () => {
 }
 
 const getStorage = async () =>{
-    const {data} = await storages.get({page: 1, itemsPerPage: 100});
+    const {data} = await storages.get({page: 1, itemsPerPage: 50});
     listStorages.value = data.result.data.map(item =>({
         id:item.id,
         name: item.name
@@ -60,7 +54,7 @@ const getStorage = async () =>{
 const getOrganizations = async () => {
   const { data } = await organizationApi.get({
     page: 1,
-    itemsPerPage: 100,
+    itemsPerPage: 50,
     sortBy: "name",
   });
   organizations.value = data.result.data;
@@ -167,7 +161,7 @@ onMounted(()=>{
                 <tbody>
                     <tr v-for="{ id: storageId, name: name } in listStorages" :key="storageId">
                         <td class="fz-14">{{ name }}</td> 
-                        <td v-for="{ id: monthId } in months" :key="monthId">
+                        <td v-for="{ id:monthId } in months" :key="monthId">
                         <custom-text-field
                             min-width="20"
                             @input="handleInput(storageId, monthId, $event)"

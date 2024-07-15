@@ -1,7 +1,6 @@
 <script setup>
 import {defineEmits, onMounted, onUnmounted, reactive, ref,} from "vue";
-import {useConfirmDocumentStore} from "../../../../store/confirmDocument.js";
-import {FIELD_COLOR, FIELD_OF_SEARCH, BASE_COLOR, TITLE_COLOR } from "../../../../composables/constant/colors.js";
+import {BASE_COLOR, FIELD_COLOR, TITLE_COLOR} from "../../../../composables/constant/colors.js";
 import {useRoute, useRouter} from "vue-router";
 import CustomTextField from "../../../../components/formElements/CustomTextField.vue";
 import CustomAutocomplete from "../../../../components/formElements/CustomAutocomplete.vue";
@@ -13,10 +12,9 @@ import "../../../../assets/css/procurement.css";
 import {useHasOneOrganization} from "../../../../store/hasOneOrganization.js";
 import getDataBased from "../../../../composables/otherQueries/getDataBased.js";
 import monthApi from "../../../../api/list/schedule.js";
-import plan from "../../../../api/plans/goods.js"
-import showToast from "../../../../composables/toast/index.js";
+import plan from "../../../../api/plans/installment.js"
 import groupApi from "../../../../api/list/goodGroup.js";
-import { forIn } from "lodash";
+import showToast from "../../../../composables/toast/index.js";
 
 const useOrganization = ref(useHasOneOrganization())
 const router = useRouter();
@@ -31,7 +29,6 @@ const selected_groups = ref([]);
 const viewAdd = ref(false)
 const selectedGoods = ref(null)
 const addedGoods = ref([])
-const getListGood = ref([])
 const form = reactive({
   year: null,
   organization: null,
@@ -46,7 +43,6 @@ const goods = ref([
   }
 ]);
 
-
 const addToArray = (selectedItem) => {
   if (selectedItem && !addedGoods.value.some(item => item.name === selectedItem)) {
     const newItem = listOfGoods.value.find(item => item.name === selectedItem);
@@ -58,17 +54,21 @@ const addToArray = (selectedItem) => {
 
 
 const getOrganizations = async () => {
-  const {data} = await organizationApi.get({
+  const { data } = await organizationApi.get({
     page: 1,
-    itemsPerPage: 100000,
+    itemsPerPage: 50,
     sortBy: "name",
   });
   organizations.value = data.result.data;
 };
 
+const isAdded = () =>{
+  viewAdd.value = true
+}
+
 const getMonths = async () => {
   try {
-    const {data} = await monthApi.month();
+    const { data } = await monthApi.month();
     months.value = data.result.data;
   } catch (e) {
     console.error(e);
@@ -77,15 +77,15 @@ const getMonths = async () => {
 
 
 const getGoods = async (good_storage_id, good_organization_id) => {
-  const {data} = await goodApi.get({page: 1, itemsPerPage: 100000});
+  const { data } = await goodApi.get({ page: 1, itemsPerPage: 50 });
   listOfGoods.value = data.result.data.map((item) => ({
-    id: item.id,
+    id:item.id,
     name: item.name
   }))
 }
 
 const getGoodsId = async () => {
-  const {data} = await plan.getGoodsByGroupId({
+  const { data } = await plan.getGoodsByGroupId({
     ids: selected_groups.value,
   });
 
@@ -97,19 +97,11 @@ const getGoodsId = async () => {
   });
 }
 
-
-const isAdded = () => {
-  viewAdd.value = true
-  console.log(getListGood.value)
-  console.log(goods.value)
-}
-
-
 const getCategotyGoods = async (id) => {
   try {
     const {
       data: {
-        result: {data},
+        result: { data },
       },
     } = await groupApi.get({});
     good_groups.value = data;
@@ -119,99 +111,57 @@ const getCategotyGoods = async (id) => {
 };
 
 const addToQuantity = (incValue) => {
-
-  getListGood.value.forEach(item => {
-
-    Object.keys(item.months).forEach(monthId => {
-      if (item.months[monthId] !== null) {
-        item.months[monthId] += incValue;
-        console.log(item.months[monthId]);
-      }
-    });
-  });
+  goods.value.forEach(item => {
+    item.quantity += incValue;
+    console.log(item.quantity)
+  })
 };
 
-const handleInput = (id, monthId, event) => {
-  const value = parseInt(event.target.value);
-  const index = getListGood.value.findIndex(
-      (item) => item.id === id && monthId in item.months
-  );
 
+const handleInput = (goodId, monthId, event) => {
+
+  const value = event.target.value;
+  const index = goods.value.findIndex(
+      (item) => item.good_id === goodId && item.month_id === monthId
+  );
   if (index !== -1) {
-    getListGood.value[index].months[monthId] = value;
+    goods.value[index].quantity = value;
   } else {
-    console.error(`Item with id ${id} and monthId ${monthId} not found in getListGood.value`);
+    goods.value.push({
+      good_id: goodId,
+      month_id: monthId,
+      quantity: value,
+    });
   }
 };
 
 const createPlan = async () => {
   try {
-    const id = route.params.id
+    const updatedGoods = goods.value
+        .filter(item => item.good_id !== null && item.month_id !== null && item.quantity !== null)
+        .map(item => ({
+          good_id: item.good_id,
+          month_id: item.month_id,
+          quantity: item.quantity
+        }));
 
     const payload = {
       year: form.year,
       organization_id: form.organization,
-      goods: getListGood.value.map(item => {
-        const goods = [];
-        Object.keys(item.months).forEach(monthId => {
-          goods.push({
-            good_id: item.id,
-            month_id: parseInt(monthId),
-            quantity: item.months[monthId]
-          });
-        });
-        return goods;
-      }).flat()
+      goods: updatedGoods
     };
 
-    const response = await plan.add(payload)
-    showToast("Успешно создано!", "green")
+    const response = await plan.add(payload);
     console.log(response.data);
+    showToast("Успешно добавлено!", 'green')
   } catch (error) {
-    console.error('Error updating plan:', error);
-    showToast("Ошибка при создание плана!", "red")
+    console.error('Error creating plan:', error);
+    showToast("Ошибка при создании плана!", 'red')
     if (error.response) {
       console.error('Response data:', error.response.data);
     }
   }
 };
-const getGoodsById = async () => {
-  const { data } = await plan.getById(route.params.id);
-  form.organization = data.result.organization;
-  form.year = data.result.year;
-
-  const goodsMap = new Map();
-  data.result.goods.forEach(item => {
-    const goodId = item.good.id;
-    const monthId = item.month.id;
-
-    if (!goodsMap.has(goodId)) {
-      goodsMap.set(goodId, {
-        id: item.id,
-        name: item.good.name,
-        months: {}
-      });
-      for (let i = 1; i <= 12; i++) {
-        goodsMap.get(goodId).months[i] = null;
-      }
-    }
-    const goodItem = goodsMap.get(goodId);
-    goodItem.months[monthId] = item.quantity || null;
-  });
-  getListGood.value = Array.from(goodsMap.values()).map(item => {
-    const months = {};
-    Object.keys(item.months).forEach(monthId => {
-      months[monthId] = item.months[monthId] || 0;
-    });
-    return {
-      ...item,
-      months
-    };
-  });
-
-  console.log(getListGood.value);
-};
-
 
 onUnmounted(() => {
   emits("changed", false);
@@ -228,19 +178,18 @@ onMounted(() => {
   getOrganizations()
   getCategotyGoods()
   getGoods()
-  getGoodsById
 })
 </script>
 <template>
   <div class="document">
     <div class="d-flex justify-space-between documentCalcWidth">
-      <div class="d-flex align-center ga-2 pe-2 ms-4">
-        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">План продаж товаров (создание</span>
+      <div class="d-flex align-center ga-2 pe-2 ms-4" >
+        <span :style="{ color: TITLE_COLOR, fontSize: '22px' }">План продаж в рассрочку товаров (создание)</span>
       </div>
       <v-card variant="text" class="d-flex align-center ga-2">
         <div class="d-flex w-100">
           <div class="d-flex ga-2 mt-1 me-3 py-2">
-            <Button @click="createPlan() " name="save1"/>
+            <Button @click="createPlan() " name="save1"  />
             <Button
                 @click="router.push('/procurementOfGoods')"
                 name="close"
@@ -299,29 +248,24 @@ onMounted(() => {
           <thead>
           <tr style="font-weight: 400 !important;">
             <th>Товар</th>
-            <th
-                v-for="{ id, name } in months" :key="id">
-              {{ name }}
-            </th>
+            <th v-for="{ id, name } in months" :key="id">{{ name }}</th>
           </tr>
           </thead>
           <tbody>
-          <tr v-for="{ id, name, months } in getListGood" :key="id">
-            {{listCategoryGoods}}
-            <td class="fz-14">{{ name }}</td>
-            <td v-for="(monthId) in months" :key="monthId">
+          <tr v-for="{ id: goodId, name: goodName } in listCategoryGoods" :key="goodId">
+            <td class="fz-14">{{ goodName }}</td>
+            <td v-for="{ id:monthId } in months" :key="monthId">
               <custom-text-field
                   min-width="20"
-                  v-model="months[monthId]"
-                  @input="handleInput(id, monthId, $event)"
+                  @input="handleInput(goodId, monthId, $event)"
               />
             </td>
           </tr>
           </tbody>
         </table>
-        <div v-if="viewAdd === true">
+        <div  v-if="viewAdd === true">
           <v-autocomplete
-              style="max-width: 12%; min-width: 12%; border-radius: 12px"
+              style="max-width: 99%; min-width: 12%; border-radius: 12px"
               :color="BASE_COLOR"
               :base-color="FIELD_COLOR"
               :items="listOfGoods"
@@ -339,7 +283,7 @@ onMounted(() => {
         </div>
       </v-col>
     </div>
-    <v-divider/>
+    <v-divider />
   </div>
 </template>
 
@@ -352,18 +296,17 @@ onMounted(() => {
   border: 1px solid #dddddd;
   border-collapse: collapse;
 }
-
 .table th {
   font-weight: bold;
   padding: 5px;
   background: #efefef;
   border: 1px solid #dddddd;
 }
-
 .table td {
   border: 1px solid #dddddd;
   padding: 5px;
 }
+
 
 
 </style>

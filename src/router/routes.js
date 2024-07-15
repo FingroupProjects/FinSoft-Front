@@ -45,6 +45,81 @@ const routes = [
     component: () => import("../pages/dashboard/planning/shops/create.vue"),
   },
   {
+    path: "/planning/employees",
+    name: "planningEmployees",
+    component: () => import("../pages/dashboard/planning/employees/index.vue"),
+  },
+  {
+    path: "/planning/employees/create",
+    name: "planningEmployeeCreate",
+    component: () => import("../pages/dashboard/planning/employees/create.vue"),
+  },
+  {
+    path: "/planning/employees/:id",
+    name: "planningEmployeeShow",
+    component: () => import("../pages/dashboard/planning/employees/show.vue"),
+  },
+  {
+    path: "/planning/installment",
+    name: "planningInstallment",
+    component: () => import("../pages/dashboard/planning/installment/index.vue"),
+  },
+  {
+    path: "/planning/installment/create",
+    name: "planningInstallmentCreate",
+    component: () => import("../pages/dashboard/planning/installment/create.vue"),
+  },
+  {
+    path: "/planning/installment/:id",
+    name: "planningInstallmentShow",
+    component: () => import("../pages/dashboard/planning/installment/show.vue"),
+  },
+  {
+    path: "/planning/consumption",
+    name: "planningConsumption",
+    component: () => import("../pages/dashboard/planning/consumption/index.vue"),
+  },
+  {
+    path: "/planning/consumption/create",
+    name: "planningConsumptionCreate",
+    component: () => import("../pages/dashboard/planning/consumption/create.vue"),
+  },
+  {
+    path: "/planning/consumption/:id",
+    name: "planningConsumptionShow",
+    component: () => import("../pages/dashboard/planning/consumption/show.vue"),
+  },
+  {
+    path: "/planning/operationTypes",
+    name: "planningOperationTypes",
+    component: () => import("../pages/dashboard/planning/operationTypes/index.vue"),
+  },
+  {
+    path: "/planning/operationTypes/create",
+    name: "planningOperationCreate",
+    component: () => import("../pages/dashboard/planning/operationTypes/create.vue"),
+  },
+  {
+    path: "/planning/operationTypes/:id",
+    name: "planningOperationShow",
+    component: () => import("../pages/dashboard/planning/operationTypes/show.vue"),
+  },
+  {
+    path: "/planning/clients",
+    name: "planningClients",
+    component: () => import("../pages/dashboard/planning/clients/index.vue"),
+  },
+  {
+    path: "/planning/clients/create",
+    name: "planningClientCreate",
+    component: () => import("../pages/dashboard/planning/clients/create.vue"),
+  },
+  {
+    path: "/planning/clients/:id",
+    name: "planningClientShow",
+    component: () => import("../pages/dashboard/planning/clients/show.vue"),
+  },
+  {
     path: "/procurementOfGoods",
     name: "procurementOfGoods",
     component: () =>
